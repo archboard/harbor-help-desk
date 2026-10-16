@@ -18,10 +18,10 @@ An open-source helpdesk. This app is the Inertia web UI and the backend. Other c
 - Treat IDs as strings everywhere: `string` type hints and `string` in TypeScript, never `int`.
 - Add each new prefix to this registry:
 
-| Prefix | Model |
-| --- | --- |
-| `usr_` | `User` |
-| `pky_` | `Passkey` |
+| Prefix | Model       |
+| ------ | ----------- |
+| `usr_` | `User`      |
+| `pky_` | `Passkey`   |
 | `wsp_` | `Workspace` |
 
 ## Tenancy

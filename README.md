@@ -6,10 +6,10 @@ An open-source helpdesk. This repository contains the web UI and the backend. Ot
 
 Both modes run the same codebase.
 
-| Mode | How tenants work | Config |
-| --- | --- | --- |
-| **Cloud** | Many workspaces share one Postgres database. Each workspace is reached at its own subdomain (`acme.harbor.help`). | `HARBOR_MULTITENANT=true` |
-| **Self-hosted** | One workspace. Subdomains are ignored. | `HARBOR_MULTITENANT=false` |
+| Mode            | How tenants work                                                                                                  | Config                     |
+| --------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| **Cloud**       | Many workspaces share one Postgres database. Each workspace is reached at its own subdomain (`acme.harbor.help`). | `HARBOR_MULTITENANT=true`  |
+| **Self-hosted** | One workspace. Subdomains are ignored.                                                                            | `HARBOR_MULTITENANT=false` |
 
 Self-hosting needs only PHP and Postgres. Cache, queues and sessions use the database by default. Redis, S3 and websockets are optional.
 

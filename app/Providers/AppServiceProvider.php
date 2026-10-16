@@ -11,8 +11,10 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Inertia\Inertia;
 use Laravel\Passkeys\Passkeys;
 use Laravel\Passport\Passport;
+use Laravel\Passport\Scope;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,7 +23,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        Passport::$deviceCodeGrantEnabled = false;
     }
 
     /**
@@ -49,6 +51,14 @@ class AppServiceProvider extends ServiceProvider
 
         Passport::tokensExpireIn(CarbonImmutable::now()->addHour());
         Passport::refreshTokensExpireIn(CarbonImmutable::now()->addDays(30));
+
+        Passport::authorizationView(fn (array $parameters) => Inertia::render('auth/OAuthAuthorize', [
+            'client' => ['id' => $parameters['client']->getKey(), 'name' => $parameters['client']->name],
+            'scopes' => array_map(fn (Scope $scope): string => $scope->description, $parameters['scopes']),
+            'state' => $parameters['request']->state,
+            'authToken' => $parameters['authToken'],
+            'csrfToken' => csrf_token(),
+        ])->toResponse($parameters['request']));
 
         DB::prohibitDestructiveCommands(
             app()->isProduction(),
