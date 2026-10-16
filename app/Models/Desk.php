@@ -7,6 +7,8 @@ use Carbon\CarbonImmutable;
 use Database\Factories\DeskFactory;
 use GrantHolle\Scru128Laravel\Concerns\HasScru128Ids;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -44,6 +46,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *
  * @property-read DeskUser|null $pivot
  *
+ * @method static Builder<static>|Desk visibleTo(\App\Models\User $user)
+ *
  * @mixin \Eloquent
  */
 #[Fillable(['name', 'slug'])]
@@ -57,6 +61,24 @@ class Desk extends Model
     public function idPrefix(): string
     {
         return 'dsk_';
+    }
+
+    /**
+     * Limit to the desks the user can see in the current workspace: all of them for
+     * workspace admins, otherwise only the desks they're on.
+     *
+     * @param  Builder<self>  $query
+     */
+    #[Scope]
+    protected function visibleTo(Builder $query, User $user): void
+    {
+        $workspace = Workspace::current();
+
+        if ($workspace !== null && $user->workspaceRole($workspace)?->isAdmin() === true) {
+            return;
+        }
+
+        $query->whereHas('users', fn (Builder $query) => $query->whereKey($user->getKey()));
     }
 
     /**
