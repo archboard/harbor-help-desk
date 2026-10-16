@@ -4,11 +4,13 @@ import { destroy, store } from '@/routes/api-tokens';
 
 // Placeholder until the frontend is designed.
 defineProps<{
+  workspaces: { id: string; name: string }[];
   tokens: {
     id: string;
     name: string;
     created_at: string | null;
     expires_at: string | null;
+    workspaces: string[];
   }[];
 }>();
 
@@ -25,12 +27,18 @@ const page = usePage();
     <Form v-bind="store.form()" reset-on-success v-slot="{ errors }">
       <input name="name" placeholder="Token name" required />
       <span v-if="errors.name">{{ errors.name }}</span>
+      <label v-for="workspace in workspaces" :key="workspace.id">
+        <input type="checkbox" name="workspaces[]" :value="workspace.id" />
+        {{ workspace.name }}
+      </label>
+      <span v-if="errors.workspaces">{{ errors.workspaces }}</span>
       <button type="submit">Create token</button>
     </Form>
 
     <ul>
       <li v-for="token in tokens" :key="token.id">
-        {{ token.name }} (expires {{ token.expires_at }})
+        {{ token.name }} ({{ token.workspaces.join(', ') }}, expires
+        {{ token.expires_at }})
         <Form v-bind="destroy.form(token.id)">
           <button type="submit">Revoke</button>
         </Form>

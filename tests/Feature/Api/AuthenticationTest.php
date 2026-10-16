@@ -18,7 +18,7 @@ test('rejects requests without a token', function () {
 });
 
 test('returns the authenticated member', function () {
-    Passport::actingAs($this->user);
+    Passport::actingAs($this->user, [$this->acme->tokenScope()]);
 
     $this->getJson('http://acme.harbor.test/api/v1/user')
         ->assertOk()
@@ -29,11 +29,32 @@ test('returns the authenticated member', function () {
         ]]);
 });
 
-test('rejects a user calling another workspace', function () {
-    Workspace::factory()->create(['subdomain' => 'other']);
+test('rejects a token without the workspace scope', function () {
     Passport::actingAs($this->user);
 
+    $this->getJson('http://acme.harbor.test/api/v1/user')->assertForbidden();
+});
+
+test('rejects a user calling a workspace they do not belong to', function () {
+    $other = Workspace::factory()->create(['subdomain' => 'other']);
+    Passport::actingAs($this->user, [$other->tokenScope()]);
+
     $this->getJson('http://other.harbor.test/api/v1/user')->assertForbidden();
+});
+
+test('rejects a token scoped to another workspace the user also belongs to', function () {
+    $other = Workspace::factory()->create(['subdomain' => 'other']);
+    $other->users()->attach($this->user, ['role' => WorkspaceRole::Agent]);
+    Passport::actingAs($this->user, [$this->acme->tokenScope()]);
+
+    $this->getJson('http://other.harbor.test/api/v1/user')->assertForbidden();
+});
+
+test('rejects a scoped token once the user leaves the workspace', function () {
+    $this->acme->users()->detach($this->user);
+    Passport::actingAs($this->user, [$this->acme->tokenScope()]);
+
+    $this->getJson('http://acme.harbor.test/api/v1/user')->assertForbidden();
 });
 
 test('returns 404 for an unknown subdomain', function () {
@@ -44,7 +65,7 @@ test('returns 404 for an unknown subdomain', function () {
 
 test('self hosted resolves the single workspace on any host', function () {
     config(['harbor.multitenant' => false]);
-    Passport::actingAs($this->user);
+    Passport::actingAs($this->user, [$this->acme->tokenScope()]);
 
     $this->getJson('http://help.example.com/api/v1/user')->assertOk();
 });

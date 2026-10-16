@@ -1,7 +1,9 @@
 <?php
 
+use App\Actions\ApiTokens\CreatePersonalAccessToken;
 use App\Enums\WorkspaceRole;
 use App\Models\User;
+use App\Models\Workspace;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Passport\Token;
 use Tests\Concerns\InWorkspace;
@@ -20,7 +22,7 @@ test('api tokens page requires password confirmation', function () {
 });
 
 test('api tokens page lists only active personal access tokens', function () {
-    $this->user->createToken('Active');
+    $this->user->createToken('Active', [$this->workspace->tokenScope()]);
     $this->user->createToken('Revoked')->token->revoke();
 
     $this->actingAs($this->user)
@@ -29,14 +31,16 @@ test('api tokens page lists only active personal access tokens', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('settings/ApiTokens')
             ->has('tokens', 1)
-            ->where('tokens.0.name', 'Active'),
+            ->where('tokens.0.name', 'Active')
+            ->where('tokens.0.workspaces', [$this->workspace->name])
+            ->where('workspaces.0.id', $this->workspace->id),
         );
 });
 
 test('a created token is flashed once and authenticates against the api', function () {
     $this->actingAs($this->user)
         ->withSession(['auth.password_confirmed_at' => time()])
-        ->post(route('api-tokens.store'), ['name' => 'CLI'])
+        ->post(route('api-tokens.store'), ['name' => 'CLI', 'workspaces' => [$this->workspace->id]])
         ->assertRedirect()
         ->assertInertiaFlash('apiToken');
 
@@ -50,8 +54,29 @@ test('a created token is flashed once and authenticates against the api', functi
         ->assertJsonPath('data.id', $this->user->id);
 });
 
+test('creating a token requires a workspace the user belongs to', function () {
+    $this->actingAs($this->user)
+        ->withSession(['auth.password_confirmed_at' => time()])
+        ->post(route('api-tokens.store'), ['name' => 'CLI', 'workspaces' => [Workspace::factory()->create()->id]])
+        ->assertSessionHasErrors('workspaces.0');
+
+    $this->actingAs($this->user)
+        ->withSession(['auth.password_confirmed_at' => time()])
+        ->post(route('api-tokens.store'), ['name' => 'CLI'])
+        ->assertSessionHasErrors('workspaces');
+});
+
+test('workspaces the user does not belong to are dropped from new tokens', function () {
+    $stranger = Workspace::factory()->create();
+
+    $result = app(CreatePersonalAccessToken::class)
+        ->handle($this->user, 'CLI', [$this->workspace->id, $stranger->id]);
+
+    expect($result->token->scopes)->toBe([$this->workspace->tokenScope()]);
+});
+
 test('a revoked token no longer authenticates', function () {
-    $result = $this->user->createToken('CLI');
+    $result = $this->user->createToken('CLI', [$this->workspace->tokenScope()]);
 
     $this->actingAs($this->user)
         ->withSession(['auth.password_confirmed_at' => time()])

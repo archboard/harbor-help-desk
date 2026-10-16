@@ -43,9 +43,22 @@ class Workspace extends Model implements IsTenant
     /** @use HasFactory<WorkspaceFactory> */
     use HasFactory, HasScru128Ids, ImplementsTenant, UsesMultitenancyConfig;
 
+    /**
+     * OAuth scopes of this form grant a token access to one workspace.
+     */
+    public const string TOKEN_SCOPE_PREFIX = 'workspace:';
+
     public function idPrefix(): string
     {
         return 'wsp_';
+    }
+
+    /**
+     * The OAuth scope that grants a token access to this workspace.
+     */
+    public function tokenScope(): string
+    {
+        return self::TOKEN_SCOPE_PREFIX.$this->getKey();
     }
 
     /**

@@ -6,6 +6,7 @@ use App\Actions\ApiTokens\CreatePersonalAccessToken;
 use App\Actions\ApiTokens\RevokePersonalAccessToken;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ApiTokenStoreRequest;
+use App\Models\Workspace;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -19,7 +20,11 @@ class ApiTokenController extends Controller
      */
     public function edit(Request $request): Response
     {
+        $workspaces = $request->user()->workspaces()->get(['workspaces.id', 'workspaces.name']);
+        $workspaceNames = $workspaces->mapWithKeys(fn (Workspace $workspace): array => [$workspace->tokenScope() => $workspace->name]);
+
         return Inertia::render('settings/ApiTokens', [
+            'workspaces' => $workspaces->map(fn (Workspace $workspace): array => ['id' => $workspace->id, 'name' => $workspace->name]),
             'tokens' => $request->user()
                 ->tokens()
                 ->with('client')
@@ -30,6 +35,7 @@ class ApiTokenController extends Controller
                 ->map(fn (Token $token): array => [
                     'id' => $token->id,
                     'name' => $token->name,
+                    'workspaces' => $workspaceNames->only($token->scopes)->values()->all(),
                     'created_at' => $token->created_at?->toIso8601String(),
                     'expires_at' => $token->expires_at?->toIso8601String(),
                 ])
@@ -43,7 +49,11 @@ class ApiTokenController extends Controller
      */
     public function store(ApiTokenStoreRequest $request, CreatePersonalAccessToken $createToken): RedirectResponse
     {
-        $result = $createToken->handle($request->user(), $request->validated('name'));
+        $result = $createToken->handle(
+            $request->user(),
+            $request->validated('name'),
+            $request->validated('workspaces'),
+        );
 
         Inertia::flash('apiToken', $result->accessToken);
 

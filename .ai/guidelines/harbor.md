@@ -30,6 +30,7 @@ An open-source helpdesk. This app is the Inertia web UI and the backend. Other c
 - `users` is a global table. Agents belong to workspaces through the `workspace_user` pivot, which holds their role. End customers are workspace-scoped `contacts`, not `users`.
 - Every tenant-owned table has a non-null `workspace_id` FK, and its model uses the workspace scoping trait. Every index and unique constraint on a tenant table starts with `workspace_id`.
 - Queued jobs, notifications and listeners that touch tenant data must be tenant-aware.
+- API tokens are scoped to workspaces through `workspace:{id}` OAuth scopes (`Workspace::tokenScope()`). `/api/v1` routes go through `EnsureTokenCanAccessWorkspace`, which requires the scope and current membership.
 - Remove the tenant scope only explicitly, and only in landlord or admin code.
 - Each tenant-scoped feature needs a test proving that workspace A cannot read or change workspace B's data.
 

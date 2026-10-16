@@ -8,10 +8,12 @@ defineOptions({
 
 defineProps<{
   client: { id: string; name: string };
+  workspaces: { id: string; name: string }[];
   scopes: string[];
   state: string | null;
   authToken: string;
   csrfToken: string;
+  errors: Record<string, string>;
 }>();
 </script>
 
@@ -21,6 +23,11 @@ defineProps<{
 
     <!-- Plain forms, not Inertia: approval redirects to the client's external redirect URI. -->
     <form v-bind="approve.form()">
+      <label v-for="workspace in workspaces" :key="workspace.id">
+        <input type="checkbox" name="workspaces[]" :value="workspace.id" />
+        {{ workspace.name }}
+      </label>
+      <span v-if="errors.workspaces">{{ errors.workspaces }}</span>
       <input type="hidden" name="_token" :value="csrfToken" />
       <input type="hidden" name="state" :value="state ?? ''" />
       <input type="hidden" name="client_id" :value="client.id" />
