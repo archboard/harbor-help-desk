@@ -1,21 +1,25 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/vue-starter-kit",
+    "name": "grantholle/harbor-help",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "An open-source helpdesk for teams, with a web UI, API and MCP tools. Run it multi-tenant in the cloud or self-hosted.",
     "keywords": [
-        "laravel",
-        "framework"
+        "helpdesk",
+        "support",
+        "ticketing",
+        "laravel"
     ],
-    "license": "MIT",
+    "license": "AGPL-3.0-or-later",
     "require": {
-        "php": "^8.3",
+        "php": "^8.5",
+        "grantholle/scru128-laravel": "^1.1",
         "inertiajs/inertia-laravel": "^3.0",
         "laravel/chisel": "^0.1.0",
         "laravel/fortify": "^1.37.2",
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0",
-        "laravel/wayfinder": "^0.1.14"
+        "laravel/wayfinder": "^0.1.14",
+        "spatie/laravel-multitenancy": "^4.0"
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^3.7",
@@ -28,7 +32,8 @@
         "laravel/sail": "^1.53",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.9.3",
-        "phpunit/phpunit": "^12.5.23"
+        "pestphp/pest": "^5.3",
+        "pestphp/pest-plugin-laravel": "^5.0"
     },
     "autoload": {
         "psr-4": {
@@ -74,7 +79,7 @@
             "@test"
         ],
         "lint": [
-            "phpstan analyse"
+            "phpstan analyse --memory-limit=1G"
         ],
         "test": [
             "@php artisan config:clear --ansi",
@@ -95,7 +100,6 @@
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi",
-            "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
             "@php artisan migrate --graceful --ansi"
         ],
         "pre-package-uninstall": [
