@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\DeskRole;
+use App\Enums\WorkspaceRole;
 use Carbon\CarbonImmutable;
 use Database\Factories\UserFactory;
 use GrantHolle\Scru128Laravel\Concerns\HasScru128Ids;
@@ -65,6 +67,9 @@ use Spatie\Multitenancy\TenantCollection;
  * @property-read int|null $oauth_apps_count
  * @property-read Collection<int, Token> $tokens
  * @property-read int|null $tokens_count
+ * @property-read Collection<int, Desk> $desks
+ * @property-read int|null $desks_count
+ * @property-read WorkspaceUser|DeskUser|null $pivot
  *
  * @mixin \Eloquent
  */
@@ -83,13 +88,43 @@ class User extends Authenticatable implements MustVerifyEmail, OAuthenticatable,
     /**
      * The workspaces this user is an agent in, with their role on the pivot.
      *
-     * @return BelongsToMany<Workspace, $this>
+     * @return BelongsToMany<Workspace, $this, WorkspaceUser>
      */
     public function workspaces(): BelongsToMany
     {
         return $this->belongsToMany(Workspace::class, 'workspace_user')
+            ->using(WorkspaceUser::class)
             ->withPivot('role')
             ->withTimestamps();
+    }
+
+    /**
+     * The desks this user works in the current workspace, with their desk role on the pivot.
+     *
+     * @return BelongsToMany<Desk, $this, DeskUser>
+     */
+    public function desks(): BelongsToMany
+    {
+        return $this->belongsToMany(Desk::class, 'desk_user')
+            ->using(DeskUser::class)
+            ->withPivot('role')
+            ->withTimestamps();
+    }
+
+    /**
+     * The user's role in the given workspace, or null when they aren't a member.
+     */
+    public function workspaceRole(Workspace $workspace): ?WorkspaceRole
+    {
+        return $this->workspaces()->whereKey($workspace->getKey())->first()?->pivot->role;
+    }
+
+    /**
+     * The user's role on the given desk, or null when they aren't on it.
+     */
+    public function deskRole(Desk $desk): ?DeskRole
+    {
+        return $desk->users()->whereKey($this->getKey())->first()?->pivot->role;
     }
 
     /**

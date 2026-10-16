@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Multitenancy\Concerns\UsesMultitenancyConfig;
 use Spatie\Multitenancy\Contracts\IsTenant;
 use Spatie\Multitenancy\Models\Concerns\ImplementsTenant;
@@ -35,6 +36,10 @@ use Spatie\Multitenancy\Models\Concerns\ImplementsTenant;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereSubdomain($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereUpdatedAt($value)
  *
+ * @property-read Collection<int, Desk> $desks
+ * @property-read int|null $desks_count
+ * @property-read WorkspaceUser|null $pivot
+ *
  * @mixin \Eloquent
  */
 #[Fillable(['name', 'subdomain'])]
@@ -47,6 +52,16 @@ class Workspace extends Model implements IsTenant
      * OAuth scopes of this form grant a token access to one workspace.
      */
     public const string TOKEN_SCOPE_PREFIX = 'workspace:';
+
+    /**
+     * Every workspace starts with a default desk, so it always has at least one.
+     */
+    protected static function booted(): void
+    {
+        static::created(function (Workspace $workspace): void {
+            $workspace->desks()->create(['name' => $workspace->name, 'slug' => 'default']);
+        });
+    }
 
     public function idPrefix(): string
     {
@@ -64,12 +79,21 @@ class Workspace extends Model implements IsTenant
     /**
      * The agents who belong to this workspace, with their role on the pivot.
      *
-     * @return BelongsToMany<User, $this>
+     * @return BelongsToMany<User, $this, WorkspaceUser>
      */
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'workspace_user')
+            ->using(WorkspaceUser::class)
             ->withPivot('role')
             ->withTimestamps();
+    }
+
+    /**
+     * @return HasMany<Desk, $this>
+     */
+    public function desks(): HasMany
+    {
+        return $this->hasMany(Desk::class);
     }
 }

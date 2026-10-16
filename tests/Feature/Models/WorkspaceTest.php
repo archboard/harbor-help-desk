@@ -10,6 +10,6 @@ test('agents join workspaces with a role on the pivot', function () {
         ->hasAttached($user, ['role' => WorkspaceRole::Admin->value])
         ->create();
 
-    expect($user->workspaces->sole()->pivot->role)->toBe(WorkspaceRole::Admin->value);
+    expect($user->workspaces->sole()->pivot->role)->toBe(WorkspaceRole::Admin);
     expect($workspace->users->sole()->is($user))->toBeTrue();
 });
