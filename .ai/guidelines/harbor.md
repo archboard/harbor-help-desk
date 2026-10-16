@@ -24,6 +24,7 @@ An open-source helpdesk. This app is the Inertia web UI and the backend. Other c
 | `pky_` | `Passkey`   |
 | `wsp_` | `Workspace` |
 | `dsk_` | `Desk`      |
+| `ctc_` | `Contact`   |
 
 ## Tenancy
 

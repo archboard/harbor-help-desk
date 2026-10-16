@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Http\Controllers\OAuth\ApproveAuthorizationController;
 use App\Http\Controllers\OAuth\AuthorizationController;
+use App\Models\Contact;
 use App\Models\Desk;
 use App\Models\Passkey;
 use App\Models\User;
@@ -64,6 +65,7 @@ class AppServiceProvider extends ServiceProvider
             'workspace' => Workspace::class,
             'passkey' => Passkey::class,
             'desk' => Desk::class,
+            'contact' => Contact::class,
         ]);
 
         Passport::tokensExpireIn(CarbonImmutable::now()->addHour());
