@@ -13,6 +13,7 @@ An open-source helpdesk. This app is the Inertia web UI and the backend. Other c
 - Migrations use `$table->scru128('id', 'xxx_')` and `$table->foreignScru128('xxx_id', 'xxx_')`. Never use `id()`, `foreignId()`, `uuid()` or `ulid()`. The prefix passed in the migration must match the model's `idPrefix()`.
 - Postgres does not index foreign keys automatically, so add an index to each FK unless a composite index already starts with that column.
 - Vendor models (e.g. `Laravel\Passkeys\Passkey`) get an `App\Models` subclass that uses the trait, registered through the package's `use*Model()` hook.
+- Exception: Passport's tables and models keep their default IDs (UUID clients, string tokens). Only their `user_id` columns use `foreignScru128('user_id', 'usr_')`.
 - For polymorphic relations, use `string('{name}_type')` and `string('{name}_id', 40)` with a composite index, and register every model in `Relation::enforceMorphMap()`.
 - Treat IDs as strings everywhere: `string` type hints and `string` in TypeScript, never `int`.
 - Add each new prefix to this registry:

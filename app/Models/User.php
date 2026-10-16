@@ -18,6 +18,10 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Laravel\Passport\Client;
+use Laravel\Passport\Contracts\OAuthenticatable;
+use Laravel\Passport\HasApiTokens;
+use Laravel\Passport\Token;
 use Spatie\Multitenancy\TenantCollection;
 
 /**
@@ -55,15 +59,21 @@ use Spatie\Multitenancy\TenantCollection;
  *
  * @property-read TenantCollection<int, Workspace> $workspaces
  * @property-read int|null $workspaces_count
+ * @property-read Collection<int, Client> $clients
+ * @property-read int|null $clients_count
+ * @property-read Collection<int, Client> $oauthApps
+ * @property-read int|null $oauth_apps_count
+ * @property-read Collection<int, Token> $tokens
+ * @property-read int|null $tokens_count
  *
  * @mixin \Eloquent
  */
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
+class User extends Authenticatable implements MustVerifyEmail, OAuthenticatable, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasScru128Ids, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+    use HasApiTokens, HasFactory, HasScru128Ids, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
     public function idPrefix(): string
     {
