@@ -7,6 +7,7 @@ use App\Http\Controllers\OAuth\AuthorizationController;
 use App\Models\Contact;
 use App\Models\Desk;
 use App\Models\Passkey;
+use App\Models\Tag;
 use App\Models\Ticket;
 use App\Models\TicketEvent;
 use App\Models\User;
@@ -70,6 +71,7 @@ class AppServiceProvider extends ServiceProvider
             'contact' => Contact::class,
             'ticket' => Ticket::class,
             'ticket_event' => TicketEvent::class,
+            'tag' => Tag::class,
         ]);
 
         Passport::tokensExpireIn(CarbonImmutable::now()->addHour());

@@ -15,6 +15,7 @@ An open-source helpdesk. This app is the Inertia web UI and the backend. Other c
 - Vendor models (e.g. `Laravel\Passkeys\Passkey`) get an `App\Models` subclass that uses the trait, registered through the package's `use*Model()` hook.
 - Exception: Passport's tables and models keep their default IDs (UUID clients, string tokens). Only their `user_id` columns use `foreignScru128('user_id', 'usr_')`.
 - For polymorphic relations, use `string('{name}_type')` and `string('{name}_id', 40)` with a composite index, and register every model in `Relation::enforceMorphMap()`.
+- Models use `#[Unguarded]` instead of `#[Fillable]`. Actions only ever pass validated or explicitly built arrays to `create()`, `fill()` and `update()`, never raw request input.
 - Treat IDs as strings everywhere: `string` type hints and `string` in TypeScript, never `int`.
 - Add each new prefix to this registry:
 
@@ -27,6 +28,7 @@ An open-source helpdesk. This app is the Inertia web UI and the backend. Other c
 | `ctc_` | `Contact`   |
 | `tkt_` | `Ticket`    |
 | `tev_` | `TicketEvent` |
+| `tag_` | `Tag`       |
 
 ## Tenancy
 
