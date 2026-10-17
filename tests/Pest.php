@@ -34,3 +34,16 @@ function actAs(User $user, Workspace $workspace): void
 {
     Passport::actingAs($user, [$workspace->tokenScope()]);
 }
+
+/**
+ * The acme workspace with an agent on its default desk, made current.
+ *
+ * @return array{workspace: Workspace, desk: Desk, agent: User}
+ */
+function acmeWithAgent(): array
+{
+    $workspace = Workspace::factory()->create(['subdomain' => 'acme'])->makeCurrent();
+    $desk = Desk::sole();
+
+    return ['workspace' => $workspace, 'desk' => $desk, 'agent' => deskMember($workspace, $desk)];
+}

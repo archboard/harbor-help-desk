@@ -13,19 +13,6 @@ beforeEach(function () {
     config(['harbor.multitenant' => true, 'harbor.domain' => 'harbor.test']);
 });
 
-/**
- * The acme workspace with an agent on its default desk, made current.
- *
- * @return array{workspace: Workspace, desk: Desk, agent: User}
- */
-function acmeWithAgent(): array
-{
-    $workspace = Workspace::factory()->create(['subdomain' => 'acme'])->makeCurrent();
-    $desk = Desk::sole();
-
-    return ['workspace' => $workspace, 'desk' => $desk, 'agent' => deskMember($workspace, $desk)];
-}
-
 test('agents open tickets on their desk', function () {
     ['workspace' => $workspace, 'desk' => $desk, 'agent' => $agent] = acmeWithAgent();
     actAs($agent, $workspace);

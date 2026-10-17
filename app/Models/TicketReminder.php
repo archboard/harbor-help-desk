@@ -6,7 +6,9 @@ use App\Models\Concerns\BelongsToWorkspace;
 use Carbon\CarbonImmutable;
 use Database\Factories\TicketReminderFactory;
 use GrantHolle\Scru128Laravel\Concerns\HasScru128Ids;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -45,6 +47,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TicketReminder whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TicketReminder whereUserId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TicketReminder whereWorkspaceId($value)
+ * @method static Builder<static>|TicketReminder visibleTo(\App\Models\User $user)
  *
  * @mixin \Eloquent
  */
@@ -57,6 +60,17 @@ class TicketReminder extends Model
     public function idPrefix(): string
     {
         return 'rmd_';
+    }
+
+    /**
+     * Personal reminders are visible only to their user; ticket-level ones to everyone on the ticket.
+     *
+     * @param  Builder<self>  $query
+     */
+    #[Scope]
+    protected function visibleTo(Builder $query, User $user): void
+    {
+        $query->where(fn (Builder $query) => $query->whereNull('user_id')->orWhere('user_id', $user->getKey()));
     }
 
     /**

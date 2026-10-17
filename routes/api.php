@@ -1,11 +1,14 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AttachmentController;
 use App\Http\Controllers\Api\V1\DeskController;
 use App\Http\Controllers\Api\V1\DeskMemberController;
 use App\Http\Controllers\Api\V1\TicketAssigneeController;
+use App\Http\Controllers\Api\V1\TicketCommentController;
 use App\Http\Controllers\Api\V1\TicketController;
 use App\Http\Controllers\Api\V1\TicketDeskController;
 use App\Http\Controllers\Api\V1\TicketEventController;
+use App\Http\Controllers\Api\V1\TicketReminderController;
 use App\Http\Controllers\Api\V1\TicketTagController;
 use App\Http\Middleware\EnsureTokenCanAccessWorkspace;
 use App\Http\Middleware\ResolveWorkspace;
@@ -32,4 +35,9 @@ Route::prefix('v1')->name('api.v1.')
         Route::put('tickets/{ticket}/assignees', [TicketAssigneeController::class, 'update'])->name('tickets.assignees.update');
         Route::put('tickets/{ticket}/tags', [TicketTagController::class, 'update'])->name('tickets.tags.update');
         Route::get('tickets/{ticket}/events', [TicketEventController::class, 'index'])->name('tickets.events.index');
+
+        Route::apiResource('tickets.comments', TicketCommentController::class)->shallow()->except('show');
+        Route::apiResource('tickets.attachments', AttachmentController::class)->shallow()->only(['index', 'store', 'destroy']);
+        Route::get('attachments/{attachment}/download', [AttachmentController::class, 'download'])->name('attachments.download');
+        Route::apiResource('tickets.reminders', TicketReminderController::class)->shallow()->only(['index', 'store', 'destroy']);
     });

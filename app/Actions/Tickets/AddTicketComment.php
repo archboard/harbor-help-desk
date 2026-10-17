@@ -48,7 +48,7 @@ class AddTicketComment
             // ponytail: every file is validated up front, so only a storage error mid-loop rolls back
             // the comment; files already written then stay on disk. Add an orphan sweep if that bites.
             foreach ($validated['attachments'] ?? [] as $file) {
-                $this->addTicketAttachment->handle($actor, $ticket, $file, $comment);
+                $this->addTicketAttachment->handle($actor, $ticket, ['file' => $file], $comment);
             }
 
             return $comment;

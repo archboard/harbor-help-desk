@@ -14,18 +14,21 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use LogicException;
 use Throwable;
 
 class AddTicketAttachment
 {
     /**
-     * Store a file on the ticket, optionally as part of one of its comments.
+     * Store the uploaded `file` on the ticket, optionally as part of one of its comments.
+     *
+     * @param  array<string, mixed>  $input
      */
-    public function handle(User $actor, Ticket $ticket, UploadedFile $file, ?TicketComment $comment = null): Attachment
+    public function handle(User $actor, Ticket $ticket, array $input, ?TicketComment $comment = null): Attachment
     {
         Gate::forUser($actor)->authorize('update', $ticket);
 
-        Validator::make(['file' => $file], ['file' => self::rules()])->validate();
+        $file = Validator::make($input, ['file' => ['required', ...self::rules()]])->safe()->file('file') ?? throw new LogicException('A validated upload is always present.');
 
         if ($comment !== null && $comment->ticket_id !== $ticket->getKey()) {
             throw ValidationException::withMessages(['comment' => __('The comment belongs to another ticket.')]);
