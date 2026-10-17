@@ -5,7 +5,6 @@ use App\Enums\WorkspaceRole;
 use App\Models\Desk;
 use App\Models\User;
 use App\Models\Workspace;
-use Laravel\Passport\Passport;
 
 beforeEach(function () {
     config(['harbor.multitenant' => true, 'harbor.domain' => 'harbor.test']);
@@ -22,11 +21,6 @@ beforeEach(function () {
     $this->acmeDesk = $this->acme->execute(fn () => Desk::sole());
     $this->otherDesk = $this->other->execute(fn () => Desk::sole());
 });
-
-function actAs(User $user, Workspace $workspace): void
-{
-    Passport::actingAs($user, [$workspace->tokenScope()]);
-}
 
 test('admins list every desk and agents only their own', function () {
     $this->acme->execute(fn () => Desk::factory()->create(['name' => 'Zeta']));

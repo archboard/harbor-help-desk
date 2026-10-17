@@ -4,12 +4,10 @@ use App\Actions\Tickets\AddTicketAttachment;
 use App\Actions\Tickets\AddTicketComment;
 use App\Actions\Tickets\DeleteTicketAttachment;
 use App\Enums\DeskRole;
-use App\Enums\WorkspaceRole;
 use App\Models\Attachment;
 use App\Models\Desk;
 use App\Models\Ticket;
 use App\Models\TicketComment;
-use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\UploadedFile;
@@ -21,18 +19,9 @@ uses(InWorkspace::class);
 
 beforeEach(fn () => Storage::fake('local'));
 
-function deskAgent(Workspace $workspace, Desk $desk, DeskRole $role = DeskRole::AGENT): User
-{
-    $user = User::factory()->create(['name' => 'Jane Doe']);
-    $workspace->users()->attach($user, ['role' => WorkspaceRole::AGENT]);
-    $desk->users()->attach($user, ['role' => $role, 'workspace_id' => $workspace->id]);
-
-    return $user;
-}
-
 test('uploads are stored under the ticket with their checksum and logged', function () {
     $ticket = Ticket::factory()->create();
-    $agent = deskAgent($this->workspace, $ticket->desk);
+    $agent = deskMember($this->workspace, $ticket->desk);
 
     $attachment = app(AddTicketAttachment::class)->handle($agent, $ticket, UploadedFile::fake()->createWithContent('invoice.pdf', 'PDF-BYTES'));
 
@@ -48,7 +37,7 @@ test('uploads are stored under the ticket with their checksum and logged', funct
 test('path segments are stripped from uploaded filenames', function () {
     $ticket = Ticket::factory()->create();
 
-    $attachment = app(AddTicketAttachment::class)->handle(deskAgent($this->workspace, $ticket->desk), $ticket, UploadedFile::fake()->create('../../etc/passwd.txt'));
+    $attachment = app(AddTicketAttachment::class)->handle(deskMember($this->workspace, $ticket->desk), $ticket, UploadedFile::fake()->create('../../etc/passwd.txt'));
 
     expect($attachment->filename)->toBe('passwd.txt');
     expect($attachment->path)->toEndWith("/{$attachment->id}/passwd.txt");
@@ -58,7 +47,7 @@ test('blocked and oversized files are rejected', function (UploadedFile $file, s
     $ticket = Ticket::factory()->create();
     config(['harbor.attachments.max_size_kb' => 100]);
 
-    expect(fn () => app(AddTicketAttachment::class)->handle(deskAgent($this->workspace, $ticket->desk), $ticket, $file))
+    expect(fn () => app(AddTicketAttachment::class)->handle(deskMember($this->workspace, $ticket->desk), $ticket, $file))
         ->toThrow(ValidationException::class, $message);
     expect(Storage::disk('local')->allFiles())->toBe([]);
 })->with([
@@ -70,14 +59,14 @@ test('a comment from another ticket cannot carry the upload', function () {
     $ticket = Ticket::factory()->create();
     $otherComment = TicketComment::factory()->for(Ticket::factory()->for($ticket->desk))->create();
 
-    expect(fn () => app(AddTicketAttachment::class)->handle(deskAgent($this->workspace, $ticket->desk), $ticket, UploadedFile::fake()->create('a.pdf'), $otherComment))
+    expect(fn () => app(AddTicketAttachment::class)->handle(deskMember($this->workspace, $ticket->desk), $ticket, UploadedFile::fake()->create('a.pdf'), $otherComment))
         ->toThrow(ValidationException::class);
 });
 
 test('comments can carry attachments', function () {
     $ticket = Ticket::factory()->create();
 
-    $comment = app(AddTicketComment::class)->handle(deskAgent($this->workspace, $ticket->desk), $ticket, [
+    $comment = app(AddTicketComment::class)->handle(deskMember($this->workspace, $ticket->desk), $ticket, [
         'body' => 'See attached.',
         'attachments' => [UploadedFile::fake()->create('a.pdf'), UploadedFile::fake()->create('b.png')],
     ]);
@@ -88,13 +77,13 @@ test('comments can carry attachments', function () {
 test('agents off the desk cannot upload', function () {
     $ticket = Ticket::factory()->create();
 
-    expect(fn () => app(AddTicketAttachment::class)->handle(deskAgent($this->workspace, Desk::factory()->create()), $ticket, UploadedFile::fake()->create('a.pdf')))
+    expect(fn () => app(AddTicketAttachment::class)->handle(deskMember($this->workspace, Desk::factory()->create()), $ticket, UploadedFile::fake()->create('a.pdf')))
         ->toThrow(AuthorizationException::class);
 });
 
 test('uploaders can remove their file, which deletes it from the disk', function () {
     $ticket = Ticket::factory()->create();
-    $agent = deskAgent($this->workspace, $ticket->desk);
+    $agent = deskMember($this->workspace, $ticket->desk);
     $attachment = app(AddTicketAttachment::class)->handle($agent, $ticket, UploadedFile::fake()->create('a.pdf'));
 
     app(DeleteTicketAttachment::class)->handle($agent, $attachment);
@@ -106,12 +95,12 @@ test('uploaders can remove their file, which deletes it from the disk', function
 
 test('agents cannot remove someone else file but desk leads can', function () {
     $ticket = Ticket::factory()->create();
-    $attachment = app(AddTicketAttachment::class)->handle(deskAgent($this->workspace, $ticket->desk), $ticket, UploadedFile::fake()->create('a.pdf'));
+    $attachment = app(AddTicketAttachment::class)->handle(deskMember($this->workspace, $ticket->desk), $ticket, UploadedFile::fake()->create('a.pdf'));
 
-    expect(fn () => app(DeleteTicketAttachment::class)->handle(deskAgent($this->workspace, $ticket->desk), $attachment))
+    expect(fn () => app(DeleteTicketAttachment::class)->handle(deskMember($this->workspace, $ticket->desk), $attachment))
         ->toThrow(AuthorizationException::class);
 
-    app(DeleteTicketAttachment::class)->handle(deskAgent($this->workspace, $ticket->desk, DeskRole::LEAD), $attachment);
+    app(DeleteTicketAttachment::class)->handle(deskMember($this->workspace, $ticket->desk, DeskRole::LEAD), $attachment);
     expect(Attachment::find($attachment->id))->toBeNull();
 });
 

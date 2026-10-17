@@ -9,26 +9,15 @@ use App\Actions\Tickets\UpdateTicket;
 use App\Enums\DeskRole;
 use App\Enums\TicketEventType;
 use App\Enums\TicketPriority;
-use App\Enums\WorkspaceRole;
 use App\Models\Contact;
 use App\Models\Desk;
 use App\Models\Ticket;
-use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Validation\ValidationException;
 use Tests\Concerns\InWorkspace;
 
 uses(InWorkspace::class);
-
-function deskMember(Workspace $workspace, Desk $desk, DeskRole $role = DeskRole::AGENT, array $attributes = []): User
-{
-    $user = User::factory()->create($attributes);
-    $workspace->users()->attach($user, ['role' => WorkspaceRole::AGENT]);
-    $desk->users()->attach($user, ['role' => $role, 'workspace_id' => $workspace->id]);
-
-    return $user;
-}
 
 test('creating a ticket finds the requester by email regardless of case and logs it', function () {
     $desk = Desk::factory()->create();

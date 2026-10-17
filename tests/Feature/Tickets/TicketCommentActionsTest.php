@@ -5,29 +5,18 @@ use App\Actions\Tickets\DeleteTicketComment;
 use App\Actions\Tickets\UpdateTicketComment;
 use App\Enums\DeskRole;
 use App\Enums\TicketEventType;
-use App\Enums\WorkspaceRole;
 use App\Models\Desk;
 use App\Models\Ticket;
 use App\Models\TicketComment;
-use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Auth\Access\AuthorizationException;
 use Tests\Concerns\InWorkspace;
 
 uses(InWorkspace::class);
 
-function onDesk(Workspace $workspace, Desk $desk, DeskRole $role = DeskRole::AGENT): User
-{
-    $user = User::factory()->create(['name' => 'Jane Doe']);
-    $workspace->users()->attach($user, ['role' => WorkspaceRole::AGENT]);
-    $desk->users()->attach($user, ['role' => $role, 'workspace_id' => $workspace->id]);
-
-    return $user;
-}
-
 test('agents reply or add internal notes and each is logged', function () {
     $ticket = Ticket::factory()->create();
-    $agent = onDesk($this->workspace, $ticket->desk);
+    $agent = deskMember($this->workspace, $ticket->desk);
 
     $reply = app(AddTicketComment::class)->handle($agent, $ticket, ['body' => 'On it.']);
     $note = app(AddTicketComment::class)->handle($agent, $ticket, ['body' => 'Probably the toner.', 'is_internal' => true]);
@@ -45,7 +34,7 @@ test('agents reply or add internal notes and each is logged', function () {
 
 test('agents off the desk cannot comment', function () {
     $ticket = Ticket::factory()->create();
-    $outsider = onDesk($this->workspace, Desk::factory()->create());
+    $outsider = deskMember($this->workspace, Desk::factory()->create());
 
     expect(fn () => app(AddTicketComment::class)->handle($outsider, $ticket, ['body' => 'Hi']))
         ->toThrow(AuthorizationException::class);
@@ -53,7 +42,7 @@ test('agents off the desk cannot comment', function () {
 
 test('authors can edit their comment and the previous body stays in the audit trail', function () {
     $ticket = Ticket::factory()->create();
-    $author = onDesk($this->workspace, $ticket->desk);
+    $author = deskMember($this->workspace, $ticket->desk);
     $comment = TicketComment::factory()->for($ticket)->for($author, 'author')->create(['body' => 'Frist']);
 
     $this->freezeSecond();
@@ -69,8 +58,8 @@ test('authors can edit their comment and the previous body stays in the audit tr
 
 test('agents cannot edit or delete someone else comment', function (string $action, array $arguments) {
     $ticket = Ticket::factory()->create();
-    $comment = TicketComment::factory()->for($ticket)->for(onDesk($this->workspace, $ticket->desk), 'author')->create();
-    $agent = onDesk($this->workspace, $ticket->desk);
+    $comment = TicketComment::factory()->for($ticket)->for(deskMember($this->workspace, $ticket->desk), 'author')->create();
+    $agent = deskMember($this->workspace, $ticket->desk);
 
     expect(fn () => app($action)->handle($agent, $comment, ...$arguments))->toThrow(AuthorizationException::class);
 })->with([
@@ -80,9 +69,9 @@ test('agents cannot edit or delete someone else comment', function (string $acti
 
 test('desk leads can delete any comment and it is soft-deleted', function () {
     $ticket = Ticket::factory()->create();
-    $comment = TicketComment::factory()->for($ticket)->for(onDesk($this->workspace, $ticket->desk), 'author')->create();
+    $comment = TicketComment::factory()->for($ticket)->for(deskMember($this->workspace, $ticket->desk), 'author')->create();
 
-    app(DeleteTicketComment::class)->handle(onDesk($this->workspace, $ticket->desk, DeskRole::LEAD), $comment);
+    app(DeleteTicketComment::class)->handle(deskMember($this->workspace, $ticket->desk, DeskRole::LEAD), $comment);
 
     expect($ticket->comments()->count())->toBe(0);
     expect($comment->fresh()->trashed())->toBeTrue();

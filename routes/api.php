@@ -2,6 +2,11 @@
 
 use App\Http\Controllers\Api\V1\DeskController;
 use App\Http\Controllers\Api\V1\DeskMemberController;
+use App\Http\Controllers\Api\V1\TicketAssigneeController;
+use App\Http\Controllers\Api\V1\TicketController;
+use App\Http\Controllers\Api\V1\TicketDeskController;
+use App\Http\Controllers\Api\V1\TicketEventController;
+use App\Http\Controllers\Api\V1\TicketTagController;
 use App\Http\Middleware\EnsureTokenCanAccessWorkspace;
 use App\Http\Middleware\ResolveWorkspace;
 use App\Http\Resources\UserResource;
@@ -19,4 +24,12 @@ Route::prefix('v1')->name('api.v1.')
         Route::get('desks/{desk}/members', [DeskMemberController::class, 'index'])->name('desks.members.index');
         Route::put('desks/{desk}/members/{user}', [DeskMemberController::class, 'update'])->name('desks.members.update');
         Route::delete('desks/{desk}/members/{user}', [DeskMemberController::class, 'destroy'])->name('desks.members.destroy');
+
+        Route::post('desks/{desk}/tickets', [TicketController::class, 'store'])->name('desks.tickets.store');
+        Route::apiResource('tickets', TicketController::class)->except('store');
+        Route::post('tickets/{ticket}/restore', [TicketController::class, 'restore'])->withTrashed()->name('tickets.restore');
+        Route::put('tickets/{ticket}/desk', [TicketDeskController::class, 'update'])->name('tickets.desk.update');
+        Route::put('tickets/{ticket}/assignees', [TicketAssigneeController::class, 'update'])->name('tickets.assignees.update');
+        Route::put('tickets/{ticket}/tags', [TicketTagController::class, 'update'])->name('tickets.tags.update');
+        Route::get('tickets/{ticket}/events', [TicketEventController::class, 'index'])->name('tickets.events.index');
     });
