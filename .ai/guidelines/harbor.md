@@ -29,6 +29,7 @@ An open-source helpdesk. This app is the Inertia web UI and the backend. Other c
 | `tkt_` | `Ticket`    |
 | `tev_` | `TicketEvent` |
 | `tag_` | `Tag`       |
+| `cmt_` | `TicketComment` |
 
 ## Tenancy
 

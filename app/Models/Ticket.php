@@ -66,6 +66,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read int|null $events_count
  * @property-read Collection<int, Tag> $tags
  * @property-read int|null $tags_count
+ * @property-read Collection<int, TicketComment> $comments
+ * @property-read int|null $comments_count
  *
  * @mixin \Eloquent
  */
@@ -133,6 +135,16 @@ class Ticket extends Model
     public function assignees(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'ticket_user')->withTimestamps();
+    }
+
+    /**
+     * The conversation, oldest first.
+     *
+     * @return HasMany<TicketComment, $this>
+     */
+    public function comments(): HasMany
+    {
+        return $this->hasMany(TicketComment::class)->oldest()->orderBy('id');
     }
 
     /**
