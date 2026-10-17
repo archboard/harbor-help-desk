@@ -4,6 +4,6 @@ namespace App\Enums;
 
 enum DeskRole: string
 {
-    case Lead = 'lead';
-    case Agent = 'agent';
+    case LEAD = 'lead';
+    case AGENT = 'agent';
 }
