@@ -22,7 +22,8 @@ class CreateTicket
 
     /**
      * Open a ticket on an active desk. The requester is an existing contact (`requester_id`) or is
-     * found or created by email (`requester.email`, `requester.name`).
+     * found or created by email (`requester.email`, `requester.name`). `custom_fields` maps the
+     * desk's enabled field ids to values.
      *
      * @param  array<string, mixed>  $input
      */
@@ -40,11 +41,13 @@ class CreateTicket
             'requester.email' => ['required_with:requester', 'email', 'max:255'],
             'requester.name' => ['required_with:requester', 'string', 'max:255'],
             'assignee_ids' => ['sometimes', 'array'],
+            ...CustomFieldRules::for($desk, creating: true),
         ])->validate();
 
         return DB::transaction(function () use ($actor, $desk, $validated): Ticket {
             $ticket = Ticket::create([
                 ...Arr::only($validated, ['subject', 'status', 'priority', 'due_at']),
+                'custom_fields' => CustomFieldRules::cast($desk, $validated['custom_fields'] ?? []),
                 'desk_id' => $desk->getKey(),
                 'requester_id' => $validated['requester_id'] ?? $this->findOrCreateContact($validated['requester'])->getKey(),
             ]);

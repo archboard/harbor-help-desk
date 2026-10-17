@@ -12,6 +12,7 @@ use GrantHolle\Scru128Laravel\Concerns\HasScru128Ids;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -72,6 +73,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read int|null $attachments_count
  * @property-read Collection<int, TicketReminder> $reminders
  * @property-read int|null $reminders_count
+ * @property array<string, mixed> $custom_fields
+ *
+ * @method static Builder<static>|Ticket whereCustomFields($value)
  *
  * @mixin \Eloquent
  */
@@ -87,6 +91,7 @@ class Ticket extends Model
     protected $attributes = [
         'status' => TicketStatus::OPEN->value,
         'priority' => TicketPriority::NORMAL->value,
+        'custom_fields' => '{}',
     ];
 
     public function idPrefix(): string
@@ -197,6 +202,20 @@ class Ticket extends Model
         $event->ticket()->associate($this)->saveOrFail();
 
         return $event;
+    }
+
+    /**
+     * Custom field values keyed by field id. Stored as a JSON object even when empty, which
+     * the plain `array` cast would write as `[]`.
+     *
+     * @return Attribute<array<string, mixed>, array<string, mixed>>
+     */
+    protected function customFields(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value): array => json_decode($value ?? '{}', true),
+            set: fn (array $value): string => json_encode((object) $value, JSON_THROW_ON_ERROR),
+        );
     }
 
     /**

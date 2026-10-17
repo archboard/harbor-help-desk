@@ -97,6 +97,9 @@ class TicketEvent extends Model
                 ? __(':actor removed the due date.', $replace)
                 : __(':actor set the due date to :to.', $replace + ['to' => CarbonImmutable::parse($properties['to'])->toDayDateTimeString()]),
             TicketEventType::DESK_CHANGED => __(':actor moved the ticket to :to.', $replace + ['to' => $properties['to']]),
+            TicketEventType::CUSTOM_FIELD_CHANGED => $properties['to'] === null
+                ? __(':actor cleared :name.', $replace + ['name' => $properties['name']])
+                : __(':actor set :name to :to.', $replace + ['name' => $properties['name'], 'to' => $this->customFieldValue($properties['to'])]),
             TicketEventType::ASSIGNEE_ADDED => __(':actor assigned :name.', $replace + ['name' => $properties['name']]),
             TicketEventType::ASSIGNEE_REMOVED => __(':actor unassigned :name.', $replace + ['name' => $properties['name']]),
             TicketEventType::TAG_ADDED => __(':actor added the tag “:name”.', $replace + ['name' => $properties['name']]),
@@ -110,6 +113,18 @@ class TicketEvent extends Model
             TicketEventType::REMINDER_SET => __(':actor set a reminder for :at.', $replace + ['at' => CarbonImmutable::parse($properties['remind_at'])->toDayDateTimeString()]),
             TicketEventType::DELETED => __(':actor deleted the ticket.', $replace),
             TicketEventType::RESTORED => __(':actor restored the ticket.', $replace),
+        };
+    }
+
+    /**
+     * A custom field value as text: Yes or No for a checkbox, a comma-separated list for a multi-select.
+     */
+    protected function customFieldValue(mixed $value): string
+    {
+        return match (true) {
+            is_bool($value) => $value ? __('Yes') : __('No'),
+            is_array($value) => implode(', ', $value),
+            default => (string) $value,
         };
     }
 

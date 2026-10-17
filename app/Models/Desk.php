@@ -48,6 +48,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *
  * @method static Builder<static>|Desk visibleTo(\App\Models\User $user)
  *
+ * @property-read Collection<int, CustomField> $customFields
+ * @property-read int|null $custom_fields_count
+ *
  * @mixin \Eloquent
  */
 #[Unguarded]
@@ -92,5 +95,17 @@ class Desk extends Model
             ->using(DeskUser::class)
             ->withPivot('role')
             ->withTimestamps();
+    }
+
+    /**
+     * The custom fields this desk's tickets use, in display order.
+     *
+     * @return BelongsToMany<CustomField, $this>
+     */
+    public function customFields(): BelongsToMany
+    {
+        return $this->belongsToMany(CustomField::class, 'custom_field_desk')
+            ->orderBy('position')
+            ->orderBy('custom_fields.id');
     }
 }

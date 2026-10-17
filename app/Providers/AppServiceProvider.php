@@ -6,6 +6,7 @@ use App\Http\Controllers\OAuth\ApproveAuthorizationController;
 use App\Http\Controllers\OAuth\AuthorizationController;
 use App\Models\Attachment;
 use App\Models\Contact;
+use App\Models\CustomField;
 use App\Models\Desk;
 use App\Models\Passkey;
 use App\Models\Tag;
@@ -78,6 +79,7 @@ class AppServiceProvider extends ServiceProvider
             'ticket_comment' => TicketComment::class,
             'attachment' => Attachment::class,
             'ticket_reminder' => TicketReminder::class,
+            'custom_field' => CustomField::class,
         ]);
 
         Passport::tokensExpireIn(CarbonImmutable::now()->addHour());

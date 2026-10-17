@@ -24,6 +24,7 @@ class TicketResource extends JsonResource
             'priority' => $this->priority->value,
             'desk_id' => $this->desk_id,
             'due_at' => $this->due_at?->toIso8601String(),
+            'custom_fields' => (object) $this->custom_fields,
             'requester' => new ContactResource($this->whenLoaded('requester')),
             'assignees' => UserResource::collection($this->whenLoaded('assignees')),
             'tags' => TagResource::collection($this->whenLoaded('tags')),

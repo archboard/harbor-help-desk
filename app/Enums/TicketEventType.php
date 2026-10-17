@@ -10,6 +10,7 @@ enum TicketEventType: string
     case PRIORITY_CHANGED = 'priority_changed';
     case DUE_DATE_CHANGED = 'due_date_changed';
     case DESK_CHANGED = 'desk_changed';
+    case CUSTOM_FIELD_CHANGED = 'custom_field_changed';
     case ASSIGNEE_ADDED = 'assignee_added';
     case ASSIGNEE_REMOVED = 'assignee_removed';
     case TAG_ADDED = 'tag_added';

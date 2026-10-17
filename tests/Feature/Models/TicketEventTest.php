@@ -21,6 +21,8 @@ test('events describe what happened in a sentence', function (TicketEventType $t
     'due date set' => [TicketEventType::DUE_DATE_CHANGED, ['from' => null, 'to' => '2026-11-02T15:00:00+00:00'], 'Jane Doe set the due date to Mon, Nov 2, 2026 3:00 PM.'],
     'due date removed' => [TicketEventType::DUE_DATE_CHANGED, ['from' => '2026-11-02T15:00:00+00:00', 'to' => null], 'Jane Doe removed the due date.'],
     'desk' => [TicketEventType::DESK_CHANGED, ['from' => 'North', 'to' => 'South'], 'Jane Doe moved the ticket to South.'],
+    'custom field set' => [TicketEventType::CUSTOM_FIELD_CHANGED, ['name' => 'Order number', 'from' => null, 'to' => 'ACME-42'], 'Jane Doe set Order number to ACME-42.'],
+    'custom field cleared' => [TicketEventType::CUSTOM_FIELD_CHANGED, ['name' => 'Order number', 'from' => 'ACME-42', 'to' => null], 'Jane Doe cleared Order number.'],
     'assigned' => [TicketEventType::ASSIGNEE_ADDED, ['user_id' => 'usr_x', 'name' => 'John Smith'], 'Jane Doe assigned John Smith.'],
     'unassigned' => [TicketEventType::ASSIGNEE_REMOVED, ['user_id' => 'usr_x', 'name' => 'John Smith'], 'Jane Doe unassigned John Smith.'],
     'tag added' => [TicketEventType::TAG_ADDED, ['name' => 'billing'], 'Jane Doe added the tag “billing”.'],

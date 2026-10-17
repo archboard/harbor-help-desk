@@ -24,7 +24,7 @@ class DeskController extends Controller
         Gate::authorize('viewAny', Desk::class);
 
         return DeskResource::collection(
-            Desk::visibleTo($request->user())->orderBy('name')->paginate(),
+            Desk::visibleTo($request->user())->with('customFields')->orderBy('name')->paginate(),
         );
     }
 
@@ -37,7 +37,7 @@ class DeskController extends Controller
     {
         Gate::authorize('view', $desk);
 
-        return new DeskResource($desk);
+        return new DeskResource($desk->load('customFields'));
     }
 
     public function update(Request $request, Desk $desk, UpdateDesk $updateDesk): DeskResource

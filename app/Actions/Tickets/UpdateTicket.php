@@ -8,6 +8,7 @@ use App\Enums\TicketStatus;
 use App\Models\Ticket;
 use App\Models\User;
 use Closure;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
@@ -17,7 +18,8 @@ class UpdateTicket
 {
     /**
      * Change a ticket's fields, recording one event per field that actually changed.
-     * Moving it to another desk is {@see MoveTicket}.
+     * Moving it to another desk is {@see MoveTicket}. `custom_fields` is patched: submitted
+     * ids are set, or removed when null, and the rest are left alone.
      *
      * @param  array<string, mixed>  $input
      */
@@ -30,19 +32,57 @@ class UpdateTicket
             'status' => ['sometimes', 'required', Rule::enum(TicketStatus::class)],
             'priority' => ['sometimes', 'required', Rule::enum(TicketPriority::class)],
             'due_at' => ['sometimes', 'nullable', 'date'],
+            ...CustomFieldRules::for($ticket->desk, creating: false),
         ])->validate();
 
+        $incoming = Arr::pull($validated, 'custom_fields', []);
         $ticket->fill($validated);
 
-        DB::transaction(function () use ($actor, $ticket): void {
+        DB::transaction(function () use ($actor, $ticket, $incoming): void {
             foreach ($this->changes($ticket) as [$type, $properties]) {
                 $ticket->recordEvent($type, $actor, $properties);
             }
+
+            $this->updateCustomFields($actor, $ticket, $incoming);
 
             $ticket->save();
         });
 
         return $ticket;
+    }
+
+    /**
+     * Merge the submitted values into the ticket's, removing a field set to null, and record
+     * an event for each value that changed.
+     *
+     * @param  array<string, mixed>  $incoming
+     */
+    protected function updateCustomFields(User $actor, Ticket $ticket, array $incoming): void
+    {
+        $old = $ticket->custom_fields;
+        $new = array_diff_key($old, $incoming) + CustomFieldRules::cast($ticket->desk, $incoming);
+
+        // ponytail: moving a ticket keeps values for fields the new desk hasn't enabled. They're
+        // harmless; strip them in MoveTicket if that ever matters.
+        $changed = false;
+
+        foreach ($ticket->desk->customFields->whereIn('id', array_keys($incoming)) as $field) {
+            if (($old[$field->id] ?? null) === ($new[$field->id] ?? null)) {
+                continue;
+            }
+
+            $changed = true;
+            $ticket->recordEvent(TicketEventType::CUSTOM_FIELD_CHANGED, $actor, [
+                'field_id' => $field->id,
+                'name' => $field->name,
+                'from' => $old[$field->id] ?? null,
+                'to' => $new[$field->id] ?? null,
+            ]);
+        }
+
+        if ($changed) {
+            $ticket->custom_fields = $new;
+        }
     }
 
     /**

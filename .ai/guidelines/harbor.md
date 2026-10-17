@@ -26,6 +26,7 @@ An open-source helpdesk. This app is the Inertia web UI and the backend. Other c
 | `pky_` | `Passkey`   |
 | `wsp_` | `Workspace` |
 | `dsk_` | `Desk`      |
+| `cfd_` | `CustomField` |
 | `ctc_` | `Contact`   |
 | `tkt_` | `Ticket`    |
 | `tev_` | `TicketEvent` |
