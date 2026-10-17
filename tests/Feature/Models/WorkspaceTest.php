@@ -7,9 +7,9 @@ use App\Models\Workspace;
 test('agents join workspaces with a role on the pivot', function () {
     $user = User::factory()->create();
     $workspace = Workspace::factory()
-        ->hasAttached($user, ['role' => WorkspaceRole::Admin->value])
+        ->hasAttached($user, ['role' => WorkspaceRole::ADMIN->value])
         ->create();
 
-    expect($user->workspaces->sole()->pivot->role)->toBe(WorkspaceRole::Admin);
+    expect($user->workspaces->sole()->pivot->role)->toBe(WorkspaceRole::ADMIN);
     expect($workspace->users->sole()->is($user))->toBeTrue();
 });

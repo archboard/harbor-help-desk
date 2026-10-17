@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 use Spatie\Multitenancy\Concerns\UsesMultitenancyConfig;
 use Spatie\Multitenancy\Contracts\IsTenant;
 use Spatie\Multitenancy\Models\Concerns\ImplementsTenant;
@@ -39,6 +40,9 @@ use Spatie\Multitenancy\Models\Concerns\ImplementsTenant;
  * @property-read Collection<int, Desk> $desks
  * @property-read int|null $desks_count
  * @property-read WorkspaceUser|null $pivot
+ * @property int $next_ticket_number
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereNextTicketNumber($value)
  *
  * @mixin \Eloquent
  */
@@ -74,6 +78,18 @@ class Workspace extends Model implements IsTenant
     public function tokenScope(): string
     {
         return self::TOKEN_SCOPE_PREFIX.$this->getKey();
+    }
+
+    /**
+     * Claim the workspace's next ticket number. The single UPDATE is atomic, so concurrent
+     * tickets never share a number.
+     */
+    public static function allocateTicketNumber(string $workspaceId): int
+    {
+        return (int) DB::selectOne(
+            'UPDATE workspaces SET next_ticket_number = next_ticket_number + 1 WHERE id = ? RETURNING next_ticket_number - 1 AS number',
+            [$workspaceId],
+        )->number;
     }
 
     /**

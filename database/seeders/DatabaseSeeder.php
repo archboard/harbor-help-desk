@@ -25,7 +25,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         Workspace::factory()
-            ->hasAttached($user, ['role' => WorkspaceRole::Owner->value])
+            ->hasAttached($user, ['role' => WorkspaceRole::OWNER->value])
             ->create(['name' => 'Demo', 'subdomain' => 'demo']);
     }
 }

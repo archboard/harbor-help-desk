@@ -12,9 +12,9 @@ beforeEach(function () {
 
     $this->user = User::factory()->create();
     $this->acme = Workspace::factory()->create(['subdomain' => 'acme']);
-    $this->acme->users()->attach($this->user, ['role' => WorkspaceRole::Agent]);
+    $this->acme->users()->attach($this->user, ['role' => WorkspaceRole::AGENT]);
     $this->other = Workspace::factory()->create(['subdomain' => 'other']);
-    $this->other->users()->attach($this->user, ['role' => WorkspaceRole::Agent]);
+    $this->other->users()->attach($this->user, ['role' => WorkspaceRole::AGENT]);
 
     $this->client = Client::factory()->asPublic()->create([
         'redirect_uris' => ['https://client.test/callback'],

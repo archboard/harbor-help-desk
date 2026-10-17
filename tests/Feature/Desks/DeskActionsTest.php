@@ -19,10 +19,10 @@ uses(InWorkspace::class);
 
 beforeEach(function () {
     $this->admin = User::factory()->create();
-    $this->workspace->users()->attach($this->admin, ['role' => WorkspaceRole::Admin]);
+    $this->workspace->users()->attach($this->admin, ['role' => WorkspaceRole::ADMIN]);
 
     $this->agent = User::factory()->create();
-    $this->workspace->users()->attach($this->agent, ['role' => WorkspaceRole::Agent]);
+    $this->workspace->users()->attach($this->agent, ['role' => WorkspaceRole::AGENT]);
 });
 
 test('creating a desk defaults the slug from the name', function () {
@@ -45,7 +45,7 @@ test('agents cannot create desks', function () {
 
 test('desk leads can update their desk', function () {
     $desk = Desk::factory()->create();
-    app(SetDeskMember::class)->handle($this->admin, $desk, $this->agent, ['role' => DeskRole::Lead->value]);
+    app(SetDeskMember::class)->handle($this->admin, $desk, $this->agent, ['role' => DeskRole::LEAD->value]);
 
     app(UpdateDesk::class)->handle($this->agent, $desk, ['name' => 'Renamed']);
 
@@ -80,11 +80,11 @@ test('archived desks can be restored unless their slug was taken', function () {
 test('members can be added, have their role changed and be removed', function () {
     $desk = Desk::sole();
 
-    app(SetDeskMember::class)->handle($this->admin, $desk, $this->agent, ['role' => DeskRole::Agent->value]);
-    expect($this->agent->deskRole($desk))->toBe(DeskRole::Agent);
+    app(SetDeskMember::class)->handle($this->admin, $desk, $this->agent, ['role' => DeskRole::AGENT->value]);
+    expect($this->agent->deskRole($desk))->toBe(DeskRole::AGENT);
 
-    app(SetDeskMember::class)->handle($this->admin, $desk, $this->agent, ['role' => DeskRole::Lead->value]);
-    expect($this->agent->deskRole($desk))->toBe(DeskRole::Lead);
+    app(SetDeskMember::class)->handle($this->admin, $desk, $this->agent, ['role' => DeskRole::LEAD->value]);
+    expect($this->agent->deskRole($desk))->toBe(DeskRole::LEAD);
     $this->assertDatabaseHas('desk_user', ['desk_id' => $desk->id, 'workspace_id' => $this->workspace->id]);
 
     app(RemoveDeskMember::class)->handle($this->admin, $desk, $this->agent);
@@ -93,8 +93,8 @@ test('members can be added, have their role changed and be removed', function ()
 
 test('only workspace members can be added to a desk', function () {
     $stranger = User::factory()->create();
-    Workspace::factory()->create()->users()->attach($stranger, ['role' => WorkspaceRole::Agent]);
+    Workspace::factory()->create()->users()->attach($stranger, ['role' => WorkspaceRole::AGENT]);
 
-    expect(fn () => app(SetDeskMember::class)->handle($this->admin, Desk::sole(), $stranger, ['role' => DeskRole::Agent->value]))
+    expect(fn () => app(SetDeskMember::class)->handle($this->admin, Desk::sole(), $stranger, ['role' => DeskRole::AGENT->value]))
         ->toThrow(ValidationException::class);
 });

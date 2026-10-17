@@ -12,7 +12,7 @@ uses(InWorkspace::class);
 
 beforeEach(function () {
     $this->user = User::factory()->create();
-    $this->workspace->users()->attach($this->user, ['role' => WorkspaceRole::Agent]);
+    $this->workspace->users()->attach($this->user, ['role' => WorkspaceRole::AGENT]);
 });
 
 test('api tokens page requires password confirmation', function () {

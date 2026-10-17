@@ -10,7 +10,7 @@ beforeEach(function () {
 
     $this->acme = Workspace::factory()->create(['subdomain' => 'acme']);
     $this->user = User::factory()->create();
-    $this->acme->users()->attach($this->user, ['role' => WorkspaceRole::Agent]);
+    $this->acme->users()->attach($this->user, ['role' => WorkspaceRole::AGENT]);
 });
 
 test('rejects requests without a token', function () {
@@ -44,7 +44,7 @@ test('rejects a user calling a workspace they do not belong to', function () {
 
 test('rejects a token scoped to another workspace the user also belongs to', function () {
     $other = Workspace::factory()->create(['subdomain' => 'other']);
-    $other->users()->attach($this->user, ['role' => WorkspaceRole::Agent]);
+    $other->users()->attach($this->user, ['role' => WorkspaceRole::AGENT]);
     Passport::actingAs($this->user, [$this->acme->tokenScope()]);
 
     $this->getJson('http://other.harbor.test/api/v1/user')->assertForbidden();

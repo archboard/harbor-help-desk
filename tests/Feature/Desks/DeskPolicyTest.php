@@ -13,18 +13,18 @@ beforeEach(function () {
     $this->desk = Desk::factory()->create();
 
     $this->admin = User::factory()->create();
-    $this->workspace->users()->attach($this->admin, ['role' => WorkspaceRole::Admin]);
+    $this->workspace->users()->attach($this->admin, ['role' => WorkspaceRole::ADMIN]);
 
     $this->lead = User::factory()->create();
-    $this->workspace->users()->attach($this->lead, ['role' => WorkspaceRole::Agent]);
-    $this->desk->users()->attach($this->lead, ['role' => DeskRole::Lead, 'workspace_id' => $this->workspace->id]);
+    $this->workspace->users()->attach($this->lead, ['role' => WorkspaceRole::AGENT]);
+    $this->desk->users()->attach($this->lead, ['role' => DeskRole::LEAD, 'workspace_id' => $this->workspace->id]);
 
     $this->agent = User::factory()->create();
-    $this->workspace->users()->attach($this->agent, ['role' => WorkspaceRole::Agent]);
-    $this->desk->users()->attach($this->agent, ['role' => DeskRole::Agent, 'workspace_id' => $this->workspace->id]);
+    $this->workspace->users()->attach($this->agent, ['role' => WorkspaceRole::AGENT]);
+    $this->desk->users()->attach($this->agent, ['role' => DeskRole::AGENT, 'workspace_id' => $this->workspace->id]);
 
     $this->bystander = User::factory()->create();
-    $this->workspace->users()->attach($this->bystander, ['role' => WorkspaceRole::Agent]);
+    $this->workspace->users()->attach($this->bystander, ['role' => WorkspaceRole::AGENT]);
 
     $this->outsider = User::factory()->create();
 });
@@ -53,7 +53,7 @@ test('admins see every desk and agents only their own', function () {
 });
 
 test('admins of another workspace have no say over this one', function () {
-    Workspace::factory()->create()->users()->attach($this->outsider, ['role' => WorkspaceRole::Owner]);
+    Workspace::factory()->create()->users()->attach($this->outsider, ['role' => WorkspaceRole::OWNER]);
 
     expect($this->outsider->can('update', $this->desk))->toBeFalse();
     expect(Desk::visibleTo($this->outsider)->count())->toBe(0);

@@ -14,10 +14,10 @@ beforeEach(function () {
     $this->other = Workspace::factory()->create(['subdomain' => 'other']);
 
     $this->admin = User::factory()->create();
-    $this->acme->users()->attach($this->admin, ['role' => WorkspaceRole::Admin]);
+    $this->acme->users()->attach($this->admin, ['role' => WorkspaceRole::ADMIN]);
 
     $this->agent = User::factory()->create();
-    $this->acme->users()->attach($this->agent, ['role' => WorkspaceRole::Agent]);
+    $this->acme->users()->attach($this->agent, ['role' => WorkspaceRole::AGENT]);
 
     $this->acmeDesk = $this->acme->execute(fn () => Desk::sole());
     $this->otherDesk = $this->other->execute(fn () => Desk::sole());
@@ -69,13 +69,13 @@ test('admins create desks and agents cannot', function () {
 });
 
 test('leads update their desk and agents cannot', function () {
-    $this->acmeDesk->users()->attach($this->agent, ['role' => DeskRole::Agent, 'workspace_id' => $this->acme->id]);
+    $this->acmeDesk->users()->attach($this->agent, ['role' => DeskRole::AGENT, 'workspace_id' => $this->acme->id]);
 
     actAs($this->agent, $this->acme);
     $this->getJson("http://acme.harbor.test/api/v1/desks/{$this->acmeDesk->id}")->assertOk();
     $this->patchJson("http://acme.harbor.test/api/v1/desks/{$this->acmeDesk->id}", ['name' => 'Renamed'])->assertForbidden();
 
-    $this->acmeDesk->users()->updateExistingPivot($this->agent->id, ['role' => DeskRole::Lead]);
+    $this->acmeDesk->users()->updateExistingPivot($this->agent->id, ['role' => DeskRole::LEAD]);
 
     $this->patchJson("http://acme.harbor.test/api/v1/desks/{$this->acmeDesk->id}", ['name' => 'Renamed'])
         ->assertOk()

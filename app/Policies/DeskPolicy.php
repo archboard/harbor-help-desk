@@ -34,7 +34,7 @@ class DeskPolicy
 
     public function update(User $user, Desk $desk): bool
     {
-        return $this->isWorkspaceAdmin($user, $desk) || $user->deskRole($desk) === DeskRole::Lead;
+        return $this->isWorkspaceAdmin($user, $desk) || $user->deskRole($desk) === DeskRole::LEAD;
     }
 
     public function manageMembers(User $user, Desk $desk): bool

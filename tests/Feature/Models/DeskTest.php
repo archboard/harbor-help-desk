@@ -40,12 +40,12 @@ test('slugs are unique among active desks only', function () {
 
 test('users expose their workspace and desk roles', function () {
     $user = User::factory()->create();
-    $workspace = Workspace::factory()->hasAttached($user, ['role' => WorkspaceRole::Admin->value])->create()->makeCurrent();
+    $workspace = Workspace::factory()->hasAttached($user, ['role' => WorkspaceRole::ADMIN->value])->create()->makeCurrent();
     $desk = Desk::factory()->create();
-    $desk->users()->attach($user, ['role' => DeskRole::Lead->value, 'workspace_id' => $workspace->id]);
+    $desk->users()->attach($user, ['role' => DeskRole::LEAD->value, 'workspace_id' => $workspace->id]);
 
-    expect($user->workspaceRole($workspace))->toBe(WorkspaceRole::Admin);
-    expect($user->deskRole($desk))->toBe(DeskRole::Lead);
+    expect($user->workspaceRole($workspace))->toBe(WorkspaceRole::ADMIN);
+    expect($user->deskRole($desk))->toBe(DeskRole::LEAD);
     expect($user->deskRole(Desk::where('slug', 'default')->sole()))->toBeNull();
     expect($user->workspaceRole(Workspace::factory()->create()))->toBeNull();
 });

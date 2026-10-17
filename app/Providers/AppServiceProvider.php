@@ -7,6 +7,7 @@ use App\Http\Controllers\OAuth\AuthorizationController;
 use App\Models\Contact;
 use App\Models\Desk;
 use App\Models\Passkey;
+use App\Models\Ticket;
 use App\Models\User;
 use App\Models\Workspace;
 use App\OAuth\WorkspaceScopeRepository;
@@ -66,6 +67,7 @@ class AppServiceProvider extends ServiceProvider
             'passkey' => Passkey::class,
             'desk' => Desk::class,
             'contact' => Contact::class,
+            'ticket' => Ticket::class,
         ]);
 
         Passport::tokensExpireIn(CarbonImmutable::now()->addHour());

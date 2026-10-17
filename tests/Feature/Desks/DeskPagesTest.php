@@ -13,10 +13,10 @@ beforeEach(function () {
     $this->desk = Desk::sole();
 
     $this->admin = User::factory()->create();
-    $this->workspace->users()->attach($this->admin, ['role' => WorkspaceRole::Admin]);
+    $this->workspace->users()->attach($this->admin, ['role' => WorkspaceRole::ADMIN]);
 
     $this->agent = User::factory()->create();
-    $this->workspace->users()->attach($this->agent, ['role' => WorkspaceRole::Agent]);
+    $this->workspace->users()->attach($this->agent, ['role' => WorkspaceRole::AGENT]);
 });
 
 test('admins see every desk, archived ones and the create form', function () {
@@ -34,7 +34,7 @@ test('admins see every desk, archived ones and the create form', function () {
 
 test('agents only see their own desks', function () {
     $other = Desk::factory()->create();
-    $other->users()->attach($this->agent, ['role' => DeskRole::Agent, 'workspace_id' => $this->workspace->id]);
+    $other->users()->attach($this->agent, ['role' => DeskRole::AGENT, 'workspace_id' => $this->workspace->id]);
 
     $this->actingAs($this->agent)
         ->get(route('desks.index'))
@@ -47,7 +47,7 @@ test('agents only see their own desks', function () {
 });
 
 test('the desk page lists members, candidates and abilities', function () {
-    $this->desk->users()->attach($this->agent, ['role' => DeskRole::Lead, 'workspace_id' => $this->workspace->id]);
+    $this->desk->users()->attach($this->agent, ['role' => DeskRole::LEAD, 'workspace_id' => $this->workspace->id]);
 
     $this->actingAs($this->admin)
         ->get(route('desks.show', $this->desk))
@@ -66,7 +66,7 @@ test('desks and members are managed through the web routes', function () {
     $desk = Desk::where('slug', 'north-high')->sole();
 
     $this->put(route('desks.members.update', [$desk, $this->agent]), ['role' => 'agent'])->assertRedirect();
-    expect($this->agent->deskRole($desk))->toBe(DeskRole::Agent);
+    expect($this->agent->deskRole($desk))->toBe(DeskRole::AGENT);
 
     $this->delete(route('desks.destroy', $desk))->assertRedirect(route('desks.index'));
     expect($desk->fresh()->trashed())->toBeTrue();
