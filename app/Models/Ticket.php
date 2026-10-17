@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\TicketEventType;
 use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
 use App\Models\Concerns\BelongsToWorkspace;
@@ -16,6 +17,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -59,6 +61,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static Builder<static>|Ticket whereWorkspaceId($value)
  * @method static Builder<static>|Ticket withTrashed(bool $withTrashed = true)
  * @method static Builder<static>|Ticket withoutTrashed()
+ *
+ * @property-read Collection<int, TicketEvent> $events
+ * @property-read int|null $events_count
  *
  * @mixin \Eloquent
  */
@@ -126,6 +131,30 @@ class Ticket extends Model
     public function assignees(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'ticket_user')->withTimestamps();
+    }
+
+    /**
+     * The audit trail, oldest first.
+     *
+     * @return HasMany<TicketEvent, $this>
+     */
+    public function events(): HasMany
+    {
+        return $this->hasMany(TicketEvent::class)->oldest()->orderBy('id');
+    }
+
+    /**
+     * Append an entry to the audit trail. A null actor means Harbor did it.
+     *
+     * @param  array<string, mixed>  $properties
+     */
+    public function recordEvent(TicketEventType $type, User|Contact|null $actor, array $properties = []): TicketEvent
+    {
+        $event = new TicketEvent(['type' => $type, 'properties' => $properties]);
+        $event->actor()->associate($actor);
+        $event->ticket()->associate($this)->saveOrFail();
+
+        return $event;
     }
 
     /**

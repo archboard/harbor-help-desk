@@ -26,6 +26,7 @@ An open-source helpdesk. This app is the Inertia web UI and the backend. Other c
 | `dsk_` | `Desk`      |
 | `ctc_` | `Contact`   |
 | `tkt_` | `Ticket`    |
+| `tev_` | `TicketEvent` |
 
 ## Tenancy
 
@@ -48,6 +49,7 @@ Postgres is the only supported database, so use its features wherever they help:
 - Use `whereLike()` for case-insensitive matching (ILIKE).
 - Use `upsert()` for bulk writes, and `lockForUpdate()` plus `skipLocked()` for work-claiming queries such as ticket assignment.
 - Use string columns with PHP backed enums, not native Postgres enum types. Enum case names are ALL_CAPS (`TicketStatus::ON_HOLD`) with lowercase snake_case values (`on_hold`). This overrides the TitleCase rule in the PHP guidelines.
+- Enums shown to people use `App\Enums\Concerns\HasLabels` and implement `label()` as a `match` returning literal `__('...')` strings, so translation tooling finds them. Never build translation keys dynamically.
 - Use `text()` when the length is unbounded. Don't pick arbitrary `string()` lengths.
 
 ## Self-Hosting
