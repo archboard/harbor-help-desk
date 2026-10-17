@@ -14,6 +14,7 @@ An open-source helpdesk. This app is the Inertia web UI and the backend. Other c
 - Postgres does not index foreign keys automatically, so add an index to each FK unless a composite index already starts with that column.
 - Vendor models (e.g. `Laravel\Passkeys\Passkey`) get an `App\Models` subclass that uses the trait, registered through the package's `use*Model()` hook.
 - Exception: Passport's tables and models keep their default IDs (UUID clients, string tokens). Only their `user_id` columns use `foreignScru128('user_id', 'usr_')`.
+- Exception: Laravel's `notifications` table keeps its UUID id, since Laravel generates it. Its `notifiable_id` is `string(40)`.
 - For polymorphic relations, use `string('{name}_type')` and `string('{name}_id', 40)` with a composite index, and register every model in `Relation::enforceMorphMap()`.
 - Models use `#[Unguarded]` instead of `#[Fillable]`. Actions only ever pass validated or explicitly built arrays to `create()`, `fill()` and `update()`, never raw request input.
 - Treat IDs as strings everywhere: `string` type hints and `string` in TypeScript, never `int`.
@@ -31,6 +32,7 @@ An open-source helpdesk. This app is the Inertia web UI and the backend. Other c
 | `tag_` | `Tag`       |
 | `cmt_` | `TicketComment` |
 | `att_` | `Attachment` |
+| `rmd_` | `TicketReminder` |
 
 ## Tenancy
 
@@ -51,7 +53,7 @@ Postgres is the only supported database, so use its features wherever they help:
 - Full-text search: a `$table->fullText()` index and `whereFullText()`, before considering Scout.
 - Partial indexes (e.g. `WHERE deleted_at IS NULL`, `WHERE status = 'open'`) and functional indexes (`lower(email)`) go in the migration through `DB::statement()`.
 - Use `whereLike()` for case-insensitive matching (ILIKE).
-- Use `upsert()` for bulk writes, and `lockForUpdate()` plus `skipLocked()` for work-claiming queries such as ticket assignment.
+- Use `upsert()` for bulk writes, and `lock('for update skip locked')` for work-claiming queries such as ticket assignment.
 - Use string columns with PHP backed enums, not native Postgres enum types. Enum case names are ALL_CAPS (`TicketStatus::ON_HOLD`) with lowercase snake_case values (`on_hold`). This overrides the TitleCase rule in the PHP guidelines.
 - Enums shown to people use `App\Enums\Concerns\HasLabels` and implement `label()` as a `match` returning literal `__('...')` strings, so translation tooling finds them. Never build translation keys dynamically.
 - Use `text()` when the length is unbounded. Don't pick arbitrary `string()` lengths.

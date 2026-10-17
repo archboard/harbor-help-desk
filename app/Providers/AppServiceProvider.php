@@ -12,6 +12,7 @@ use App\Models\Tag;
 use App\Models\Ticket;
 use App\Models\TicketComment;
 use App\Models\TicketEvent;
+use App\Models\TicketReminder;
 use App\Models\User;
 use App\Models\Workspace;
 use App\OAuth\WorkspaceScopeRepository;
@@ -76,6 +77,7 @@ class AppServiceProvider extends ServiceProvider
             'tag' => Tag::class,
             'ticket_comment' => TicketComment::class,
             'attachment' => Attachment::class,
+            'ticket_reminder' => TicketReminder::class,
         ]);
 
         Passport::tokensExpireIn(CarbonImmutable::now()->addHour());
