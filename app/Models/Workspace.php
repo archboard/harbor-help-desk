@@ -5,7 +5,7 @@ namespace App\Models;
 use Carbon\CarbonImmutable;
 use Database\Factories\WorkspaceFactory;
 use GrantHolle\Scru128Laravel\Concerns\HasScru128Ids;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -46,7 +46,7 @@ use Spatie\Multitenancy\Models\Concerns\ImplementsTenant;
  *
  * @mixin \Eloquent
  */
-#[Fillable(['name', 'subdomain'])]
+#[Unguarded]
 class Workspace extends Model implements IsTenant
 {
     /** @use HasFactory<WorkspaceFactory> */

@@ -9,8 +9,8 @@ use App\Models\Concerns\BelongsToWorkspace;
 use Carbon\CarbonImmutable;
 use Database\Factories\TicketFactory;
 use GrantHolle\Scru128Laravel\Concerns\HasScru128Ids;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -64,10 +64,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *
  * @property-read Collection<int, TicketEvent> $events
  * @property-read int|null $events_count
+ * @property-read Collection<int, Tag> $tags
+ * @property-read int|null $tags_count
  *
  * @mixin \Eloquent
  */
-#[Fillable(['desk_id', 'requester_id', 'subject', 'status', 'priority', 'due_at'])]
+#[Unguarded]
 class Ticket extends Model
 {
     /** @use HasFactory<TicketFactory> */
@@ -131,6 +133,14 @@ class Ticket extends Model
     public function assignees(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'ticket_user')->withTimestamps();
+    }
+
+    /**
+     * @return BelongsToMany<Tag, $this>
+     */
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class)->withTimestamps();
     }
 
     /**

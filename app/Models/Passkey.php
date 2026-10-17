@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Carbon\CarbonImmutable;
 use GrantHolle\Scru128Laravel\Concerns\HasScru128Ids;
+use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Laravel\Passkeys\Passkey as BasePasskey;
 
 /**
@@ -32,6 +33,7 @@ use Laravel\Passkeys\Passkey as BasePasskey;
  *
  * @mixin \Eloquent
  */
+#[Unguarded]
 class Passkey extends BasePasskey
 {
     use HasScru128Ids;

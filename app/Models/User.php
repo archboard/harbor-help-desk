@@ -8,8 +8,8 @@ use Carbon\CarbonImmutable;
 use Database\Factories\UserFactory;
 use GrantHolle\Scru128Laravel\Concerns\HasScru128Ids;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -73,7 +73,7 @@ use Spatie\Multitenancy\TenantCollection;
  *
  * @mixin \Eloquent
  */
-#[Fillable(['name', 'email', 'password'])]
+#[Unguarded]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail, OAuthenticatable, PasskeyUser
 {

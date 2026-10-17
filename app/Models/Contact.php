@@ -6,7 +6,7 @@ use App\Models\Concerns\BelongsToWorkspace;
 use Carbon\CarbonImmutable;
 use Database\Factories\ContactFactory;
 use GrantHolle\Scru128Laravel\Concerns\HasScru128Ids;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -34,7 +34,7 @@ use Illuminate\Database\Eloquent\Model;
  *
  * @mixin \Eloquent
  */
-#[Fillable(['name', 'email'])]
+#[Unguarded]
 class Contact extends Model
 {
     /** @use HasFactory<ContactFactory> */

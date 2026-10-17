@@ -4,7 +4,7 @@ namespace Tests\Fixtures;
 
 use App\Models\Concerns\BelongsToWorkspace;
 use GrantHolle\Scru128Laravel\Concerns\HasScru128Ids;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Test-only tenant-owned model for exercising BelongsToWorkspace.
  */
-#[Fillable(['body'])]
+#[Unguarded]
 class WorkspaceNote extends Model
 {
     use BelongsToWorkspace, HasScru128Ids;
