@@ -68,6 +68,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read int|null $tags_count
  * @property-read Collection<int, TicketComment> $comments
  * @property-read int|null $comments_count
+ * @property-read Collection<int, Attachment> $attachments
+ * @property-read int|null $attachments_count
  *
  * @mixin \Eloquent
  */
@@ -145,6 +147,14 @@ class Ticket extends Model
     public function comments(): HasMany
     {
         return $this->hasMany(TicketComment::class)->oldest()->orderBy('id');
+    }
+
+    /**
+     * @return HasMany<Attachment, $this>
+     */
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(Attachment::class)->oldest()->orderBy('id');
     }
 
     /**

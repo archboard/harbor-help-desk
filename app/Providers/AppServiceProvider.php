@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Http\Controllers\OAuth\ApproveAuthorizationController;
 use App\Http\Controllers\OAuth\AuthorizationController;
+use App\Models\Attachment;
 use App\Models\Contact;
 use App\Models\Desk;
 use App\Models\Passkey;
@@ -74,6 +75,7 @@ class AppServiceProvider extends ServiceProvider
             'ticket_event' => TicketEvent::class,
             'tag' => Tag::class,
             'ticket_comment' => TicketComment::class,
+            'attachment' => Attachment::class,
         ]);
 
         Passport::tokensExpireIn(CarbonImmutable::now()->addHour());

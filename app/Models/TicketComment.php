@@ -7,9 +7,11 @@ use Carbon\CarbonImmutable;
 use Database\Factories\TicketCommentFactory;
 use GrantHolle\Scru128Laravel\Concerns\HasScru128Ids;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -50,6 +52,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TicketComment withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TicketComment withoutTrashed()
  *
+ * @property-read Collection<int, Attachment> $attachments
+ * @property-read int|null $attachments_count
+ *
  * @mixin \Eloquent
  */
 #[Unguarded]
@@ -79,6 +84,14 @@ class TicketComment extends Model
     public function author(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    /**
+     * @return HasMany<Attachment, $this>
+     */
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(Attachment::class)->orderBy('id');
     }
 
     public function isWrittenBy(User|Contact $author): bool

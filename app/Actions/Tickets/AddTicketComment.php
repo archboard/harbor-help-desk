@@ -12,8 +12,11 @@ use Illuminate\Support\Facades\Validator;
 
 class AddTicketComment
 {
+    public function __construct(protected AddTicketAttachment $addTicketAttachment) {}
+
     /**
-     * Reply on the ticket, or add an internal note when `is_internal` is true.
+     * Reply on the ticket, or add an internal note when `is_internal` is true. Files in
+     * `attachments` are attached to the comment.
      *
      * @param  array<string, mixed>  $input
      */
@@ -24,6 +27,8 @@ class AddTicketComment
         $validated = Validator::make($input, [
             'body' => ['required', 'string', 'max:65535'],
             'is_internal' => ['sometimes', 'boolean'],
+            'attachments' => ['sometimes', 'array', 'max:20'],
+            'attachments.*' => AddTicketAttachment::rules(),
         ])->validate();
 
         return DB::transaction(function () use ($actor, $ticket, $validated): TicketComment {
@@ -39,6 +44,12 @@ class AddTicketComment
                 $actor,
                 ['comment_id' => $comment->id],
             );
+
+            // ponytail: every file is validated up front, so only a storage error mid-loop rolls back
+            // the comment; files already written then stay on disk. Add an orphan sweep if that bites.
+            foreach ($validated['attachments'] ?? [] as $file) {
+                $this->addTicketAttachment->handle($actor, $ticket, $file, $comment);
+            }
 
             return $comment;
         });
