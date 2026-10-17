@@ -66,3 +66,10 @@ test('agents see tickets on their desks only, including archived desks', functio
     expect(Ticket::visibleTo($users['bystander'])->count())->toBe(0);
     expect($users['agent']->can('view', $ticket->fresh()))->toBeTrue();
 });
+
+test('tickets cannot be opened on an archived desk, even by admins', function () {
+    ['ticket' => $ticket, 'users' => $users] = ticketWithRoles($this->workspace);
+    $ticket->desk->delete();
+
+    expect($users['admin']->can('create', [Ticket::class, $ticket->desk]))->toBeFalse();
+});

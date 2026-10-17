@@ -23,9 +23,12 @@ class TicketPolicy
         return Gate::forUser($user)->allows('view', $ticket->desk);
     }
 
+    /**
+     * Tickets can be opened on, or moved to, active desks only.
+     */
     public function create(User $user, Desk $desk): bool
     {
-        return Gate::forUser($user)->allows('view', $desk);
+        return ! $desk->trashed() && Gate::forUser($user)->allows('view', $desk);
     }
 
     public function update(User $user, Ticket $ticket): bool
