@@ -4,6 +4,7 @@ import { computed } from 'vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { edit as editApiTokens } from '@/routes/api-tokens';
 import { edit as editAppearance } from '@/routes/appearance';
+import { index as customFields } from '@/routes/custom-fields';
 import { edit as editProfile } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
 import { edit as editWorkspace } from '@/routes/workspace';
@@ -17,7 +18,10 @@ const tabs = computed(() => [
   { label: 'API tokens', href: editApiTokens().url },
   { label: 'Appearance', href: editAppearance().url },
   ...(page.props.workspace?.is_admin
-    ? [{ label: 'Workspace', href: editWorkspace().url }]
+    ? [
+        { label: 'Workspace', href: editWorkspace().url },
+        { label: 'Custom fields', href: customFields().url },
+      ]
     : []),
 ]);
 </script>

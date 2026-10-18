@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Settings\ApiTokenController;
+use App\Http\Controllers\Settings\CustomFieldController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
 use App\Http\Controllers\Settings\WorkspaceController;
@@ -33,6 +34,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('settings/workspace', [WorkspaceController::class, 'edit'])->name('workspace.edit');
     Route::patch('settings/workspace', [WorkspaceController::class, 'update'])->name('workspace.update');
+
+    Route::resource('settings/custom-fields', CustomFieldController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->names('custom-fields')
+        ->parameters(['custom-fields' => 'customField']);
 
     Route::inertia('settings/appearance', 'settings/Appearance')->name('appearance.edit');
 });

@@ -20,9 +20,11 @@ class CustomFieldResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'type' => $this->type->value,
+            'type_label' => $this->type->label(),
             'options' => $this->options,
             'is_required' => $this->is_required,
             'position' => $this->position,
+            'desks' => DeskResource::collection($this->whenLoaded('desks')),
         ];
     }
 }
