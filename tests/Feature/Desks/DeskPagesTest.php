@@ -39,7 +39,7 @@ test('agents only see their own desks', function () {
     $this->actingAs($this->agent)
         ->get(route('desks.index'))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('desks', [['id' => $other->id, 'name' => $other->name, 'slug' => $other->slug]])
+            ->where('desks', [['id' => $other->id, 'name' => $other->name, 'slug' => $other->slug, 'archived_at' => null]])
             ->where('archivedDesks', [])
             ->where('canManageDesks', false));
 
@@ -55,7 +55,7 @@ test('the desk page lists members, candidates and abilities', function () {
             ->component('desks/Show')
             ->where('desk.id', $this->desk->id)
             ->where('members.0.role', 'lead')
-            ->where('candidates', [['id' => $this->admin->id, 'name' => $this->admin->name]])
+            ->where('candidates', [['id' => $this->admin->id, 'name' => $this->admin->name, 'email' => $this->admin->email]])
             ->where('can', ['update' => true, 'manageMembers' => true, 'archive' => true]));
 });
 

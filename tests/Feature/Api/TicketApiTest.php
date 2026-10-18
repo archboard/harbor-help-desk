@@ -23,10 +23,10 @@ test('agents open tickets on their desk', function () {
         'assignee_ids' => [$agent->id],
     ])
         ->assertCreated()
-        ->assertJsonPath('data.number', 1)
-        ->assertJsonPath('data.status', 'open')
-        ->assertJsonPath('data.requester.email', 'pat@example.com')
-        ->assertJsonPath('data.assignees.0.id', $agent->id);
+        ->assertJsonPath('number', 1)
+        ->assertJsonPath('status', 'open')
+        ->assertJsonPath('requester.email', 'pat@example.com')
+        ->assertJsonPath('assignees.0.id', $agent->id);
 
     expect(Ticket::sole()->subject)->toBe('Printer jam');
 });
@@ -83,10 +83,10 @@ test('tickets are updated, moved, assigned and tagged, and the history reads bac
     actAs($agent, $workspace);
     $url = "http://acme.harbor.test/api/v1/tickets/{$ticket->id}";
 
-    $this->patchJson($url, ['priority' => 'high'])->assertOk()->assertJsonPath('data.priority', 'high');
-    $this->putJson("{$url}/assignees", ['user_ids' => [$agent->id]])->assertOk()->assertJsonPath('data.0.id', $agent->id);
-    $this->putJson("{$url}/tags", ['names' => ['Billing']])->assertOk()->assertJsonPath('data.0.name', 'Billing');
-    $this->putJson("{$url}/desk", ['desk_id' => $south->id])->assertOk()->assertJsonPath('data.desk_id', $south->id);
+    $this->patchJson($url, ['priority' => 'high'])->assertOk()->assertJsonPath('priority', 'high');
+    $this->putJson("{$url}/assignees", ['user_ids' => [$agent->id]])->assertOk()->assertJsonPath('0.id', $agent->id);
+    $this->putJson("{$url}/tags", ['names' => ['Billing']])->assertOk()->assertJsonPath('0.name', 'Billing');
+    $this->putJson("{$url}/desk", ['desk_id' => $south->id])->assertOk()->assertJsonPath('desk_id', $south->id);
 
     $this->getJson("{$url}/events")
         ->assertOk()
@@ -117,7 +117,7 @@ test('leads delete and restore tickets and agents cannot', function () {
     actAs(deskMember($workspace, $desk, DeskRole::LEAD), $workspace);
     $this->deleteJson($url)->assertNoContent();
     $this->getJson($url)->assertNotFound();
-    $this->postJson("{$url}/restore")->assertOk()->assertJsonPath('data.deleted_at', null);
+    $this->postJson("{$url}/restore")->assertOk()->assertJsonPath('deleted_at', null);
 });
 
 test('workspace members off the desk cannot see its tickets', function () {

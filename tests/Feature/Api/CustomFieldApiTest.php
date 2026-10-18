@@ -27,17 +27,17 @@ test('admins define fields and every member can list them', function () {
 
     $this->postJson('http://acme.harbor.test/api/v1/custom-fields', ['name' => 'Size', 'type' => 'select', 'options' => ['S', 'L'], 'position' => 1])
         ->assertCreated()
-        ->assertJsonPath('data.name', 'Size')
-        ->assertJsonPath('data.type', 'select')
-        ->assertJsonPath('data.options', ['S', 'L'])
-        ->assertJsonPath('data.is_required', false);
+        ->assertJsonPath('name', 'Size')
+        ->assertJsonPath('type', 'select')
+        ->assertJsonPath('options', ['S', 'L'])
+        ->assertJsonPath('is_required', false);
     $this->postJson('http://acme.harbor.test/api/v1/custom-fields', ['name' => 'Order', 'type' => 'text', 'position' => 0])->assertCreated();
 
     actAs($this->agent, $this->acme);
     $this->getJson('http://acme.harbor.test/api/v1/custom-fields')
         ->assertOk()
-        ->assertJsonPath('data.0.name', 'Order')
-        ->assertJsonPath('data.1.name', 'Size');
+        ->assertJsonPath('0.name', 'Order')
+        ->assertJsonPath('1.name', 'Size');
 });
 
 test('fields are validated and agents cannot manage them', function () {
@@ -56,8 +56,8 @@ test('admins rename and delete fields', function () {
 
     $this->patchJson("http://acme.harbor.test/api/v1/custom-fields/{$field->id}", ['name' => 'Order number', 'is_required' => true])
         ->assertOk()
-        ->assertJsonPath('data.name', 'Order number')
-        ->assertJsonPath('data.is_required', true);
+        ->assertJsonPath('name', 'Order number')
+        ->assertJsonPath('is_required', true);
     $this->deleteJson("http://acme.harbor.test/api/v1/custom-fields/{$field->id}")->assertNoContent();
 
     expect(CustomField::withoutGlobalScopes()->count())->toBe(0);
@@ -69,11 +69,11 @@ test('desk leads enable fields on their desk', function () {
 
     $this->putJson("http://acme.harbor.test/api/v1/desks/{$this->desk->id}/custom-fields", ['field_ids' => [$a->id, $b->id]])
         ->assertOk()
-        ->assertJsonPath('data.0.id', $b->id)
-        ->assertJsonPath('data.1.id', $a->id);
+        ->assertJsonPath('0.id', $b->id)
+        ->assertJsonPath('1.id', $a->id);
     $this->getJson("http://acme.harbor.test/api/v1/desks/{$this->desk->id}")
-        ->assertJsonPath('data.custom_fields.0.id', $b->id)
-        ->assertJsonCount(2, 'data.custom_fields');
+        ->assertJsonPath('custom_fields.0.id', $b->id)
+        ->assertJsonCount(2, 'custom_fields');
 
     actAs($this->agent, $this->acme);
     $this->putJson("http://acme.harbor.test/api/v1/desks/{$this->desk->id}/custom-fields", ['field_ids' => []])->assertForbidden();
@@ -88,11 +88,11 @@ test('values are set through the ticket', function () {
     });
     actAs($this->admin, $this->acme);
 
-    $this->getJson("http://acme.harbor.test/api/v1/tickets/{$ticket->id}")->assertJsonPath('data.custom_fields', []);
+    $this->getJson("http://acme.harbor.test/api/v1/tickets/{$ticket->id}")->assertJsonPath('custom_fields', []);
 
     $this->patchJson("http://acme.harbor.test/api/v1/tickets/{$ticket->id}", ['custom_fields' => [$field->id => '12']])
         ->assertOk()
-        ->assertJsonPath("data.custom_fields.{$field->id}", 12);
+        ->assertJsonPath("custom_fields.{$field->id}", 12);
     $this->patchJson("http://acme.harbor.test/api/v1/tickets/{$ticket->id}", ['custom_fields' => [$field->id => 'lots']])
         ->assertUnprocessable()
         ->assertJsonValidationErrors(["custom_fields.{$field->id}"]);

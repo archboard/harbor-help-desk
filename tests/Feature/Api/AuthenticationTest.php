@@ -22,11 +22,11 @@ test('returns the authenticated member', function () {
 
     $this->getJson('http://acme.harbor.test/api/v1/user')
         ->assertOk()
-        ->assertExactJson(['data' => [
+        ->assertExactJson([
             'id' => $this->user->id,
             'name' => $this->user->name,
             'email' => $this->user->email,
-        ]]);
+        ]);
 });
 
 test('rejects a token without the workspace scope', function () {

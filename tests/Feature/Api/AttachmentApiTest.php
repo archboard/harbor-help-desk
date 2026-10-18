@@ -22,16 +22,16 @@ test('agents upload, list, download and remove files', function () {
         'file' => UploadedFile::fake()->createWithContent('notes.txt', 'hello'),
     ], ['Accept' => 'application/json'])
         ->assertCreated()
-        ->assertJsonPath('data.filename', 'notes.txt')
-        ->assertJsonPath('data.size', 5);
+        ->assertJsonPath('filename', 'notes.txt')
+        ->assertJsonPath('size', 5);
 
     $this->getJson("http://acme.harbor.test/api/v1/tickets/{$ticket->id}/attachments")->assertJsonCount(1, 'data');
 
-    $download = $this->get($upload->json('data.download_url'));
+    $download = $this->get($upload->json('download_url'));
     $download->assertOk()->assertDownload('notes.txt');
     expect($download->streamedContent())->toBe('hello');
 
-    $this->deleteJson("http://acme.harbor.test/api/v1/attachments/{$upload->json('data.id')}")->assertNoContent();
+    $this->deleteJson("http://acme.harbor.test/api/v1/attachments/{$upload->json('id')}")->assertNoContent();
     expect(Attachment::count())->toBe(0);
 });
 

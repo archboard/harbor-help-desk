@@ -19,11 +19,11 @@ test('agents set, list and cancel reminders and only see others ticket-level one
 
     $mine = $this->postJson($url, ['remind_at' => now()->addDay()->toIso8601String(), 'note' => 'Follow up'])
         ->assertCreated()
-        ->assertJsonPath('data.for_assignees', false)
-        ->assertJsonPath('data.user_id', $agent->id)
-        ->json('data.id');
+        ->assertJsonPath('for_assignees', false)
+        ->assertJsonPath('user_id', $agent->id)
+        ->json('id');
 
-    $this->getJson($url)->assertOk()->assertJsonPath('data.*.id', [$shared->id, $mine]);
+    $this->getJson($url)->assertOk()->assertJsonPath('*.id', [$shared->id, $mine]);
 
     $this->deleteJson("http://acme.harbor.test/api/v1/reminders/{$mine}")->assertNoContent();
     $this->deleteJson("http://acme.harbor.test/api/v1/reminders/{$shared->id}")->assertForbidden();

@@ -51,7 +51,7 @@ test('a created token is flashed once and authenticates against the api', functi
     $this->withToken($plainTextToken)
         ->getJson('/api/v1/user')
         ->assertOk()
-        ->assertJsonPath('data.id', $this->user->id);
+        ->assertJsonPath('id', $this->user->id);
 });
 
 test('creating a token requires a workspace the user belongs to', function () {

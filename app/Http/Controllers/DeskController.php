@@ -7,8 +7,9 @@ use App\Actions\Desks\CreateDesk;
 use App\Actions\Desks\RestoreDesk;
 use App\Actions\Desks\UpdateDesk;
 use App\Http\Resources\DeskMemberResource;
+use App\Http\Resources\DeskResource;
+use App\Http\Resources\UserResource;
 use App\Models\Desk;
-use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,8 +26,8 @@ class DeskController extends Controller
         $canManageDesks = $request->user()->can('create', Desk::class);
 
         return Inertia::render('desks/Index', [
-            'desks' => Desk::visibleTo($request->user())->orderBy('name')->get(['id', 'name', 'slug']),
-            'archivedDesks' => $canManageDesks ? Desk::onlyTrashed()->orderBy('name')->get(['id', 'name', 'slug']) : [],
+            'desks' => DeskResource::collection(Desk::visibleTo($request->user())->orderBy('name')->get()),
+            'archivedDesks' => DeskResource::collection($canManageDesks ? Desk::onlyTrashed()->orderBy('name')->get() : []),
             'canManageDesks' => $canManageDesks,
         ]);
     }
@@ -48,12 +49,11 @@ class DeskController extends Controller
         $canManageMembers = $request->user()->can('manageMembers', $desk);
 
         return Inertia::render('desks/Show', [
-            'desk' => $desk->only(['id', 'name', 'slug']),
-            'members' => DeskMemberResource::collection($members)->resolve($request),
-            'candidates' => $canManageMembers
-                ? Workspace::current()->users()->whereKeyNot($members->modelKeys())->orderBy('name')->get(['users.id', 'users.name'])
-                    ->map(fn (User $user): array => ['id' => $user->id, 'name' => $user->name])
-                : [],
+            'desk' => new DeskResource($desk),
+            'members' => DeskMemberResource::collection($members),
+            'candidates' => UserResource::collection($canManageMembers
+                ? Workspace::current()->users()->whereKeyNot($members->modelKeys())->orderBy('name')->get()
+                : []),
             'can' => [
                 'update' => $request->user()->can('update', $desk),
                 'manageMembers' => $canManageMembers,

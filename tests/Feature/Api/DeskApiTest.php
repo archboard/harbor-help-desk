@@ -52,7 +52,7 @@ test('admins create desks and agents cannot', function () {
     actAs($this->admin, $this->acme);
     $this->postJson('http://acme.harbor.test/api/v1/desks', ['name' => 'North High'])
         ->assertCreated()
-        ->assertJsonPath('data.slug', 'north-high');
+        ->assertJsonPath('slug', 'north-high');
 
     $this->postJson('http://acme.harbor.test/api/v1/desks', ['name' => ''])
         ->assertUnprocessable()
@@ -73,7 +73,7 @@ test('leads update their desk and agents cannot', function () {
 
     $this->patchJson("http://acme.harbor.test/api/v1/desks/{$this->acmeDesk->id}", ['name' => 'Renamed'])
         ->assertOk()
-        ->assertJsonPath('data.name', 'Renamed');
+        ->assertJsonPath('name', 'Renamed');
 });
 
 test('desks are archived and restored, but never the last one', function () {
@@ -90,7 +90,7 @@ test('desks are archived and restored, but never the last one', function () {
 
     $this->postJson("http://acme.harbor.test/api/v1/desks/{$desk->id}/restore")
         ->assertOk()
-        ->assertJsonPath('data.archived_at', null);
+        ->assertJsonPath('archived_at', null);
 });
 
 test('members are added, listed with their role and removed', function () {

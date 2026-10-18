@@ -6,6 +6,7 @@ An open-source helpdesk. This app is the Inertia web UI and the backend. Other c
 
 - Put business logic in Action classes in `app/Actions`. Controllers, API endpoints, jobs and MCP tools call those Actions. Logic must never exist only in an Inertia controller.
 - Anything a user can do in the UI must also be possible through the versioned JSON API (`/api/v1`, Eloquent API Resources) once that API exists, so other clients and MCP tools have the same capabilities.
+- Model data leaves the app through Eloquent API Resources only, in API responses, Inertia page props and shared props alike. Never hand-build an array of model attributes (`$model->only()`, `get([...])`, `map(fn () => [...])`). Pass the resource itself, not `->resolve()`; resources are unwrapped globally (`JsonResource::withoutWrapping()`).
 
 ## Model IDs
 

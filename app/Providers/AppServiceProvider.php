@@ -20,6 +20,7 @@ use App\OAuth\WorkspaceScopeRepository;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -64,6 +65,7 @@ class AppServiceProvider extends ServiceProvider
     protected function configureDefaults(): void
     {
         Date::use(CarbonImmutable::class);
+        JsonResource::withoutWrapping();
 
         Passkeys::usePasskeyModel(Passkey::class);
 

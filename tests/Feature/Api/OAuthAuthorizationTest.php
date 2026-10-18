@@ -95,7 +95,7 @@ test('an approved PKCE authorization yields a token for the picked workspaces on
     $this->withToken($tokens['access_token'])
         ->getJson('http://acme.harbor.test/api/v1/user')
         ->assertOk()
-        ->assertJsonPath('data.id', $this->user->id);
+        ->assertJsonPath('id', $this->user->id);
 
     forgetRequestState();
 

@@ -6,7 +6,8 @@ use App\Actions\ApiTokens\CreatePersonalAccessToken;
 use App\Actions\ApiTokens\RevokePersonalAccessToken;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ApiTokenStoreRequest;
-use App\Models\Workspace;
+use App\Http\Resources\ApiTokenResource;
+use App\Http\Resources\WorkspaceResource;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -20,27 +21,16 @@ class ApiTokenController extends Controller
      */
     public function edit(Request $request): Response
     {
-        $workspaces = $request->user()->workspaces()->get(['workspaces.id', 'workspaces.name']);
-        $workspaceNames = $workspaces->mapWithKeys(fn (Workspace $workspace): array => [$workspace->tokenScope() => $workspace->name]);
-
         return Inertia::render('settings/ApiTokens', [
-            'workspaces' => $workspaces->map(fn (Workspace $workspace): array => ['id' => $workspace->id, 'name' => $workspace->name]),
-            'tokens' => $request->user()
+            'workspaces' => WorkspaceResource::collection($request->user()->workspaces),
+            'tokens' => ApiTokenResource::collection($request->user()
                 ->tokens()
                 ->with('client')
                 ->where('revoked', false)
                 ->latest()
                 ->get()
                 ->filter(fn (Token $token): bool => $token->client->hasGrantType('personal_access'))
-                ->map(fn (Token $token): array => [
-                    'id' => $token->id,
-                    'name' => $token->name,
-                    'workspaces' => $workspaceNames->only($token->scopes)->values()->all(),
-                    'created_at' => $token->created_at?->toIso8601String(),
-                    'expires_at' => $token->expires_at?->toIso8601String(),
-                ])
-                ->values()
-                ->all(),
+                ->values()),
         ]);
     }
 
