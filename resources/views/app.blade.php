@@ -19,18 +19,17 @@
             })();
         </script>
 
-        {{-- Inline style to set the HTML background color based on our theme in app.css --}}
+        {{-- Inline style to set the HTML background color before app.css loads --}}
         <style>
             html {
-                background-color: oklch(1 0 0);
+                background-color: #fafafa;
             }
 
             html.dark {
-                background-color: oklch(0.145 0 0);
+                background-color: #000;
             }
         </style>
 
-        <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
@@ -41,7 +40,7 @@
             <title>{{ config('app.name', 'Laravel') }}</title>
         </x-inertia::head>
     </head>
-    <body class="font-sans antialiased">
+    <body class="bg-gray-50 font-sans text-gray-900 antialiased dark:bg-black dark:text-gray-100">
         <x-inertia::app />
     </body>
 </html>
