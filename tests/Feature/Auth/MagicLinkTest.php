@@ -88,7 +88,8 @@ test('a link issued on one workspace host is rejected on another', function () {
     $user = User::factory()->create();
     $url = requestMagicLink($user);
 
-    $response = $this->get(str_replace('://localhost', '://other.localhost', $url));
+    $host = parse_url($url, PHP_URL_HOST);
+    $response = $this->get(str_replace("://{$host}", "://other.{$host}", $url));
 
     $this->assertGuest();
     $response->assertSessionHasErrors('email');
