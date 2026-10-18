@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\TicketDeskController;
 use App\Http\Controllers\Api\V1\TicketEventController;
 use App\Http\Controllers\Api\V1\TicketReminderController;
 use App\Http\Controllers\Api\V1\TicketTagController;
+use App\Http\Controllers\Api\V1\WorkspaceController;
 use App\Http\Middleware\EnsureTokenCanAccessWorkspace;
 use App\Http\Middleware\ResolveWorkspace;
 use App\Http\Resources\UserResource;
@@ -22,6 +23,9 @@ Route::prefix('v1')->name('api.v1.')
     ->middleware([ResolveWorkspace::class, 'auth:api', EnsureTokenCanAccessWorkspace::class])
     ->group(function () {
         Route::get('user', fn (Request $request) => new UserResource($request->user()))->name('user');
+
+        Route::get('workspace', [WorkspaceController::class, 'show'])->name('workspace.show');
+        Route::patch('workspace', [WorkspaceController::class, 'update'])->name('workspace.update');
 
         Route::apiResource('desks', DeskController::class);
         Route::post('desks/{desk}/restore', [DeskController::class, 'restore'])->withTrashed()->name('desks.restore');

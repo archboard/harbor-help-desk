@@ -1,5 +1,5 @@
 import type { Directive } from 'vue';
-import type { Auth } from '@/types/auth';
+import type { Auth, CurrentWorkspace } from '@/types/auth';
 import type { FlashToast } from '@/types/ui';
 
 // Extend ImportMeta interface for Vite...
@@ -20,6 +20,7 @@ declare module '@inertiajs/core' {
     sharedPageProps: {
       name: string;
       auth: Auth;
+      workspace: CurrentWorkspace | null;
       [key: string]: unknown;
     };
     flashDataType: {

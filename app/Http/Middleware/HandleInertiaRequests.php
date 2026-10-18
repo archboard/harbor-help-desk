@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Http\Resources\WorkspaceResource;
+use App\Models\Workspace;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -41,6 +43,8 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            // Lazy, because the workspace is resolved by route middleware that runs after this one.
+            'workspace' => fn (): ?WorkspaceResource => Workspace::current() === null ? null : new WorkspaceResource(Workspace::current()),
         ];
     }
 }

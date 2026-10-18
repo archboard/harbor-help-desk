@@ -12,3 +12,10 @@ export type User = {
 export type Auth = {
   user: User;
 };
+
+export type CurrentWorkspace = {
+  id: string;
+  name: string;
+  subdomain: string;
+  is_admin: boolean;
+};

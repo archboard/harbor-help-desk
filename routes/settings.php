@@ -3,6 +3,7 @@
 use App\Http\Controllers\Settings\ApiTokenController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
+use App\Http\Controllers\Settings\WorkspaceController;
 use Illuminate\Auth\Middleware\RequirePassword;
 use Illuminate\Support\Facades\Route;
 
@@ -29,6 +30,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('settings/api-tokens', [ApiTokenController::class, 'store'])->name('api-tokens.store');
         Route::delete('settings/api-tokens/{tokenId}', [ApiTokenController::class, 'destroy'])->name('api-tokens.destroy');
     });
+
+    Route::get('settings/workspace', [WorkspaceController::class, 'edit'])->name('workspace.edit');
+    Route::patch('settings/workspace', [WorkspaceController::class, 'update'])->name('workspace.update');
 
     Route::inertia('settings/appearance', 'settings/Appearance')->name('appearance.edit');
 });
