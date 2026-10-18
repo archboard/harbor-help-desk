@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
-import InputError from '@/components/InputError.vue';
-import TextLink from '@/components/TextLink.vue';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
+import { Head, useForm } from '@inertiajs/vue3';
+import AppButton from '@/components/AppButton.vue';
+import AppLink from '@/components/AppLink.vue';
+import SimpleAlert from '@/components/alerts/SimpleAlert.vue';
+import AppFieldset from '@/components/forms/AppFieldset.vue';
+import AppInput from '@/components/forms/AppInput.vue';
+import FormField from '@/components/forms/FormField.vue';
 import { login } from '@/routes';
 import { email } from '@/routes/password';
 
@@ -19,48 +19,43 @@ defineOptions({
 defineProps<{
   status?: string;
 }>();
+
+const form = useForm({ email: '' });
 </script>
 
 <template>
   <Head title="Forgot password" />
 
-  <div
-    v-if="status"
-    class="mb-4 text-center text-sm font-medium text-green-600"
-  >
+  <SimpleAlert v-if="status" level="success" class="mb-6">
     {{ status }}
-  </div>
+  </SimpleAlert>
 
-  <div class="space-y-6">
-    <Form v-bind="email.form()" v-slot="{ errors, processing }">
-      <div class="grid gap-2">
-        <Label for="email">Email address</Label>
-        <Input
-          id="email"
-          type="email"
-          name="email"
-          autocomplete="off"
-          v-focus
-          placeholder="email@example.com"
-        />
-        <InputError :message="errors.email" />
-      </div>
+  <form @submit.prevent="form.submit(email())">
+    <AppFieldset>
+      <FormField :error="form.errors.email">
+        Email address
+        <template #component="{ id, hasError }">
+          <AppInput
+            :id="id"
+            v-model="form.email"
+            type="email"
+            autocomplete="email"
+            placeholder="email@example.com"
+            autofocus
+            required
+            :has-error="hasError"
+          />
+        </template>
+      </FormField>
 
-      <div class="my-6 flex items-center justify-start">
-        <Button
-          class="w-full"
-          :disabled="processing"
-          data-test="email-password-reset-link-button"
-        >
-          <Spinner v-if="processing" />
-          Email password reset link
-        </Button>
-      </div>
-    </Form>
+      <AppButton type="submit" :loading="form.processing" full>
+        Email password reset link
+      </AppButton>
 
-    <div class="text-muted-foreground space-x-1 text-center text-sm">
-      <span>Or, return to</span>
-      <TextLink :href="login()">log in</TextLink>
-    </div>
-  </div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">
+        Or, return to
+        <AppLink :href="login()">log in</AppLink>
+      </p>
+    </AppFieldset>
+  </form>
 </template>

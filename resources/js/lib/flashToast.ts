@@ -1,6 +1,13 @@
 import { router } from '@inertiajs/vue3';
-import { toast } from 'vue-sonner';
+import { notify } from '@/lib/notifications';
 import type { FlashToast } from '@/types/ui';
+
+const levels = {
+  success: 'success',
+  info: 'neutral',
+  warning: 'warning',
+  error: 'error',
+} as const;
 
 export function initializeFlashToast(): void {
   router.on('flash', (event) => {
@@ -11,6 +18,6 @@ export function initializeFlashToast(): void {
       return;
     }
 
-    toast[data.type](data.message);
+    notify({ level: levels[data.type], text: data.message });
   });
 }

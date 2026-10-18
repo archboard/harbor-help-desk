@@ -1,48 +1,19 @@
 <script setup lang="ts">
-import { Form, usePage } from '@inertiajs/vue3';
-import { destroy, store } from '@/routes/api-tokens';
+import { Head } from '@inertiajs/vue3';
+import CardPadding from '@/components/CardPadding.vue';
+import CardWrapper from '@/components/CardWrapper.vue';
 
-// Placeholder until the frontend is designed.
-defineProps<{
-  workspaces: { id: string; name: string }[];
-  tokens: {
-    id: string;
-    name: string;
-    created_at: string | null;
-    expires_at: string | null;
-    workspaces: string[];
-  }[];
-}>();
-
-const page = usePage();
+defineOptions({ layout: { title: 'API tokens' } });
 </script>
 
 <template>
-  <div>
-    <p v-if="page.flash.apiToken">
-      Copy this token now, it won't be shown again:
-      <code>{{ page.flash.apiToken }}</code>
-    </p>
+  <Head title="API tokens" />
 
-    <Form v-bind="store.form()" reset-on-success v-slot="{ errors }">
-      <input name="name" placeholder="Token name" required />
-      <span v-if="errors.name">{{ errors.name }}</span>
-      <label v-for="workspace in workspaces" :key="workspace.id">
-        <input type="checkbox" name="workspaces[]" :value="workspace.id" />
-        {{ workspace.name }}
-      </label>
-      <span v-if="errors.workspaces">{{ errors.workspaces }}</span>
-      <button type="submit">Create token</button>
-    </Form>
-
-    <ul>
-      <li v-for="token in tokens" :key="token.id">
-        {{ token.name }} ({{ token.workspaces.join(', ') }}, expires
-        {{ token.expires_at }})
-        <Form v-bind="destroy.form(token.id)">
-          <button type="submit">Revoke</button>
-        </Form>
-      </li>
-    </ul>
-  </div>
+  <CardWrapper>
+    <CardPadding>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        API token management is coming soon.
+      </p>
+    </CardPadding>
+  </CardWrapper>
 </template>

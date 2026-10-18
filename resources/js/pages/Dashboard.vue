@@ -1,45 +1,19 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import PlaceholderPattern from '@/components/PlaceholderPattern.vue';
-import { dashboard } from '@/routes';
+import CardPadding from '@/components/CardPadding.vue';
+import CardWrapper from '@/components/CardWrapper.vue';
 
-defineOptions({
-  layout: {
-    breadcrumbs: [
-      {
-        title: 'Dashboard',
-        href: dashboard(),
-      },
-    ],
-  },
-});
+defineOptions({ layout: { title: 'Dashboard' } });
 </script>
 
 <template>
   <Head title="Dashboard" />
 
-  <div class="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-    <div class="grid auto-rows-min gap-4 md:grid-cols-3">
-      <div
-        class="border-sidebar-border/70 dark:border-sidebar-border relative aspect-video overflow-hidden rounded-xl border"
-      >
-        <PlaceholderPattern />
-      </div>
-      <div
-        class="border-sidebar-border/70 dark:border-sidebar-border relative aspect-video overflow-hidden rounded-xl border"
-      >
-        <PlaceholderPattern />
-      </div>
-      <div
-        class="border-sidebar-border/70 dark:border-sidebar-border relative aspect-video overflow-hidden rounded-xl border"
-      >
-        <PlaceholderPattern />
-      </div>
-    </div>
-    <div
-      class="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 rounded-xl border md:min-h-min"
-    >
-      <PlaceholderPattern />
-    </div>
-  </div>
+  <CardWrapper>
+    <CardPadding>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        The ticket dashboard is coming soon.
+      </p>
+    </CardPadding>
+  </CardWrapper>
 </template>

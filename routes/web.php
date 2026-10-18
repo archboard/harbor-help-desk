@@ -4,7 +4,7 @@ use App\Http\Controllers\DeskController;
 use App\Http\Controllers\DeskMemberController;
 use Illuminate\Support\Facades\Route;
 
-Route::inertia('/', 'Welcome')->name('home');
+Route::redirect('/', '/dashboard')->name('home');
 
 Route::middleware('workspace')->group(function () {
     Route::middleware(['auth', 'verified'])->group(function () {

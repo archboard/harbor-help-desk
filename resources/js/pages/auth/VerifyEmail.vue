@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
-import TextLink from '@/components/TextLink.vue';
-import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
+import { Head, useForm } from '@inertiajs/vue3';
+import AppButton from '@/components/AppButton.vue';
+import AppLink from '@/components/AppLink.vue';
+import SimpleAlert from '@/components/alerts/SimpleAlert.vue';
 import { logout } from '@/routes';
 import { send } from '@/routes/verification';
 
@@ -17,31 +17,35 @@ defineOptions({
 defineProps<{
   status?: string;
 }>();
+
+const form = useForm({});
 </script>
 
 <template>
   <Head title="Email verification" />
 
-  <div
+  <SimpleAlert
     v-if="status === 'verification-link-sent'"
-    class="mb-4 text-center text-sm font-medium text-green-600"
+    level="success"
+    class="mb-6"
   >
-    A new verification link has been sent to the email address you provided
-    during registration.
-  </div>
+    A new verification link has been sent to your email address.
+  </SimpleAlert>
 
-  <Form
-    v-bind="send.form()"
-    class="space-y-6 text-center"
-    v-slot="{ processing }"
-  >
-    <Button :disabled="processing" variant="secondary">
-      <Spinner v-if="processing" />
+  <div class="space-y-6">
+    <AppButton
+      color="white"
+      full
+      :loading="form.processing"
+      @click="form.submit(send())"
+    >
       Resend verification email
-    </Button>
+    </AppButton>
 
-    <TextLink :href="logout()" as="button" class="mx-auto block text-sm">
-      Log out
-    </TextLink>
-  </Form>
+    <p class="text-center">
+      <AppLink :href="logout()" method="post" as="button" class="text-sm">
+        Log out
+      </AppLink>
+    </p>
+  </div>
 </template>
