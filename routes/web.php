@@ -1,10 +1,16 @@
 <?php
 
+use App\Http\Controllers\Auth\MagicLinkController;
 use App\Http\Controllers\DeskController;
 use App\Http\Controllers\DeskMemberController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard')->name('home');
+
+Route::middleware('guest')->group(function () {
+    Route::post('login/magic', [MagicLinkController::class, 'store'])->middleware('throttle:6,1')->name('magic-link.store');
+    Route::get('login/magic/{user}', [MagicLinkController::class, 'show'])->name('magic-link.login');
+});
 
 Route::middleware('workspace')->group(function () {
     Route::middleware(['auth', 'verified'])->group(function () {

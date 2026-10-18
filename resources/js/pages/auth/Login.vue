@@ -2,12 +2,14 @@
 import { Head, useForm } from '@inertiajs/vue3';
 import AppButton from '@/components/AppButton.vue';
 import AppLink from '@/components/AppLink.vue';
+import BorderSeparator from '@/components/BorderSeparator.vue';
 import SimpleAlert from '@/components/alerts/SimpleAlert.vue';
 import AppCheckbox from '@/components/forms/AppCheckbox.vue';
 import AppFieldset from '@/components/forms/AppFieldset.vue';
 import AppInput from '@/components/forms/AppInput.vue';
 import FormField from '@/components/forms/FormField.vue';
 import { store } from '@/routes/login';
+import { store as sendMagicLink } from '@/routes/magic-link';
 import { request } from '@/routes/password';
 
 defineOptions({
@@ -28,6 +30,13 @@ const form = useForm({
   remember: false,
 });
 
+const magicLinkForm = useForm({ email: '' });
+
+function submitMagicLink(): void {
+  magicLinkForm.email = form.email;
+  magicLinkForm.submit(sendMagicLink());
+}
+
 function submit(): void {
   form.submit(store(), {
     onFinish: () => form.reset('password'),
@@ -44,7 +53,7 @@ function submit(): void {
 
   <form @submit.prevent="submit">
     <AppFieldset>
-      <FormField :error="form.errors.email">
+      <FormField :error="form.errors.email ?? magicLinkForm.errors.email">
         Email address
         <template #component="{ id, hasError }">
           <AppInput
@@ -78,6 +87,20 @@ function submit(): void {
 
       <AppButton type="submit" :loading="form.processing" full>
         Log in
+      </AppButton>
+
+      <BorderSeparator background="bg-gray-50 dark:bg-black">
+        Or
+      </BorderSeparator>
+
+      <AppButton
+        type="button"
+        color="white"
+        :loading="magicLinkForm.processing"
+        full
+        @click="submitMagicLink"
+      >
+        Email me a sign-in link
       </AppButton>
 
       <p v-if="canResetPassword">
