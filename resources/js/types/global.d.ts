@@ -1,5 +1,6 @@
 import type { Directive } from 'vue';
 import type { Auth } from '@/types/auth';
+import type { FlashToast } from '@/types/ui';
 
 // Extend ImportMeta interface for Vite...
 declare module 'vite/client' {
@@ -20,6 +21,10 @@ declare module '@inertiajs/core' {
       name: string;
       auth: Auth;
       [key: string]: unknown;
+    };
+    flashDataType: {
+      toast?: FlashToast;
+      apiToken?: string;
     };
   }
 }

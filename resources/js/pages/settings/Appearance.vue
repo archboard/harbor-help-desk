@@ -3,12 +3,15 @@ import { Head } from '@inertiajs/vue3';
 import AppearanceTabs from '@/components/AppearanceTabs.vue';
 import CardPadding from '@/components/CardPadding.vue';
 import CardWrapper from '@/components/CardWrapper.vue';
+import SettingsNav from '@/components/SettingsNav.vue';
 
 defineOptions({ layout: { title: 'Appearance' } });
 </script>
 
 <template>
   <Head title="Appearance" />
+
+  <SettingsNav />
 
   <CardWrapper>
     <CardPadding class="space-y-4">
