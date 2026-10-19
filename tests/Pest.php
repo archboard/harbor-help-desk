@@ -2,11 +2,13 @@
 
 use App\Enums\DeskRole;
 use App\Enums\WorkspaceRole;
+use App\Mail\Inbound\ImapMailboxClient;
 use App\Models\Desk;
 use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Passport\Passport;
+use Mockery\MockInterface;
 use Tests\TestCase;
 
 pest()->extend(TestCase::class)
@@ -46,4 +48,17 @@ function acmeWithAgent(): array
     $desk = Desk::sole();
 
     return ['workspace' => $workspace, 'desk' => $desk, 'agent' => deskMember($workspace, $desk)];
+}
+
+/**
+ * Bind a mocked IMAP client that reports the given folder status for every mailbox.
+ */
+function mockImapClient(int $uidValidity, int $uidNext): MockInterface
+{
+    $client = Mockery::mock(ImapMailboxClient::class);
+    $client->shouldReceive('status')->andReturn(['uid_validity' => $uidValidity, 'uid_next' => $uidNext]);
+    $client->shouldReceive('disconnect');
+    app()->bind(ImapMailboxClient::class, fn () => $client);
+
+    return $client;
 }

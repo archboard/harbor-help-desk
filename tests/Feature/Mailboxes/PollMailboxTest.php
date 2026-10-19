@@ -8,8 +8,8 @@ use App\Models\Desk;
 use App\Models\Mailbox;
 use App\Models\Ticket;
 use App\Models\Workspace;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
-use Mockery\MockInterface;
 use Tests\Concerns\InWorkspace;
 
 uses(InWorkspace::class);
@@ -17,19 +17,6 @@ uses(InWorkspace::class);
 beforeEach(function () {
     $this->mailbox = Mailbox::factory()->create(['default_desk_id' => Desk::sole()->id]);
 });
-
-/**
- * Bind a mocked IMAP client reporting the given status for every PollMailbox run.
- */
-function mockImapClient(int $uidValidity, int $uidNext): MockInterface
-{
-    $client = Mockery::mock(ImapMailboxClient::class);
-    $client->shouldReceive('status')->andReturn(['uid_validity' => $uidValidity, 'uid_next' => $uidNext]);
-    $client->shouldReceive('disconnect');
-    app()->bind(ImapMailboxClient::class, fn () => $client);
-
-    return $client;
-}
 
 function rawFixtureEmail(string $name): string
 {
@@ -127,4 +114,13 @@ test('the command queues polls only for each workspace own non-hosted mailboxes'
     Queue::assertPushed(PollMailbox::class, fn (PollMailbox $job) => $job->mailbox->is($this->mailbox));
     Queue::assertPushed(PollMailbox::class, fn (PollMailbox $job) => $job->mailbox->is($other));
     Queue::assertNotPushed(PollMailbox::class, fn (PollMailbox $job) => $job->mailbox->is($hosted));
+});
+
+test('the command queues each poll with its workspace attached', function () {
+    config(['queue.default' => 'database']);
+    Workspace::forgetCurrent();
+
+    $this->artisan('mailboxes:poll')->assertSuccessful();
+
+    expect(DB::table('jobs')->sole()->payload)->toContain($this->workspace->id);
 });

@@ -49,6 +49,11 @@ return [
         'inbound_domain' => env('HARBOR_INBOUND_DOMAIN'),
         'postmark_webhook_secret' => env('HARBOR_POSTMARK_WEBHOOK_SECRET'),
         'new_tickets_per_sender_per_hour' => (int) env('HARBOR_NEW_TICKETS_PER_SENDER_PER_HOUR', 20),
+
+        // With `mailboxes:watch` running, connected mailboxes are checked every few seconds over
+        // held-open connections, and the per-minute poll only runs as a 5-minute backstop.
+        'watch' => (bool) env('HARBOR_MAIL_WATCH', false),
+        'watch_interval' => (int) env('HARBOR_MAIL_WATCH_INTERVAL', 10),
     ],
 
 ];

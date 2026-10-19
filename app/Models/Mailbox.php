@@ -91,14 +91,18 @@ class Mailbox extends Model
 
     /**
      * Limit to the mailboxes `mailboxes:poll` should queue a poll for this minute. Hosted
-     * mailboxes receive by webhook, so only the workspace's own mailboxes are polled.
+     * mailboxes receive by webhook, so only the workspace's own mailboxes are polled. While
+     * `mailboxes:watch` runs, only those it hasn't polled for 5 minutes are, as a backstop.
      *
      * @param  Builder<self>  $query
      */
     #[Scope]
     protected function needsScheduledPoll(Builder $query): void
     {
-        $query->where('driver', '!=', MailboxDriver::HOSTED);
+        $query->where('driver', '!=', MailboxDriver::HOSTED)
+            ->when(config('harbor.mail.watch'), fn (Builder $query) => $query->where(
+                fn (Builder $query) => $query->whereNull('polled_at')->orWhere('polled_at', '<', now()->subMinutes(5)),
+            ));
     }
 
     /**

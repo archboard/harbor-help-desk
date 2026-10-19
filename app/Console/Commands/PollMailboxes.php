@@ -22,6 +22,9 @@ class PollMailboxes extends Command
             ->needsScheduledPoll()
             ->with('workspace')
             ->lazyById()
-            ->each(fn (Mailbox $mailbox) => $mailbox->workspace->execute(fn () => PollMailbox::dispatch($mailbox)));
+            ->each(fn (Mailbox $mailbox) => $mailbox->workspace->execute(function () use ($mailbox): void {
+                // A statement, not a returned PendingDispatch, so the job is queued while the workspace is current.
+                PollMailbox::dispatch($mailbox);
+            }));
     }
 }
