@@ -10,6 +10,7 @@ import Tbody from '@/components/tables/Tbody.vue';
 import Td from '@/components/tables/Td.vue';
 import Th from '@/components/tables/Th.vue';
 import Thead from '@/components/tables/Thead.vue';
+import { formatDate } from '@/lib/dates';
 import { restore, show, store } from '@/routes/desks';
 import type { Desk } from '@/types';
 
@@ -101,11 +102,7 @@ function restoreDesk(desk: Desk): void {
           <tr v-for="desk in archivedDesks" :key="desk.id">
             <Td darker>{{ desk.name }}</Td>
             <Td>
-              {{
-                desk.archived_at
-                  ? new Date(desk.archived_at).toLocaleDateString()
-                  : '—'
-              }}
+              {{ formatDate(desk.archived_at) }}
             </Td>
             <Td class="text-end">
               <AppButton

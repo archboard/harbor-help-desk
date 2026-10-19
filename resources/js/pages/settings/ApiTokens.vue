@@ -16,6 +16,7 @@ import Tbody from '@/components/tables/Tbody.vue';
 import Td from '@/components/tables/Td.vue';
 import Th from '@/components/tables/Th.vue';
 import Thead from '@/components/tables/Thead.vue';
+import { formatDate } from '@/lib/dates';
 import { notify } from '@/lib/notifications';
 import { destroy, store } from '@/routes/api-tokens';
 
@@ -43,10 +44,6 @@ const form = useForm({
 
 const revoking = ref<ApiToken | null>(null);
 const revokeLoading = ref(false);
-
-function formatDate(value: string | null): string {
-  return value ? new Date(value).toLocaleDateString() : '—';
-}
 
 async function copyToken(token: string): Promise<void> {
   await navigator.clipboard.writeText(token);

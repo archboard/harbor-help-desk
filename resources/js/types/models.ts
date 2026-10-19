@@ -78,3 +78,42 @@ export type Ticket = {
 export type Paginated<T> = {
   data: T[];
 };
+
+export type Attachment = {
+  id: string;
+  ticket_id: string;
+  ticket_comment_id: string | null;
+  filename: string;
+  mime_type: string;
+  size: number;
+  download_url: string;
+  created_at: string | null;
+};
+
+export type TicketComment = {
+  id: string;
+  ticket_id: string;
+  body: string;
+  is_internal: boolean;
+  author_type: string | null;
+  author_id: string | null;
+  author_name?: string | null;
+  attachments?: Attachment[];
+  edited_at: string | null;
+  created_at: string | null;
+};
+
+export type TicketEvent = {
+  id: string;
+  type: string;
+  description: string;
+  created_at: string;
+};
+
+export type TicketReminder = {
+  id: string;
+  user_id: string | null;
+  for_assignees: boolean;
+  remind_at: string;
+  note: string | null;
+};

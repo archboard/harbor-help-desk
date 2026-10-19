@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, InfiniteScroll, router } from '@inertiajs/vue3';
+import { Head, InfiniteScroll, Link, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import Spinner from '@/components/Spinner.vue';
 import Table from '@/components/tables/Table.vue';
@@ -11,8 +11,8 @@ import PriorityPill from '@/components/tickets/PriorityPill.vue';
 import StatusPill from '@/components/tickets/StatusPill.vue';
 import TicketFilters from '@/components/tickets/TicketFilters.vue';
 import type { TicketQuery } from '@/components/tickets/TicketFilters.vue';
-import { timeAgo } from '@/lib/dates';
-import { index } from '@/routes/tickets';
+import { formatDateTime, timeAgo } from '@/lib/dates';
+import { index, show } from '@/routes/tickets';
 import type { Agent, Desk, Paginated, Tag, Ticket } from '@/types';
 
 defineOptions({ layout: { title: 'Tickets' } });
@@ -115,9 +115,13 @@ function apply(query: TicketQuery): void {
             <Td class="whitespace-nowrap text-gray-500 dark:text-gray-400">
               {{ ticket.number }}
             </Td>
-            <!-- ponytail: plain text until the ticket page exists (step 8), then a Link. -->
             <Td darker class="max-w-md">
-              <span class="line-clamp-2">{{ ticket.subject }}</span>
+              <Link
+                :href="show(ticket.id)"
+                class="line-clamp-2 hover:text-primary-600 hover:underline dark:hover:text-primary-400"
+              >
+                {{ ticket.subject }}
+              </Link>
             </Td>
             <Td class="whitespace-nowrap">{{ ticket.requester?.name }}</Td>
             <Td class="whitespace-nowrap">{{ ticket.desk?.name }}</Td>
@@ -140,11 +144,7 @@ function apply(query: TicketQuery): void {
             </Td>
             <Td
               class="whitespace-nowrap"
-              :title="
-                ticket.updated_at
-                  ? new Date(ticket.updated_at).toLocaleString()
-                  : undefined
-              "
+              :title="formatDateTime(ticket.updated_at)"
             >
               {{ timeAgo(ticket.updated_at) }}
             </Td>

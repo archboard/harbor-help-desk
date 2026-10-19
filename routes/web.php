@@ -18,6 +18,10 @@ Route::middleware('workspace')->group(function () {
     Route::middleware(['auth', 'verified'])->group(function () {
         Route::redirect('dashboard', '/tickets')->name('dashboard');
         Route::get('tickets', [TicketController::class, 'index'])->name('tickets.index');
+        Route::get('tickets/{ticket}', [TicketController::class, 'show'])->withTrashed()->name('tickets.show');
+        Route::patch('tickets/{ticket}', [TicketController::class, 'update'])->name('tickets.update');
+        Route::delete('tickets/{ticket}', [TicketController::class, 'destroy'])->name('tickets.destroy');
+        Route::post('tickets/{ticket}/restore', [TicketController::class, 'restore'])->withTrashed()->name('tickets.restore');
 
         Route::resource('desks', DeskController::class)->except(['create', 'edit']);
         Route::post('desks/{desk}/restore', [DeskController::class, 'restore'])->withTrashed()->name('desks.restore');
