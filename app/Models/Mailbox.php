@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Actions\Mailboxes\RefreshMailboxToken;
 use App\Enums\MailboxDriver;
 use App\Mail\Inbound\InboundEmail;
 use App\Models\Concerns\BelongsToWorkspace;
@@ -17,6 +18,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Mail\Mailables\Address;
 use Illuminate\Support\Facades\Mail;
+use Symfony\Component\Mailer\Transport\Smtp\Auth\XOAuth2Authenticator;
+use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
 
 /**
  * An email inbox that belongs to the workspace. Mail it receives goes to the desk picked by
@@ -113,7 +116,7 @@ class Mailbox extends Model
 
     /**
      * The mailer that sends as this mailbox: the app's default mailer (Postmark in the cloud)
-     * for the hosted mailbox, otherwise the workspace's own SMTP server.
+     * for the hosted mailbox, otherwise the workspace's own SMTP server (XOAUTH2 for OAuth ones).
      */
     public function mailer(): Mailer
     {
@@ -122,7 +125,7 @@ class Mailbox extends Model
         }
 
         $name = "mailbox-{$this->id}";
-        $smtp = $this->settings['smtp'] ?? [];
+        $smtp = $this->connection('smtp');
 
         config(["mail.mailers.{$name}" => [
             'transport' => 'smtp',
@@ -137,7 +140,35 @@ class Mailbox extends Model
         // Long-running workers cache mailers by name; drop it so changed settings apply.
         Mail::purge($name);
 
+        if ($this->driver->usesOAuth()) {
+            $transport = Mail::mailer($name)->getSymfonyTransport();
+
+            if ($transport instanceof EsmtpTransport) {
+                $transport->setAuthenticators([new XOAuth2Authenticator]);
+            }
+        }
+
         return Mail::mailer($name);
+    }
+
+    /**
+     * The IMAP or SMTP server settings to connect with. OAuth mailboxes use their provider's
+     * servers, with a fresh access token as the password.
+     *
+     * @param  'imap'|'smtp'  $protocol
+     * @return array<string, mixed>
+     */
+    public function connection(string $protocol): array
+    {
+        if ($this->driver->usesOAuth()) {
+            return [
+                ...$this->driver->oauth()[$protocol],
+                'username' => $this->address,
+                'password' => app(RefreshMailboxToken::class)->handle($this),
+            ];
+        }
+
+        return $this->settings[$protocol] ?? [];
     }
 
     /**

@@ -5,6 +5,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DeskController;
 use App\Http\Controllers\DeskCustomFieldController;
 use App\Http\Controllers\DeskMemberController;
+use App\Http\Controllers\MailboxOAuthController;
 use App\Http\Controllers\SavedViewController;
 use App\Http\Controllers\TicketAssigneeController;
 use App\Http\Controllers\TicketAttachmentController;
@@ -28,6 +29,9 @@ Route::middleware(VerifyPostmarkWebhook::class)->prefix('webhooks/postmark')->na
     Route::post('inbound', [PostmarkWebhookController::class, 'inbound'])->name('inbound');
     Route::post('bounce', [PostmarkWebhookController::class, 'bounce'])->name('bounce');
 });
+
+// On the central domain: OAuth redirect URIs can't be wildcards. The `state` names the workspace.
+Route::get('mailboxes/oauth/callback', [MailboxOAuthController::class, 'callback'])->name('mailboxes.oauth.callback');
 
 Route::middleware('workspace')->group(function () {
     Route::middleware(['auth', 'verified'])->group(function () {
@@ -64,6 +68,8 @@ Route::middleware('workspace')->group(function () {
         Route::put('desks/{desk}/members/{user}', [DeskMemberController::class, 'update'])->name('desks.members.update');
         Route::delete('desks/{desk}/members/{user}', [DeskMemberController::class, 'destroy'])->name('desks.members.destroy');
         Route::put('desks/{desk}/custom-fields', [DeskCustomFieldController::class, 'update'])->name('desks.custom-fields.update');
+
+        Route::get('mailboxes/oauth/{provider}', [MailboxOAuthController::class, 'redirect'])->whereIn('provider', ['google', 'microsoft'])->name('mailboxes.oauth.redirect');
     });
 
     require __DIR__.'/settings.php';

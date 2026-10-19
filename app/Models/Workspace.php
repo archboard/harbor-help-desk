@@ -87,6 +87,21 @@ class Workspace extends Model implements IsTenant
     }
 
     /**
+     * An absolute URL on the workspace's own host: its subdomain in the cloud, else `APP_URL`.
+     */
+    public function url(string $path = ''): string
+    {
+        $root = rtrim((string) config('app.url'), '/');
+
+        if (config('harbor.multitenant')) {
+            $port = parse_url($root, PHP_URL_PORT);
+            $root = parse_url($root, PHP_URL_SCHEME)."://{$this->subdomain}.".config('harbor.domain').($port ? ":{$port}" : '');
+        }
+
+        return $root.'/'.ltrim($path, '/');
+    }
+
+    /**
      * Claim the workspace's next ticket number. The single UPDATE is atomic, so concurrent
      * tickets never share a number.
      */

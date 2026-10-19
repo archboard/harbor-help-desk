@@ -55,7 +55,7 @@ class ImapMailboxClient
     protected function imap(): ImapMailbox
     {
         if ($this->imap === null) {
-            $settings = $this->mailbox->settings['imap'] ?? [];
+            $settings = $this->mailbox->connection('imap');
 
             $this->imap = new ImapMailbox([
                 'host' => $settings['host'] ?? '',
@@ -63,6 +63,7 @@ class ImapMailboxClient
                 'encryption' => $settings['encryption'] ?? 'ssl',
                 'username' => $settings['username'] ?? '',
                 'password' => $settings['password'] ?? '',
+                'authentication' => $this->mailbox->driver->usesOAuth() ? 'oauth' : 'plain',
                 'timeout' => 30,
             ]);
             $this->imap->connect();
