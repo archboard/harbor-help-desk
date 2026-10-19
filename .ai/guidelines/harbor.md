@@ -64,8 +64,10 @@ Postgres is the only supported database, so use its features wherever they help:
 
 ## Self-Hosting
 
-- Never add a required service beyond PHP and Postgres. Cache, queue and session default to the `database` driver.
-- Optional services (Redis, S3, Reverb, external mail providers) sit behind config, with a database or local fallback.
+- The required services are PHP, Postgres, Redis and Reverb. Never add another. All of them ship with the self-hosted installation.
+- Cache, session and queues use Redis. Queues run under Horizon. Use `Cache::lock()` for cross-process locks that aren't tied to a database row. Row-level work claiming still uses Postgres (`lock('for update skip locked')`). Durable data never lives only in Redis.
+- Realtime features may rely on Reverb without a polling fallback. Broadcasts carry ids and event types only, never model data. Clients reload through policies and API Resources.
+- Optional services (Redis, S3, external mail providers) sit behind config, with a database or local fallback.
 
 ## Testing
 
