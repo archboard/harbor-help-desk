@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { router } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
 import { X } from '@lucide/vue';
 import { watchDebounced } from '@vueuse/core';
 import { computed, ref } from 'vue';
@@ -12,6 +12,7 @@ import FieldError from '@/components/forms/FieldError.vue';
 import GenericObjectCombobox from '@/components/forms/GenericObjectCombobox.vue';
 import Pill from '@/components/Pill.vue';
 import CustomFieldInput from '@/components/tickets/CustomFieldInput.vue';
+import { show as showContact } from '@/routes/contacts';
 import { update as updateTicket } from '@/routes/tickets';
 import { update as moveTicket } from '@/routes/tickets/desk';
 import { update as syncAssignees } from '@/routes/tickets/assignees';
@@ -153,7 +154,13 @@ function removeTag(name: string): void {
     <CardPadding class="space-y-5 text-sm">
       <div>
         <h2 class="font-medium text-gray-500 dark:text-gray-400">Requester</h2>
-        <p class="mt-1">{{ ticket.requester?.name }}</p>
+        <Link
+          v-if="ticket.requester"
+          :href="showContact(ticket.requester.id)"
+          class="mt-1 block text-primary-600 hover:underline dark:text-primary-400"
+        >
+          {{ ticket.requester.name }}
+        </Link>
         <p class="text-gray-500 dark:text-gray-400">
           {{ ticket.requester?.email }}
         </p>

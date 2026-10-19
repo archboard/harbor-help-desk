@@ -1,37 +1,42 @@
-<script setup lang="ts">
+<script
+  setup
+  lang="ts"
+  generic="T extends { id: string; [key: string]: unknown }"
+>
 import { watchDebounced } from '@vueuse/core';
-import { computed, ref } from 'vue';
+import { computed, ref, shallowRef } from 'vue';
 import AppCombobox from '@/components/forms/AppCombobox.vue';
-
-type ModelOption = { id: string; label: string };
 
 const {
   url,
   hasError = false,
   disabled = false,
   id,
+  displayValue,
 } = defineProps<{
-  /** JSON endpoint that takes `?search=` and returns `{ id, label }[]`. */
+  /** JSON endpoint that takes `?search=` and returns a list of resources with an `id`. */
   url: string;
   hasError?: boolean;
   disabled?: boolean;
   id?: string;
+  /** How to show an option; defaults to its `name`, `title` or `label`. */
+  displayValue?: (item: T | null) => string;
 }>();
 
 const model = defineModel<string | null>();
 // ponytail: pass v-model:object to preselect; PTC re-searched by id on mount, which needs id lookup on every endpoint
-const object = defineModel<ModelOption | null>('object', { default: null });
+const object = defineModel<T | null>('object', { default: null });
 
 const selected = computed({
   get: () => object.value,
-  set: (value: ModelOption | null) => {
+  set: (value: T | null) => {
     object.value = value;
     model.value = value?.id ?? null;
   },
 });
 
 const query = ref('');
-const options = ref<ModelOption[]>([]);
+const options = shallowRef<T[]>([]);
 const loading = ref(false);
 let controller: AbortController | null = null;
 
@@ -84,5 +89,6 @@ watchDebounced(
     :has-error="hasError"
     :disabled="disabled"
     :loading="loading"
+    :display-value="displayValue"
   />
 </template>

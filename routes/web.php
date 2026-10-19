@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\MagicLinkController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DeskController;
 use App\Http\Controllers\DeskCustomFieldController;
 use App\Http\Controllers\DeskMemberController;
@@ -23,6 +24,9 @@ Route::middleware('guest')->group(function () {
 Route::middleware('workspace')->group(function () {
     Route::middleware(['auth', 'verified'])->group(function () {
         Route::redirect('dashboard', '/tickets')->name('dashboard');
+        Route::get('contacts/search', [ContactController::class, 'search'])->name('contacts.search');
+        Route::resource('contacts', ContactController::class)->only(['index', 'store', 'show', 'update']);
+
         Route::get('tickets', [TicketController::class, 'index'])->name('tickets.index');
         Route::get('tickets/{ticket}', [TicketController::class, 'show'])->withTrashed()->name('tickets.show');
         Route::patch('tickets/{ticket}', [TicketController::class, 'update'])->name('tickets.update');

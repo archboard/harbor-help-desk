@@ -19,6 +19,7 @@ import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { setDisplayTimezone } from '@/lib/dates';
 import { logout } from '@/routes';
 import { edit as editApiTokens } from '@/routes/api-tokens';
+import { index as contacts } from '@/routes/contacts';
 import { edit as editAppearance } from '@/routes/appearance';
 import { index as desks } from '@/routes/desks';
 import { edit as editProfile } from '@/routes/profile';
@@ -36,6 +37,7 @@ watch(() => page.props.auth.user.timezone, setDisplayTimezone, {
 
 const navigation = [
   { label: 'Tickets', href: tickets().url },
+  { label: 'Contacts', href: contacts().url },
   { label: 'Desks', href: desks().url },
 ];
 

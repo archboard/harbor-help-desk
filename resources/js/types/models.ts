@@ -43,6 +43,8 @@ export type Contact = {
   id: string;
   name: string;
   email: string;
+  /** Tickets the viewer can see, when counted. */
+  tickets_count?: number;
 };
 
 export type Tag = {

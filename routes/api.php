@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AttachmentController;
+use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\CustomFieldController;
 use App\Http\Controllers\Api\V1\DeskController;
 use App\Http\Controllers\Api\V1\DeskCustomFieldController;
@@ -26,6 +27,8 @@ Route::prefix('v1')->name('api.v1.')
 
         Route::get('workspace', [WorkspaceController::class, 'show'])->name('workspace.show');
         Route::patch('workspace', [WorkspaceController::class, 'update'])->name('workspace.update');
+
+        Route::apiResource('contacts', ContactController::class)->except('destroy');
 
         Route::apiResource('desks', DeskController::class);
         Route::post('desks/{desk}/restore', [DeskController::class, 'restore'])->withTrashed()->name('desks.restore');
