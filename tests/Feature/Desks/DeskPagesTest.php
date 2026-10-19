@@ -55,6 +55,7 @@ test('the desk page lists members, candidates and abilities', function () {
             ->component('desks/Show')
             ->where('desk.id', $this->desk->id)
             ->where('members.0.role', 'lead')
+            ->where('roles', ['lead' => 'Lead', 'agent' => 'Agent'])
             ->where('candidates', [['id' => $this->admin->id, 'name' => $this->admin->name, 'email' => $this->admin->email]])
             ->where('can', ['update' => true, 'manageMembers' => true, 'archive' => true]));
 });

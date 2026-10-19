@@ -26,3 +26,15 @@ export type CustomField = {
   position: number;
   desks?: Desk[];
 };
+
+export type DeskRole = 'lead' | 'agent';
+
+export type Agent = {
+  id: string;
+  name: string;
+  email: string;
+};
+
+export type DeskMember = Agent & {
+  role: DeskRole | null;
+};

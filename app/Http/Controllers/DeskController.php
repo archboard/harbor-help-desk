@@ -6,6 +6,7 @@ use App\Actions\Desks\ArchiveDesk;
 use App\Actions\Desks\CreateDesk;
 use App\Actions\Desks\RestoreDesk;
 use App\Actions\Desks\UpdateDesk;
+use App\Enums\DeskRole;
 use App\Http\Resources\DeskMemberResource;
 use App\Http\Resources\DeskResource;
 use App\Http\Resources\UserResource;
@@ -54,6 +55,7 @@ class DeskController extends Controller
             'candidates' => UserResource::collection($canManageMembers
                 ? Workspace::current()->users()->whereKeyNot($members->modelKeys())->orderBy('name')->get()
                 : []),
+            'roles' => DeskRole::options(),
             'can' => [
                 'update' => $request->user()->can('update', $desk),
                 'manageMembers' => $canManageMembers,
