@@ -12,6 +12,7 @@
     "license": "AGPL-3.0-or-later",
     "require": {
         "php": "^8.5",
+        "directorytree/imapengine": "^1.25",
         "grantholle/scru128-laravel": "^1.1",
         "inertiajs/inertia-laravel": "^3.0",
         "laravel/chisel": "^0.1.0",
@@ -20,7 +21,9 @@
         "laravel/passport": "^13.10",
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.14",
-        "spatie/laravel-multitenancy": "^4.0"
+        "spatie/laravel-multitenancy": "^4.0",
+        "symfony/http-client": "^8.1",
+        "symfony/postmark-mailer": "^8.1"
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^3.7",

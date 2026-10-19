@@ -34,4 +34,21 @@ return [
         'blocked_extensions' => ['bat', 'cmd', 'com', 'cpl', 'dll', 'exe', 'hta', 'jar', 'js', 'jse', 'lnk', 'msi', 'msp', 'ps1', 'scr', 'sh', 'vbe', 'vbs', 'wsf'],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Email
+    |--------------------------------------------------------------------------
+    |
+    | With an inbound domain set, every workspace gets a hosted mailbox on it
+    | that receives mail through Postmark's inbound webhook. Leave it null
+    | (self-hosted) to use only connected IMAP/SMTP or OAuth mailboxes.
+    |
+    */
+
+    'mail' => [
+        'inbound_domain' => env('HARBOR_INBOUND_DOMAIN'),
+        'postmark_webhook_secret' => env('HARBOR_POSTMARK_WEBHOOK_SECRET'),
+        'new_tickets_per_sender_per_hour' => (int) env('HARBOR_NEW_TICKETS_PER_SENDER_PER_HOUR', 20),
+    ],
+
 ];
