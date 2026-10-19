@@ -240,8 +240,21 @@ return [
         ],
     ],
 
+    // First match wins, so self-hosters on any APP_ENV other than local get the production plan.
     'environments' => [
-        'production' => [
+        'local' => [
+            'supervisor-default' => [
+                'maxProcesses' => 3,
+            ],
+            'supervisor-mail-poll' => [
+                'maxProcesses' => 1,
+            ],
+            'supervisor-broadcasts' => [
+                'maxProcesses' => 1,
+            ],
+        ],
+
+        '*' => [
             'supervisor-default' => [
                 'maxProcesses' => 10,
                 'balanceMaxShift' => 1,
@@ -252,18 +265,6 @@ return [
             ],
             'supervisor-broadcasts' => [
                 'maxProcesses' => 3,
-            ],
-        ],
-
-        'local' => [
-            'supervisor-default' => [
-                'maxProcesses' => 3,
-            ],
-            'supervisor-mail-poll' => [
-                'maxProcesses' => 1,
-            ],
-            'supervisor-broadcasts' => [
-                'maxProcesses' => 1,
             ],
         ],
     ],

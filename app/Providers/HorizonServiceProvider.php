@@ -19,7 +19,7 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
     {
         Gate::define('viewHorizon', function (User $user): bool {
             if (config('harbor.multitenant')) {
-                return in_array(strtolower($user->email), config('harbor.horizon_emails'), true);
+                return $user->hasVerifiedEmail() && in_array(strtolower($user->email), config('harbor.horizon_emails'), true);
             }
 
             $workspace = app(SingleWorkspaceFinder::class)->findForRequest(request());

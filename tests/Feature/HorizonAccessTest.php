@@ -21,11 +21,13 @@ test('self-hosted, workspace admins open Horizon and agents are denied', functio
     $this->actingAs($agent)->get('/horizon')->assertForbidden();
 });
 
-test('multitenant, only allowlisted operators open Horizon', function () {
-    config(['harbor.multitenant' => true, 'harbor.horizon_emails' => ['ops@example.com']]);
+test('multitenant, only verified allowlisted operators open Horizon', function () {
+    config(['harbor.multitenant' => true, 'harbor.horizon_emails' => ['ops@example.com', 'new@example.com']]);
 
     $operator = User::factory()->create(['email' => 'Ops@Example.com']);
+    $unverified = User::factory()->unverified()->create(['email' => 'new@example.com']);
 
     $this->actingAs($this->admin)->get('/horizon')->assertForbidden();
+    $this->actingAs($unverified)->get('/horizon')->assertForbidden();
     $this->actingAs($operator)->get('/horizon')->assertOk();
 });
