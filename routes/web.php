@@ -4,6 +4,8 @@ use App\Http\Controllers\Auth\MagicLinkController;
 use App\Http\Controllers\DeskController;
 use App\Http\Controllers\DeskCustomFieldController;
 use App\Http\Controllers\DeskMemberController;
+use App\Http\Controllers\TicketAttachmentController;
+use App\Http\Controllers\TicketCommentController;
 use App\Http\Controllers\TicketController;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +24,14 @@ Route::middleware('workspace')->group(function () {
         Route::patch('tickets/{ticket}', [TicketController::class, 'update'])->name('tickets.update');
         Route::delete('tickets/{ticket}', [TicketController::class, 'destroy'])->name('tickets.destroy');
         Route::post('tickets/{ticket}/restore', [TicketController::class, 'restore'])->withTrashed()->name('tickets.restore');
+
+        Route::post('tickets/{ticket}/comments', [TicketCommentController::class, 'store'])->name('tickets.comments.store');
+        Route::patch('comments/{comment}', [TicketCommentController::class, 'update'])->name('comments.update');
+        Route::delete('comments/{comment}', [TicketCommentController::class, 'destroy'])->name('comments.destroy');
+
+        Route::post('tickets/{ticket}/attachments', [TicketAttachmentController::class, 'store'])->name('tickets.attachments.store');
+        Route::delete('attachments/{attachment}', [TicketAttachmentController::class, 'destroy'])->name('attachments.destroy');
+        Route::get('attachments/{attachment}/download', [TicketAttachmentController::class, 'download'])->name('attachments.download');
 
         Route::resource('desks', DeskController::class)->except(['create', 'edit']);
         Route::post('desks/{desk}/restore', [DeskController::class, 'restore'])->withTrashed()->name('desks.restore');

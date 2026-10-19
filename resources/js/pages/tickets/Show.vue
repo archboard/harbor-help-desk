@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { Paperclip } from '@lucide/vue';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import SimpleAlert from '@/components/alerts/SimpleAlert.vue';
@@ -13,6 +12,9 @@ import AppSelect from '@/components/forms/AppSelect.vue';
 import FieldError from '@/components/forms/FieldError.vue';
 import ConfirmationModal from '@/components/modals/ConfirmationModal.vue';
 import Pill from '@/components/Pill.vue';
+import ReplyComposer from '@/components/tickets/ReplyComposer.vue';
+import TicketAttachments from '@/components/tickets/TicketAttachments.vue';
+import TicketCommentCard from '@/components/tickets/TicketCommentCard.vue';
 import {
   formatDateTime,
   fromLocalDateTime,
@@ -32,7 +34,7 @@ import type {
 
 defineOptions({ layout: { title: '' } });
 
-const { ticket, comments, events } = defineProps<{
+const { ticket, comments, events, can } = defineProps<{
   ticket: Ticket;
   comments: TicketComment[];
   events: TicketEvent[];
@@ -44,6 +46,8 @@ const { ticket, comments, events } = defineProps<{
   priorities: Record<string, string>;
   can: { update: boolean; delete: boolean; restore: boolean };
 }>();
+
+const page = usePage();
 
 const isDeleted = computed(() => ticket.deleted_at !== null);
 const canEdit = computed(() => !isDeleted.value);
@@ -112,6 +116,16 @@ function restoreTicket(): void {
   );
 }
 
+/** Mirrors `TicketCommentPolicy`: authors edit their own comments on tickets they can work. */
+function canEditComment(comment: TicketComment): boolean {
+  return (
+    can.update &&
+    canEdit.value &&
+    comment.author_type === 'user' &&
+    comment.author_id === page.props.auth.user.id
+  );
+}
+
 function customFieldValue(value: unknown): string {
   if (value === null || value === undefined || value === '') {
     return '—';
@@ -122,12 +136,6 @@ function customFieldValue(value: unknown): string {
   }
 
   return Array.isArray(value) ? value.join(', ') : String(value);
-}
-
-function fileSize(bytes: number): string {
-  return bytes < 1024 * 1024
-    ? `${Math.max(1, Math.round(bytes / 1024))} KB`
-    : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 </script>
 
@@ -254,53 +262,12 @@ function fileSize(bytes: number): string {
     <div class="grid gap-6 lg:grid-cols-3">
       <section class="space-y-4 lg:col-span-2" aria-label="Conversation">
         <template v-for="item in thread" :key="item.key">
-          <article
+          <TicketCommentCard
             v-if="'comment' in item"
-            :class="[
-              'rounded-2xl p-5 shadow-sm',
-              item.comment.is_internal
-                ? 'bg-yellow-50 ring-1 ring-yellow-200 dark:bg-yellow-950 dark:ring-yellow-900'
-                : 'bg-white dark:bg-gray-900',
-            ]"
-          >
-            <header class="mb-2 flex flex-wrap items-center gap-2 text-sm">
-              <span class="font-medium">
-                {{ item.comment.author_name ?? 'Unknown' }}
-              </span>
-              <Pill v-if="item.comment.is_internal" color="yellow">
-                Internal
-              </Pill>
-              <span
-                class="text-gray-500 dark:text-gray-400"
-                :title="formatDateTime(item.comment.created_at)"
-              >
-                {{ timeAgo(item.comment.created_at) }}
-              </span>
-              <span
-                v-if="item.comment.edited_at"
-                class="text-gray-400 dark:text-gray-500"
-              >
-                (edited)
-              </span>
-            </header>
-            <p class="text-sm whitespace-pre-wrap">{{ item.comment.body }}</p>
-            <ul
-              v-if="item.comment.attachments?.length"
-              class="mt-3 space-y-1 text-sm text-gray-600 dark:text-gray-300"
-            >
-              <li
-                v-for="attachment in item.comment.attachments"
-                :key="attachment.id"
-                class="flex items-center gap-1"
-              >
-                <Paperclip class="size-4 shrink-0" aria-hidden="true" />
-                {{ attachment.filename }}
-                <span class="text-gray-400">
-                  ({{ fileSize(attachment.size) }})
-                </span>
-              </li>
-            </ul>
-          </article>
+            :comment="item.comment"
+            :can-edit="canEditComment(item.comment)"
+            :can-delete="canEditComment(item.comment) || can.delete"
+          />
           <p
             v-else
             class="px-5 text-sm text-gray-500 dark:text-gray-400"
@@ -312,6 +279,8 @@ function fileSize(bytes: number): string {
             </span>
           </p>
         </template>
+
+        <ReplyComposer v-if="can.update && canEdit" :ticket-id="ticket.id" />
       </section>
 
       <aside class="space-y-4">
@@ -385,19 +354,12 @@ function fileSize(bytes: number): string {
           </CardPadding>
         </CardWrapper>
 
-        <CardWrapper v-if="attachments.length">
-          <CardPadding class="space-y-2 text-sm">
-            <h2 class="font-medium">Attachments</h2>
-            <ul class="space-y-1">
-              <li v-for="attachment in attachments" :key="attachment.id">
-                {{ attachment.filename }}
-                <span class="text-gray-400">
-                  ({{ fileSize(attachment.size) }})
-                </span>
-              </li>
-            </ul>
-          </CardPadding>
-        </CardWrapper>
+        <TicketAttachments
+          :ticket-id="ticket.id"
+          :attachments="attachments"
+          :can-upload="can.update && canEdit"
+          :can-delete-any="can.delete"
+        />
 
         <AppButton
           v-if="can.delete && !isDeleted"

@@ -26,7 +26,8 @@ class AttachmentResource extends JsonResource
             'checksum' => $this->checksum,
             'uploader_type' => $this->uploader_type,
             'uploader_id' => $this->uploader_id,
-            'download_url' => route('api.v1.attachments.download', $this->resource),
+            // API clients download with their token; the web app with its session.
+            'download_url' => route($request->is('api/*') ? 'api.v1.attachments.download' : 'attachments.download', $this->resource),
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

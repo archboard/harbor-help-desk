@@ -86,6 +86,8 @@ export type Attachment = {
   filename: string;
   mime_type: string;
   size: number;
+  uploader_type: string | null;
+  uploader_id: string | null;
   download_url: string;
   created_at: string | null;
 };
