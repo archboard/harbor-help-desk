@@ -4,6 +4,7 @@ namespace App\Actions\Tickets;
 
 use App\Enums\TicketEventType;
 use App\Models\Attachment;
+use App\Models\Contact;
 use App\Models\Ticket;
 use App\Models\TicketComment;
 use App\Models\User;
@@ -20,13 +21,16 @@ use Throwable;
 class AddTicketAttachment
 {
     /**
-     * Store the uploaded `file` on the ticket, optionally as part of one of its comments.
+     * Store the uploaded `file` on the ticket, optionally as part of one of its comments. A contact
+     * (sending a file by email) skips the policy check.
      *
      * @param  array<string, mixed>  $input
      */
-    public function handle(User $actor, Ticket $ticket, array $input, ?TicketComment $comment = null): Attachment
+    public function handle(User|Contact $actor, Ticket $ticket, array $input, ?TicketComment $comment = null): Attachment
     {
-        Gate::forUser($actor)->authorize('update', $ticket);
+        if ($actor instanceof User) {
+            Gate::forUser($actor)->authorize('update', $ticket);
+        }
 
         $file = Validator::make($input, ['file' => ['required', ...self::rules()]])->safe()->file('file') ?? throw new LogicException('A validated upload is always present.');
 

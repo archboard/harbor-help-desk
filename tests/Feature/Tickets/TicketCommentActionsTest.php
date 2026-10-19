@@ -10,6 +10,7 @@ use App\Models\Ticket;
 use App\Models\TicketComment;
 use App\Models\Workspace;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Validation\ValidationException;
 use Tests\Concerns\InWorkspace;
 
 uses(InWorkspace::class);
@@ -38,6 +39,25 @@ test('agents off the desk cannot comment', function () {
 
     expect(fn () => app(AddTicketComment::class)->handle($outsider, $ticket, ['body' => 'Hi']))
         ->toThrow(AuthorizationException::class);
+});
+
+test('a contact can reply by email without a desk policy but cannot add internal notes', function () {
+    $ticket = Ticket::factory()->create();
+
+    $reply = app(AddTicketComment::class)->handle($ticket->requester, $ticket, ['body' => 'Still broken.', 'message_id' => '<abc@mail.example.com>']);
+
+    expect($reply->author->is($ticket->requester))->toBeTrue();
+    expect($reply->message_id)->toBe('<abc@mail.example.com>');
+    expect(fn () => app(AddTicketComment::class)->handle($ticket->requester, $ticket, ['body' => 'Psst', 'is_internal' => true]))
+        ->toThrow(ValidationException::class);
+});
+
+test('agents cannot set a message id', function () {
+    $ticket = Ticket::factory()->create();
+    $agent = deskMember($this->workspace, $ticket->desk);
+
+    expect(fn () => app(AddTicketComment::class)->handle($agent, $ticket, ['body' => 'Hi', 'message_id' => '<abc@example.com>']))
+        ->toThrow(ValidationException::class);
 });
 
 test('authors can edit their comment and the previous body stays in the audit trail', function () {

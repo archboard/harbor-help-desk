@@ -12,6 +12,7 @@ use App\Enums\TicketPriority;
 use App\Models\Contact;
 use App\Models\CustomField;
 use App\Models\Desk;
+use App\Models\Mailbox;
 use App\Models\Ticket;
 use App\Models\Workspace;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -69,6 +70,48 @@ test('tickets cannot be created for another workspace contact', function () {
     $foreignContact = Workspace::factory()->create()->execute(fn () => Contact::factory()->create());
 
     expect(fn () => app(CreateTicket::class)->handle($agent, $desk, ['subject' => 'Printer jam', 'requester_id' => $foreignContact->id]))
+        ->toThrow(ValidationException::class);
+});
+
+test('a contact can open a ticket by email without a desk policy', function () {
+    $desk = Desk::factory()->create();
+    $contact = Contact::factory()->create();
+    $mailbox = Mailbox::factory()->create(['default_desk_id' => $desk->id]);
+
+    $ticket = app(CreateTicket::class)->handle($contact, $desk, [
+        'subject' => 'Printer jam',
+        'requester_id' => $contact->id,
+        'body' => 'It is jammed again.',
+        'mailbox_id' => $mailbox->id,
+        'message_id' => '<abc@mail.example.com>',
+    ]);
+
+    expect($ticket->mailbox_id)->toBe($mailbox->id);
+    expect($ticket->comments()->sole())
+        ->message_id->toBe('<abc@mail.example.com>')
+        ->author->is($contact)->toBeTrue();
+    expect($ticket->events()->first()->actor->is($contact))->toBeTrue();
+});
+
+test('only contacts can set email fields and contacts cannot assign', function (string $actor, array $input) {
+    $desk = Desk::factory()->create();
+    $contact = Contact::factory()->create();
+    $actor = $actor === 'agent' ? deskMember($this->workspace, $desk) : $contact;
+
+    expect(fn () => app(CreateTicket::class)->handle($actor, $desk, ['subject' => 'Printer jam', 'requester_id' => $contact->id, ...$input]))
+        ->toThrow(ValidationException::class);
+})->with([
+    'agent sets message_id' => ['agent', ['body' => 'Hi', 'message_id' => '<abc@example.com>']],
+    'agent sets mailbox_id' => ['agent', ['mailbox_id' => 'mbx_x']],
+    'contact assigns' => ['contact', ['assignee_ids' => ['usr_x']]],
+]);
+
+test('a contact cannot attach a ticket to another workspace mailbox', function () {
+    $desk = Desk::factory()->create();
+    $contact = Contact::factory()->create();
+    $foreignMailbox = Workspace::factory()->create()->execute(fn () => Mailbox::factory()->create());
+
+    expect(fn () => app(CreateTicket::class)->handle($contact, $desk, ['subject' => 'Printer jam', 'requester_id' => $contact->id, 'mailbox_id' => $foreignMailbox->id]))
         ->toThrow(ValidationException::class);
 });
 
