@@ -2,17 +2,20 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppButton from '@/components/AppButton.vue';
 import { computed } from 'vue';
+import SavedViews from '@/components/tickets/SavedViews.vue';
 import TicketFilters from '@/components/tickets/TicketFilters.vue';
 import TicketTable from '@/components/tickets/TicketTable.vue';
 import type { TicketQuery } from '@/components/tickets/TicketFilters.vue';
+import { cleanQuery, sameQuery } from '@/lib/tickets';
 import { create, index } from '@/routes/tickets';
-import type { Agent, Desk, Paginated, Tag, Ticket } from '@/types';
+import type { Agent, Desk, Paginated, SavedView, Tag, Ticket } from '@/types';
 
 defineOptions({ layout: { title: 'Tickets' } });
 
 const { filters } = defineProps<{
   tickets: Paginated<Ticket>;
   filters: TicketQuery;
+  savedViews: SavedView[];
   desks: Desk[];
   agents: Agent[];
   tags: Tag[];
@@ -29,25 +32,12 @@ const quickFilters: Array<{ label: string; query: TicketQuery }> = [
 ];
 
 /** The quick filter that matches the current filters exactly, if any. */
-const activeQuickFilter = computed(() => {
-  const current = JSON.stringify(clean(filters));
-
-  return quickFilters.find(
-    (quick) => JSON.stringify(clean(quick.query)) === current,
-  )?.label;
-});
-
-/** Drop empty values so they don't end up in the URL. */
-function clean(query: TicketQuery): TicketQuery {
-  return Object.fromEntries(
-    Object.entries(query)
-      .filter(([, value]) => value !== undefined && value !== '')
-      .sort(([a], [b]) => a.localeCompare(b)),
-  );
-}
+const activeQuickFilter = computed(
+  () => quickFilters.find((quick) => sameQuery(quick.query, filters))?.label,
+);
 
 function apply(query: TicketQuery): void {
-  router.get(index.url(), clean(query), {
+  router.get(index.url(), cleanQuery(query), {
     only: ['tickets', 'filters'],
     reset: ['tickets'],
     preserveState: true,
@@ -79,7 +69,14 @@ function apply(query: TicketQuery): void {
           {{ quick.label }}
         </button>
       </nav>
-      <AppButton :component="Link" :href="create()">New ticket</AppButton>
+      <div class="flex flex-wrap items-center gap-2">
+        <SavedViews
+          :views="savedViews"
+          :filters="cleanQuery(filters)"
+          @apply="apply"
+        />
+        <AppButton :component="Link" :href="create()">New ticket</AppButton>
+      </div>
     </div>
 
     <TicketFilters

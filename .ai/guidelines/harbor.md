@@ -35,6 +35,7 @@ An open-source helpdesk. This app is the Inertia web UI and the backend. Other c
 | `cmt_` | `TicketComment` |
 | `att_` | `Attachment` |
 | `rmd_` | `TicketReminder` |
+| `svw_` | `SavedView` |
 
 ## Tenancy
 

@@ -17,6 +17,12 @@ class SearchTickets
 {
     private const array SORTS = ['updated', 'created', 'due', 'priority'];
 
+    /** Filters that take one value or a list. */
+    private const array LIST_FILTERS = ['desk_id', 'status', 'priority', 'tag'];
+
+    /** Every filter {@see handle()} understands. */
+    public const array FILTERS = [...self::LIST_FILTERS, 'search', 'assignee_id', 'requester_id', 'deleted', 'sort'];
+
     /**
      * The tickets the actor can see, narrowed by any of:
      *
@@ -36,8 +42,41 @@ class SearchTickets
     {
         Gate::forUser($actor)->authorize('viewAny', Ticket::class);
 
-        // These take one value or a list. A single value is checked under its own key, so the
-        // error lands on `status` rather than `status.0`, and is wrapped in a list afterwards.
+        $validated = Validator::make($filters, self::rules($filters))->validate();
+
+        foreach (self::LIST_FILTERS as $key) {
+            if (isset($validated[$key])) {
+                $validated[$key] = Arr::wrap($validated[$key]);
+            }
+        }
+
+        $search = trim((string) ($validated['search'] ?? ''));
+
+        $query = Ticket::visibleTo($actor)
+            ->when($search !== '', fn (Builder $query) => $this->search($query, $search))
+            ->when($validated['desk_id'] ?? null, fn (Builder $query, array $deskIds) => $query->whereIn('desk_id', $deskIds))
+            ->when($validated['status'] ?? null, fn (Builder $query, array $statuses) => $query->whereIn('status', $statuses))
+            ->when($validated['priority'] ?? null, fn (Builder $query, array $priorities) => $query->whereIn('priority', $priorities))
+            ->when($validated['tag'] ?? null, fn (Builder $query, array $tags) => $query->whereHas('tags', fn (Builder $query) => $query->whereIn(DB::raw('lower(name)'), array_map(mb_strtolower(...), $tags))))
+            ->when($validated['assignee_id'] ?? null, fn (Builder $query, string $assignee) => match ($assignee) {
+                'none' => $query->whereDoesntHave('assignees'),
+                default => $query->whereHas('assignees', fn (Builder $query) => $query->whereKey($assignee === 'me' ? $actor->getKey() : $assignee)),
+            })
+            ->when($validated['requester_id'] ?? null, fn (Builder $query, string $contactId) => $query->where('requester_id', $contactId))
+            ->when((bool) ($validated['deleted'] ?? false), fn (Builder $query) => $query->onlyTrashed());
+
+        return $this->sort($query, $validated['sort'] ?? 'updated');
+    }
+
+    /**
+     * Rules for the filters. A list filter given one value is checked under its own key, so
+     * the error lands on `status` rather than `status.0`.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array<string, array<int, mixed>>
+     */
+    public static function rules(array $filters): array
+    {
         $listRules = [
             'desk_id' => ['string'],
             'status' => [Rule::enum(TicketStatus::class)],
@@ -62,30 +101,7 @@ class SearchTickets
             }
         }
 
-        $validated = Validator::make($filters, $rules)->validate();
-
-        foreach (array_keys($listRules) as $key) {
-            if (isset($validated[$key])) {
-                $validated[$key] = Arr::wrap($validated[$key]);
-            }
-        }
-
-        $search = trim((string) ($validated['search'] ?? ''));
-
-        $query = Ticket::visibleTo($actor)
-            ->when($search !== '', fn (Builder $query) => $this->search($query, $search))
-            ->when($validated['desk_id'] ?? null, fn (Builder $query, array $deskIds) => $query->whereIn('desk_id', $deskIds))
-            ->when($validated['status'] ?? null, fn (Builder $query, array $statuses) => $query->whereIn('status', $statuses))
-            ->when($validated['priority'] ?? null, fn (Builder $query, array $priorities) => $query->whereIn('priority', $priorities))
-            ->when($validated['tag'] ?? null, fn (Builder $query, array $tags) => $query->whereHas('tags', fn (Builder $query) => $query->whereIn(DB::raw('lower(name)'), array_map(mb_strtolower(...), $tags))))
-            ->when($validated['assignee_id'] ?? null, fn (Builder $query, string $assignee) => match ($assignee) {
-                'none' => $query->whereDoesntHave('assignees'),
-                default => $query->whereHas('assignees', fn (Builder $query) => $query->whereKey($assignee === 'me' ? $actor->getKey() : $assignee)),
-            })
-            ->when($validated['requester_id'] ?? null, fn (Builder $query, string $contactId) => $query->where('requester_id', $contactId))
-            ->when((bool) ($validated['deleted'] ?? false), fn (Builder $query) => $query->onlyTrashed());
-
-        return $this->sort($query, $validated['sort'] ?? 'updated');
+        return $rules;
     }
 
     /**

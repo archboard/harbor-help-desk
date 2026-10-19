@@ -13,6 +13,7 @@ use App\Enums\TicketStatus;
 use App\Http\Resources\AttachmentResource;
 use App\Http\Resources\DeskMemberResource;
 use App\Http\Resources\DeskResource;
+use App\Http\Resources\SavedViewResource;
 use App\Http\Resources\TagResource;
 use App\Http\Resources\TicketCommentResource;
 use App\Http\Resources\TicketEventResource;
@@ -20,6 +21,7 @@ use App\Http\Resources\TicketReminderResource;
 use App\Http\Resources\TicketResource;
 use App\Http\Resources\UserResource;
 use App\Models\Desk;
+use App\Models\SavedView;
 use App\Models\Tag;
 use App\Models\Ticket;
 use App\Models\Workspace;
@@ -45,6 +47,7 @@ class TicketController extends Controller
         return Inertia::render('tickets/Index', [
             'tickets' => Inertia::scroll(TicketResource::collection($tickets)),
             'filters' => (object) $filters,
+            'savedViews' => SavedViewResource::collection(SavedView::visibleTo($request->user())->with('user')->orderBy('name')->get()),
             'desks' => DeskResource::collection(Desk::visibleTo($request->user())->orderBy('name')->get()),
             'agents' => UserResource::collection(Workspace::current()->users()->orderBy('name')->get()),
             'tags' => TagResource::collection(Tag::query()->orderBy('name')->get()),

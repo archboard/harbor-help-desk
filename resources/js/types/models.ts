@@ -128,3 +128,13 @@ export type TicketReminder = {
   remind_at: string;
   note: string | null;
 };
+
+export type SavedView = {
+  id: string;
+  user_id: string;
+  owner?: Agent;
+  name: string;
+  /** `SearchTickets` filters; the API may store `deleted` as a boolean. */
+  filters: Record<string, string | string[] | boolean>;
+  is_shared: boolean;
+};

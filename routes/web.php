@@ -5,6 +5,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DeskController;
 use App\Http\Controllers\DeskCustomFieldController;
 use App\Http\Controllers\DeskMemberController;
+use App\Http\Controllers\SavedViewController;
 use App\Http\Controllers\TicketAssigneeController;
 use App\Http\Controllers\TicketAttachmentController;
 use App\Http\Controllers\TicketCommentController;
@@ -28,6 +29,7 @@ Route::middleware('workspace')->group(function () {
         Route::resource('contacts', ContactController::class)->only(['index', 'store', 'show', 'update']);
 
         Route::get('tickets', [TicketController::class, 'index'])->name('tickets.index');
+        Route::resource('saved-views', SavedViewController::class)->only(['store', 'update', 'destroy']);
         Route::get('tickets/create', [TicketController::class, 'create'])->name('tickets.create');
         Route::post('desks/{desk}/tickets', [TicketController::class, 'store'])->name('desks.tickets.store');
         Route::get('tickets/{ticket}', [TicketController::class, 'show'])->withTrashed()->name('tickets.show');
