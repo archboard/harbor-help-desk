@@ -112,10 +112,10 @@ class TicketReminder extends Model
     public function recipients(): Collection
     {
         if ($this->isTicketLevel()) {
-            return $this->ticket->assignees()->get();
+            return $this->ticket->assignees;
         }
 
-        return $this->user()->get();
+        return Collection::wrap($this->user);
     }
 
     /**

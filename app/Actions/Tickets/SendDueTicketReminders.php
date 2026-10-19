@@ -27,12 +27,12 @@ class SendDueTicketReminders
                 ->orderBy('remind_at')
                 ->limit($limit)
                 ->lock('for update skip locked')
-                ->with('ticket')
+                ->with(['user', 'ticket.assignees', 'ticket.desk.workspace'])
                 ->get();
 
-            foreach ($reminders as $reminder) {
-                $reminder->update(['sent_at' => now()]);
+            TicketReminder::query()->whereKey($reminders->modelKeys())->update(['sent_at' => now()]);
 
+            foreach ($reminders as $reminder) {
                 if ($reminder->ticket === null) {
                     continue;
                 }
