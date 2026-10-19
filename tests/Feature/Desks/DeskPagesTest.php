@@ -2,6 +2,7 @@
 
 use App\Enums\DeskRole;
 use App\Enums\WorkspaceRole;
+use App\Models\CustomField;
 use App\Models\Desk;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -73,4 +74,43 @@ test('desks and members are managed through the web routes', function () {
     expect($desk->fresh()->trashed())->toBeTrue();
 
     $this->delete(route('desks.destroy', $this->desk))->assertSessionHasErrors('desk');
+});
+
+test('the desk page lists every field and the ones the desk uses', function () {
+    $enabled = CustomField::factory()->create(['position' => 0]);
+    $other = CustomField::factory()->create(['position' => 1]);
+    $this->desk->customFields()->attach($enabled, ['workspace_id' => $this->workspace->id]);
+
+    $this->actingAs($this->admin)
+        ->get(route('desks.show', $this->desk))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('customFields', 2)
+            ->where('customFields.0.id', $enabled->id)
+            ->where('customFields.1.id', $other->id)
+            ->has('desk.custom_fields', 1)
+            ->where('desk.custom_fields.0.id', $enabled->id));
+});
+
+test('desk leads choose the desk\'s fields and agents cannot', function () {
+    $field = CustomField::factory()->create();
+    $this->desk->users()->attach($this->agent, ['role' => DeskRole::AGENT, 'workspace_id' => $this->workspace->id]);
+    $lead = User::factory()->create();
+    $this->workspace->users()->attach($lead, ['role' => WorkspaceRole::AGENT]);
+    $this->desk->users()->attach($lead, ['role' => DeskRole::LEAD, 'workspace_id' => $this->workspace->id]);
+
+    $this->actingAs($this->agent)
+        ->put(route('desks.custom-fields.update', $this->desk), ['field_ids' => [$field->id]])
+        ->assertForbidden();
+    expect($this->desk->customFields()->count())->toBe(0);
+
+    $this->actingAs($lead)
+        ->put(route('desks.custom-fields.update', $this->desk), ['field_ids' => [$field->id]])
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
+    expect($this->desk->customFields()->pluck('custom_fields.id')->all())->toBe([$field->id]);
+
+    $this->actingAs($lead)
+        ->put(route('desks.custom-fields.update', $this->desk), ['field_ids' => []])
+        ->assertSessionHasNoErrors();
+    expect($this->desk->customFields()->count())->toBe(0);
 });

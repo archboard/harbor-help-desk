@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import CardAction from '@/components/CardAction.vue';
@@ -9,6 +9,7 @@ import CardWrapper from '@/components/CardWrapper.vue';
 import AppFieldset from '@/components/forms/AppFieldset.vue';
 import AppSelect from '@/components/forms/AppSelect.vue';
 import {
+  CheckboxListField,
   InputField,
   ObjectComboboxField,
   SelectField,
@@ -20,24 +21,33 @@ import Td from '@/components/tables/Td.vue';
 import Th from '@/components/tables/Th.vue';
 import Thead from '@/components/tables/Thead.vue';
 import { notify } from '@/lib/notifications';
+import { index as customFieldSettings } from '@/routes/custom-fields';
 import { destroy, update } from '@/routes/desks';
+import { update as syncCustomFields } from '@/routes/desks/custom-fields';
 import {
   destroy as removeMember,
   update as setMember,
 } from '@/routes/desks/members';
-import type { Agent, Desk, DeskMember, DeskRole } from '@/types';
+import type { Agent, CustomField, Desk, DeskMember, DeskRole } from '@/types';
 
 const { desk } = defineProps<{
   desk: Desk;
   members: DeskMember[];
   candidates: Agent[];
   roles: Record<DeskRole, string>;
+  customFields: CustomField[];
   can: { update: boolean; manageMembers: boolean; archive: boolean };
 }>();
 
 defineOptions({ layout: { title: 'Desk' } });
 
+const page = usePage();
+
 const form = useForm({ name: desk.name, slug: desk.slug });
+
+const fieldsForm = useForm({
+  field_ids: (desk.custom_fields ?? []).map((field) => field.id),
+});
 
 const addForm = useForm({
   user_id: null as string | null,
@@ -213,6 +223,52 @@ function archive(close: () => void): void {
           </CardPadding>
         </form>
       </CardWrapper>
+    </div>
+
+    <div class="space-y-4">
+      <div class="flex items-center justify-between gap-4">
+        <h2 class="text-lg font-semibold">Custom fields</h2>
+        <Link
+          v-if="page.props.workspace?.is_admin"
+          :href="customFieldSettings()"
+          class="text-sm text-primary-600 hover:underline dark:text-primary-400"
+        >
+          Manage fields
+        </Link>
+      </div>
+
+      <CardWrapper v-if="can.update && customFields.length">
+        <form
+          @submit.prevent="
+            fieldsForm.submit(syncCustomFields(desk.id), {
+              preserveScroll: true,
+            })
+          "
+        >
+          <CardPadding>
+            <CheckboxListField
+              v-model="fieldsForm.field_ids"
+              label="Fields on this desk's tickets"
+              :options="customFields"
+              :error="fieldsForm.errors.field_ids"
+            />
+          </CardPadding>
+          <CardAction :loading="fieldsForm.processing" />
+        </form>
+      </CardWrapper>
+      <p
+        v-else-if="desk.custom_fields?.length"
+        class="text-sm text-gray-700 dark:text-gray-300"
+      >
+        {{ desk.custom_fields.map((field) => field.name).join(', ') }}
+      </p>
+      <p v-else class="text-sm text-gray-500 dark:text-gray-400">
+        {{
+          customFields.length
+            ? 'No custom fields are enabled on this desk.'
+            : 'The workspace has no custom fields yet.'
+        }}
+      </p>
     </div>
 
     <div v-if="can.archive" class="flex justify-end">

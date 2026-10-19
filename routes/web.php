@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\MagicLinkController;
 use App\Http\Controllers\DeskController;
+use App\Http\Controllers\DeskCustomFieldController;
 use App\Http\Controllers\DeskMemberController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,6 +21,7 @@ Route::middleware('workspace')->group(function () {
         Route::post('desks/{desk}/restore', [DeskController::class, 'restore'])->withTrashed()->name('desks.restore');
         Route::put('desks/{desk}/members/{user}', [DeskMemberController::class, 'update'])->name('desks.members.update');
         Route::delete('desks/{desk}/members/{user}', [DeskMemberController::class, 'destroy'])->name('desks.members.destroy');
+        Route::put('desks/{desk}/custom-fields', [DeskCustomFieldController::class, 'update'])->name('desks.custom-fields.update');
     });
 
     require __DIR__.'/settings.php';

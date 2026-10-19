@@ -7,9 +7,11 @@ use App\Actions\Desks\CreateDesk;
 use App\Actions\Desks\RestoreDesk;
 use App\Actions\Desks\UpdateDesk;
 use App\Enums\DeskRole;
+use App\Http\Resources\CustomFieldResource;
 use App\Http\Resources\DeskMemberResource;
 use App\Http\Resources\DeskResource;
 use App\Http\Resources\UserResource;
+use App\Models\CustomField;
 use App\Models\Desk;
 use App\Models\Workspace;
 use Illuminate\Http\RedirectResponse;
@@ -50,12 +52,13 @@ class DeskController extends Controller
         $canManageMembers = $request->user()->can('manageMembers', $desk);
 
         return Inertia::render('desks/Show', [
-            'desk' => new DeskResource($desk),
+            'desk' => new DeskResource($desk->load('customFields')),
             'members' => DeskMemberResource::collection($members),
             'candidates' => UserResource::collection($canManageMembers
                 ? Workspace::current()->users()->whereKeyNot($members->modelKeys())->orderBy('name')->get()
                 : []),
             'roles' => DeskRole::options(),
+            'customFields' => CustomFieldResource::collection(CustomField::query()->orderBy('position')->orderBy('id')->get()),
             'can' => [
                 'update' => $request->user()->can('update', $desk),
                 'manageMembers' => $canManageMembers,
