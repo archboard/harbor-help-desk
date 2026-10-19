@@ -21,22 +21,22 @@ An open-source helpdesk. This app is the Inertia web UI and the backend. Other c
 - Treat IDs as strings everywhere: `string` type hints and `string` in TypeScript, never `int`.
 - Add each new prefix to this registry:
 
-| Prefix | Model       |
-| ------ | ----------- |
-| `usr_` | `User`      |
-| `pky_` | `Passkey`   |
-| `wsp_` | `Workspace` |
-| `dsk_` | `Desk`      |
-| `cfd_` | `CustomField` |
-| `ctc_` | `Contact`   |
-| `tkt_` | `Ticket`    |
-| `tev_` | `TicketEvent` |
-| `tag_` | `Tag`       |
-| `cmt_` | `TicketComment` |
-| `att_` | `Attachment` |
+| Prefix | Model            |
+| ------ | ---------------- |
+| `usr_` | `User`           |
+| `pky_` | `Passkey`        |
+| `wsp_` | `Workspace`      |
+| `dsk_` | `Desk`           |
+| `cfd_` | `CustomField`    |
+| `ctc_` | `Contact`        |
+| `tkt_` | `Ticket`         |
+| `tev_` | `TicketEvent`    |
+| `tag_` | `Tag`            |
+| `cmt_` | `TicketComment`  |
+| `att_` | `Attachment`     |
 | `rmd_` | `TicketReminder` |
-| `svw_` | `SavedView` |
-| `mbx_` | `Mailbox`   |
+| `svw_` | `SavedView`      |
+| `mbx_` | `Mailbox`        |
 
 ## Tenancy
 

@@ -35,6 +35,12 @@ class MailboxResource extends JsonResource
                 'imap' => Arr::only($this->settings['imap'] ?? [], ['host', 'port', 'encryption', 'username', 'folder']),
                 'smtp' => Arr::only($this->settings['smtp'] ?? [], ['host', 'port', 'encryption', 'username']),
             ]),
+            'receives_by' => match (true) {
+                $this->driver === MailboxDriver::HOSTED => 'webhook',
+                (bool) $this->push_expires_at?->isFuture() => 'push',
+                (bool) config('harbor.mail.watch') => 'watch',
+                default => 'poll',
+            },
             'polled_at' => $this->polled_at?->toIso8601String(),
             'last_error' => $this->last_error,
             'created_at' => $this->created_at?->toIso8601String(),

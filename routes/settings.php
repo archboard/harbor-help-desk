@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Settings\ApiTokenController;
 use App\Http\Controllers\Settings\CustomFieldController;
+use App\Http\Controllers\Settings\EmailController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
 use App\Http\Controllers\Settings\WorkspaceController;
@@ -40,6 +41,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->only(['index', 'store', 'update', 'destroy'])
         ->names('custom-fields')
         ->parameters(['custom-fields' => 'customField']);
+
+    Route::resource('settings/email', EmailController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->names('email')
+        ->parameters(['email' => 'mailbox']);
 
     Route::inertia('settings/appearance', 'settings/Appearance')->name('appearance.edit');
 });
