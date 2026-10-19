@@ -1,0 +1,10 @@
+From: sam@example.com
+To: support@acme.com
+Subject: Broken link
+Message-ID: <html-only@example.com>
+MIME-Version: 1.0
+Content-Type: text/html; charset="UTF-8"
+
+<html><head><style>p { color: red; }</style></head><body>
+<p>The link on the &quot;Pricing&quot; page is broken.</p><p>Fish &amp; chips<br>Sam</p>
+</body></html>

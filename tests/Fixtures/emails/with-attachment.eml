@@ -1,0 +1,17 @@
+From: Sam <sam@example.com>
+To: support@acme.com
+Subject: Invoice
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="mixb"
+
+--mixb
+Content-Type: text/plain; charset="UTF-8"
+
+Invoice attached.
+--mixb
+Content-Type: application/pdf; name="invoice.pdf"
+Content-Disposition: attachment; filename="invoice.pdf"
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjQgZmFrZQ==
+--mixb--

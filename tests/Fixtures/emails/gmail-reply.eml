@@ -1,0 +1,30 @@
+Delivered-To: support@acme.com
+From: Pat Lee <Pat.Lee@gmail.com>
+To: Acme Support <support@acme.com>
+Cc: billing@acme.com
+Subject: Re: Printer jam [#1042]
+Date: Mon, 19 Oct 2026 09:12:00 -0700
+Message-ID: <CAF=reply123@mail.gmail.com>
+In-Reply-To: <cmt_abc@harbor.test>
+References: <CAF=first@mail.gmail.com> <cmt_abc@harbor.test>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="gmailb"
+
+--gmailb
+Content-Type: text/plain; charset="UTF-8"
+
+Thanks, that fixed it!
+
+Pat
+
+On Mon, Oct 19, 2026 at 8:00 AM Acme Support <support@acme.com>
+wrote:
+
+> ##- Reply above this line -##
+> Try turning it off and on again.
+
+--gmailb
+Content-Type: text/html; charset="UTF-8"
+
+<div>Thanks, that fixed it!</div><div><br></div><div>Pat</div>
+--gmailb--
