@@ -13,6 +13,8 @@ use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TicketDeskController;
 use App\Http\Controllers\TicketReminderController;
 use App\Http\Controllers\TicketTagController;
+use App\Http\Controllers\Webhooks\PostmarkWebhookController;
+use App\Http\Middleware\VerifyPostmarkWebhook;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/tickets')->name('home');
@@ -20,6 +22,11 @@ Route::redirect('/', '/tickets')->name('home');
 Route::middleware('guest')->group(function () {
     Route::post('login/magic', [MagicLinkController::class, 'store'])->middleware('throttle:6,1')->name('magic-link.store');
     Route::get('login/magic/{user}', [MagicLinkController::class, 'show'])->name('magic-link.login');
+});
+
+Route::middleware(VerifyPostmarkWebhook::class)->prefix('webhooks/postmark')->name('webhooks.postmark.')->group(function () {
+    Route::post('inbound', [PostmarkWebhookController::class, 'inbound'])->name('inbound');
+    Route::post('bounce', [PostmarkWebhookController::class, 'bounce'])->name('bounce');
 });
 
 Route::middleware('workspace')->group(function () {

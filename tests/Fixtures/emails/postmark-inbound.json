@@ -1,0 +1,19 @@
+{
+    "From": "pat.lee@gmail.com",
+    "FromFull": {
+        "Email": "pat.lee@gmail.com",
+        "Name": "Pat Lee"
+    },
+    "To": "acme@in.harbor-help.test",
+    "ToFull": [
+        {
+            "Email": "acme@in.harbor-help.test",
+            "Name": ""
+        }
+    ],
+    "CcFull": [],
+    "OriginalRecipient": "acme@in.harbor-help.test",
+    "Subject": "Printer jam",
+    "MessageID": "22c74902-a0c1-4511-804f-341342852c90",
+    "RawEmail": "Delivered-To: support@acme.com\r\nFrom: Pat Lee <Pat.Lee@gmail.com>\r\nTo: Acme Support <support@acme.com>\r\nCc: billing@acme.com\r\nSubject: Printer jam\r\nDate: Mon, 19 Oct 2026 09:12:00 -0700\r\nMessage-ID: <CAF=reply123@mail.gmail.com>\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative; boundary=\"gmailb\"\r\n\r\n--gmailb\r\nContent-Type: text/plain; charset=\"UTF-8\"\r\n\r\nThanks, that fixed it!\r\n\r\nPat\r\n\r\nOn Mon, Oct 19, 2026 at 8:00 AM Acme Support <support@acme.com>\r\nwrote:\r\n\r\n> ##- Reply above this line -##\r\n> Try turning it off and on again.\r\n\r\n--gmailb\r\nContent-Type: text/html; charset=\"UTF-8\"\r\n\r\n<div>Thanks, that fixed it!</div><div><br></div><div>Pat</div>\r\n--gmailb--\r\n"
+}
