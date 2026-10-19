@@ -70,6 +70,9 @@ use Spatie\Multitenancy\TenantCollection;
  * @property-read Collection<int, Desk> $desks
  * @property-read int|null $desks_count
  * @property-read WorkspaceUser|DeskUser|null $pivot
+ * @property string|null $timezone
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereTimezone($value)
  *
  * @mixin \Eloquent
  */

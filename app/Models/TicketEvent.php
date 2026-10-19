@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Facades\Auth;
 use LogicException;
 
 /**
@@ -95,7 +96,7 @@ class TicketEvent extends Model
             TicketEventType::PRIORITY_CHANGED => __(':actor changed the priority to :to.', $replace + ['to' => TicketPriority::from($properties['to'])->label()]),
             TicketEventType::DUE_DATE_CHANGED => $properties['to'] === null
                 ? __(':actor removed the due date.', $replace)
-                : __(':actor set the due date to :to.', $replace + ['to' => CarbonImmutable::parse($properties['to'])->toDayDateTimeString()]),
+                : __(':actor set the due date to :to.', $replace + ['to' => $this->localTime($properties['to'])]),
             TicketEventType::DESK_CHANGED => __(':actor moved the ticket to :to.', $replace + ['to' => $properties['to']]),
             TicketEventType::CUSTOM_FIELD_CHANGED => $properties['to'] === null
                 ? __(':actor cleared :name.', $replace + ['name' => $properties['name']])
@@ -110,10 +111,21 @@ class TicketEvent extends Model
             TicketEventType::COMMENT_DELETED => __(':actor deleted a comment.', $replace),
             TicketEventType::ATTACHMENT_ADDED => __(':actor attached :filename.', $replace + ['filename' => $properties['filename']]),
             TicketEventType::ATTACHMENT_REMOVED => __(':actor removed the attachment :filename.', $replace + ['filename' => $properties['filename']]),
-            TicketEventType::REMINDER_SET => __(':actor set a reminder for :at.', $replace + ['at' => CarbonImmutable::parse($properties['remind_at'])->toDayDateTimeString()]),
+            TicketEventType::REMINDER_SET => __(':actor set a reminder for :at.', $replace + ['at' => $this->localTime($properties['remind_at'])]),
             TicketEventType::DELETED => __(':actor deleted the ticket.', $replace),
             TicketEventType::RESTORED => __(':actor restored the ticket.', $replace),
         };
+    }
+
+    /**
+     * A stored time in the viewing user's timezone. Descriptions are built per request, so
+     * each viewer reads their own local time.
+     */
+    protected function localTime(string $time): string
+    {
+        return CarbonImmutable::parse($time)
+            ->setTimezone(Auth::user()?->getAttribute('timezone') ?? config('app.timezone'))
+            ->toDayDateTimeString();
     }
 
     /**

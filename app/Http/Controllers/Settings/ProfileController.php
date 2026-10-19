@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
+use DateTimeZone;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,6 +23,7 @@ class ProfileController extends Controller
         return Inertia::render('settings/Profile', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => $request->session()->get('status'),
+            'timezones' => DateTimeZone::listIdentifiers(),
         ]);
     }
 
@@ -41,6 +43,21 @@ class ProfileController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Profile updated.')]);
 
         return to_route('profile.edit');
+    }
+
+    /**
+     * Change only the user's timezone, e.g. from the prompt shown when their browser's
+     * timezone differs, and stay on the page they were on.
+     */
+    public function updateTimezone(Request $request): RedirectResponse
+    {
+        $validated = $request->validate(['timezone' => ['required', 'timezone:all']]);
+
+        $request->user()->update($validated);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Timezone updated.')]);
+
+        return back();
     }
 
     /**

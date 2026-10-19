@@ -9,11 +9,14 @@ import {
 } from '@headlessui/vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import { ChevronDown, Menu as MenuIcon, X } from '@lucide/vue';
+import { watch } from 'vue';
 import Container from '@/components/Container.vue';
 import ArchboardLogo from '@/components/icons/ArchboardLogo.vue';
 import Notifications from '@/components/Notifications.vue';
+import TimezonePrompt from '@/components/TimezonePrompt.vue';
 import ScaleIn from '@/components/transitions/ScaleIn.vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
+import { setDisplayTimezone } from '@/lib/dates';
 import { logout } from '@/routes';
 import { edit as editApiTokens } from '@/routes/api-tokens';
 import { edit as editAppearance } from '@/routes/appearance';
@@ -26,6 +29,10 @@ const { title = '' } = defineProps<{ title?: string }>();
 
 const page = usePage();
 const { isCurrentOrParentUrl } = useCurrentUrl();
+
+watch(() => page.props.auth.user.timezone, setDisplayTimezone, {
+  immediate: true,
+});
 
 const navigation = [
   { label: 'Tickets', href: tickets().url },
@@ -177,6 +184,8 @@ const userNavigation = [
 
     <main class="py-8">
       <Container>
+        <TimezonePrompt />
+
         <h1 v-if="title" class="mb-6 text-2xl font-semibold tracking-tight">
           {{ title }}
         </h1>

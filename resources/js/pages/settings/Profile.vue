@@ -5,8 +5,9 @@ import CardAction from '@/components/CardAction.vue';
 import CardPadding from '@/components/CardPadding.vue';
 import CardWrapper from '@/components/CardWrapper.vue';
 import AppFieldset from '@/components/forms/AppFieldset.vue';
-import { EmailField, InputField } from '@/components/forms/fields';
+import { EmailField, InputField, SelectField } from '@/components/forms/fields';
 import SettingsNav from '@/components/SettingsNav.vue';
+import { guessTimezone } from '@/lib/dates';
 import { update } from '@/routes/profile';
 import { send } from '@/routes/verification';
 
@@ -15,6 +16,7 @@ defineOptions({ layout: { title: 'Profile' } });
 defineProps<{
   mustVerifyEmail: boolean;
   status?: string;
+  timezones: string[];
 }>();
 
 const page = usePage();
@@ -22,6 +24,7 @@ const page = usePage();
 const form = useForm({
   name: page.props.auth.user.name,
   email: page.props.auth.user.email,
+  timezone: page.props.auth.user.timezone ?? guessTimezone(),
 });
 
 const resend = useForm({});
@@ -46,6 +49,14 @@ const resend = useForm({});
             v-model="form.email"
             label="Email address"
             :error="form.errors.email"
+            required
+          />
+          <SelectField
+            v-model="form.timezone"
+            label="Timezone"
+            :options="timezones"
+            :error="form.errors.timezone"
+            help-text="Dates and times are shown in this timezone."
             required
           />
 

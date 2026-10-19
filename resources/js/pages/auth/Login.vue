@@ -8,6 +8,7 @@ import AppCheckbox from '@/components/forms/AppCheckbox.vue';
 import AppFieldset from '@/components/forms/AppFieldset.vue';
 import AppInput from '@/components/forms/AppInput.vue';
 import FormField from '@/components/forms/FormField.vue';
+import { guessTimezone } from '@/lib/dates';
 import { store } from '@/routes/login';
 import { store as sendMagicLink } from '@/routes/magic-link';
 import { request } from '@/routes/password';
@@ -28,6 +29,8 @@ const form = useForm({
   email: '',
   password: '',
   remember: false,
+  // Saved on the account the first time, so dates show in the user's local time.
+  timezone: guessTimezone(),
 });
 
 const magicLinkForm = useForm({ email: '' });
