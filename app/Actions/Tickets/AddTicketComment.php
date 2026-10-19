@@ -3,6 +3,7 @@
 namespace App\Actions\Tickets;
 
 use App\Enums\TicketEventType;
+use App\Jobs\SendTicketReplyEmail;
 use App\Models\Contact;
 use App\Models\Ticket;
 use App\Models\TicketComment;
@@ -17,7 +18,8 @@ class AddTicketComment
 
     /**
      * Reply on the ticket, or add an internal note when `is_internal` is true. Files in
-     * `attachments` are attached to the comment. A contact (replying by email) skips the policy
+     * `attachments` are attached to the comment. An agent's public reply is emailed to the
+     * requester once the transaction commits. A contact (replying by email) skips the policy
      * check, can't add internal notes, and alone may set `message_id` (the email's Message-ID).
      *
      * @param  array<string, mixed>  $input
@@ -55,6 +57,10 @@ class AddTicketComment
             // the comment; files already written then stay on disk. Add an orphan sweep if that bites.
             foreach ($validated['attachments'] ?? [] as $file) {
                 $this->addTicketAttachment->handle($actor, $ticket, ['file' => $file], $comment);
+            }
+
+            if ($actor instanceof User && ! $comment->is_internal) {
+                SendTicketReplyEmail::dispatch($comment);
             }
 
             return $comment;
