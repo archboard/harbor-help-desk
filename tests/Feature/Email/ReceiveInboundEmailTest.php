@@ -1,15 +1,20 @@
 <?php
 
 use App\Actions\Email\ReceiveInboundEmail;
+use App\Enums\DeskRole;
 use App\Enums\TicketEventType;
 use App\Enums\TicketStatus;
+use App\Enums\WorkspaceRole;
+use App\Jobs\SendTicketReplyEmail;
 use App\Mail\Inbound\InboundEmail;
 use App\Models\Contact;
 use App\Models\Desk;
 use App\Models\Mailbox;
 use App\Models\Ticket;
 use App\Models\TicketComment;
+use App\Models\User;
 use App\Models\Workspace;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Tests\Concerns\InWorkspace;
 
@@ -90,7 +95,7 @@ test('replies thread by in-reply-to and reopen a solved ticket', function () {
     expect($first->ticket->events()->get()->last()->description())->toBe('Pat Lee changed the status to Open.');
 });
 
-test('replies thread by the ticket number in the subject when the requester sends them', function () {
+test('replies thread by the ticket number in the subject', function () {
     $ticket = receive(inboundEmail())->ticket;
 
     $reply = receive(inboundEmail(['subject' => "Re: Printer jam [#{$ticket->number}]", 'fromEmail' => 'PAT@example.com']));
@@ -98,13 +103,62 @@ test('replies thread by the ticket number in the subject when the requester send
     expect($reply->ticket_id)->toBe($ticket->id);
 });
 
-test('a stranger using a ticket number in the subject gets a new ticket', function () {
+test('a reply from someone other than the requester is their comment on the same ticket', function () {
+    Queue::fake();
     $ticket = receive(inboundEmail())->ticket;
 
-    $comment = receive(inboundEmail(['subject' => "Re: Printer jam [#{$ticket->number}]", 'fromEmail' => 'mallory@example.com']));
+    $comment = receive(inboundEmail(['subject' => "Re: Printer jam [#{$ticket->number}]", 'fromEmail' => 'sam@example.com', 'fromName' => 'Sam']));
 
-    expect($comment->ticket_id)->not->toBe($ticket->id);
+    expect($comment->ticket_id)->toBe($ticket->id)
+        ->and($comment->author)->toBeInstanceOf(Contact::class)
+        ->and($comment->author->email)->toBe('sam@example.com')
+        ->and(Ticket::count())->toBe(1);
+    Queue::assertNothingPushed();
 });
+
+test('an agent replying by email adds their comment and it is emailed to the requester', function () {
+    Queue::fake();
+    $agent = User::factory()->create(['email' => 'alex@acme.com']);
+    $this->workspace->users()->attach($agent, ['role' => WorkspaceRole::AGENT]);
+    $this->desk->users()->attach($agent, ['role' => DeskRole::AGENT, 'workspace_id' => $this->workspace->id]);
+    $first = receive(inboundEmail(['messageId' => 'first@mail.example.com']));
+    $first->ticket->update(['status' => TicketStatus::PENDING]);
+
+    $reply = receive(inboundEmail([
+        'messageId' => 'agent@mail.acme.com',
+        'inReplyTo' => 'first@mail.example.com',
+        'fromEmail' => 'Alex@acme.com',
+        'text' => 'Try turning it off and on.',
+        'headers' => ['authentication-results' => 'mx.google.com; dkim=pass header.i=@acme.com header.s=s1; spf=pass'],
+    ]));
+
+    expect($reply->author->is($agent))->toBeTrue()
+        ->and($reply)->is_internal->toBeFalse()->message_id->toBe('agent@mail.acme.com')->body->toBe('Try turning it off and on.')
+        ->and($first->ticket->fresh()->status)->toBe(TicketStatus::PENDING)
+        ->and(Contact::count())->toBe(1);
+    Queue::assertPushed(SendTicketReplyEmail::class, fn (SendTicketReplyEmail $job) => $job->comment->is($reply));
+});
+
+test('an agent is only matched when the receiving server vouches for them and they can work the ticket', function (array $headers, bool $onDesk) {
+    Queue::fake();
+    $agent = User::factory()->create(['email' => 'alex@acme.com']);
+    $this->workspace->users()->attach($agent, ['role' => WorkspaceRole::AGENT]);
+    if ($onDesk) {
+        $this->desk->users()->attach($agent, ['role' => DeskRole::AGENT, 'workspace_id' => $this->workspace->id]);
+    }
+    $ticket = receive(inboundEmail())->ticket;
+
+    $reply = receive(inboundEmail(['subject' => "Re: [#{$ticket->number}]", 'fromEmail' => 'alex@acme.com', 'headers' => $headers]));
+
+    expect($reply->ticket_id)->toBe($ticket->id)
+        ->and($reply->author)->toBeInstanceOf(Contact::class);
+    Queue::assertNotPushed(SendTicketReplyEmail::class);
+})->with([
+    'no authentication results' => [[], true],
+    'dmarc failed' => [['authentication-results' => 'mx.google.com; dmarc=fail header.from=acme.com'], true],
+    'dkim for another domain' => [['authentication-results' => 'mx.google.com; dkim=pass header.d=evil.com'], true],
+    'not on the desk' => [['authentication-results' => 'mx.google.com; dmarc=pass header.from=acme.com'], false],
+]);
 
 test('the same message received twice is stored once', function () {
     receive(inboundEmail(['messageId' => 'same@mail.example.com']));

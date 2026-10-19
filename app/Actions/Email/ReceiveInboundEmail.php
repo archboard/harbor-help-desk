@@ -12,9 +12,13 @@ use App\Models\Contact;
 use App\Models\Mailbox;
 use App\Models\Ticket;
 use App\Models\TicketComment;
+use App\Models\User;
+use App\Models\Workspace;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
@@ -64,20 +68,22 @@ class ReceiveInboundEmail
             return null;
         }
 
-        $contact = Contact::findOrCreateByEmail($email->fromEmail, $email->fromName ?? Str::before($email->fromEmail, '@'));
+        // A new ticket's author is always a contact, who becomes its requester.
+        $author = $this->agent($email, $ticket)
+            ?? Contact::findOrCreateByEmail($email->fromEmail, $email->fromName ?? Str::before($email->fromEmail, '@'));
         [$attachments, $skipped] = $this->attachments($email);
         $body = Str::limit(implode("\n\n", array_filter([$email->replyText(), ...$skipped])) ?: __('(empty message)'), 65000);
         $input = ['body' => $body, 'attachments' => $attachments, 'message_id' => $email->messageId];
 
         try {
             $comment = $ticket === null
-                ? $this->createTicket->handle($contact, $mailbox->deskFor($email), [
+                ? $this->createTicket->handle($author, $mailbox->deskFor($email), [
                     ...$input,
                     'subject' => Str::limit($email->subject, 250) ?: __('(no subject)'),
-                    'requester_id' => $contact->id,
+                    'requester_id' => $author->id,
                     'mailbox_id' => $mailbox->id,
                 ])->comments()->sole()
-                : $this->reply($contact, $ticket, $input);
+                : $this->reply($author, $ticket, $input);
         } catch (UniqueConstraintViolationException) {
             Log::info('Inbound email dropped: duplicate', $context);
 
@@ -130,8 +136,8 @@ class ReceiveInboundEmail
     }
 
     /**
-     * The ticket named by `[#1042]` in the subject, but only when the sender is its requester,
-     * so a stranger can't post into someone else's ticket by guessing a number.
+     * The ticket named by `[#1042]` in the subject. Anyone's reply lands on it, not just the
+     * requester's; a sender who isn't an agent only adds a comment, which isn't emailed out.
      */
     protected function ticketBySubject(InboundEmail $email): ?Ticket
     {
@@ -139,10 +145,23 @@ class ReceiveInboundEmail
             return null;
         }
 
-        return Ticket::query()
-            ->where('number', (int) $match[1])
-            ->whereHas('requester', fn ($query) => $query->whereRaw('lower(email) = lower(?)', [$email->fromEmail]))
-            ->first();
+        return Ticket::query()->where('number', (int) $match[1])->first();
+    }
+
+    /**
+     * The workspace's agent who sent a reply to the ticket, so it's added as their comment and
+     * emailed to the requester. Only when the receiving server vouched for the From address and
+     * the agent can work the ticket; otherwise the sender is treated as a contact.
+     */
+    protected function agent(InboundEmail $email, ?Ticket $ticket): ?User
+    {
+        if ($ticket === null || ! $email->hasAuthenticatedSender()) {
+            return null;
+        }
+
+        $user = Workspace::current()?->users()->whereRaw('lower(email) = lower(?)', [$email->fromEmail])->first();
+
+        return $user !== null && Gate::forUser($user)->allows('update', $ticket) ? $user : null;
     }
 
     protected function isOverRateLimit(Mailbox $mailbox, InboundEmail $email): bool
@@ -161,15 +180,24 @@ class ReceiveInboundEmail
     /**
      * @param  array{body: string, attachments: array<int, UploadedFile>, message_id: string}  $input
      */
-    protected function reply(Contact $contact, Ticket $ticket, array $input): TicketComment
+    protected function reply(User|Contact $author, Ticket $ticket, array $input): TicketComment
     {
-        return DB::transaction(function () use ($contact, $ticket, $input): TicketComment {
-            $comment = $this->addTicketComment->handle($contact, $ticket, $input);
+        return DB::transaction(function () use ($author, $ticket, $input): TicketComment {
+            if ($author instanceof User) {
+                // Agents can't set a message_id through AddTicketComment (or the API). The agent's
+                // own one is stored for dedupe, and the copy emailed to the requester reuses it.
+                $comment = $this->addTicketComment->handle($author, $ticket, Arr::except($input, 'message_id'));
+                $comment->forceFill(['message_id' => $input['message_id']])->save();
+
+                return $comment;
+            }
+
+            $comment = $this->addTicketComment->handle($author, $ticket, $input);
 
             if (in_array($ticket->status, [TicketStatus::PENDING, TicketStatus::SOLVED, TicketStatus::CLOSED], true)) {
                 $from = $ticket->status;
                 $ticket->update(['status' => TicketStatus::OPEN]);
-                $ticket->recordEvent(TicketEventType::STATUS_CHANGED, $contact, ['from' => $from->value, 'to' => TicketStatus::OPEN->value]);
+                $ticket->recordEvent(TicketEventType::STATUS_CHANGED, $author, ['from' => $from->value, 'to' => TicketStatus::OPEN->value]);
             }
 
             return $comment;

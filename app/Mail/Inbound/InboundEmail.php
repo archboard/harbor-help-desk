@@ -130,6 +130,24 @@ final readonly class InboundEmail
     }
 
     /**
+     * Whether the receiving server vouched for the From domain: DMARC passed, or a DKIM signature
+     * from that domain did. Only the topmost Authentication-Results counts, since the receiver
+     * adds its own above any the sender forged.
+     *
+     * ponytail: a server that doesn't add Authentication-Results never vouches; add SPF or
+     * Postmark's checks if a mailbox needs them.
+     */
+    public function hasAuthenticatedSender(): bool
+    {
+        $results = strtolower($this->headers['authentication-results'] ?? '');
+        $domain = preg_quote(strtolower(substr((string) strrchr($this->fromEmail, '@'), 1)), '/');
+
+        return $domain !== ''
+            && (preg_match('/\bdmarc=pass\b/', $results) === 1
+                || preg_match("/\\bdkim=pass\\b[^;]*\\bheader\\.(?:d={$domain}|i=[^\\s;]*@{$domain})(?![\\w.-])/", $results) === 1);
+    }
+
+    /**
      * @return array<int, string>
      */
     protected static function recipients(IMessage $message): array
