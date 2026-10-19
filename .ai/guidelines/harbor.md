@@ -68,6 +68,7 @@ Postgres is the only supported database, so use its features wherever they help:
 - Cache, session and queues use Redis. Queues run under Horizon. Use `Cache::lock()` for cross-process locks that aren't tied to a database row. Row-level work claiming still uses Postgres (`lock('for update skip locked')`). Durable data never lives only in Redis.
 - Realtime features may rely on Reverb without a polling fallback. Broadcasts carry ids and event types only, never model data. Clients reload through policies and API Resources.
 - Optional services (Redis, S3, external mail providers) sit behind config, with a database or local fallback.
+- Anything a workspace admin could reasonably change is a workspace setting, managed in the UI and the API, never an `.env` variable. That includes outbound mail, limits, integrations and feature toggles. `.env` holds only infrastructure (database, Redis, Reverb, storage, app keys), platform-operator settings (multitenant mode, landlord access, platform secrets) and hard caps the cloud operator enforces across tenants. A workspace setting may be limited by such a cap, or hidden in the cloud, but self-hosters configure it in the UI.
 
 ## Testing
 
