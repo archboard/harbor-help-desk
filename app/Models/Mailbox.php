@@ -39,6 +39,9 @@ use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
  * @property int|null $imap_uid_validity
  * @property int|null $imap_last_uid
  * @property CarbonImmutable|null $polled_at
+ * @property string|null $push_subscription_id
+ * @property CarbonImmutable|null $push_expires_at
+ * @property string|null $push_secret
  * @property string|null $last_error
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
@@ -66,6 +69,10 @@ use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Mailbox whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Mailbox whereWorkspaceId($value)
  * @method static Builder<static>|Mailbox needsScheduledPoll()
+ * @method static Builder<static>|Mailbox withoutPush()
+ * @method static Builder<static>|Mailbox wherePushExpiresAt($value)
+ * @method static Builder<static>|Mailbox wherePushSecret($value)
+ * @method static Builder<static>|Mailbox wherePushSubscriptionId($value)
  *
  * @mixin \Eloquent
  */
@@ -174,7 +181,8 @@ class Mailbox extends Model
     /**
      * Limit to the mailboxes `mailboxes:poll` should queue a poll for this minute. Hosted
      * mailboxes receive by webhook, so only the workspace's own mailboxes are polled. While
-     * `mailboxes:watch` runs, only those it hasn't polled for 5 minutes are, as a backstop.
+     * `mailboxes:watch` runs, or for a mailbox with an unexpired push subscription, only those
+     * not polled for 5 minutes are, as a backstop.
      *
      * @param  Builder<self>  $query
      */
@@ -182,9 +190,23 @@ class Mailbox extends Model
     protected function needsScheduledPoll(Builder $query): void
     {
         $query->where('driver', '!=', MailboxDriver::HOSTED)
-            ->when(config('harbor.mail.watch'), fn (Builder $query) => $query->where(
-                fn (Builder $query) => $query->whereNull('polled_at')->orWhere('polled_at', '<', now()->subMinutes(5)),
-            ));
+            ->where(fn (Builder $query) => $query
+                ->whereNull('polled_at')
+                ->orWhere('polled_at', '<', now()->subMinutes(5))
+                ->unless(config('harbor.mail.watch'), fn (Builder $query) => $query->orWhere(
+                    fn (Builder $query) => $query->withoutPush(),
+                )));
+    }
+
+    /**
+     * Limit to the mailboxes whose provider isn't pushing new mail to Harbor right now.
+     *
+     * @param  Builder<self>  $query
+     */
+    #[Scope]
+    protected function withoutPush(Builder $query): void
+    {
+        $query->where(fn (Builder $query) => $query->whereNull('push_expires_at')->orWhere('push_expires_at', '<=', now()));
     }
 
     /**
@@ -216,6 +238,8 @@ class Mailbox extends Model
             'imap_uid_validity' => 'integer',
             'imap_last_uid' => 'integer',
             'polled_at' => 'datetime',
+            'push_expires_at' => 'datetime',
+            'push_secret' => 'encrypted',
         ];
     }
 }

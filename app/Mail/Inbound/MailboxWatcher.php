@@ -81,6 +81,7 @@ class MailboxWatcher
     {
         $this->mailboxes = Mailbox::withoutGlobalScope('workspace')
             ->where('driver', '!=', MailboxDriver::HOSTED)
+            ->withoutPush()
             ->with('workspace')
             ->get()
             ->filter(fn (Mailbox $mailbox): bool => crc32($mailbox->id) % $this->shards === $this->shard)

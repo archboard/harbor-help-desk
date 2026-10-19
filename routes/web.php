@@ -14,6 +14,7 @@ use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TicketDeskController;
 use App\Http\Controllers\TicketReminderController;
 use App\Http\Controllers\TicketTagController;
+use App\Http\Controllers\Webhooks\MailboxPushController;
 use App\Http\Controllers\Webhooks\PostmarkWebhookController;
 use App\Http\Middleware\VerifyPostmarkWebhook;
 use Illuminate\Support\Facades\Route;
@@ -29,6 +30,9 @@ Route::middleware(VerifyPostmarkWebhook::class)->prefix('webhooks/postmark')->na
     Route::post('inbound', [PostmarkWebhookController::class, 'inbound'])->name('inbound');
     Route::post('bounce', [PostmarkWebhookController::class, 'bounce'])->name('bounce');
 });
+
+Route::post('webhooks/google/gmail', [MailboxPushController::class, 'gmail'])->name('webhooks.google.gmail');
+Route::post('webhooks/microsoft/graph', [MailboxPushController::class, 'graph'])->name('webhooks.microsoft.graph');
 
 // On the central domain: OAuth redirect URIs can't be wildcards. The `state` names the workspace.
 Route::get('mailboxes/oauth/callback', [MailboxOAuthController::class, 'callback'])->name('mailboxes.oauth.callback');

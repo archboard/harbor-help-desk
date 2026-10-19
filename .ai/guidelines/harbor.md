@@ -42,7 +42,7 @@ An open-source helpdesk. This app is the Inertia web UI and the backend. Other c
 
 - Tenancy uses `spatie/laravel-multitenancy` with a single database. `Workspace` is the tenant model and `workspace_id` is the scoping column. In the cloud the tenant is found by subdomain. With `HARBOR_MULTITENANT=false` (self-hosted), the single workspace is always the current one.
 - `users` is a global table. Agents belong to workspaces through the `workspace_user` pivot, which holds their role. End customers are workspace-scoped `contacts`, not `users`.
-- Every tenant-owned table has a non-null `workspace_id` FK, and its model uses the workspace scoping trait. Every index and unique constraint on a tenant table starts with `workspace_id`.
+- Every tenant-owned table has a non-null `workspace_id` FK, and its model uses the workspace scoping trait. Every index and unique constraint on a tenant table starts with `workspace_id`. Exception: `mailboxes` has a landlord index on `lower(address) WHERE driver = 'google'`, because Gmail push notifications only carry the email address, so that webhook looks the mailbox up across workspaces.
 - Queued jobs, notifications and listeners that touch tenant data must be tenant-aware.
 - API tokens are scoped to workspaces through `workspace:{id}` OAuth scopes (`Workspace::tokenScope()`). `/api/v1` routes go through `EnsureTokenCanAccessWorkspace`, which requires the scope and current membership.
 - Remove the tenant scope only explicitly, and only in landlord or admin code.

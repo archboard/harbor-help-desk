@@ -53,8 +53,9 @@ enum MailboxDriver: string
                 'client_secret' => config('services.microsoft_mail.client_secret'),
                 'authorize_url' => 'https://login.microsoftonline.com/'.config('services.microsoft_mail.tenant').'/oauth2/v2.0/authorize',
                 'token_url' => 'https://login.microsoftonline.com/'.config('services.microsoft_mail.tenant').'/oauth2/v2.0/token',
-                // SMTP AUTH must be enabled on the Microsoft 365 tenant for sending.
-                'scopes' => 'openid email offline_access https://outlook.office.com/IMAP.AccessAsUser.All https://outlook.office.com/SMTP.Send',
+                // SMTP AUTH must be enabled on the Microsoft 365 tenant for sending. Mail.Read is
+                // for Microsoft Graph push subscriptions.
+                'scopes' => 'openid email offline_access https://outlook.office.com/IMAP.AccessAsUser.All https://outlook.office.com/SMTP.Send https://graph.microsoft.com/Mail.Read',
                 'imap' => ['host' => 'outlook.office365.com', 'port' => 993, 'encryption' => 'ssl'],
                 'smtp' => ['host' => 'smtp.office365.com', 'port' => 587, 'encryption' => 'starttls'],
             ],

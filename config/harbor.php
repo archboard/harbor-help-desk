@@ -50,6 +50,10 @@ return [
         'postmark_webhook_secret' => env('HARBOR_POSTMARK_WEBHOOK_SECRET'),
         'new_tickets_per_sender_per_hour' => (int) env('HARBOR_NEW_TICKETS_PER_SENDER_PER_HOUR', 20),
 
+        // Lets Gmail and Microsoft Graph push new-mail notifications to Harbor: the token on the
+        // Gmail Pub/Sub push URL. Needs an https APP_URL; mailboxes poll or watch without it.
+        'push_secret' => env('HARBOR_MAIL_PUSH_SECRET'),
+
         // With `mailboxes:watch` running, connected mailboxes are checked every few seconds over
         // held-open connections, and the per-minute poll only runs as a 5-minute backstop.
         'watch' => (bool) env('HARBOR_MAIL_WATCH', false),

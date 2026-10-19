@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Mailboxes\CreateMailbox;
+use App\Actions\Mailboxes\SubscribeMailboxPush;
 use App\Enums\MailboxDriver;
 use App\Models\Mailbox;
 use App\Models\User;
@@ -58,7 +59,7 @@ class MailboxOAuthController extends Controller
         ]));
     }
 
-    public function callback(Request $request, CreateMailbox $createMailbox): RedirectResponse
+    public function callback(Request $request, CreateMailbox $createMailbox, SubscribeMailboxPush $subscribePush): RedirectResponse
     {
         $state = rescue(fn () => Crypt::decrypt((string) $request->query('state')), report: false);
 
@@ -92,7 +93,7 @@ class MailboxOAuthController extends Controller
 
         abort_if(blank($email), Response::HTTP_UNPROCESSABLE_ENTITY);
 
-        $workspace->execute(fn () => $createMailbox->handle($user, [
+        $workspace->execute(fn () => $subscribePush->handle($createMailbox->handle($user, [
             'driver' => $driver->value,
             'name' => $workspace->name,
             'address' => $email,
@@ -102,7 +103,7 @@ class MailboxOAuthController extends Controller
                 'refresh_token' => $tokens['refresh_token'] ?? null,
                 'expires_at' => now()->addSeconds((int) $tokens['expires_in'])->getTimestamp(),
             ],
-        ]));
+        ])));
 
         return $back;
     }

@@ -31,6 +31,8 @@ return [
     'google_mail' => [
         'client_id' => env('GOOGLE_MAIL_CLIENT_ID'),
         'client_secret' => env('GOOGLE_MAIL_CLIENT_SECRET'),
+        // The Pub/Sub topic (projects/…/topics/…) Gmail publishes to; push is off without it.
+        'pubsub_topic' => env('GOOGLE_MAIL_PUBSUB_TOPIC'),
     ],
 
     'microsoft_mail' => [
