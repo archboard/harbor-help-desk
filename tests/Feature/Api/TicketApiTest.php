@@ -88,7 +88,9 @@ test('tickets are updated, moved, assigned and tagged, and the history reads bac
     $url = "http://acme.harbor.test/api/v1/tickets/{$ticket->id}";
 
     $this->patchJson($url, ['priority' => 'high'])->assertOk()->assertJsonPath('priority', 'high');
-    $this->putJson("{$url}/assignees", ['user_ids' => [$agent->id]])->assertOk()->assertJsonPath('0.id', $agent->id);
+    $this->putJson("{$url}/assignees", ['user_ids' => [$agent->id]])
+        ->assertOk()
+        ->assertExactJson([['id' => $agent->id, 'name' => $agent->name, 'email' => $agent->email]]);
     $this->putJson("{$url}/tags", ['names' => ['Billing']])->assertOk()->assertJsonPath('0.name', 'Billing');
     $this->putJson("{$url}/desk", ['desk_id' => $south->id])->assertOk()->assertJsonPath('desk_id', $south->id);
 

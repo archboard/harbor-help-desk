@@ -22,7 +22,7 @@ test('api tokens page requires password confirmation', function () {
 });
 
 test('api tokens page lists only active personal access tokens', function () {
-    $this->user->createToken('Active', [$this->workspace->tokenScope()]);
+    $token = $this->user->createToken('Active', [$this->workspace->tokenScope()])->token;
     $this->user->createToken('Revoked')->token->revoke();
 
     $this->actingAs($this->user)
@@ -30,10 +30,19 @@ test('api tokens page lists only active personal access tokens', function () {
         ->get(route('api-tokens.edit'))
         ->assertInertia(fn (Assert $page) => $page
             ->component('settings/ApiTokens')
-            ->has('tokens', 1)
-            ->where('tokens.0.name', 'Active')
-            ->where('tokens.0.workspaces', [$this->workspace->name])
-            ->where('workspaces.0.id', $this->workspace->id),
+            ->where('tokens', [[
+                'id' => $token->id,
+                'name' => 'Active',
+                'workspaces' => [$this->workspace->name],
+                'created_at' => $token->created_at->toIso8601String(),
+                'expires_at' => $token->expires_at->toIso8601String(),
+            ]])
+            ->where('workspaces', [[
+                'id' => $this->workspace->id,
+                'name' => $this->workspace->name,
+                'subdomain' => $this->workspace->subdomain,
+                'is_admin' => false,
+            ]]),
         );
 });
 

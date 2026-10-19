@@ -8,6 +8,7 @@ use App\Actions\Tickets\DeleteTicket;
 use App\Actions\Tickets\RestoreTicket;
 use App\Actions\Tickets\SearchTickets;
 use App\Actions\Tickets\UpdateTicket;
+use App\Data\Users\UserData;
 use App\Enums\TicketEventType;
 use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
@@ -20,7 +21,6 @@ use App\Http\Resources\TicketCommentResource;
 use App\Http\Resources\TicketEventResource;
 use App\Http\Resources\TicketReminderResource;
 use App\Http\Resources\TicketResource;
-use App\Http\Resources\UserResource;
 use App\Models\Desk;
 use App\Models\SavedView;
 use App\Models\Tag;
@@ -52,7 +52,7 @@ class TicketController extends Controller
             'savedViews' => SavedViewResource::collection(SavedView::visibleTo($request->user())->with('user')->orderBy('name')->get()),
             'desks' => DeskResource::collection($desks),
             'leadDeskIds' => $desks->filter(fn (Desk $desk): bool => $request->user()->can('update', $desk))->values()->modelKeys(),
-            'agents' => UserResource::collection(Workspace::current()->users()->orderBy('name')->get()),
+            'agents' => UserData::collect(Workspace::current()->users()->orderBy('name')->get()),
             'tags' => TagResource::collection(Tag::query()->orderBy('name')->get()),
             'statuses' => TicketStatus::options(),
             'priorities' => TicketPriority::options(),

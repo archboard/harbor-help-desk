@@ -28,12 +28,12 @@ import {
   destroy as removeMember,
   update as setMember,
 } from '@/routes/desks/members';
-import type { Agent, CustomField, Desk, DeskMember, DeskRole } from '@/types';
+import type { CustomField, Desk, DeskMember, DeskRole } from '@/types';
 
 const { desk } = defineProps<{
   desk: Desk;
   members: DeskMember[];
-  candidates: Agent[];
+  candidates: App.Data.Users.UserData[];
   roles: Record<DeskRole, string>;
   customFields: CustomField[];
   can: { update: boolean; manageMembers: boolean; archive: boolean };

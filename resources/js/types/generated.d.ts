@@ -1,6 +1,37 @@
 declare namespace App {
   namespace Data {
     export type InputData = object;
+    namespace ApiTokens {
+      export type ApiTokenData = {
+        id: string;
+        name: string | null;
+        workspaces: string[];
+        created_at: string | null;
+        expires_at: string | null;
+      };
+    }
+    namespace Users {
+      export type CurrentUserData = {
+        id: string;
+        name: string;
+        email: string;
+        email_verified_at: string | null;
+        timezone: string | null;
+      };
+      export type UserData = {
+        id: string;
+        name: string;
+        email: string;
+      };
+    }
+    namespace Workspaces {
+      export type WorkspaceData = {
+        id: string;
+        name: string;
+        subdomain: string;
+        is_admin: boolean;
+      };
+    }
   }
   namespace Enums {
     export type CustomFieldType =

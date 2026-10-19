@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Settings;
 
 use App\Actions\ApiTokens\CreatePersonalAccessToken;
 use App\Actions\ApiTokens\RevokePersonalAccessToken;
+use App\Data\ApiTokens\ApiTokenData;
+use App\Data\Workspaces\WorkspaceData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ApiTokenStoreRequest;
-use App\Http\Resources\ApiTokenResource;
-use App\Http\Resources\WorkspaceResource;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -22,8 +22,8 @@ class ApiTokenController extends Controller
     public function edit(Request $request): Response
     {
         return Inertia::render('settings/ApiTokens', [
-            'workspaces' => WorkspaceResource::collection($request->user()->workspaces),
-            'tokens' => ApiTokenResource::collection($request->user()
+            'workspaces' => WorkspaceData::collect($request->user()->workspaces),
+            'tokens' => ApiTokenData::collect($request->user()
                 ->tokens()
                 ->with('client')
                 ->where('revoked', false)

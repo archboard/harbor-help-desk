@@ -30,13 +30,7 @@ export type CustomField = {
 
 export type DeskRole = 'lead' | 'agent';
 
-export type Agent = {
-  id: string;
-  name: string;
-  email: string;
-};
-
-export type DeskMember = Agent & {
+export type DeskMember = App.Data.Users.UserData & {
   role: DeskRole | null;
 };
 
@@ -73,7 +67,7 @@ export type Ticket = {
   due_at: string | null;
   custom_fields: Record<string, CustomFieldValue>;
   requester?: Contact;
-  assignees?: Agent[];
+  assignees?: App.Data.Users.UserData[];
   tags?: Tag[];
   created_at: string | null;
   updated_at: string | null;
@@ -132,7 +126,7 @@ export type TicketReminder = {
 export type SavedView = {
   id: string;
   user_id: string;
-  owner?: Agent;
+  owner?: App.Data.Users.UserData;
   name: string;
   /** `SearchTickets` filters; the API may store `deleted` as a boolean. */
   filters: Record<string, string | string[] | boolean>;

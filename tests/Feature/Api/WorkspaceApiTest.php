@@ -26,7 +26,7 @@ test('members read the workspace and admins update it', function () {
     actAs($this->admin, $this->acme);
     $this->patchJson('http://acme.harbor.test/api/v1/workspace', ['name' => 'Acme Support'])
         ->assertOk()
-        ->assertJsonPath('name', 'Acme Support');
+        ->assertExactJson(['id' => $this->acme->id, 'name' => 'Acme Support', 'subdomain' => 'acme', 'is_admin' => true]);
 });
 
 test('agents cannot update the workspace', function () {
