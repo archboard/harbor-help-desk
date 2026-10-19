@@ -53,4 +53,7 @@ test('history times are shown in the viewer\'s timezone', function () {
 
     $this->actingAs(User::factory()->create(['timezone' => null]));
     expect($event->description())->toContain('6:30 PM');
+
+    $this->actingAs(User::factory()->create(['timezone' => '']));
+    expect($event->description())->toContain('6:30 PM');
 });

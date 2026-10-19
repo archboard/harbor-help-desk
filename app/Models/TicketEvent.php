@@ -124,7 +124,7 @@ class TicketEvent extends Model
     protected function localTime(string $time): string
     {
         return CarbonImmutable::parse($time)
-            ->setTimezone(Auth::user()?->getAttribute('timezone') ?? config('app.timezone'))
+            ->setTimezone(Auth::user()?->getAttribute('timezone') ?: config('app.timezone'))
             ->toDayDateTimeString();
     }
 

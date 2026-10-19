@@ -10,11 +10,28 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 /**
- * Show dates in the user's saved timezone, or the browser's when they haven't saved one.
- * Every helper below formats and parses in this zone.
+ * Whether the browser knows the IANA zone, so formatting in it won't throw.
  */
-export function setDisplayTimezone(zone: string | null): void {
-  dayjs.tz.setDefault(zone ?? undefined);
+function isValidTimezone(zone: string | null | undefined): zone is string {
+  if (!zone) {
+    return false;
+  }
+
+  try {
+    new Intl.DateTimeFormat(undefined, { timeZone: zone });
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Show dates in the user's saved timezone, falling back to the browser's when it's
+ * missing, empty or unknown. Every helper below formats and parses in this zone.
+ */
+export function setDisplayTimezone(zone: string | null | undefined): void {
+  dayjs.tz.setDefault(isValidTimezone(zone) ? zone : guessTimezone());
 }
 
 /**
