@@ -54,6 +54,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *
  * @property-read Collection<int, Attachment> $attachments
  * @property-read int|null $attachments_count
+ * @property string|null $message_id
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TicketComment whereMessageId($value)
  *
  * @mixin \Eloquent
  */

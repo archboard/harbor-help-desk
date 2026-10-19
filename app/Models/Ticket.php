@@ -77,6 +77,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *
  * @method static Builder<static>|Ticket whereCustomFields($value)
  *
+ * @property string|null $mailbox_id
+ * @property-read Mailbox|null $mailbox
+ *
+ * @method static Builder<static>|Ticket whereMailboxId($value)
+ *
  * @mixin \Eloquent
  */
 #[Unguarded]
@@ -126,6 +131,16 @@ class Ticket extends Model
     public function desk(): BelongsTo
     {
         return $this->belongsTo(Desk::class)->withTrashed();
+    }
+
+    /**
+     * The mailbox the ticket's email thread lives in.
+     *
+     * @return BelongsTo<Mailbox, $this>
+     */
+    public function mailbox(): BelongsTo
+    {
+        return $this->belongsTo(Mailbox::class);
     }
 
     /**

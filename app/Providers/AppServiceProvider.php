@@ -8,6 +8,7 @@ use App\Models\Attachment;
 use App\Models\Contact;
 use App\Models\CustomField;
 use App\Models\Desk;
+use App\Models\Mailbox;
 use App\Models\Passkey;
 use App\Models\Tag;
 use App\Models\Ticket;
@@ -82,6 +83,7 @@ class AppServiceProvider extends ServiceProvider
             'attachment' => Attachment::class,
             'ticket_reminder' => TicketReminder::class,
             'custom_field' => CustomField::class,
+            'mailbox' => Mailbox::class,
         ]);
 
         Passport::tokensExpireIn(CarbonImmutable::now()->addHour());

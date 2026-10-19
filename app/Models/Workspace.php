@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Actions\Mailboxes\CreateHostedMailbox;
 use Carbon\CarbonImmutable;
 use Database\Factories\WorkspaceFactory;
 use GrantHolle\Scru128Laravel\Concerns\HasScru128Ids;
@@ -44,6 +45,9 @@ use Spatie\Multitenancy\Models\Concerns\ImplementsTenant;
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereNextTicketNumber($value)
  *
+ * @property-read Collection<int, Mailbox> $mailboxes
+ * @property-read int|null $mailboxes_count
+ *
  * @mixin \Eloquent
  */
 #[Unguarded]
@@ -63,7 +67,9 @@ class Workspace extends Model implements IsTenant
     protected static function booted(): void
     {
         static::created(function (Workspace $workspace): void {
-            $workspace->desks()->create(['name' => $workspace->name, 'slug' => 'default']);
+            $desk = $workspace->desks()->create(['name' => $workspace->name, 'slug' => 'default']);
+
+            app(CreateHostedMailbox::class)->handle($workspace, $desk);
         });
     }
 
@@ -111,5 +117,13 @@ class Workspace extends Model implements IsTenant
     public function desks(): HasMany
     {
         return $this->hasMany(Desk::class);
+    }
+
+    /**
+     * @return HasMany<Mailbox, $this>
+     */
+    public function mailboxes(): HasMany
+    {
+        return $this->hasMany(Mailbox::class);
     }
 }

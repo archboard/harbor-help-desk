@@ -36,6 +36,7 @@ An open-source helpdesk. This app is the Inertia web UI and the backend. Other c
 | `att_` | `Attachment` |
 | `rmd_` | `TicketReminder` |
 | `svw_` | `SavedView` |
+| `mbx_` | `Mailbox`   |
 
 ## Tenancy
 
