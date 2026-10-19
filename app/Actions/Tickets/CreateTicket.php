@@ -61,7 +61,7 @@ class CreateTicket
                 ...Arr::only($validated, ['subject', 'status', 'priority', 'due_at', 'mailbox_id']),
                 'custom_fields' => CustomFieldRules::cast($desk, $validated['custom_fields'] ?? []),
                 'desk_id' => $desk->getKey(),
-                'requester_id' => $validated['requester_id'] ?? $this->findOrCreateContact($validated['requester'])->getKey(),
+                'requester_id' => $validated['requester_id'] ?? Contact::findOrCreateByEmail($validated['requester']['email'], $validated['requester']['name'])->getKey(),
             ]);
 
             $ticket->recordEvent(TicketEventType::CREATED, $actor);
@@ -76,16 +76,5 @@ class CreateTicket
 
             return $ticket;
         });
-    }
-
-    /**
-     * @param  array{name: string, email: string}  $requester
-     */
-    protected function findOrCreateContact(array $requester): Contact
-    {
-        // ponytail: two concurrent tickets from a brand-new email can race; the unique index
-        // rejects the second. Retry on UniqueConstraintViolationException if that shows up.
-        return Contact::query()->whereRaw('lower(email) = lower(?)', [$requester['email']])->first()
-            ?? Contact::create($requester);
     }
 }

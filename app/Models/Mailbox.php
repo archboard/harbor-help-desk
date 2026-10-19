@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\MailboxDriver;
+use App\Mail\Inbound\InboundEmail;
 use App\Models\Concerns\BelongsToWorkspace;
 use Carbon\CarbonImmutable;
 use Database\Factories\MailboxFactory;
@@ -65,6 +66,13 @@ class Mailbox extends Model
     /** @use HasFactory<MailboxFactory> */
     use BelongsToWorkspace, HasFactory, HasScru128Ids;
 
+    /**
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'routing' => '[]',
+    ];
+
     public function idPrefix(): string
     {
         return 'mbx_';
@@ -76,6 +84,23 @@ class Mailbox extends Model
     public function defaultDesk(): BelongsTo
     {
         return $this->belongsTo(Desk::class, 'default_desk_id')->withTrashed();
+    }
+
+    /**
+     * The desk new mail goes to: the first routing rule whose address is among the recipients
+     * and whose desk is active, then the default desk, then the workspace's oldest active desk.
+     */
+    public function deskFor(InboundEmail $email): Desk
+    {
+        $desks = Desk::query()->whereKey([...array_column($this->routing, 'desk_id'), $this->default_desk_id])->get()->keyBy('id');
+
+        foreach ($this->routing as $rule) {
+            if (in_array(strtolower($rule['address']), $email->recipients, true) && $desks->has($rule['desk_id'])) {
+                return $desks[$rule['desk_id']];
+            }
+        }
+
+        return $desks[$this->default_desk_id] ?? Desk::query()->oldest()->firstOrFail();
     }
 
     /**

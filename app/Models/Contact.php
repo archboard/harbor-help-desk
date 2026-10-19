@@ -51,6 +51,18 @@ class Contact extends Model
     }
 
     /**
+     * The workspace's contact with this email, matched case-insensitively, or a new one.
+     *
+     * ponytail: two concurrent tickets from a brand-new email can race; the unique index
+     * rejects the second. Retry on UniqueConstraintViolationException if that shows up.
+     */
+    public static function findOrCreateByEmail(string $email, string $name): self
+    {
+        return self::query()->whereRaw('lower(email) = lower(?)', [$email])->first()
+            ?? self::create(['name' => $name, 'email' => $email]);
+    }
+
+    /**
      * The tickets this contact requested.
      *
      * @return HasMany<Ticket, $this>

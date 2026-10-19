@@ -22,6 +22,7 @@ enum TicketEventType: string
     case ATTACHMENT_ADDED = 'attachment_added';
     case ATTACHMENT_REMOVED = 'attachment_removed';
     case REMINDER_SET = 'reminder_set';
+    case EMAIL_BOUNCED = 'email_bounced';
     case DELETED = 'deleted';
     case RESTORED = 'restored';
 }

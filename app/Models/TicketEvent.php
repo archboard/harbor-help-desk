@@ -112,6 +112,7 @@ class TicketEvent extends Model
             TicketEventType::ATTACHMENT_ADDED => __(':actor attached :filename.', $replace + ['filename' => $properties['filename']]),
             TicketEventType::ATTACHMENT_REMOVED => __(':actor removed the attachment :filename.', $replace + ['filename' => $properties['filename']]),
             TicketEventType::REMINDER_SET => __(':actor set a reminder for :at.', $replace + ['at' => $this->localTime($properties['remind_at'])]),
+            TicketEventType::EMAIL_BOUNCED => __('An emailed reply bounced: :reason', ['reason' => $properties['reason']]),
             TicketEventType::DELETED => __(':actor deleted the ticket.', $replace),
             TicketEventType::RESTORED => __(':actor restored the ticket.', $replace),
         };
