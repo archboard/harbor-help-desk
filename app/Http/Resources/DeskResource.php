@@ -21,6 +21,7 @@ class DeskResource extends JsonResource
             'name' => $this->name,
             'slug' => $this->slug,
             'custom_fields' => CustomFieldResource::collection($this->whenLoaded('customFields')),
+            'members' => DeskMemberResource::collection($this->whenLoaded('users')),
             'archived_at' => $this->archived_at?->toIso8601String(),
         ];
     }

@@ -18,12 +18,16 @@ use Illuminate\Validation\Rule;
 
 class CreateTicket
 {
-    public function __construct(protected SyncTicketAssignees $syncTicketAssignees) {}
+    public function __construct(
+        protected SyncTicketAssignees $syncTicketAssignees,
+        protected AddTicketComment $addTicketComment,
+    ) {}
 
     /**
      * Open a ticket on an active desk. The requester is an existing contact (`requester_id`) or is
      * found or created by email (`requester.email`, `requester.name`). `custom_fields` maps the
-     * desk's enabled field ids to values.
+     * desk's enabled field ids to values. An optional `body` (with `attachments`) becomes the
+     * ticket's first reply, written by the actor.
      *
      * @param  array<string, mixed>  $input
      */
@@ -41,6 +45,9 @@ class CreateTicket
             'requester.email' => ['required_with:requester', 'email', 'max:255'],
             'requester.name' => ['required_with:requester', 'string', 'max:255'],
             'assignee_ids' => ['sometimes', 'array'],
+            'body' => ['required_with:attachments', 'nullable', 'string', 'max:65535'],
+            'attachments' => ['sometimes', 'array', 'max:20'],
+            'attachments.*' => AddTicketAttachment::rules(),
             ...CustomFieldRules::for($desk, creating: true),
         ])->validate();
 
@@ -56,6 +63,10 @@ class CreateTicket
 
             if (isset($validated['assignee_ids'])) {
                 $this->syncTicketAssignees->handle($actor, $ticket, ['user_ids' => $validated['assignee_ids']]);
+            }
+
+            if (filled($validated['body'] ?? null)) {
+                $this->addTicketComment->handle($actor, $ticket, Arr::only($validated, ['body', 'attachments']));
             }
 
             return $ticket;

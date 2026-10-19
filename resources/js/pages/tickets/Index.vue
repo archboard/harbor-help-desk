@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
+import AppButton from '@/components/AppButton.vue';
 import { computed } from 'vue';
 import TicketFilters from '@/components/tickets/TicketFilters.vue';
 import TicketTable from '@/components/tickets/TicketTable.vue';
 import type { TicketQuery } from '@/components/tickets/TicketFilters.vue';
-import { index } from '@/routes/tickets';
+import { create, index } from '@/routes/tickets';
 import type { Agent, Desk, Paginated, Tag, Ticket } from '@/types';
 
 defineOptions({ layout: { title: 'Tickets' } });
@@ -60,23 +61,26 @@ function apply(query: TicketQuery): void {
   <Head title="Tickets" />
 
   <div class="space-y-4">
-    <nav class="flex flex-wrap gap-1" aria-label="Quick filters">
-      <button
-        v-for="quick in quickFilters"
-        :key="quick.label"
-        type="button"
-        :aria-pressed="activeQuickFilter === quick.label"
-        :class="[
-          'rounded-md px-3 py-1.5 text-sm font-medium',
-          activeQuickFilter === quick.label
-            ? 'bg-primary-50 text-primary-700 dark:bg-primary-950 dark:text-primary-300'
-            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white',
-        ]"
-        @click="apply(quick.query)"
-      >
-        {{ quick.label }}
-      </button>
-    </nav>
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <nav class="flex flex-wrap gap-1" aria-label="Quick filters">
+        <button
+          v-for="quick in quickFilters"
+          :key="quick.label"
+          type="button"
+          :aria-pressed="activeQuickFilter === quick.label"
+          :class="[
+            'rounded-md px-3 py-1.5 text-sm font-medium',
+            activeQuickFilter === quick.label
+              ? 'bg-primary-50 text-primary-700 dark:bg-primary-950 dark:text-primary-300'
+              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white',
+          ]"
+          @click="apply(quick.query)"
+        >
+          {{ quick.label }}
+        </button>
+      </nav>
+      <AppButton :component="Link" :href="create()">New ticket</AppButton>
+    </div>
 
     <TicketFilters
       :filters="filters"

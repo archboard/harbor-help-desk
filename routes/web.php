@@ -28,6 +28,8 @@ Route::middleware('workspace')->group(function () {
         Route::resource('contacts', ContactController::class)->only(['index', 'store', 'show', 'update']);
 
         Route::get('tickets', [TicketController::class, 'index'])->name('tickets.index');
+        Route::get('tickets/create', [TicketController::class, 'create'])->name('tickets.create');
+        Route::post('desks/{desk}/tickets', [TicketController::class, 'store'])->name('desks.tickets.store');
         Route::get('tickets/{ticket}', [TicketController::class, 'show'])->withTrashed()->name('tickets.show');
         Route::patch('tickets/{ticket}', [TicketController::class, 'update'])->name('tickets.update');
         Route::delete('tickets/{ticket}', [TicketController::class, 'destroy'])->name('tickets.destroy');

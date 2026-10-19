@@ -2,15 +2,15 @@
 import { Link, router } from '@inertiajs/vue3';
 import { X } from '@lucide/vue';
 import { watchDebounced } from '@vueuse/core';
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import CardPadding from '@/components/CardPadding.vue';
 import CardWrapper from '@/components/CardWrapper.vue';
 import AppInput from '@/components/forms/AppInput.vue';
 import AppLabel from '@/components/forms/AppLabel.vue';
 import AppSelect from '@/components/forms/AppSelect.vue';
 import FieldError from '@/components/forms/FieldError.vue';
-import GenericObjectCombobox from '@/components/forms/GenericObjectCombobox.vue';
 import Pill from '@/components/Pill.vue';
+import AssigneePicker from '@/components/tickets/AssigneePicker.vue';
 import CustomFieldInput from '@/components/tickets/CustomFieldInput.vue';
 import { show as showContact } from '@/routes/contacts';
 import { update as updateTicket } from '@/routes/tickets';
@@ -26,7 +26,7 @@ import type {
   Ticket,
 } from '@/types';
 
-const { ticket, deskMembers } = defineProps<{
+const { ticket } = defineProps<{
   ticket: Ticket;
   desks: Desk[];
   deskMembers: DeskMember[];
@@ -102,31 +102,8 @@ watchDebounced(
   { debounce: 500, deep: true },
 );
 
-const assigneeIds = computed(() =>
-  (ticket.assignees ?? []).map((agent) => agent.id),
-);
-
-/** Desk members who aren't assigned yet, for the search box. */
-const assignable = computed(() =>
-  deskMembers.filter((member) => !assigneeIds.value.includes(member.id)),
-);
-
-/** Bumped after adding someone, to clear the search box. */
-const assigneeSearchKey = ref(0);
-
-function addAssignee(member: DeskMember | null): void {
-  if (member) {
-    save(syncAssignees(ticket.id).url, {
-      user_ids: [...assigneeIds.value, member.id],
-    });
-    assigneeSearchKey.value++;
-  }
-}
-
-function removeAssignee(userId: string): void {
-  save(syncAssignees(ticket.id).url, {
-    user_ids: assigneeIds.value.filter((id) => id !== userId),
-  });
+function saveAssignees(ids: string[]): void {
+  save(syncAssignees(ticket.id).url, { user_ids: ids });
 }
 
 function tagNames(): string[] {
@@ -184,39 +161,12 @@ function removeTag(name: string): void {
 
       <div class="space-y-2">
         <h2 class="font-medium text-gray-500 dark:text-gray-400">Assignees</h2>
-        <div v-if="ticket.assignees?.length" class="flex flex-wrap gap-1">
-          <Pill
-            v-for="agent in ticket.assignees"
-            :key="agent.id"
-            color="primary"
-          >
-            {{ agent.name }}
-            <button
-              v-if="editable"
-              type="button"
-              class="-mr-1 ml-1 rounded-full hover:text-red-600"
-              @click="removeAssignee(agent.id)"
-            >
-              <span class="sr-only">Unassign {{ agent.name }}</span>
-              <X class="size-3" aria-hidden="true" />
-            </button>
-          </Pill>
-        </div>
-        <p v-else-if="!editable" class="text-gray-400">Unassigned</p>
-        <div v-if="editable && assignable.length">
-          <label for="ticket-assignee-search" class="sr-only"
-            >Assign someone</label
-          >
-          <GenericObjectCombobox
-            :key="assigneeSearchKey"
-            :options="assignable"
-            id="ticket-assignee-search"
-            @update:model-value="addAssignee"
-          />
-        </div>
-        <p v-else-if="editable && !deskMembers.length" class="text-gray-400">
-          Nobody is on this desk yet.
-        </p>
+        <AssigneePicker
+          :model-value="(ticket.assignees ?? []).map((agent) => agent.id)"
+          :members="deskMembers"
+          :disabled="!editable"
+          @update:model-value="saveAssignees"
+        />
         <FieldError v-if="errors.user_ids">{{ errors.user_ids }}</FieldError>
       </div>
 

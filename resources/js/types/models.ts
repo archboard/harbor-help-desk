@@ -4,6 +4,7 @@ export type Desk = {
   slug: string;
   archived_at: string | null;
   custom_fields?: CustomField[];
+  members?: DeskMember[];
 };
 
 export type CustomFieldType =

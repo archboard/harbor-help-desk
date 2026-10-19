@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Tickets\CreateTicket;
 use App\Actions\Tickets\DeleteTicket;
 use App\Actions\Tickets\RestoreTicket;
 use App\Actions\Tickets\SearchTickets;
@@ -50,6 +51,30 @@ class TicketController extends Controller
             'statuses' => TicketStatus::options(),
             'priorities' => TicketPriority::options(),
         ]);
+    }
+
+    /**
+     * The new ticket form: each desk the user can open tickets on, with its fields and members.
+     */
+    public function create(Request $request): Response
+    {
+        return Inertia::render('tickets/Create', [
+            'desks' => DeskResource::collection(Desk::visibleTo($request->user())
+                ->with(['customFields', 'users' => fn ($query) => $query->orderBy('name')])
+                ->orderBy('name')
+                ->get()),
+            'statuses' => TicketStatus::options(),
+            'priorities' => TicketPriority::options(),
+        ]);
+    }
+
+    public function store(Request $request, Desk $desk, CreateTicket $createTicket): RedirectResponse
+    {
+        $ticket = $createTicket->handle($request->user(), $desk, $request->all());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Ticket #:number created.', ['number' => $ticket->number])]);
+
+        return to_route('tickets.show', $ticket);
     }
 
     /**

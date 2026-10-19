@@ -21,6 +21,7 @@ test('agents open tickets on their desk', function () {
         'subject' => 'Printer jam',
         'requester' => ['name' => 'Pat Lee', 'email' => 'pat@example.com'],
         'assignee_ids' => [$agent->id],
+        'body' => 'It jams on every double-sided print.',
     ])
         ->assertCreated()
         ->assertJsonPath('number', 1)
@@ -28,7 +29,8 @@ test('agents open tickets on their desk', function () {
         ->assertJsonPath('requester.email', 'pat@example.com')
         ->assertJsonPath('assignees.0.id', $agent->id);
 
-    expect(Ticket::sole()->subject)->toBe('Printer jam');
+    expect(Ticket::sole())->subject->toBe('Printer jam')
+        ->and(Ticket::sole()->comments()->sole())->body->toBe('It jams on every double-sided print.')->author_id->toBe($agent->id);
 });
 
 test('opening a ticket validates its input', function () {
