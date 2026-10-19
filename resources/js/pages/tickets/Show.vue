@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import SimpleAlert from '@/components/alerts/SimpleAlert.vue';
@@ -12,9 +12,10 @@ import AppSelect from '@/components/forms/AppSelect.vue';
 import FieldError from '@/components/forms/FieldError.vue';
 import ConfirmationModal from '@/components/modals/ConfirmationModal.vue';
 import Pill from '@/components/Pill.vue';
-import ReplyComposer from '@/components/tickets/ReplyComposer.vue';
 import TicketAttachments from '@/components/tickets/TicketAttachments.vue';
-import TicketCommentCard from '@/components/tickets/TicketCommentCard.vue';
+import TicketProperties from '@/components/tickets/TicketProperties.vue';
+import TicketTimeline from '@/components/tickets/TicketTimeline.vue';
+import TicketReminders from '@/components/tickets/TicketReminders.vue';
 import {
   formatDateTime,
   fromLocalDateTime,
@@ -26,6 +27,7 @@ import type {
   Attachment,
   Desk,
   DeskMember,
+  Tag,
   Ticket,
   TicketComment,
   TicketEvent,
@@ -42,27 +44,14 @@ const { ticket, comments, events, can } = defineProps<{
   reminders: TicketReminder[];
   deskMembers: DeskMember[];
   desks: Desk[];
+  tags: Tag[];
   statuses: Record<string, string>;
   priorities: Record<string, string>;
   can: { update: boolean; delete: boolean; restore: boolean };
 }>();
 
-const page = usePage();
-
 const isDeleted = computed(() => ticket.deleted_at !== null);
 const canEdit = computed(() => !isDeleted.value);
-
-/** Comments and history in the order they happened. */
-const thread = computed(() =>
-  [
-    ...comments.map((comment) => ({
-      key: comment.id,
-      at: comment.created_at ?? '',
-      comment,
-    })),
-    ...events.map((event) => ({ key: event.id, at: event.created_at, event })),
-  ].sort((a, b) => a.at.localeCompare(b.at)),
-);
 
 const editingSubject = ref(false);
 const subjectForm = useForm({ subject: ticket.subject });
@@ -114,28 +103,6 @@ function restoreTicket(): void {
       onFinish: () => (restoring.value = false),
     },
   );
-}
-
-/** Mirrors `TicketCommentPolicy`: authors edit their own comments on tickets they can work. */
-function canEditComment(comment: TicketComment): boolean {
-  return (
-    can.update &&
-    canEdit.value &&
-    comment.author_type === 'user' &&
-    comment.author_id === page.props.auth.user.id
-  );
-}
-
-function customFieldValue(value: unknown): string {
-  if (value === null || value === undefined || value === '') {
-    return '—';
-  }
-
-  if (typeof value === 'boolean') {
-    return value ? 'Yes' : 'No';
-  }
-
-  return Array.isArray(value) ? value.join(', ') : String(value);
 }
 </script>
 
@@ -260,99 +227,31 @@ function customFieldValue(value: unknown): string {
     </div>
 
     <div class="grid gap-6 lg:grid-cols-3">
-      <section class="space-y-4 lg:col-span-2" aria-label="Conversation">
-        <template v-for="item in thread" :key="item.key">
-          <TicketCommentCard
-            v-if="'comment' in item"
-            :comment="item.comment"
-            :can-edit="canEditComment(item.comment)"
-            :can-delete="canEditComment(item.comment) || can.delete"
-          />
-          <p
-            v-else
-            class="px-5 text-sm text-gray-500 dark:text-gray-400"
-            :title="formatDateTime(item.event.created_at)"
-          >
-            {{ item.event.description }}
-            <span class="text-gray-400 dark:text-gray-500">
-              · {{ timeAgo(item.event.created_at) }}
-            </span>
-          </p>
-        </template>
-
-        <ReplyComposer v-if="can.update && canEdit" :ticket-id="ticket.id" />
+      <section class="lg:col-span-2" aria-label="Activity">
+        <TicketTimeline
+          :ticket-id="ticket.id"
+          :comments="comments"
+          :events="events"
+          :can-work="can.update && canEdit"
+          :can-delete-any="can.delete"
+        />
       </section>
 
-      <aside class="space-y-4">
-        <CardWrapper>
-          <CardPadding class="space-y-4 text-sm">
-            <div>
-              <h2 class="font-medium text-gray-500 dark:text-gray-400">
-                Requester
-              </h2>
-              <p class="mt-1">{{ ticket.requester?.name }}</p>
-              <p class="text-gray-500 dark:text-gray-400">
-                {{ ticket.requester?.email }}
-              </p>
-            </div>
-            <div>
-              <h2 class="font-medium text-gray-500 dark:text-gray-400">Desk</h2>
-              <p class="mt-1">{{ ticket.desk?.name }}</p>
-            </div>
-            <div>
-              <h2 class="font-medium text-gray-500 dark:text-gray-400">
-                Assignees
-              </h2>
-              <p class="mt-1">
-                {{
-                  ticket.assignees?.map((agent) => agent.name).join(', ') ||
-                  'Unassigned'
-                }}
-              </p>
-            </div>
-            <div>
-              <h2 class="font-medium text-gray-500 dark:text-gray-400">Tags</h2>
-              <div v-if="ticket.tags?.length" class="mt-1 flex flex-wrap gap-1">
-                <Pill v-for="tag in ticket.tags" :key="tag.id">
-                  {{ tag.name }}
-                </Pill>
-              </div>
-              <p v-else class="mt-1 text-gray-400">None</p>
-            </div>
-          </CardPadding>
-        </CardWrapper>
-
-        <CardWrapper v-if="ticket.desk?.custom_fields?.length">
-          <CardPadding class="space-y-3 text-sm">
-            <h2 class="font-medium">Custom fields</h2>
-            <dl class="space-y-2">
-              <div v-for="field in ticket.desk.custom_fields" :key="field.id">
-                <dt class="text-gray-500 dark:text-gray-400">
-                  {{ field.name }}
-                </dt>
-                <dd>{{ customFieldValue(ticket.custom_fields[field.id]) }}</dd>
-              </div>
-            </dl>
-          </CardPadding>
-        </CardWrapper>
-
-        <CardWrapper>
-          <CardPadding class="space-y-2 text-sm">
-            <h2 class="font-medium">Reminders</h2>
-            <ul v-if="reminders.length" class="space-y-2">
-              <li v-for="reminder in reminders" :key="reminder.id">
-                <p>{{ formatDateTime(reminder.remind_at) }}</p>
-                <p class="text-gray-500 dark:text-gray-400">
-                  {{ reminder.for_assignees ? 'For assignees' : 'For you' }}
-                  <template v-if="reminder.note">
-                    · {{ reminder.note }}
-                  </template>
-                </p>
-              </li>
-            </ul>
-            <p v-else class="text-gray-400">None</p>
-          </CardPadding>
-        </CardWrapper>
+      <aside class="space-y-4 lg:sticky lg:top-20 lg:self-start">
+        <TicketProperties
+          :key="ticket.desk_id"
+          :ticket="ticket"
+          :desks="desks"
+          :desk-members="deskMembers"
+          :tags="tags"
+          :editable="can.update && canEdit"
+        />
+        <TicketReminders
+          :ticket-id="ticket.id"
+          :reminders="reminders"
+          :editable="can.update && canEdit"
+          :can-delete-ticket="can.delete"
+        />
 
         <TicketAttachments
           :ticket-id="ticket.id"

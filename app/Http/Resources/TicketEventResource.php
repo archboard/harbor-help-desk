@@ -20,6 +20,7 @@ class TicketEventResource extends JsonResource
             'id' => $this->id,
             'type' => $this->type->value,
             'description' => $this->description(),
+            'actor_name' => $this->actorName(),
             'actor_type' => $this->actor_type,
             'actor_id' => $this->actor_id,
             'properties' => $this->properties,

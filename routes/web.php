@@ -4,9 +4,13 @@ use App\Http\Controllers\Auth\MagicLinkController;
 use App\Http\Controllers\DeskController;
 use App\Http\Controllers\DeskCustomFieldController;
 use App\Http\Controllers\DeskMemberController;
+use App\Http\Controllers\TicketAssigneeController;
 use App\Http\Controllers\TicketAttachmentController;
 use App\Http\Controllers\TicketCommentController;
 use App\Http\Controllers\TicketController;
+use App\Http\Controllers\TicketDeskController;
+use App\Http\Controllers\TicketReminderController;
+use App\Http\Controllers\TicketTagController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/tickets')->name('home');
@@ -24,6 +28,12 @@ Route::middleware('workspace')->group(function () {
         Route::patch('tickets/{ticket}', [TicketController::class, 'update'])->name('tickets.update');
         Route::delete('tickets/{ticket}', [TicketController::class, 'destroy'])->name('tickets.destroy');
         Route::post('tickets/{ticket}/restore', [TicketController::class, 'restore'])->withTrashed()->name('tickets.restore');
+
+        Route::put('tickets/{ticket}/desk', [TicketDeskController::class, 'update'])->name('tickets.desk.update');
+        Route::put('tickets/{ticket}/assignees', [TicketAssigneeController::class, 'update'])->name('tickets.assignees.update');
+        Route::put('tickets/{ticket}/tags', [TicketTagController::class, 'update'])->name('tickets.tags.update');
+        Route::post('tickets/{ticket}/reminders', [TicketReminderController::class, 'store'])->name('tickets.reminders.store');
+        Route::delete('reminders/{reminder}', [TicketReminderController::class, 'destroy'])->name('reminders.destroy');
 
         Route::post('tickets/{ticket}/comments', [TicketCommentController::class, 'store'])->name('tickets.comments.store');
         Route::patch('comments/{comment}', [TicketCommentController::class, 'update'])->name('comments.update');

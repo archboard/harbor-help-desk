@@ -140,7 +140,7 @@ class TicketEvent extends Model
         };
     }
 
-    protected function actorName(): string
+    public function actorName(): string
     {
         if ($this->actor_type === null) {
             return __('Harbor');

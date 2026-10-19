@@ -90,6 +90,7 @@ test('the ticket page shows the thread, sidebar and abilities', function () {
             ->where('comments.0.author_name', $this->agent->name)
             ->has('events', 1)
             ->where('events.0.type', 'created')
+            ->where('events.0.actor_name', $this->agent->name)
             ->has('reminders', 1)
             ->where('deskMembers.0.id', $this->agent->id)
             ->where('can', ['update' => true, 'delete' => false, 'restore' => false]));

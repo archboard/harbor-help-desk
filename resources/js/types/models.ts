@@ -54,6 +54,9 @@ export type TicketStatus = 'open' | 'pending' | 'on_hold' | 'solved' | 'closed';
 
 export type TicketPriority = 'low' | 'normal' | 'high' | 'urgent';
 
+/** A ticket's value for one custom field, by the field's type. */
+export type CustomFieldValue = string | number | boolean | string[] | null;
+
 export type Ticket = {
   id: string;
   number: number;
@@ -65,7 +68,7 @@ export type Ticket = {
   desk_id: string;
   desk?: Desk;
   due_at: string | null;
-  custom_fields: Record<string, unknown>;
+  custom_fields: Record<string, CustomFieldValue>;
   requester?: Contact;
   assignees?: Agent[];
   tags?: Tag[];
@@ -109,6 +112,8 @@ export type TicketEvent = {
   id: string;
   type: string;
   description: string;
+  actor_name: string;
+  properties: Record<string, unknown> | null;
   created_at: string;
 };
 
@@ -116,6 +121,7 @@ export type TicketReminder = {
   id: string;
   user_id: string | null;
   for_assignees: boolean;
+  created_by: string;
   remind_at: string;
   note: string | null;
 };

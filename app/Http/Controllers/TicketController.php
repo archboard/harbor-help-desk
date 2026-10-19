@@ -81,6 +81,7 @@ class TicketController extends Controller
                 ->get()),
             'deskMembers' => DeskMemberResource::collection($ticket->desk->users()->orderBy('name')->get()),
             'desks' => DeskResource::collection(Desk::visibleTo($request->user())->orderBy('name')->get()),
+            'tags' => TagResource::collection(Tag::query()->orderBy('name')->get()),
             'statuses' => TicketStatus::options(),
             'priorities' => TicketPriority::options(),
             'can' => [

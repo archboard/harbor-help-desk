@@ -59,10 +59,10 @@ function send(): void {
   <form
     ref="composer"
     :class="[
-      'relative space-y-3 rounded-2xl p-5 shadow-sm',
+      'relative space-y-3 rounded-lg p-3 ring-1 ring-inset',
       form.is_internal
-        ? 'bg-yellow-50 ring-1 ring-yellow-200 dark:bg-yellow-950 dark:ring-yellow-900'
-        : 'bg-white dark:bg-gray-900',
+        ? 'bg-yellow-50 ring-yellow-300 dark:bg-yellow-950 dark:ring-yellow-800'
+        : 'bg-white ring-gray-300 dark:bg-gray-900 dark:ring-gray-700',
     ]"
     @submit.prevent="send"
   >
@@ -144,7 +144,7 @@ function send(): void {
       <div
         v-if="draggingFiles"
         :class="[
-          'pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed text-sm font-medium backdrop-blur-sm',
+          'pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed text-sm font-medium backdrop-blur-sm',
           isOverComposer
             ? 'border-primary-500 bg-primary-50/90 text-primary-700 dark:bg-primary-950/90 dark:text-primary-200'
             : 'border-gray-300 bg-white/80 text-gray-600 dark:border-gray-600 dark:bg-gray-900/80 dark:text-gray-300',
