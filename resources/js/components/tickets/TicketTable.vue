@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { InfiniteScroll, Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import AppCheckbox from '@/components/forms/AppCheckbox.vue';
 import Spinner from '@/components/Spinner.vue';
 import Table from '@/components/tables/Table.vue';
 import Tbody from '@/components/tables/Tbody.vue';
@@ -14,13 +16,24 @@ import type { Ticket } from '@/types';
 
 /**
  * A page of tickets that loads more as it scrolls. `prop` is the name of the
- * `Inertia::scroll()` prop holding them.
+ * `Inertia::scroll()` prop holding them. Binding `v-model:selected` adds checkboxes.
  */
-const { hideRequester = false } = defineProps<{
+const { tickets, hideRequester = false } = defineProps<{
   prop: string;
   tickets: Ticket[];
   hideRequester?: boolean;
 }>();
+
+const selected = defineModel<string[]>('selected');
+
+/** Selects or clears every ticket loaded so far. */
+const allSelected = computed({
+  get: () =>
+    tickets.length > 0 &&
+    tickets.every((ticket) => selected.value?.includes(ticket.id)),
+  set: (all: boolean) =>
+    (selected.value = all ? tickets.map((ticket) => ticket.id) : []),
+});
 </script>
 
 <template>
@@ -28,6 +41,11 @@ const { hideRequester = false } = defineProps<{
     <Table>
       <Thead>
         <tr>
+          <Th v-if="selected" class="w-0 pr-0">
+            <AppCheckbox v-model="allSelected">
+              <span class="sr-only">Select all loaded tickets</span>
+            </AppCheckbox>
+          </Th>
           <Th>#</Th>
           <Th>Subject</Th>
           <Th v-if="!hideRequester">Requester</Th>
@@ -40,6 +58,11 @@ const { hideRequester = false } = defineProps<{
       </Thead>
       <Tbody>
         <tr v-for="ticket in tickets" :key="ticket.id">
+          <Td v-if="selected" class="w-0 pr-0">
+            <AppCheckbox v-model="selected" :value="ticket.id">
+              <span class="sr-only">Select #{{ ticket.number }}</span>
+            </AppCheckbox>
+          </Td>
           <Td class="whitespace-nowrap text-gray-500 dark:text-gray-400">
             {{ ticket.number }}
           </Td>

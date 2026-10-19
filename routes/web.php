@@ -30,6 +30,7 @@ Route::middleware('workspace')->group(function () {
 
         Route::get('tickets', [TicketController::class, 'index'])->name('tickets.index');
         Route::resource('saved-views', SavedViewController::class)->only(['store', 'update', 'destroy']);
+        Route::post('tickets/bulk', [TicketController::class, 'bulk'])->name('tickets.bulk');
         Route::get('tickets/create', [TicketController::class, 'create'])->name('tickets.create');
         Route::post('desks/{desk}/tickets', [TicketController::class, 'store'])->name('desks.tickets.store');
         Route::get('tickets/{ticket}', [TicketController::class, 'show'])->withTrashed()->name('tickets.show');

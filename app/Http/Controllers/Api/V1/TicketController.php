@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Actions\Tickets\BulkUpdateTickets;
 use App\Actions\Tickets\CreateTicket;
 use App\Actions\Tickets\DeleteTicket;
 use App\Actions\Tickets\RestoreTicket;
@@ -33,6 +34,16 @@ class TicketController extends Controller
     public function store(Request $request, Desk $desk, CreateTicket $createTicket): TicketResource
     {
         return new TicketResource($createTicket->handle($request->user(), $desk, $request->all())->load(self::RELATIONS));
+    }
+
+    /**
+     * Apply one change to up to 100 tickets, all or nothing.
+     *
+     * @return array{updated: int}
+     */
+    public function bulk(Request $request, BulkUpdateTickets $bulkUpdateTickets): array
+    {
+        return ['updated' => $bulkUpdateTickets->handle($request->user(), $request->all())];
     }
 
     public function show(Ticket $ticket): TicketResource

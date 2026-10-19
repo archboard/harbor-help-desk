@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Tickets\BulkUpdateTickets;
 use App\Actions\Tickets\CreateTicket;
 use App\Actions\Tickets\DeleteTicket;
 use App\Actions\Tickets\RestoreTicket;
@@ -40,6 +41,7 @@ class TicketController extends Controller
     public function index(Request $request, SearchTickets $searchTickets): Response
     {
         $filters = $request->except('page');
+        $desks = Desk::visibleTo($request->user())->orderBy('name')->get();
         $tickets = $searchTickets->handle($request->user(), $filters)
             ->with(['desk', 'requester', 'assignees', 'tags'])
             ->paginate(50);
@@ -48,7 +50,8 @@ class TicketController extends Controller
             'tickets' => Inertia::scroll(TicketResource::collection($tickets)),
             'filters' => (object) $filters,
             'savedViews' => SavedViewResource::collection(SavedView::visibleTo($request->user())->with('user')->orderBy('name')->get()),
-            'desks' => DeskResource::collection(Desk::visibleTo($request->user())->orderBy('name')->get()),
+            'desks' => DeskResource::collection($desks),
+            'leadDeskIds' => $desks->filter(fn (Desk $desk): bool => $request->user()->can('update', $desk))->values()->modelKeys(),
             'agents' => UserResource::collection(Workspace::current()->users()->orderBy('name')->get()),
             'tags' => TagResource::collection(Tag::query()->orderBy('name')->get()),
             'statuses' => TicketStatus::options(),
@@ -78,6 +81,18 @@ class TicketController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Ticket #:number created.', ['number' => $ticket->number])]);
 
         return to_route('tickets.show', $ticket);
+    }
+
+    /**
+     * Apply one change to many tickets from the list.
+     */
+    public function bulk(Request $request, BulkUpdateTickets $bulkUpdateTickets): RedirectResponse
+    {
+        $count = $bulkUpdateTickets->handle($request->user(), $request->all());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => trans_choice(':count ticket updated.|:count tickets updated.', $count)]);
+
+        return back();
     }
 
     /**

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import AppButton from '@/components/AppButton.vue';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import SavedViews from '@/components/tickets/SavedViews.vue';
+import TicketBulkActions from '@/components/tickets/TicketBulkActions.vue';
 import TicketFilters from '@/components/tickets/TicketFilters.vue';
 import TicketTable from '@/components/tickets/TicketTable.vue';
 import type { TicketQuery } from '@/components/tickets/TicketFilters.vue';
@@ -12,8 +13,10 @@ import type { Agent, Desk, Paginated, SavedView, Tag, Ticket } from '@/types';
 
 defineOptions({ layout: { title: 'Tickets' } });
 
-const { filters } = defineProps<{
+const { tickets, filters, leadDeskIds } = defineProps<{
   tickets: Paginated<Ticket>;
+  /** Desks whose tickets the user may delete. */
+  leadDeskIds: string[];
   filters: TicketQuery;
   savedViews: SavedView[];
   desks: Desk[];
@@ -36,7 +39,18 @@ const activeQuickFilter = computed(
   () => quickFilters.find((quick) => sameQuery(quick.query, filters))?.label,
 );
 
+const selected = ref<string[]>([]);
+
+/** Mirrors `TicketPolicy@delete` for every selected ticket. */
+const canDeleteSelected = computed(() =>
+  tickets.data
+    .filter((ticket) => selected.value.includes(ticket.id))
+    .every((ticket) => leadDeskIds.includes(ticket.desk_id)),
+);
+
 function apply(query: TicketQuery): void {
+  selected.value = [];
+
   router.get(index.url(), cleanQuery(query), {
     only: ['tickets', 'filters'],
     reset: ['tickets'],
@@ -91,11 +105,24 @@ function apply(query: TicketQuery): void {
 
     <TicketTable
       v-if="tickets.data.length"
+      :selected="filters.deleted ? undefined : selected"
       prop="tickets"
       :tickets="tickets.data"
+      @update:selected="selected = $event ?? []"
     />
     <p v-else class="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
       No tickets match these filters.
     </p>
+
+    <TicketBulkActions
+      v-if="selected.length"
+      :ticket-ids="selected"
+      :can-delete="canDeleteSelected"
+      :desks="desks"
+      :agents="agents"
+      :statuses="statuses"
+      :priorities="priorities"
+      @clear="selected = []"
+    />
   </div>
 </template>

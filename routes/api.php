@@ -44,6 +44,7 @@ Route::prefix('v1')->name('api.v1.')
         Route::apiResource('saved-views', SavedViewController::class);
 
         Route::post('desks/{desk}/tickets', [TicketController::class, 'store'])->name('desks.tickets.store');
+        Route::post('tickets/bulk', [TicketController::class, 'bulk'])->name('tickets.bulk');
         Route::apiResource('tickets', TicketController::class)->except('store');
         Route::post('tickets/{ticket}/restore', [TicketController::class, 'restore'])->withTrashed()->name('tickets.restore');
         Route::put('tickets/{ticket}/desk', [TicketDeskController::class, 'update'])->name('tickets.desk.update');
