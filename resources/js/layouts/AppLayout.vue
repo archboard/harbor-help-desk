@@ -14,12 +14,13 @@ import ArchboardLogo from '@/components/icons/ArchboardLogo.vue';
 import Notifications from '@/components/Notifications.vue';
 import ScaleIn from '@/components/transitions/ScaleIn.vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
-import { dashboard, logout } from '@/routes';
+import { logout } from '@/routes';
 import { edit as editApiTokens } from '@/routes/api-tokens';
 import { edit as editAppearance } from '@/routes/appearance';
 import { index as desks } from '@/routes/desks';
 import { edit as editProfile } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
+import { index as tickets } from '@/routes/tickets';
 
 const { title = '' } = defineProps<{ title?: string }>();
 
@@ -27,7 +28,7 @@ const page = usePage();
 const { isCurrentOrParentUrl } = useCurrentUrl();
 
 const navigation = [
-  { label: 'Dashboard', href: dashboard().url },
+  { label: 'Tickets', href: tickets().url },
   { label: 'Desks', href: desks().url },
 ];
 
@@ -49,7 +50,7 @@ const userNavigation = [
       <Container>
         <div class="flex h-16 items-center justify-between">
           <div class="flex items-center gap-8">
-            <Link :href="dashboard()" class="shrink-0">
+            <Link :href="tickets()" class="shrink-0">
               <span class="sr-only">{{ page.props.name }}</span>
               <ArchboardLogo
                 class="size-8 text-primary-600 dark:text-primary-400"

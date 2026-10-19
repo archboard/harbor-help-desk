@@ -8,11 +8,14 @@ const {
   options = [],
   nullOption = 'Select an option',
   hideNull = false,
+  clearable = false,
 } = defineProps<{
   hasError?: boolean;
   options?: OptionsInput;
   nullOption?: string;
   hideNull?: boolean;
+  /** Lets the null option be chosen again, e.g. "Any status" in a filter. */
+  clearable?: boolean;
 }>();
 
 const model = defineModel<string | number | boolean | null>();
@@ -29,7 +32,9 @@ const normalizedOptions = computed(() => normalizeOptions(options));
         : 'border-gray-300 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:focus:border-primary-500'
     "
   >
-    <option v-if="!hideNull" :value="null" disabled>{{ nullOption }}</option>
+    <option v-if="!hideNull" :value="null" :disabled="!clearable">
+      {{ nullOption }}
+    </option>
     <slot>
       <option
         v-for="option in normalizedOptions"

@@ -15,7 +15,7 @@ test('resolves the workspace from the subdomain', function () {
 
     $this->actingAs($this->user)
         ->get('http://acme.harbor.test/dashboard')
-        ->assertOk();
+        ->assertRedirect('/tickets');
 
     expect($acme->isCurrent())->toBeTrue();
 });
@@ -42,7 +42,7 @@ test('self hosted falls back to the single workspace on any host', function () {
 
     $this->actingAs($this->user)
         ->get('http://help.example.com/dashboard')
-        ->assertOk();
+        ->assertRedirect('/tickets');
 
     expect($workspace->isCurrent())->toBeTrue();
 });

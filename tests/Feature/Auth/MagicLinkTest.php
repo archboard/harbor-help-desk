@@ -30,7 +30,7 @@ test('a known email is sent a link that signs the user in', function () {
     $response = $this->get($url);
 
     $this->assertAuthenticatedAs($user);
-    $response->assertRedirect(route('dashboard', absolute: false));
+    $response->assertRedirect(route('tickets.index', absolute: false));
 });
 
 test('an unknown email gets the same response and no email', function () {

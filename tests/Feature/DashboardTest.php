@@ -6,14 +6,11 @@ use Tests\Concerns\InWorkspace;
 uses(InWorkspace::class);
 
 test('guests are redirected to the login page', function () {
-    $response = $this->get(route('dashboard'));
-    $response->assertRedirect(route('login'));
+    $this->get(route('tickets.index'))->assertRedirect(route('login'));
 });
 
-test('authenticated users can visit the dashboard', function () {
-    $user = User::factory()->create();
-    $this->actingAs($user);
-
-    $response = $this->get(route('dashboard'));
-    $response->assertOk();
+test('the old dashboard address redirects to the ticket list', function () {
+    $this->actingAs(User::factory()->create())
+        ->get(route('dashboard'))
+        ->assertRedirect('/tickets');
 });

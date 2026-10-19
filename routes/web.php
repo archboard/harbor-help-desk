@@ -4,9 +4,10 @@ use App\Http\Controllers\Auth\MagicLinkController;
 use App\Http\Controllers\DeskController;
 use App\Http\Controllers\DeskCustomFieldController;
 use App\Http\Controllers\DeskMemberController;
+use App\Http\Controllers\TicketController;
 use Illuminate\Support\Facades\Route;
 
-Route::redirect('/', '/dashboard')->name('home');
+Route::redirect('/', '/tickets')->name('home');
 
 Route::middleware('guest')->group(function () {
     Route::post('login/magic', [MagicLinkController::class, 'store'])->middleware('throttle:6,1')->name('magic-link.store');
@@ -15,7 +16,8 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('workspace')->group(function () {
     Route::middleware(['auth', 'verified'])->group(function () {
-        Route::inertia('dashboard', 'Dashboard')->name('dashboard');
+        Route::redirect('dashboard', '/tickets')->name('dashboard');
+        Route::get('tickets', [TicketController::class, 'index'])->name('tickets.index');
 
         Route::resource('desks', DeskController::class)->except(['create', 'edit']);
         Route::post('desks/{desk}/restore', [DeskController::class, 'restore'])->withTrashed()->name('desks.restore');
