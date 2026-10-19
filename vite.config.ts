@@ -52,6 +52,7 @@ export default defineConfig({
       'resources/js/actions/**',
       'resources/js/routes/**',
       'resources/js/wayfinder/**',
+      'resources/js/types/generated.d.ts',
     ],
     options: {
       denyWarnings: true,
