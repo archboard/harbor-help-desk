@@ -72,6 +72,8 @@ test('the list shows visible tickets and filters them', function () {
     $this->getJson('http://acme.harbor.test/api/v1/tickets?priority=urgent')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $urgent->id);
     $this->getJson('http://acme.harbor.test/api/v1/tickets?tag=billing')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $urgent->id);
     $this->getJson("http://acme.harbor.test/api/v1/tickets?assignee_id={$agent->id}")->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $assigned->id);
+    $this->getJson('http://acme.harbor.test/api/v1/tickets?priority[]=urgent&priority[]=low')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $urgent->id);
+    $this->getJson('http://acme.harbor.test/api/v1/tickets?assignee_id=me')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $assigned->id);
     $this->getJson('http://acme.harbor.test/api/v1/tickets?status=nope')->assertJsonValidationErrors('status');
 });
 
