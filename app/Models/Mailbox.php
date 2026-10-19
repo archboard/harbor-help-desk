@@ -8,7 +8,9 @@ use App\Models\Concerns\BelongsToWorkspace;
 use Carbon\CarbonImmutable;
 use Database\Factories\MailboxFactory;
 use GrantHolle\Scru128Laravel\Concerns\HasScru128Ids;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -57,6 +59,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Mailbox whereSignature($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Mailbox whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Mailbox whereWorkspaceId($value)
+ * @method static Builder<static>|Mailbox needsScheduledPoll()
  *
  * @mixin \Eloquent
  */
@@ -84,6 +87,18 @@ class Mailbox extends Model
     public function defaultDesk(): BelongsTo
     {
         return $this->belongsTo(Desk::class, 'default_desk_id')->withTrashed();
+    }
+
+    /**
+     * Limit to the mailboxes `mailboxes:poll` should queue a poll for this minute. Hosted
+     * mailboxes receive by webhook, so only the workspace's own mailboxes are polled.
+     *
+     * @param  Builder<self>  $query
+     */
+    #[Scope]
+    protected function needsScheduledPoll(Builder $query): void
+    {
+        $query->where('driver', '!=', MailboxDriver::HOSTED);
     }
 
     /**
