@@ -2,6 +2,8 @@
 
 An open-source helpdesk. This app is the Inertia web UI and the backend. Other clients and MCP tools will be built on the same backend later. It runs either as a multi-tenant cloud app on one Postgres database or self-hosted with a single workspace.
 
+Follow the commands in the Workflow guidelines (`.ai/guidelines/workflow.md`) after every change.
+
 ## Product Shape
 
 - Put business logic in Action classes in `app/Actions`. Controllers, API endpoints, jobs and MCP tools call those Actions. Logic must never exist only in an Inertia controller.
