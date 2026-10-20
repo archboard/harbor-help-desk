@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Data\Realtime\RealtimeData;
 use App\Data\Users\CurrentUserData;
 use App\Data\Workspaces\WorkspaceData;
 use App\Models\Workspace;
@@ -46,6 +47,8 @@ class HandleInertiaRequests extends Middleware
             ],
             // Lazy, because the workspace is resolved by route middleware that runs after this one.
             'workspace' => fn (): ?WorkspaceData => Workspace::current() === null ? null : WorkspaceData::from(Workspace::current()),
+            // Authenticated pages only, so guests never open a socket.
+            ...($request->user() === null ? [] : ['realtime' => fn (): RealtimeData => RealtimeData::fromConfig()]),
         ];
     }
 }

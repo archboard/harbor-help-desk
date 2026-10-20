@@ -89,6 +89,14 @@ class User extends Authenticatable implements MustVerifyEmail, OAuthenticatable,
     }
 
     /**
+     * The private channel this user's broadcast notifications are sent on.
+     */
+    public function receivesBroadcastNotificationsOn(): string
+    {
+        return 'users.'.$this->getKey();
+    }
+
+    /**
      * The workspaces this user is an agent in, with their role on the pivot.
      *
      * @return BelongsToMany<Workspace, $this, WorkspaceUser>

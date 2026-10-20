@@ -4,6 +4,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import WorkspaceLayout from '@/layouts/WorkspaceLayout.vue';
 import { initializeFlashToast } from '@/lib/flashToast';
+import { initializeRealtime } from '@/lib/realtime';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -18,7 +19,9 @@ void createInertiaApp({
       ? [AppLayout, WorkspaceLayout]
       : AppLayout;
   },
-  withApp: (app) => {
+  withApp: (app, { page }) => {
+    initializeRealtime(page);
+
     app.directive('focus', {
       mounted: (el: HTMLElement, shouldFocus) => {
         if (shouldFocus.value !== false) {

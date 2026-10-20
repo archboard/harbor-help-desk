@@ -34,6 +34,19 @@ composer run dev
 
 Set your `DB_*` values in `.env` if your Postgres isn't Herd's default (`root` with no password on `127.0.0.1:5432`).
 
+## Realtime (Reverb)
+
+Reverb is a required process alongside the web server, queue worker and Horizon: run `php artisan reverb:start` and keep it running (`composer run dev` starts it locally). Serve it on the same domain or a proxied path (for example `/app` to port 8080) so browsers connect over the same origin.
+
+Set these in `.env`:
+
+- `BROADCAST_CONNECTION=reverb`
+- `REVERB_APP_ID`, `REVERB_APP_KEY`, `REVERB_APP_SECRET`: the credentials. The key is sent to browsers, the secret never is.
+- `REVERB_HOST`, `REVERB_PORT`, `REVERB_SCHEME`: the public-facing address browsers connect to, not the address the server binds to.
+- `REVERB_SERVER_HOST`, `REVERB_SERVER_PORT`: where `reverb:start` binds (defaults `0.0.0.0:8080`).
+
+The install command (a later phase) will generate the keys, and the Docker images will run Reverb.
+
 ## Testing and quality
 
 ```bash

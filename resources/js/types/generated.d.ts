@@ -149,6 +149,14 @@ declare namespace App {
         settings?: Record<string, any>;
       };
     }
+    namespace Realtime {
+      export type RealtimeData = {
+        key: string;
+        host: string;
+        port: number;
+        scheme: string;
+      };
+    }
     namespace SavedViews {
       export type CreateSavedViewData = {
         name: string;

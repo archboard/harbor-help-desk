@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withBroadcasting(__DIR__.'/../routes/channels.php', ['middleware' => ['web', 'workspace', 'auth']])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->encryptCookies(except: ['appearance']);
         $middleware->validateCsrfTokens(except: ['webhooks/*']);
