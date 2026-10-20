@@ -7,7 +7,7 @@ use App\Actions\Contacts\SearchContacts;
 use App\Actions\Contacts\UpdateContact;
 use App\Actions\Tickets\SearchTickets;
 use App\Data\Contacts\ContactData;
-use App\Http\Resources\TicketResource;
+use App\Data\Tickets\TicketData;
 use App\Models\Contact;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -60,7 +60,7 @@ class ContactController extends Controller
 
         return Inertia::render('contacts/Show', [
             'contact' => ContactData::from($contact),
-            'tickets' => Inertia::scroll(TicketResource::collection($tickets)),
+            'tickets' => Inertia::scroll(TicketData::collect($tickets)),
         ]);
     }
 

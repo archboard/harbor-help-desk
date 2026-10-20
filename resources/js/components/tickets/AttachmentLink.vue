@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { Paperclip } from '@lucide/vue';
 import { fileSize } from '@/lib/files';
-import type { Attachment } from '@/types';
 
-defineProps<{ attachment: Attachment }>();
+defineProps<{ attachment: App.Data.Tickets.AttachmentData }>();
 </script>
 
 <template>

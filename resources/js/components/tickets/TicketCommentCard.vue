@@ -9,10 +9,9 @@ import Pill from '@/components/Pill.vue';
 import AttachmentLink from '@/components/tickets/AttachmentLink.vue';
 import { formatDateTime, timeAgo } from '@/lib/dates';
 import { destroy, update } from '@/routes/comments';
-import type { TicketComment } from '@/types';
 
 const { comment } = defineProps<{
-  comment: TicketComment;
+  comment: App.Data.Tickets.TicketCommentData;
   canEdit: boolean;
   canDelete: boolean;
 }>();

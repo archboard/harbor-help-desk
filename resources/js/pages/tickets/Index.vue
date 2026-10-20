@@ -9,12 +9,12 @@ import TicketTable from '@/components/tickets/TicketTable.vue';
 import type { TicketQuery } from '@/components/tickets/TicketFilters.vue';
 import { cleanQuery, sameQuery } from '@/lib/tickets';
 import { create, index } from '@/routes/tickets';
-import type { Paginated, Ticket } from '@/types';
+import type { Paginated } from '@/types';
 
 defineOptions({ layout: { title: 'Tickets' } });
 
 const { tickets, filters, leadDeskIds } = defineProps<{
-  tickets: Paginated<Ticket>;
+  tickets: Paginated<App.Data.Tickets.TicketData>;
   /** Desks whose tickets the user may delete. */
   leadDeskIds: string[];
   filters: TicketQuery;

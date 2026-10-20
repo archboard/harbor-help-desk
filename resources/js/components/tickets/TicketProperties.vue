@@ -17,10 +17,10 @@ import { update as updateTicket } from '@/routes/tickets';
 import { update as moveTicket } from '@/routes/tickets/desk';
 import { update as syncAssignees } from '@/routes/tickets/assignees';
 import { update as syncTags } from '@/routes/tickets/tags';
-import type { CustomFieldValue, Ticket } from '@/types';
+import type { CustomFieldValue } from '@/types';
 
 const { ticket } = defineProps<{
-  ticket: Ticket;
+  ticket: App.Data.Tickets.TicketData;
   desks: App.Data.Desks.DeskData[];
   deskMembers: App.Data.Desks.DeskMemberData[];
   tags: App.Data.Tags.TagData[];

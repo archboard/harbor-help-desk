@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import Pill from '@/components/Pill.vue';
-import type { TicketStatus } from '@/types';
 
-const { status } = defineProps<{ status: TicketStatus; label: string }>();
+const { status } = defineProps<{
+  status: App.Enums.TicketStatus;
+  label: string;
+}>();
 
 const colors = {
   open: 'blue',

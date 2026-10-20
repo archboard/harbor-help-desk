@@ -12,15 +12,15 @@ use App\Data\Desks\DeskData;
 use App\Data\Desks\DeskMemberData;
 use App\Data\SavedViews\SavedViewData;
 use App\Data\Tags\TagData;
+use App\Data\Tickets\AttachmentData;
+use App\Data\Tickets\TicketCommentData;
+use App\Data\Tickets\TicketData;
+use App\Data\Tickets\TicketEventData;
+use App\Data\Tickets\TicketReminderData;
 use App\Data\Users\UserData;
 use App\Enums\TicketEventType;
 use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
-use App\Http\Resources\AttachmentResource;
-use App\Http\Resources\TicketCommentResource;
-use App\Http\Resources\TicketEventResource;
-use App\Http\Resources\TicketReminderResource;
-use App\Http\Resources\TicketResource;
 use App\Models\Desk;
 use App\Models\SavedView;
 use App\Models\Tag;
@@ -47,7 +47,7 @@ class TicketController extends Controller
             ->paginate(50);
 
         return Inertia::render('tickets/Index', [
-            'tickets' => Inertia::scroll(TicketResource::collection($tickets)),
+            'tickets' => Inertia::scroll(TicketData::collect($tickets)),
             'filters' => (object) $filters,
             'savedViews' => SavedViewData::collect(SavedView::visibleTo($request->user())->with('user')->orderBy('name')->get()),
             'desks' => DeskData::collect($desks),
@@ -110,14 +110,14 @@ class TicketController extends Controller
         $ticket->load(['desk.customFields', 'requester', 'assignees', 'tags']);
 
         return Inertia::render('tickets/Show', [
-            'ticket' => new TicketResource($ticket),
-            'comments' => TicketCommentResource::collection($ticket->comments()->with(['author', 'attachments'])->get()),
-            'events' => TicketEventResource::collection($ticket->events()
+            'ticket' => TicketData::from($ticket),
+            'comments' => TicketCommentData::collect($ticket->comments()->with(['author', 'attachments'])->get()),
+            'events' => TicketEventData::collect($ticket->events()
                 ->with('actor')
                 ->whereNotIn('type', self::EVENTS_SHOWN_AS_COMMENTS)
                 ->get()),
-            'attachments' => AttachmentResource::collection($ticket->attachments()->whereNull('ticket_comment_id')->oldest()->get()),
-            'reminders' => TicketReminderResource::collection($ticket->reminders()
+            'attachments' => AttachmentData::collect($ticket->attachments()->whereNull('ticket_comment_id')->oldest()->get()),
+            'reminders' => TicketReminderData::collect($ticket->reminders()
                 ->visibleTo($request->user())
                 ->whereNull('sent_at')
                 ->orderBy('remind_at')

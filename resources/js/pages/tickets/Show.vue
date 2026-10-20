@@ -23,22 +23,15 @@ import {
   toLocalDateTime,
 } from '@/lib/dates';
 import { destroy, index, restore, update } from '@/routes/tickets';
-import type {
-  Attachment,
-  Ticket,
-  TicketComment,
-  TicketEvent,
-  TicketReminder,
-} from '@/types';
 
 defineOptions({ layout: { title: '' } });
 
 const { ticket, comments, events, can } = defineProps<{
-  ticket: Ticket;
-  comments: TicketComment[];
-  events: TicketEvent[];
-  attachments: Attachment[];
-  reminders: TicketReminder[];
+  ticket: App.Data.Tickets.TicketData;
+  comments: App.Data.Tickets.TicketCommentData[];
+  events: App.Data.Tickets.TicketEventData[];
+  attachments: App.Data.Tickets.AttachmentData[];
+  reminders: App.Data.Tickets.TicketReminderData[];
   deskMembers: App.Data.Desks.DeskMemberData[];
   desks: App.Data.Desks.DeskData[];
   tags: App.Data.Tags.TagData[];

@@ -8,14 +8,15 @@ use App\Actions\Tickets\DeleteTicket;
 use App\Actions\Tickets\RestoreTicket;
 use App\Actions\Tickets\SearchTickets;
 use App\Actions\Tickets\UpdateTicket;
+use App\Data\Tickets\TicketData;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\TicketResource;
 use App\Models\Desk;
 use App\Models\Ticket;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
+use Spatie\LaravelData\PaginatedDataCollection;
 
 class TicketController extends Controller
 {
@@ -23,17 +24,20 @@ class TicketController extends Controller
 
     /**
      * The tickets the user can see, filtered by the query string.
+     *
+     * @return PaginatedDataCollection<int, TicketData>
      */
-    public function index(Request $request, SearchTickets $searchTickets): AnonymousResourceCollection
+    public function index(Request $request, SearchTickets $searchTickets): PaginatedDataCollection
     {
-        return TicketResource::collection(
+        return TicketData::collect(
             $searchTickets->handle($request->user(), $request->query())->with(self::RELATIONS)->paginate(),
+            PaginatedDataCollection::class,
         );
     }
 
-    public function store(Request $request, Desk $desk, CreateTicket $createTicket): TicketResource
+    public function store(Request $request, Desk $desk, CreateTicket $createTicket): TicketData
     {
-        return new TicketResource($createTicket->handle($request->user(), $desk, $request->all())->load(self::RELATIONS));
+        return TicketData::from($createTicket->handle($request->user(), $desk, $request->all())->load(self::RELATIONS));
     }
 
     /**
@@ -46,16 +50,16 @@ class TicketController extends Controller
         return ['updated' => $bulkUpdateTickets->handle($request->user(), $request->all())];
     }
 
-    public function show(Ticket $ticket): TicketResource
+    public function show(Ticket $ticket): TicketData
     {
         Gate::authorize('view', $ticket);
 
-        return new TicketResource($ticket->load(self::RELATIONS));
+        return TicketData::from($ticket->load(self::RELATIONS));
     }
 
-    public function update(Request $request, Ticket $ticket, UpdateTicket $updateTicket): TicketResource
+    public function update(Request $request, Ticket $ticket, UpdateTicket $updateTicket): TicketData
     {
-        return new TicketResource($updateTicket->handle($request->user(), $ticket, $request->all())->load(self::RELATIONS));
+        return TicketData::from($updateTicket->handle($request->user(), $ticket, $request->all())->load(self::RELATIONS));
     }
 
     public function destroy(Request $request, Ticket $ticket, DeleteTicket $deleteTicket): Response
@@ -65,8 +69,8 @@ class TicketController extends Controller
         return response()->noContent();
     }
 
-    public function restore(Request $request, Ticket $ticket, RestoreTicket $restoreTicket): TicketResource
+    public function restore(Request $request, Ticket $ticket, RestoreTicket $restoreTicket): JsonResponse
     {
-        return new TicketResource($restoreTicket->handle($request->user(), $ticket)->load(self::RELATIONS));
+        return response()->json(TicketData::from($restoreTicket->handle($request->user(), $ticket)->load(self::RELATIONS)));
     }
 }

@@ -4,31 +4,34 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Tickets\AddTicketAttachment;
 use App\Actions\Tickets\DeleteTicketAttachment;
+use App\Data\Tickets\AttachmentData;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\AttachmentResource;
 use App\Models\Attachment;
 use App\Models\Ticket;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
+use Spatie\LaravelData\PaginatedDataCollection;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AttachmentController extends Controller
 {
-    public function index(Ticket $ticket): AnonymousResourceCollection
+    /**
+     * @return PaginatedDataCollection<int, AttachmentData>
+     */
+    public function index(Ticket $ticket): PaginatedDataCollection
     {
         Gate::authorize('view', $ticket);
 
-        return AttachmentResource::collection($ticket->attachments()->paginate(100));
+        return AttachmentData::collect($ticket->attachments()->paginate(100), PaginatedDataCollection::class);
     }
 
     /**
      * Attach the multipart `file` to the ticket.
      */
-    public function store(Request $request, Ticket $ticket, AddTicketAttachment $addTicketAttachment): AttachmentResource
+    public function store(Request $request, Ticket $ticket, AddTicketAttachment $addTicketAttachment): AttachmentData
     {
-        return new AttachmentResource($addTicketAttachment->handle($request->user(), $ticket, $request->all()));
+        return AttachmentData::from($addTicketAttachment->handle($request->user(), $ticket, $request->all()));
     }
 
     public function download(Attachment $attachment): StreamedResponse

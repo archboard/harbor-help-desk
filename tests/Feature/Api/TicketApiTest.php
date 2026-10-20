@@ -17,17 +17,33 @@ test('agents open tickets on their desk', function () {
     ['workspace' => $workspace, 'desk' => $desk, 'agent' => $agent] = acmeWithAgent();
     actAs($agent, $workspace);
 
-    $this->postJson("http://acme.harbor.test/api/v1/desks/{$desk->id}/tickets", [
+    $response = $this->postJson("http://acme.harbor.test/api/v1/desks/{$desk->id}/tickets", [
         'subject' => 'Printer jam',
         'requester' => ['name' => 'Pat Lee', 'email' => 'pat@example.com'],
         'assignee_ids' => [$agent->id],
         'body' => 'It jams on every double-sided print.',
-    ])
-        ->assertCreated()
-        ->assertJsonPath('number', 1)
-        ->assertJsonPath('status', 'open')
-        ->assertJsonPath('requester.email', 'pat@example.com')
-        ->assertJsonPath('assignees.0.id', $agent->id);
+    ])->assertCreated();
+
+    $ticket = Ticket::sole();
+    $response->assertSee('"custom_fields":{}', false)->assertExactJson([
+        'id' => $ticket->id,
+        'number' => 1,
+        'subject' => 'Printer jam',
+        'status' => 'open',
+        'status_label' => 'Open',
+        'priority' => 'normal',
+        'priority_label' => 'Normal',
+        'desk_id' => $desk->id,
+        'desk' => ['id' => $desk->id, 'name' => $desk->name, 'slug' => $desk->slug, 'archived_at' => null],
+        'due_at' => null,
+        'custom_fields' => [],
+        'requester' => ['id' => $ticket->requester_id, 'name' => 'Pat Lee', 'email' => 'pat@example.com'],
+        'assignees' => [['id' => $agent->id, 'name' => $agent->name, 'email' => $agent->email]],
+        'tags' => [],
+        'created_at' => $ticket->created_at->toIso8601String(),
+        'updated_at' => $ticket->updated_at->toIso8601String(),
+        'deleted_at' => null,
+    ]);
 
     expect(Ticket::sole())->subject->toBe('Printer jam')
         ->and(Ticket::sole()->comments()->sole())->body->toBe('It jams on every double-sided print.')->author_id->toBe($agent->id);
@@ -96,8 +112,19 @@ test('tickets are updated, moved, assigned and tagged, and the history reads bac
         ->assertExactJson([['id' => Tag::sole()->id, 'name' => 'Billing']]);
     $this->putJson("{$url}/desk", ['desk_id' => $south->id])->assertOk()->assertJsonPath('desk_id', $south->id);
 
+    $created = $ticket->events()->oldest('id')->first();
     $this->getJson("{$url}/events")
         ->assertOk()
+        ->assertJsonPath('data.0', [
+            'id' => $created->id,
+            'type' => $created->type->value,
+            'description' => $created->description(),
+            'actor_name' => $created->actorName(),
+            'actor_type' => $created->actor_type,
+            'actor_id' => $created->actor_id,
+            'properties' => $created->properties,
+            'created_at' => $created->created_at->toIso8601String(),
+        ])
         ->assertJsonPath('data.*.description', [
             'Jane Doe changed the priority to High.',
             'Jane Doe assigned Jane Doe.',

@@ -64,6 +64,75 @@ declare namespace App {
         name: string;
       };
     }
+    namespace Tickets {
+      export type AttachmentData = {
+        id: string;
+        ticket_id: string;
+        ticket_comment_id: string | null;
+        filename: string;
+        mime_type: string;
+        size: number;
+        checksum: string;
+        uploader_type: string;
+        uploader_id: string;
+        download_url: string;
+        created_at: string | null;
+      };
+      export type TicketCommentData = {
+        id: string;
+        ticket_id: string;
+        body: string;
+        is_internal: boolean;
+        author_type: string;
+        author_id: string;
+        author_name?: string | null;
+        attachments?: App.Data.Tickets.AttachmentData[];
+        edited_at: string | null;
+        created_at: string | null;
+      };
+      export type TicketData = {
+        id: string;
+        number: number;
+        subject: string;
+        status: App.Enums.TicketStatus;
+        status_label: string;
+        priority: App.Enums.TicketPriority;
+        priority_label: string;
+        desk_id: string;
+        desk?: App.Data.Desks.DeskData;
+        due_at: string | null;
+        custom_fields: Record<
+          string,
+          string | number | boolean | string[] | null
+        >;
+        requester?: App.Data.Contacts.ContactData;
+        assignees?: App.Data.Users.UserData[];
+        tags?: App.Data.Tags.TagData[];
+        created_at: string | null;
+        updated_at: string | null;
+        deleted_at: string | null;
+      };
+      export type TicketEventData = {
+        id: string;
+        type: App.Enums.TicketEventType;
+        description: string;
+        actor_name: string;
+        actor_type: string | null;
+        actor_id: string | null;
+        properties: Record<string, any>;
+        created_at: string;
+      };
+      export type TicketReminderData = {
+        id: string;
+        ticket_id: string;
+        user_id: string | null;
+        for_assignees: boolean;
+        created_by: string;
+        remind_at: string;
+        note: string | null;
+        sent_at: string | null;
+      };
+    }
     namespace Users {
       export type CurrentUserData = {
         id: string;

@@ -7,13 +7,13 @@ import AppFieldset from '@/components/forms/AppFieldset.vue';
 import { EmailField, InputField } from '@/components/forms/fields';
 import TicketTable from '@/components/tickets/TicketTable.vue';
 import { index, update } from '@/routes/contacts';
-import type { Paginated, Ticket } from '@/types';
+import type { Paginated } from '@/types';
 
 defineOptions({ layout: { title: '' } });
 
 const { contact } = defineProps<{
   contact: App.Data.Contacts.ContactData;
-  tickets: Paginated<Ticket>;
+  tickets: Paginated<App.Data.Tickets.TicketData>;
 }>();
 
 const form = useForm({ name: contact.name, email: contact.email });

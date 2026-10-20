@@ -10,13 +10,12 @@ import FieldError from '@/components/forms/FieldError.vue';
 import AttachmentLink from '@/components/tickets/AttachmentLink.vue';
 import { destroy } from '@/routes/attachments';
 import { store } from '@/routes/tickets/attachments';
-import type { Attachment } from '@/types';
 
 const { ticketId, canDeleteAny } = defineProps<{
   ticketId: string;
-  attachments: Attachment[];
+  attachments: App.Data.Tickets.AttachmentData[];
   canUpload: boolean;
-  /** Ticket deleters can remove anyone's file; others only their own. */
+  /** App.Data.Tickets.TicketData deleters can remove anyone's file; others only their own. */
   canDeleteAny: boolean;
 }>();
 
@@ -24,7 +23,7 @@ const page = usePage();
 const form = useForm({ file: null as File | null });
 const removing = ref<string | null>(null);
 
-function canRemove(attachment: Attachment): boolean {
+function canRemove(attachment: App.Data.Tickets.AttachmentData): boolean {
   return (
     canDeleteAny ||
     (attachment.uploader_type === 'user' &&
@@ -45,7 +44,7 @@ fileDialog.onChange((files) => {
   }
 });
 
-function remove(attachment: Attachment): void {
+function remove(attachment: App.Data.Tickets.AttachmentData): void {
   router.delete(destroy(attachment.id).url, {
     preserveScroll: true,
     onStart: () => (removing.value = attachment.id),
