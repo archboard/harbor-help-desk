@@ -101,6 +101,12 @@ test('select fields keep requiring options when updated', function () {
     $text = CustomField::factory()->create();
     expect(fn () => app(UpdateCustomField::class)->handle($this->admin, $text, ['options' => ['A']]))
         ->toThrow(ValidationException::class);
+
+    app(UpdateCustomField::class)->handle($this->admin, $text, ['options' => null]);
+    expect($text->fresh()->options)->toBeNull();
+
+    expect(fn () => app(UpdateCustomField::class)->handle($this->admin, $field, ['options' => null]))
+        ->toThrow(ValidationException::class);
 });
 
 test('deleting a field strips its values from tickets and leaves the others', function () {

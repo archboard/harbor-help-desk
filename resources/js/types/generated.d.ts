@@ -59,7 +59,7 @@ declare namespace App {
       export type UpdateCustomFieldData = {
         name?: string;
         type?: App.Enums.CustomFieldType;
-        options?: string[];
+        options?: string[] | null;
         is_required?: boolean;
         position?: number;
       };

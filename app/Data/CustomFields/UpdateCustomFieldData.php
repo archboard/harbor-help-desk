@@ -15,12 +15,12 @@ use Spatie\LaravelData\Optional;
 class UpdateCustomFieldData extends InputData
 {
     /**
-     * @param  list<string>|Optional  $options
+     * @param  list<string>|Optional|null  $options
      */
     public function __construct(
         public string|Optional $name,
         public CustomFieldType|Optional $type,
-        public array|Optional $options,
+        public array|Optional|null $options,
         public bool|Optional $isRequired,
         #[IntegerType]
         public int|Optional $position,
@@ -34,7 +34,7 @@ class UpdateCustomFieldData extends InputData
         return [
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'type' => ['sometimes', 'required', Rule::enum(CustomFieldType::class)],
-            'options' => ['sometimes', 'required', 'array', 'min:1'],
+            'options' => ['sometimes', 'nullable', 'array'],
             'options.*' => ['string', 'max:255', 'distinct'],
         ];
     }

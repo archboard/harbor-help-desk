@@ -3,9 +3,10 @@
 namespace App\Data\Desks;
 
 use App\Data\InputData;
-use App\Models\Workspace;
-use Illuminate\Validation\Rule;
 
+/**
+ * The fields must belong to the desk's workspace, so `SyncDeskCustomFields` checks that they exist.
+ */
 class SyncDeskCustomFieldsData extends InputData
 {
     /**
@@ -22,7 +23,7 @@ class SyncDeskCustomFieldsData extends InputData
     {
         return [
             'field_ids' => ['present', 'array'],
-            'field_ids.*' => ['string', Rule::exists('custom_fields', 'id')->where('workspace_id', Workspace::current()?->getKey())],
+            'field_ids.*' => ['string'],
         ];
     }
 }

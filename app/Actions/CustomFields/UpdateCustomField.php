@@ -25,7 +25,7 @@ class UpdateCustomField
         $data = UpdateCustomFieldData::validateAndCreateWith($input, [
             'name' => ['sometimes', CustomFieldNameRules::unique($field)],
             'type' => ['sometimes', Rule::in([$field->type->value])],
-            'options' => $field->type->hasOptions() ? [] : ['prohibited'],
+            'options' => $field->type->hasOptions() ? ['sometimes', 'required', 'min:1'] : ['prohibited'],
         ]);
 
         $field->update($data->filled());
