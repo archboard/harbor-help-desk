@@ -5,8 +5,7 @@ import CardPadding from '@/components/CardPadding.vue';
 import CardWrapper from '@/components/CardWrapper.vue';
 import AppFieldset from '@/components/forms/AppFieldset.vue';
 import { InputField } from '@/components/forms/fields';
-import SettingsNav from '@/components/SettingsNav.vue';
-import { update } from '@/routes/workspace';
+import { update } from '@/routes/workspace/general';
 
 defineOptions({ layout: { title: 'Workspace' } });
 
@@ -19,8 +18,6 @@ const form = useForm({
 
 <template>
   <Head title="Workspace" />
-
-  <SettingsNav />
 
   <CardWrapper>
     <form @submit.prevent="form.submit(update(), { preserveScroll: true })">

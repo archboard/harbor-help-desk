@@ -1,11 +1,8 @@
 <?php
 
 use App\Http\Controllers\Settings\ApiTokenController;
-use App\Http\Controllers\Settings\CustomFieldController;
-use App\Http\Controllers\Settings\EmailController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
-use App\Http\Controllers\Settings\WorkspaceController;
 use Illuminate\Auth\Middleware\RequirePassword;
 use Illuminate\Support\Facades\Route;
 
@@ -33,19 +30,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('settings/api-tokens', [ApiTokenController::class, 'store'])->name('api-tokens.store');
         Route::delete('settings/api-tokens/{tokenId}', [ApiTokenController::class, 'destroy'])->name('api-tokens.destroy');
     });
-
-    Route::get('settings/workspace', [WorkspaceController::class, 'edit'])->name('workspace.edit');
-    Route::patch('settings/workspace', [WorkspaceController::class, 'update'])->name('workspace.update');
-
-    Route::resource('settings/custom-fields', CustomFieldController::class)
-        ->only(['index', 'store', 'update', 'destroy'])
-        ->names('custom-fields')
-        ->parameters(['custom-fields' => 'customField']);
-
-    Route::resource('settings/email', EmailController::class)
-        ->only(['index', 'store', 'update', 'destroy'])
-        ->names('email')
-        ->parameters(['email' => 'mailbox']);
 
     Route::inertia('settings/appearance', 'settings/Appearance')->name('appearance.edit');
 });

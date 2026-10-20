@@ -9,7 +9,7 @@ import {
 } from '@headlessui/vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import { ChevronDown, Menu as MenuIcon, X } from '@lucide/vue';
-import { watch } from 'vue';
+import { computed, watch } from 'vue';
 import Container from '@/components/Container.vue';
 import ArchboardLogo from '@/components/icons/ArchboardLogo.vue';
 import Notifications from '@/components/Notifications.vue';
@@ -25,6 +25,7 @@ import { index as desks } from '@/routes/desks';
 import { edit as editProfile } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
 import { index as tickets } from '@/routes/tickets';
+import { edit as workspaceSettings } from '@/routes/workspace/general';
 
 const { title = '' } = defineProps<{ title?: string }>();
 
@@ -35,11 +36,14 @@ watch(() => page.props.auth.user.timezone, setDisplayTimezone, {
   immediate: true,
 });
 
-const navigation = [
+const navigation = computed(() => [
   { label: 'Tickets', href: tickets().url },
   { label: 'Contacts', href: contacts().url },
   { label: 'Desks', href: desks().url },
-];
+  ...(page.props.workspace?.is_admin
+    ? [{ label: 'Workspace', href: workspaceSettings().url }]
+    : []),
+]);
 
 const userNavigation = [
   { label: 'Profile', href: editProfile().url },

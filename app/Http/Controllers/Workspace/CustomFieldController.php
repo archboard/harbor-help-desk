@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Settings;
+namespace App\Http\Controllers\Workspace;
 
 use App\Actions\CustomFields\CreateCustomField;
 use App\Actions\CustomFields\DeleteCustomField;
@@ -24,7 +24,7 @@ class CustomFieldController extends Controller
     {
         Gate::authorize('create', CustomField::class);
 
-        return Inertia::render('settings/CustomFields', [
+        return Inertia::render('workspace/CustomFields', [
             'fields' => CustomFieldData::collect(CustomField::query()->with('desks')->orderBy('position')->orderBy('id')->get()),
             'types' => CustomFieldType::options(),
         ]);

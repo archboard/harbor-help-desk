@@ -13,13 +13,12 @@ import {
 import ConfirmationModal from '@/components/modals/ConfirmationModal.vue';
 import Modal from '@/components/modals/Modal.vue';
 import Pill from '@/components/Pill.vue';
-import SettingsNav from '@/components/SettingsNav.vue';
 import Table from '@/components/tables/Table.vue';
 import Tbody from '@/components/tables/Tbody.vue';
 import Td from '@/components/tables/Td.vue';
 import Th from '@/components/tables/Th.vue';
 import Thead from '@/components/tables/Thead.vue';
-import { destroy, store, update } from '@/routes/custom-fields';
+import { destroy, store, update } from '@/routes/workspace/custom-fields';
 
 defineOptions({ layout: { title: 'Custom fields' } });
 
@@ -102,8 +101,6 @@ function remove(close: () => void): void {
 
 <template>
   <Head title="Custom fields" />
-
-  <SettingsNav />
 
   <div class="space-y-6">
     <div class="flex items-center justify-between gap-4">

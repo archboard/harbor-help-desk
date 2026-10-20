@@ -19,14 +19,13 @@ import {
 import ConfirmationModal from '@/components/modals/ConfirmationModal.vue';
 import Modal from '@/components/modals/Modal.vue';
 import Pill from '@/components/Pill.vue';
-import SettingsNav from '@/components/SettingsNav.vue';
 import Table from '@/components/tables/Table.vue';
 import Tbody from '@/components/tables/Tbody.vue';
 import Td from '@/components/tables/Td.vue';
 import Th from '@/components/tables/Th.vue';
 import Thead from '@/components/tables/Thead.vue';
 import { formatDateTime, timeAgo } from '@/lib/dates';
-import { destroy, store, update } from '@/routes/email';
+import { destroy, store, update } from '@/routes/workspace/email';
 import { redirect as connect } from '@/routes/mailboxes/oauth';
 
 defineOptions({ layout: { title: 'Email' } });
@@ -148,8 +147,6 @@ function remove(close: () => void): void {
 
 <template>
   <Head title="Email" />
-
-  <SettingsNav />
 
   <div class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-4">

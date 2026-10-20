@@ -2,13 +2,22 @@ import { createInertiaApp } from '@inertiajs/vue3';
 import { initializeTheme } from '@/composables/useAppearance';
 import AppLayout from '@/layouts/AppLayout.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
+import WorkspaceLayout from '@/layouts/WorkspaceLayout.vue';
 import { initializeFlashToast } from '@/lib/flashToast';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 void createInertiaApp({
   title: (title) => (title ? `${title} - ${appName}` : appName),
-  layout: (name) => (name.startsWith('auth/') ? AuthLayout : AppLayout),
+  layout: (name) => {
+    if (name.startsWith('auth/')) {
+      return AuthLayout;
+    }
+
+    return name.startsWith('workspace/')
+      ? [AppLayout, WorkspaceLayout]
+      : AppLayout;
+  },
   withApp: (app) => {
     app.directive('focus', {
       mounted: (el: HTMLElement, shouldFocus) => {

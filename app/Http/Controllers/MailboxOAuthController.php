@@ -67,7 +67,7 @@ class MailboxOAuthController extends Controller
 
         $workspace = Workspace::query()->whereKey($state['workspace_id'])->firstOrFail();
         $user = User::query()->whereKey($state['user_id'])->firstOrFail();
-        $back = redirect()->away($workspace->url('settings/email'));
+        $back = redirect()->away($workspace->url('workspace/email'));
 
         // No code means the person declined consent.
         if (! $request->filled('code')) {

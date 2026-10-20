@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Settings;
+namespace App\Http\Controllers\Workspace;
 
 use App\Actions\Mailboxes\CreateMailbox;
 use App\Actions\Mailboxes\DeleteMailbox;
@@ -28,7 +28,7 @@ class EmailController extends Controller
     {
         Gate::authorize('viewAny', Mailbox::class);
 
-        return Inertia::render('settings/Email', [
+        return Inertia::render('workspace/Email', [
             'mailboxes' => MailboxData::collect(Mailbox::query()->oldest('id')->get()),
             'desks' => DeskData::collect(Desk::query()->orderBy('name')->get()),
             'oauthProviders' => [

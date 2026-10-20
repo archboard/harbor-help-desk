@@ -52,7 +52,7 @@ test('connecting Google creates the mailbox in the workspace that started it', f
     $state = startGoogleConsent($this->admin);
 
     $this->get('http://harbor.test/mailboxes/oauth/callback?code=abc&state='.urlencode($state))
-        ->assertRedirect('http://acme.harbor.test/settings/email');
+        ->assertRedirect('http://acme.harbor.test/workspace/email');
 
     $mailbox = Mailbox::withoutGlobalScopes()->sole();
     expect($mailbox->workspace_id)->toBe($this->acme->id)

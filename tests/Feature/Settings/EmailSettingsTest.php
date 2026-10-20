@@ -31,10 +31,10 @@ test('admins see the mailboxes, desks and configured providers, never secrets', 
         'push_expires_at' => now()->addDay(),
     ]);
 
-    $response = $this->actingAs($this->admin)->get(route('email.index'));
+    $response = $this->actingAs($this->admin)->get(route('workspace.email.index'));
 
     $response->assertInertia(fn (Assert $page) => $page
-        ->component('settings/Email')
+        ->component('workspace/Email')
         ->has('mailboxes', 2)
         ->where('mailboxes.0.default_desk_id', $this->desk->id)
         ->where('mailboxes.0.receives_by', 'poll')
@@ -53,7 +53,7 @@ test('admins add, update and delete an IMAP mailbox through the web routes', fun
     $server = ['host' => '1.1.1.1', 'port' => 993, 'encryption' => 'ssl', 'username' => 'help@acme.com', 'password' => 'hunter2'];
     $this->actingAs($this->admin);
 
-    $this->post(route('email.store'), [
+    $this->post(route('workspace.email.store'), [
         'name' => 'Acme Support',
         'address' => 'help@acme.com',
         'default_desk_id' => $this->desk->id,
@@ -62,7 +62,7 @@ test('admins add, update and delete an IMAP mailbox through the web routes', fun
     $mailbox = Mailbox::sole();
     expect($mailbox->driver)->toBe(MailboxDriver::IMAP);
 
-    $this->patch(route('email.update', $mailbox), [
+    $this->patch(route('workspace.email.update', $mailbox), [
         'name' => 'Acme Help',
         'signature' => '— Acme',
         'default_desk_id' => $this->desk->id,
@@ -73,7 +73,7 @@ test('admins add, update and delete an IMAP mailbox through the web routes', fun
         ->signature->toBe('— Acme')
         ->routing->toBe([['address' => 'billing@acme.com', 'desk_id' => $billing->id]]);
 
-    $this->delete(route('email.destroy', $mailbox))->assertRedirect();
+    $this->delete(route('workspace.email.destroy', $mailbox))->assertRedirect();
     expect(Mailbox::count())->toBe(0);
 });
 
@@ -83,7 +83,7 @@ test('a routing rule must point at a desk in this workspace', function () {
     $this->workspace->makeCurrent();
 
     $this->actingAs($this->admin)
-        ->patch(route('email.update', $mailbox), ['routing' => [['address' => 'billing@acme.com', 'desk_id' => $foreignDesk->id]]])
+        ->patch(route('workspace.email.update', $mailbox), ['routing' => [['address' => 'billing@acme.com', 'desk_id' => $foreignDesk->id]]])
         ->assertSessionHasErrors('routing.0.desk_id');
 });
 
@@ -91,10 +91,10 @@ test('agents cannot manage mailboxes', function () {
     $mailbox = Mailbox::factory()->create(['name' => 'Support']);
     $this->actingAs($this->agent);
 
-    $this->get(route('email.index'))->assertForbidden();
-    $this->post(route('email.store'), ['name' => 'New'])->assertForbidden();
-    $this->patch(route('email.update', $mailbox), ['name' => 'Renamed'])->assertForbidden();
-    $this->delete(route('email.destroy', $mailbox))->assertForbidden();
+    $this->get(route('workspace.email.index'))->assertForbidden();
+    $this->post(route('workspace.email.store'), ['name' => 'New'])->assertForbidden();
+    $this->patch(route('workspace.email.update', $mailbox), ['name' => 'Renamed'])->assertForbidden();
+    $this->delete(route('workspace.email.destroy', $mailbox))->assertForbidden();
 
     expect($mailbox->fresh()->name)->toBe('Support');
 });
@@ -104,9 +104,9 @@ test("another workspace's mailboxes are not reachable", function () {
     $this->workspace->makeCurrent();
     $this->actingAs($this->admin);
 
-    $this->get(route('email.index'))->assertInertia(fn (Assert $page) => $page->has('mailboxes', 0));
-    $this->patch(route('email.update', $foreign->id), ['name' => 'Hijacked'])->assertNotFound();
-    $this->delete(route('email.destroy', $foreign->id))->assertNotFound();
+    $this->get(route('workspace.email.index'))->assertInertia(fn (Assert $page) => $page->has('mailboxes', 0));
+    $this->patch(route('workspace.email.update', $foreign->id), ['name' => 'Hijacked'])->assertNotFound();
+    $this->delete(route('workspace.email.destroy', $foreign->id))->assertNotFound();
 
     expect($foreign->fresh()->name)->toBe('Foreign');
 });

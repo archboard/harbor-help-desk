@@ -21,7 +21,7 @@ import Td from '@/components/tables/Td.vue';
 import Th from '@/components/tables/Th.vue';
 import Thead from '@/components/tables/Thead.vue';
 import { notify } from '@/lib/notifications';
-import { index as customFieldSettings } from '@/routes/custom-fields';
+import { index as customFieldSettings } from '@/routes/workspace/custom-fields';
 import { destroy, update } from '@/routes/desks';
 import { update as syncCustomFields } from '@/routes/desks/custom-fields';
 import {

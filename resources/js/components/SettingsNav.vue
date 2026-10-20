@@ -1,31 +1,19 @@
 <script setup lang="ts">
-import { Link, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Link } from '@inertiajs/vue3';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { edit as editApiTokens } from '@/routes/api-tokens';
 import { edit as editAppearance } from '@/routes/appearance';
-import { index as customFields } from '@/routes/custom-fields';
-import { index as email } from '@/routes/email';
 import { edit as editProfile } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
-import { edit as editWorkspace } from '@/routes/workspace';
 
-const page = usePage();
 const { isCurrentUrl } = useCurrentUrl();
 
-const tabs = computed(() => [
+const tabs = [
   { label: 'Profile', href: editProfile().url },
   { label: 'Security', href: editSecurity().url },
   { label: 'API tokens', href: editApiTokens().url },
   { label: 'Appearance', href: editAppearance().url },
-  ...(page.props.workspace?.is_admin
-    ? [
-        { label: 'Workspace', href: editWorkspace().url },
-        { label: 'Email', href: email().url },
-        { label: 'Custom fields', href: customFields().url },
-      ]
-    : []),
-]);
+];
 </script>
 
 <template>

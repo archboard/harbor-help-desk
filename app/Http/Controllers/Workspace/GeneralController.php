@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Settings;
+namespace App\Http\Controllers\Workspace;
 
 use App\Actions\Workspaces\UpdateWorkspace;
 use App\Http\Controllers\Controller;
@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class WorkspaceController extends Controller
+class GeneralController extends Controller
 {
     /**
      * Show the current workspace's settings page.
@@ -21,7 +21,7 @@ class WorkspaceController extends Controller
         Gate::authorize('update', Workspace::current());
 
         // The page reads the workspace from the shared `workspace` prop.
-        return Inertia::render('settings/Workspace');
+        return Inertia::render('workspace/General');
     }
 
     public function update(Request $request, UpdateWorkspace $updateWorkspace): RedirectResponse

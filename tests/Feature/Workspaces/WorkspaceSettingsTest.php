@@ -17,9 +17,9 @@ beforeEach(function () {
 
 test('admins see the workspace page and rename the workspace', function () {
     $this->actingAs($this->admin)
-        ->get(route('workspace.edit'))
+        ->get(route('workspace.general.edit'))
         ->assertInertia(fn (Assert $page) => $page
-            ->component('settings/Workspace')
+            ->component('workspace/General')
             ->where('workspace', [
                 'id' => $this->workspace->id,
                 'name' => $this->workspace->name,
@@ -28,7 +28,7 @@ test('admins see the workspace page and rename the workspace', function () {
             ]));
 
     $this->actingAs($this->admin)
-        ->patch(route('workspace.update'), ['name' => 'Acme Support'])
+        ->patch(route('workspace.general.update'), ['name' => 'Acme Support'])
         ->assertRedirect()
         ->assertSessionHasNoErrors();
 
@@ -37,7 +37,7 @@ test('admins see the workspace page and rename the workspace', function () {
 
 test('the name is required', function () {
     $this->actingAs($this->admin)
-        ->patch(route('workspace.update'), ['name' => ''])
+        ->patch(route('workspace.general.update'), ['name' => ''])
         ->assertSessionHasErrors('name');
 });
 
@@ -46,8 +46,16 @@ test('agents cannot manage the workspace', function () {
         ->get(route('desks.index'))
         ->assertInertia(fn (Assert $page) => $page->where('workspace.is_admin', false));
 
-    $this->actingAs($this->agent)->get(route('workspace.edit'))->assertForbidden();
-    $this->actingAs($this->agent)->patch(route('workspace.update'), ['name' => 'Renamed'])->assertForbidden();
+    $this->actingAs($this->agent)->get(route('workspace.general.edit'))->assertForbidden();
+    $this->actingAs($this->agent)->patch(route('workspace.general.update'), ['name' => 'Renamed'])->assertForbidden();
 
     expect($this->workspace->fresh()->name)->not->toBe('Renamed');
+});
+
+test('workspace pages are forbidden to non-admin agents and the index redirects to general', function () {
+    foreach (['workspace.general.edit', 'workspace.email.index', 'workspace.custom-fields.index'] as $name) {
+        $this->actingAs($this->agent)->get(route($name))->assertForbidden();
+    }
+
+    $this->actingAs($this->admin)->get('/workspace')->assertRedirect('/workspace/general');
 });
