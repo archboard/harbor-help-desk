@@ -4,6 +4,15 @@ An open-source helpdesk. This app is the Inertia web UI and the backend. Other c
 
 Follow the commands in the Workflow guidelines (`.ai/guidelines/workflow.md`) after every change.
 
+## Development
+
+These apply to every agent, including subagents executing a plan step:
+
+- Load the `laravel-best-practices` skill before writing or changing PHP, and `testing-best-practices` before writing or changing tests. Load the other matching skills too (`inertia-vue-development`, `wayfinder-development`, `tailwindcss-development`).
+- Use Boost's `search-docs` before relying on a Laravel-ecosystem API, and `database-schema` before writing migrations or queries.
+- After the workflow commands, run PhpStorm's `get_file_problems` on every changed file and fix what it reports.
+- Report which skills were loaded, the inspection results, and the test results with the work.
+
 ## Product Shape
 
 - Put business logic in Action classes in `app/Actions`. Controllers, API endpoints, jobs and MCP tools call those Actions. Logic must never exist only in an Inertia controller.
