@@ -150,6 +150,16 @@ declare namespace App {
       };
     }
     namespace Notifications {
+      export type MarkNotificationsReadData = {
+        ids: string[] | null;
+      };
+      export type NotificationData = {
+        id: string;
+        type: App.Enums.NotificationType;
+        data: Record<string, unknown>;
+        read_at: string | null;
+        created_at: string | null;
+      };
       export type NotificationPreferenceData = {
         type: App.Enums.NotificationType;
         label: string;

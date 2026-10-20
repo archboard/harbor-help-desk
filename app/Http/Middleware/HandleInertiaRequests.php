@@ -47,6 +47,10 @@ class HandleInertiaRequests extends Middleware
             ],
             // Lazy, because the workspace is resolved by route middleware that runs after this one.
             'workspace' => fn (): ?WorkspaceData => Workspace::current() === null ? null : WorkspaceData::from(Workspace::current()),
+            // Lazy for the same reason. Authenticated pages with a workspace only.
+            ...($request->user() === null ? [] : ['notifications' => fn (): ?array => Workspace::current() === null ? null : [
+                'unread_count' => $request->user()->notifications()->reorder()->whereNull('read_at')->count(),
+            ]]),
             // Authenticated pages only, so guests never open a socket.
             ...($request->user() === null ? [] : ['realtime' => fn (): RealtimeData => RealtimeData::fromConfig()]),
         ];

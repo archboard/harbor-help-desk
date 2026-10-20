@@ -6,6 +6,9 @@ use App\Http\Controllers\DeskController;
 use App\Http\Controllers\DeskCustomFieldController;
 use App\Http\Controllers\DeskMemberController;
 use App\Http\Controllers\MailboxOAuthController;
+use App\Http\Controllers\MarkAllNotificationsReadController;
+use App\Http\Controllers\MarkNotificationReadController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SavedViewController;
 use App\Http\Controllers\TicketAssigneeController;
 use App\Http\Controllers\TicketAttachmentController;
@@ -40,6 +43,9 @@ Route::get('mailboxes/oauth/callback', [MailboxOAuthController::class, 'callback
 Route::middleware('workspace')->group(function () {
     Route::middleware(['auth', 'verified'])->group(function () {
         Route::redirect('dashboard', '/tickets')->name('dashboard');
+        Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('notifications/read', MarkAllNotificationsReadController::class)->name('notifications.read');
+        Route::post('notifications/{notification}/read', MarkNotificationReadController::class)->name('notifications.read-one');
         Route::get('contacts/search', [ContactController::class, 'search'])->name('contacts.search');
         Route::resource('contacts', ContactController::class)->only(['index', 'store', 'show', 'update']);
 

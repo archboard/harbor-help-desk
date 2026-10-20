@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\V1\DeskController;
 use App\Http\Controllers\Api\V1\DeskCustomFieldController;
 use App\Http\Controllers\Api\V1\DeskMemberController;
 use App\Http\Controllers\Api\V1\MailboxController;
+use App\Http\Controllers\Api\V1\MarkNotificationsReadController;
+use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\NotificationPreferenceController;
 use App\Http\Controllers\Api\V1\SavedViewController;
 use App\Http\Controllers\Api\V1\TicketAssigneeController;
@@ -33,6 +35,8 @@ Route::prefix('v1')->name('api.v1.')
         Route::patch('workspace', [WorkspaceController::class, 'update'])->name('workspace.update');
         Route::patch('workspace/settings', [WorkspaceSettingsController::class, 'update'])->name('workspace.settings.update');
 
+        Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('notifications/read', MarkNotificationsReadController::class)->name('notifications.read');
         Route::get('notification-preferences', [NotificationPreferenceController::class, 'show'])->name('notification-preferences.show');
         Route::put('notification-preferences', [NotificationPreferenceController::class, 'update'])->name('notification-preferences.update');
 

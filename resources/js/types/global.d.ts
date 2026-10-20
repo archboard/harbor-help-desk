@@ -21,6 +21,7 @@ declare module '@inertiajs/core' {
       name: string;
       auth: Auth;
       workspace: App.Data.Workspaces.WorkspaceData | null;
+      notifications?: { unread_count: number } | null;
       realtime?: App.Data.Realtime.RealtimeData;
       [key: string]: unknown;
     };

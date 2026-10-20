@@ -12,6 +12,7 @@ import { ChevronDown, Menu as MenuIcon, X } from '@lucide/vue';
 import { computed, watch } from 'vue';
 import Container from '@/components/Container.vue';
 import ArchboardLogo from '@/components/icons/ArchboardLogo.vue';
+import NotificationBell from '@/components/NotificationBell.vue';
 import Notifications from '@/components/Notifications.vue';
 import TimezonePrompt from '@/components/TimezonePrompt.vue';
 import ScaleIn from '@/components/transitions/ScaleIn.vue';
@@ -87,56 +88,60 @@ const userNavigation = [
             </div>
           </div>
 
-          <Popover v-slot="{ open }" class="relative hidden md:block">
-            <PopoverButton
-              class="flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 focus:ring-2 focus:ring-primary-500 focus:outline-hidden dark:text-gray-200 dark:hover:bg-gray-800"
-            >
-              {{ page.props.auth.user.name }}
-              <ChevronDown
-                class="size-4 transition-transform"
-                :class="{ 'rotate-180': open }"
-                aria-hidden="true"
-              />
-            </PopoverButton>
+          <div class="flex items-center gap-1">
+            <NotificationBell />
 
-            <ScaleIn>
-              <PopoverPanel
-                v-slot="{ close }"
-                class="absolute right-0 z-40 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 dark:divide-gray-700 dark:bg-gray-800 dark:ring-white/10"
+            <Popover v-slot="{ open }" class="relative hidden md:block">
+              <PopoverButton
+                class="flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 focus:ring-2 focus:ring-primary-500 focus:outline-hidden dark:text-gray-200 dark:hover:bg-gray-800"
               >
-                <div class="p-1">
-                  <Link
-                    v-for="item in userNavigation"
-                    :key="item.href"
-                    :href="item.href"
-                    class="block rounded-sm px-4 py-2 text-sm text-black hover:bg-gray-100 focus:bg-gray-100 focus:outline-hidden dark:text-gray-100 dark:hover:bg-gray-700 dark:focus:bg-gray-700"
-                    @click="close()"
-                  >
-                    {{ item.label }}
-                  </Link>
-                </div>
-                <div class="p-1">
-                  <Link
-                    :href="logout()"
-                    method="post"
-                    as="button"
-                    class="block w-full rounded-sm px-4 py-2 text-left text-sm text-black hover:bg-gray-100 focus:bg-gray-100 focus:outline-hidden dark:text-gray-100 dark:hover:bg-gray-700 dark:focus:bg-gray-700"
-                    @click="close()"
-                  >
-                    Log out
-                  </Link>
-                </div>
-              </PopoverPanel>
-            </ScaleIn>
-          </Popover>
+                {{ page.props.auth.user.name }}
+                <ChevronDown
+                  class="size-4 transition-transform"
+                  :class="{ 'rotate-180': open }"
+                  aria-hidden="true"
+                />
+              </PopoverButton>
 
-          <DisclosureButton
-            class="inline-flex items-center justify-center rounded-md p-2 text-gray-500 hover:bg-gray-100 focus:ring-2 focus:ring-primary-500 focus:outline-hidden md:hidden dark:text-gray-300 dark:hover:bg-gray-800"
-          >
-            <span class="sr-only">Open main menu</span>
-            <X v-if="open" class="size-6" aria-hidden="true" />
-            <MenuIcon v-else class="size-6" aria-hidden="true" />
-          </DisclosureButton>
+              <ScaleIn>
+                <PopoverPanel
+                  v-slot="{ close }"
+                  class="absolute right-0 z-40 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 dark:divide-gray-700 dark:bg-gray-800 dark:ring-white/10"
+                >
+                  <div class="p-1">
+                    <Link
+                      v-for="item in userNavigation"
+                      :key="item.href"
+                      :href="item.href"
+                      class="block rounded-sm px-4 py-2 text-sm text-black hover:bg-gray-100 focus:bg-gray-100 focus:outline-hidden dark:text-gray-100 dark:hover:bg-gray-700 dark:focus:bg-gray-700"
+                      @click="close()"
+                    >
+                      {{ item.label }}
+                    </Link>
+                  </div>
+                  <div class="p-1">
+                    <Link
+                      :href="logout()"
+                      method="post"
+                      as="button"
+                      class="block w-full rounded-sm px-4 py-2 text-left text-sm text-black hover:bg-gray-100 focus:bg-gray-100 focus:outline-hidden dark:text-gray-100 dark:hover:bg-gray-700 dark:focus:bg-gray-700"
+                      @click="close()"
+                    >
+                      Log out
+                    </Link>
+                  </div>
+                </PopoverPanel>
+              </ScaleIn>
+            </Popover>
+
+            <DisclosureButton
+              class="inline-flex items-center justify-center rounded-md p-2 text-gray-500 hover:bg-gray-100 focus:ring-2 focus:ring-primary-500 focus:outline-hidden md:hidden dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              <span class="sr-only">Open main menu</span>
+              <X v-if="open" class="size-6" aria-hidden="true" />
+              <MenuIcon v-else class="size-6" aria-hidden="true" />
+            </DisclosureButton>
+          </div>
         </div>
       </Container>
 
