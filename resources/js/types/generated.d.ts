@@ -10,6 +10,14 @@ declare namespace App {
         expires_at: string | null;
       };
     }
+    namespace Contacts {
+      export type ContactData = {
+        id: string;
+        name: string;
+        email: string;
+        tickets_count?: number;
+      };
+    }
     namespace CustomFields {
       export type CustomFieldData = {
         id: string;
@@ -36,6 +44,24 @@ declare namespace App {
         name: string;
         email: string;
         role: App.Enums.DeskRole | null;
+      };
+    }
+    namespace SavedViews {
+      export type SavedViewData = {
+        id: string;
+        user_id: string;
+        owner?: App.Data.Users.UserData;
+        name: string;
+        filters: Record<string, string | string[] | boolean>;
+        is_shared: boolean;
+        created_at: string | null;
+        updated_at: string | null;
+      };
+    }
+    namespace Tags {
+      export type TagData = {
+        id: string;
+        name: string;
       };
     }
     namespace Users {

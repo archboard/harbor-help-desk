@@ -4,7 +4,6 @@ import { Search } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import AppInput from '@/components/forms/AppInput.vue';
 import AppSelect from '@/components/forms/AppSelect.vue';
-import type { Tag } from '@/types';
 
 export type TicketQuery = Record<string, string | string[] | undefined>;
 
@@ -12,7 +11,7 @@ const { filters, agents } = defineProps<{
   filters: TicketQuery;
   desks: App.Data.Desks.DeskData[];
   agents: App.Data.Users.UserData[];
-  tags: Tag[];
+  tags: App.Data.Tags.TagData[];
   statuses: Record<string, string>;
   priorities: Record<string, string>;
 }>();

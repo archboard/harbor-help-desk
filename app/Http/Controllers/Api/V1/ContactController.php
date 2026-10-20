@@ -5,37 +5,39 @@ namespace App\Http\Controllers\Api\V1;
 use App\Actions\Contacts\CreateContact;
 use App\Actions\Contacts\SearchContacts;
 use App\Actions\Contacts\UpdateContact;
+use App\Data\Contacts\ContactData;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\ContactResource;
 use App\Models\Contact;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
+use Spatie\LaravelData\PaginatedDataCollection;
 
 class ContactController extends Controller
 {
     /**
      * The workspace's contacts, filtered by `search` (name or email).
+     *
+     * @return PaginatedDataCollection<int, ContactData>
      */
-    public function index(Request $request, SearchContacts $searchContacts): AnonymousResourceCollection
+    public function index(Request $request, SearchContacts $searchContacts): PaginatedDataCollection
     {
-        return ContactResource::collection($searchContacts->handle($request->user(), $request->query())->paginate());
+        return ContactData::collect($searchContacts->handle($request->user(), $request->query())->paginate(), PaginatedDataCollection::class);
     }
 
-    public function store(Request $request, CreateContact $createContact): ContactResource
+    public function store(Request $request, CreateContact $createContact): ContactData
     {
-        return new ContactResource($createContact->handle($request->user(), $request->all()));
+        return ContactData::from($createContact->handle($request->user(), $request->all()));
     }
 
-    public function show(Contact $contact): ContactResource
+    public function show(Contact $contact): ContactData
     {
         Gate::authorize('view', $contact);
 
-        return new ContactResource($contact);
+        return ContactData::from($contact);
     }
 
-    public function update(Request $request, Contact $contact, UpdateContact $updateContact): ContactResource
+    public function update(Request $request, Contact $contact, UpdateContact $updateContact): ContactData
     {
-        return new ContactResource($updateContact->handle($request->user(), $contact, $request->all()));
+        return ContactData::from($updateContact->handle($request->user(), $contact, $request->all()));
     }
 }

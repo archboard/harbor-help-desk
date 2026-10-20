@@ -91,7 +91,9 @@ test('tickets are updated, moved, assigned and tagged, and the history reads bac
     $this->putJson("{$url}/assignees", ['user_ids' => [$agent->id]])
         ->assertOk()
         ->assertExactJson([['id' => $agent->id, 'name' => $agent->name, 'email' => $agent->email]]);
-    $this->putJson("{$url}/tags", ['names' => ['Billing']])->assertOk()->assertJsonPath('0.name', 'Billing');
+    $this->putJson("{$url}/tags", ['names' => ['Billing']])
+        ->assertOk()
+        ->assertExactJson([['id' => Tag::sole()->id, 'name' => 'Billing']]);
     $this->putJson("{$url}/desk", ['desk_id' => $south->id])->assertOk()->assertJsonPath('desk_id', $south->id);
 
     $this->getJson("{$url}/events")

@@ -1,16 +1,3 @@
-export type Contact = {
-  id: string;
-  name: string;
-  email: string;
-  /** Tickets the viewer can see, when counted. */
-  tickets_count?: number;
-};
-
-export type Tag = {
-  id: string;
-  name: string;
-};
-
 export type TicketStatus = 'open' | 'pending' | 'on_hold' | 'solved' | 'closed';
 
 export type TicketPriority = 'low' | 'normal' | 'high' | 'urgent';
@@ -30,9 +17,9 @@ export type Ticket = {
   desk?: App.Data.Desks.DeskData;
   due_at: string | null;
   custom_fields: Record<string, CustomFieldValue>;
-  requester?: Contact;
+  requester?: App.Data.Contacts.ContactData;
   assignees?: App.Data.Users.UserData[];
-  tags?: Tag[];
+  tags?: App.Data.Tags.TagData[];
   created_at: string | null;
   updated_at: string | null;
   deleted_at: string | null;
@@ -85,16 +72,6 @@ export type TicketReminder = {
   created_by: string;
   remind_at: string;
   note: string | null;
-};
-
-export type SavedView = {
-  id: string;
-  user_id: string;
-  owner?: App.Data.Users.UserData;
-  name: string;
-  /** `SearchTickets` filters; the API may store `deleted` as a boolean. */
-  filters: Record<string, string | string[] | boolean>;
-  is_shared: boolean;
 };
 
 export type MailboxDriver = 'hosted' | 'imap' | 'google' | 'microsoft';

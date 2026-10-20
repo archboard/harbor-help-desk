@@ -9,7 +9,7 @@ import TicketTable from '@/components/tickets/TicketTable.vue';
 import type { TicketQuery } from '@/components/tickets/TicketFilters.vue';
 import { cleanQuery, sameQuery } from '@/lib/tickets';
 import { create, index } from '@/routes/tickets';
-import type { Paginated, SavedView, Tag, Ticket } from '@/types';
+import type { Paginated, Ticket } from '@/types';
 
 defineOptions({ layout: { title: 'Tickets' } });
 
@@ -18,10 +18,10 @@ const { tickets, filters, leadDeskIds } = defineProps<{
   /** Desks whose tickets the user may delete. */
   leadDeskIds: string[];
   filters: TicketQuery;
-  savedViews: SavedView[];
+  savedViews: App.Data.SavedViews.SavedViewData[];
   desks: App.Data.Desks.DeskData[];
   agents: App.Data.Users.UserData[];
-  tags: Tag[];
+  tags: App.Data.Tags.TagData[];
   statuses: Record<string, string>;
   priorities: Record<string, string>;
 }>();

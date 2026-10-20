@@ -6,12 +6,12 @@ use App\Actions\Contacts\CreateContact;
 use App\Actions\Contacts\SearchContacts;
 use App\Actions\Contacts\UpdateContact;
 use App\Actions\Tickets\SearchTickets;
-use App\Http\Resources\ContactResource;
+use App\Data\Contacts\ContactData;
 use App\Http\Resources\TicketResource;
 use App\Models\Contact;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -23,17 +23,19 @@ class ContactController extends Controller
         $filters = $request->only('search');
 
         return Inertia::render('contacts/Index', [
-            'contacts' => Inertia::scroll(ContactResource::collection($searchContacts->handle($request->user(), $filters)->paginate(50))),
+            'contacts' => Inertia::scroll(ContactData::collect($searchContacts->handle($request->user(), $filters)->paginate(50))),
             'filters' => (object) $filters,
         ]);
     }
 
     /**
      * The first few matching contacts, for a requester picker.
+     *
+     * @return Collection<int, ContactData>
      */
-    public function search(Request $request, SearchContacts $searchContacts): AnonymousResourceCollection
+    public function search(Request $request, SearchContacts $searchContacts): Collection
     {
-        return ContactResource::collection($searchContacts->handle($request->user(), $request->only('search'))->limit(10)->get());
+        return ContactData::collect($searchContacts->handle($request->user(), $request->only('search'))->limit(10)->get());
     }
 
     public function store(Request $request, CreateContact $createContact): RedirectResponse
@@ -57,7 +59,7 @@ class ContactController extends Controller
             ->paginate(50);
 
         return Inertia::render('contacts/Show', [
-            'contact' => new ContactResource($contact),
+            'contact' => ContactData::from($contact),
             'tickets' => Inertia::scroll(TicketResource::collection($tickets)),
         ]);
     }

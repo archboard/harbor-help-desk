@@ -10,13 +10,13 @@ use App\Actions\Tickets\SearchTickets;
 use App\Actions\Tickets\UpdateTicket;
 use App\Data\Desks\DeskData;
 use App\Data\Desks\DeskMemberData;
+use App\Data\SavedViews\SavedViewData;
+use App\Data\Tags\TagData;
 use App\Data\Users\UserData;
 use App\Enums\TicketEventType;
 use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
 use App\Http\Resources\AttachmentResource;
-use App\Http\Resources\SavedViewResource;
-use App\Http\Resources\TagResource;
 use App\Http\Resources\TicketCommentResource;
 use App\Http\Resources\TicketEventResource;
 use App\Http\Resources\TicketReminderResource;
@@ -49,11 +49,11 @@ class TicketController extends Controller
         return Inertia::render('tickets/Index', [
             'tickets' => Inertia::scroll(TicketResource::collection($tickets)),
             'filters' => (object) $filters,
-            'savedViews' => SavedViewResource::collection(SavedView::visibleTo($request->user())->with('user')->orderBy('name')->get()),
+            'savedViews' => SavedViewData::collect(SavedView::visibleTo($request->user())->with('user')->orderBy('name')->get()),
             'desks' => DeskData::collect($desks),
             'leadDeskIds' => $desks->filter(fn (Desk $desk): bool => $request->user()->can('update', $desk))->values()->modelKeys(),
             'agents' => UserData::collect(Workspace::current()->users()->orderBy('name')->get()),
-            'tags' => TagResource::collection(Tag::query()->orderBy('name')->get()),
+            'tags' => TagData::collect(Tag::query()->orderBy('name')->get()),
             'statuses' => TicketStatus::options(),
             'priorities' => TicketPriority::options(),
         ]);
@@ -124,7 +124,7 @@ class TicketController extends Controller
                 ->get()),
             'deskMembers' => DeskMemberData::collect($ticket->desk->users()->orderBy('name')->get()),
             'desks' => DeskData::collect(Desk::visibleTo($request->user())->orderBy('name')->get()),
-            'tags' => TagResource::collection(Tag::query()->orderBy('name')->get()),
+            'tags' => TagData::collect(Tag::query()->orderBy('name')->get()),
             'statuses' => TicketStatus::options(),
             'priorities' => TicketPriority::options(),
             'can' => [

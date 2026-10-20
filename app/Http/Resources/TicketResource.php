@@ -2,10 +2,13 @@
 
 namespace App\Http\Resources;
 
+use App\Data\Contacts\ContactData;
 use App\Data\Desks\DeskData;
+use App\Data\Tags\TagData;
 use App\Models\Ticket;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Collection;
 
 /**
  * @mixin Ticket
@@ -29,9 +32,9 @@ class TicketResource extends JsonResource
             'desk' => $this->whenLoaded('desk', fn (): DeskData => DeskData::from($this->desk)),
             'due_at' => $this->due_at?->toIso8601String(),
             'custom_fields' => (object) $this->custom_fields,
-            'requester' => new ContactResource($this->whenLoaded('requester')),
+            'requester' => $this->whenLoaded('requester', fn (): ContactData => ContactData::from($this->requester)),
             'assignees' => UserResource::collection($this->whenLoaded('assignees')),
-            'tags' => TagResource::collection($this->whenLoaded('tags')),
+            'tags' => $this->whenLoaded('tags', fn (): Collection => TagData::collect($this->tags)),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
             'deleted_at' => $this->deleted_at?->toIso8601String(),

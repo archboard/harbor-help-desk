@@ -17,10 +17,12 @@ test('contacts are listed, created, shown and updated', function () {
 
     $this->getJson('http://acme.harbor.test/api/v1/contacts?search=pat')
         ->assertOk()
-        ->assertJsonPath('data.0.id', $pat->id)
-        ->assertJsonPath('data.0.tickets_count', 0);
+        ->assertJsonPath('data', [['id' => $pat->id, 'name' => 'Pat Lee', 'email' => 'pat@acme.test', 'tickets_count' => 0]])
+        ->assertJsonStructure(['data', 'links', 'meta' => ['current_page', 'total']]);
 
-    $this->getJson("http://acme.harbor.test/api/v1/contacts/{$pat->id}")->assertOk()->assertJsonPath('email', 'pat@acme.test');
+    $this->getJson("http://acme.harbor.test/api/v1/contacts/{$pat->id}")
+        ->assertOk()
+        ->assertExactJson(['id' => $pat->id, 'name' => 'Pat Lee', 'email' => 'pat@acme.test']);
 
     $this->patchJson("http://acme.harbor.test/api/v1/contacts/{$pat->id}", ['name' => 'Patricia'])
         ->assertOk()

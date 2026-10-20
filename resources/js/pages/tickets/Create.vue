@@ -24,7 +24,7 @@ import { firstListError } from '@/lib/files';
 import { search as searchContacts } from '@/routes/contacts';
 import { store } from '@/routes/desks/tickets';
 import { index } from '@/routes/tickets';
-import type { Contact, CustomFieldValue } from '@/types';
+import type { CustomFieldValue } from '@/types';
 
 defineOptions({ layout: { title: 'New ticket' } });
 
@@ -157,7 +157,7 @@ function submit(): void {
                   :url="searchContacts().url"
                   :has-error="hasError"
                   :display-value="
-                    (contact: Contact | null) =>
+                    (contact: App.Data.Contacts.ContactData | null) =>
                       contact ? `${contact.name} <${contact.email}>` : ''
                   "
                 />
