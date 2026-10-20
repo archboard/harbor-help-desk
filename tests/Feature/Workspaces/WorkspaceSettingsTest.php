@@ -25,7 +25,7 @@ test('admins see the workspace page and rename the workspace', function () {
                 'name' => $this->workspace->name,
                 'subdomain' => $this->workspace->subdomain,
                 'is_admin' => true,
-                'settings' => ['mail_notification_mailbox_id' => null, 'mail_new_tickets_per_sender_per_hour' => 20],
+                'settings' => ['mail_notification_mailbox_id' => null, 'mail_new_tickets_per_sender_per_hour' => 20, 'attachments_max_size_kb' => 25600, 'attachments_blocked_extensions' => ['bat', 'cmd', 'com', 'cpl', 'dll', 'exe', 'hta', 'jar', 'js', 'jse', 'lnk', 'msi', 'msp', 'ps1', 'scr', 'sh', 'vbe', 'vbs', 'wsf']],
             ]));
 
     $this->actingAs($this->admin)
@@ -54,7 +54,7 @@ test('agents cannot manage the workspace', function () {
 });
 
 test('workspace pages are forbidden to non-admin agents and the index redirects to general', function () {
-    foreach (['workspace.general.edit', 'workspace.email.index', 'workspace.custom-fields.index'] as $name) {
+    foreach (['workspace.general.edit', 'workspace.email.index', 'workspace.attachments.edit', 'workspace.custom-fields.index'] as $name) {
         $this->actingAs($this->agent)->get(route($name))->assertForbidden();
     }
 

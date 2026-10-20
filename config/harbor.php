@@ -46,7 +46,10 @@ return [
 
     'attachments' => [
         'disk' => env('HARBOR_ATTACHMENTS_DISK', 'local'),
+        // Platform cap: a workspace's own limit can't exceed it.
         'max_size_kb' => (int) env('HARBOR_ATTACHMENTS_MAX_SIZE_KB', 25 * 1024),
+        // Always blocked in the cloud, on top of each workspace's own list; self-hosted
+        // workspaces start from this list and edit it freely.
         'blocked_extensions' => ['bat', 'cmd', 'com', 'cpl', 'dll', 'exe', 'hta', 'jar', 'js', 'jse', 'lnk', 'msi', 'msp', 'ps1', 'scr', 'sh', 'vbe', 'vbs', 'wsf'],
     ],
 

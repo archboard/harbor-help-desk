@@ -110,3 +110,37 @@ test('workspace b cannot read workspace a attachments', function () {
 
     expect(Attachment::find($attachmentA->id))->toBeNull();
 });
+
+test('the workspace limit and blocked list apply to uploads', function () {
+    config(['harbor.multitenant' => false]);
+    $this->workspace->update(['settings' => ['attachments_max_size_kb' => 50, 'attachments_blocked_extensions' => ['pdf']]]);
+    $ticket = Ticket::factory()->create();
+    $agent = deskMember($this->workspace, $ticket->desk);
+
+    expect(fn () => app(AddTicketAttachment::class)->handle($agent, $ticket, ['file' => UploadedFile::fake()->create('big.png', 51)]))
+        ->toThrow(ValidationException::class, 'must not be greater than 50 kilobytes');
+    expect(fn () => app(AddTicketAttachment::class)->handle($agent, $ticket, ['file' => UploadedFile::fake()->create('a.pdf', 1)]))
+        ->toThrow(ValidationException::class, 'Files of this type can’t be attached.');
+});
+
+test('the platform cap wins over a higher workspace limit', function () {
+    config(['harbor.attachments.max_size_kb' => 100]);
+    $this->workspace->update(['settings' => ['attachments_max_size_kb' => 5000]]);
+    $ticket = Ticket::factory()->create();
+
+    expect($this->workspace->settings->effectiveAttachmentMaxKb())->toBe(100);
+    expect(fn () => app(AddTicketAttachment::class)->handle(deskMember($this->workspace, $ticket->desk), $ticket, ['file' => UploadedFile::fake()->create('big.png', 101)]))
+        ->toThrow(ValidationException::class);
+});
+
+test('the cloud also blocks the platform list but self-hosted can unblock an extension', function (bool $multitenant, bool $blocked) {
+    config(['harbor.multitenant' => $multitenant]);
+    $this->workspace->update(['settings' => ['attachments_blocked_extensions' => ['pdf']]]);
+    $ticket = Ticket::factory()->create();
+    $upload = fn () => app(AddTicketAttachment::class)->handle(deskMember($this->workspace, $ticket->desk), $ticket, ['file' => UploadedFile::fake()->create('setup.exe', 1)]);
+
+    $blocked ? expect($upload)->toThrow(ValidationException::class) : expect($upload()->filename)->toBe('setup.exe');
+})->with([
+    'cloud' => [true, true],
+    'self-hosted' => [false, false],
+]);

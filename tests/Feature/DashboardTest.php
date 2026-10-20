@@ -36,6 +36,6 @@ test('every page shares the signed-in user and the current workspace', function 
                 'name' => $this->workspace->name,
                 'subdomain' => $this->workspace->subdomain,
                 'is_admin' => true,
-                'settings' => ['mail_notification_mailbox_id' => null, 'mail_new_tickets_per_sender_per_hour' => 20],
+                'settings' => ['mail_notification_mailbox_id' => null, 'mail_new_tickets_per_sender_per_hour' => 20, 'attachments_max_size_kb' => 25600, 'attachments_blocked_extensions' => ['bat', 'cmd', 'com', 'cpl', 'dll', 'exe', 'hta', 'jar', 'js', 'jse', 'lnk', 'msi', 'msp', 'ps1', 'scr', 'sh', 'vbe', 'vbs', 'wsf']],
             ]));
 });

@@ -3,12 +3,14 @@
 namespace App\Actions\Tickets;
 
 use App\Data\Tickets\AddTicketAttachmentData;
+use App\Data\Workspaces\WorkspaceSettings;
 use App\Enums\TicketEventType;
 use App\Models\Attachment;
 use App\Models\Contact;
 use App\Models\Ticket;
 use App\Models\TicketComment;
 use App\Models\User;
+use App\Models\Workspace;
 use Closure;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -73,13 +75,17 @@ class AddTicketAttachment
      */
     public static function rules(): array
     {
+        // ponytail: falls back to the defaults where no workspace is current.
+        $settings = Workspace::current()?->settings ?? new WorkspaceSettings;
+        $blocked = $settings->effectiveBlockedExtensions();
+
         return [
             'file',
-            'max:'.config('harbor.attachments.max_size_kb'),
-            function (string $attribute, UploadedFile $file, Closure $fail): void {
+            'max:'.$settings->effectiveAttachmentMaxKb(),
+            function (string $attribute, UploadedFile $file, Closure $fail) use ($blocked): void {
                 $extensions = [strtolower($file->getClientOriginalExtension()), strtolower((string) $file->guessExtension())];
 
-                if (array_intersect($extensions, config('harbor.attachments.blocked_extensions')) !== []) {
+                if (array_intersect($extensions, $blocked) !== []) {
                     $fail(__('Files of this type can’t be attached.'));
                 }
             },

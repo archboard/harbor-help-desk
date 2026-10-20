@@ -119,3 +119,16 @@ test('deleting the mailbox clears the reference', function () {
 
     expect($this->workspace->fresh()->settings->mailNotificationMailboxId)->toBeNull();
 });
+
+test('attachment limits above the platform cap or with bad extensions are rejected', function (array $input, string $key) {
+    config(['harbor.attachments.max_size_kb' => 1000]);
+
+    $this->actingAs($this->admin)
+        ->patch(route('workspace.settings.update'), $input)
+        ->assertSessionHasErrors($key);
+})->with([
+    'over the cap' => [['attachments_max_size_kb' => 1001], 'attachments_max_size_kb'],
+    'not positive' => [['attachments_max_size_kb' => 0], 'attachments_max_size_kb'],
+    'dotted' => [['attachments_blocked_extensions' => ['.exe']], 'attachments_blocked_extensions.0'],
+    'duplicate' => [['attachments_blocked_extensions' => ['exe', 'exe']], 'attachments_blocked_extensions.0'],
+]);

@@ -4,6 +4,7 @@ namespace App\Data\Workspaces;
 
 use App\Data\InputData;
 use Spatie\LaravelData\Attributes\Validation\Between;
+use Spatie\LaravelData\Attributes\Validation\Min;
 use Spatie\LaravelData\Optional;
 
 /**
@@ -12,9 +13,15 @@ use Spatie\LaravelData\Optional;
  */
 class UpdateWorkspaceSettingsData extends InputData
 {
+    /**
+     * @param  list<string>|Optional|null  $attachmentsBlockedExtensions
+     */
     public function __construct(
         public string|Optional|null $mailNotificationMailboxId,
         #[Between(1, 1000)]
         public int|Optional|null $mailNewTicketsPerSenderPerHour,
+        #[Min(1)]
+        public int|Optional|null $attachmentsMaxSizeKb,
+        public array|Optional|null $attachmentsBlockedExtensions,
     ) {}
 }

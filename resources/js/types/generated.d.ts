@@ -334,6 +334,8 @@ declare namespace App {
       export type UpdateWorkspaceSettingsData = {
         mail_notification_mailbox_id?: string | null;
         mail_new_tickets_per_sender_per_hour?: number | null;
+        attachments_max_size_kb?: number | null;
+        attachments_blocked_extensions?: string[] | null;
       };
       export type WorkspaceData = {
         id: string;
@@ -345,6 +347,8 @@ declare namespace App {
       export type WorkspaceSettings = {
         mail_notification_mailbox_id: string | null;
         mail_new_tickets_per_sender_per_hour: number;
+        attachments_max_size_kb: number;
+        attachments_blocked_extensions: string[];
       };
     }
   }
