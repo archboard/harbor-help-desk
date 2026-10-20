@@ -22,17 +22,9 @@ import { destroy, store } from '@/routes/api-tokens';
 
 defineOptions({ layout: { title: 'API tokens' } });
 
-type ApiToken = {
-  id: string;
-  name: string;
-  workspaces: string[];
-  created_at: string | null;
-  expires_at: string | null;
-};
-
 const { workspaces } = defineProps<{
-  workspaces: Array<{ id: string; name: string }>;
-  tokens: ApiToken[];
+  workspaces: App.Data.Workspaces.WorkspaceData[];
+  tokens: App.Data.ApiTokens.ApiTokenData[];
 }>();
 
 const page = usePage();
@@ -40,9 +32,9 @@ const page = usePage();
 const form = useForm({
   name: '',
   workspaces: workspaces.length === 1 ? [workspaces[0].id] : ([] as string[]),
-});
+} satisfies App.Data.ApiTokens.CreatePersonalAccessTokenData);
 
-const revoking = ref<ApiToken | null>(null);
+const revoking = ref<App.Data.ApiTokens.ApiTokenData | null>(null);
 const revokeLoading = ref(false);
 
 async function copyToken(token: string): Promise<void> {

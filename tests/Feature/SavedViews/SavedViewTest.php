@@ -91,8 +91,16 @@ test('the API lists, creates, shows, updates and deletes views', function () {
 
     $this->getJson('http://acme.harbor.test/api/v1/saved-views')
         ->assertOk()
-        ->assertJsonCount(1)
-        ->assertJsonPath('0.id', $view->id);
+        ->assertExactJson([[
+            'id' => $view->id,
+            'user_id' => $this->agent->id,
+            'owner' => ['id' => $this->agent->id, 'name' => $this->agent->name, 'email' => $this->agent->email],
+            'name' => 'Mine',
+            'filters' => ['assignee_id' => 'me'],
+            'is_shared' => false,
+            'created_at' => $view->created_at->toIso8601String(),
+            'updated_at' => $view->updated_at->toIso8601String(),
+        ]]);
     $this->getJson("http://acme.harbor.test/api/v1/saved-views/{$private->id}")->assertForbidden();
 
     $this->patchJson("http://acme.harbor.test/api/v1/saved-views/{$view->id}", ['filters' => []])

@@ -18,10 +18,13 @@
         "laravel/chisel": "^0.1.0",
         "laravel/fortify": "^1.37.2",
         "laravel/framework": "^13.17",
+        "laravel/horizon": "^5.50",
         "laravel/passport": "^13.10",
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.14",
+        "spatie/laravel-data": "^4.23",
         "spatie/laravel-multitenancy": "^4.0",
+        "spatie/laravel-typescript-transformer": "^3.3",
         "symfony/http-client": "^8.1",
         "symfony/postmark-mailer": "^8.1"
     },
@@ -75,10 +78,13 @@
             "@php artisan ide-helper:generate",
             "@php artisan ide-helper:meta",
             "@php artisan ide-helper:models --write",
+            "@php artisan typescript:transform",
             "@format"
         ],
         "ci:check": [
             "Composer\\Config::disableProcessTimeout",
+            "@php artisan typescript:transform",
+            "git diff --exit-code -- resources/js/types/generated.d.ts",
             "npm run check",
             "npm run types:check",
             "@test"

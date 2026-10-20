@@ -2,12 +2,10 @@
 
 namespace App\Actions\Desks;
 
-use App\Enums\DeskRole;
+use App\Data\Desks\SetDeskMemberData;
 use App\Models\Desk;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class SetDeskMember
@@ -21,9 +19,7 @@ class SetDeskMember
     {
         Gate::forUser($actor)->authorize('manageMembers', $desk);
 
-        $validated = Validator::make($input, [
-            'role' => ['required', Rule::enum(DeskRole::class)],
-        ])->validate();
+        $data = SetDeskMemberData::validateAndCreate($input);
 
         if ($member->workspaceRole($desk->workspace) === null) {
             throw ValidationException::withMessages([
@@ -32,7 +28,7 @@ class SetDeskMember
         }
 
         $desk->users()->syncWithoutDetaching([
-            $member->getKey() => ['role' => $validated['role'], 'workspace_id' => $desk->workspace_id],
+            $member->getKey() => ['role' => $data->role, 'workspace_id' => $desk->workspace_id],
         ]);
     }
 }

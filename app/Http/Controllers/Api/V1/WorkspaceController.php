@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Workspaces\UpdateWorkspace;
+use App\Data\Workspaces\WorkspaceData;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\WorkspaceResource;
 use App\Models\Workspace;
 use Illuminate\Http\Request;
 
@@ -13,13 +13,13 @@ class WorkspaceController extends Controller
     /**
      * The workspace the token is being used on.
      */
-    public function show(): WorkspaceResource
+    public function show(): WorkspaceData
     {
-        return new WorkspaceResource(Workspace::current());
+        return WorkspaceData::from(Workspace::current());
     }
 
-    public function update(Request $request, UpdateWorkspace $updateWorkspace): WorkspaceResource
+    public function update(Request $request, UpdateWorkspace $updateWorkspace): WorkspaceData
     {
-        return new WorkspaceResource($updateWorkspace->handle($request->user(), Workspace::current(), $request->all()));
+        return WorkspaceData::from($updateWorkspace->handle($request->user(), Workspace::current(), $request->all()));
     }
 }

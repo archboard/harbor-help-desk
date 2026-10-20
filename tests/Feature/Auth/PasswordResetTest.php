@@ -1,8 +1,11 @@
 <?php
 
+use App\Actions\Fortify\ResetUserPassword;
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Features;
 
 beforeEach(function () {
@@ -75,4 +78,12 @@ test('password cannot be reset with invalid token', function () {
     ]);
 
     $response->assertSessionHasErrors('email');
+});
+
+test('a reset needs a confirmed password', function () {
+    $user = User::factory()->create();
+
+    expect(fn () => app(ResetUserPassword::class)->reset($user, ['password' => 'new-password', 'password_confirmation' => 'other']))
+        ->toThrow(ValidationException::class);
+    expect(Hash::check('new-password', $user->fresh()->password))->toBeFalse();
 });

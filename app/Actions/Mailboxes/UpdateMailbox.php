@@ -2,10 +2,10 @@
 
 namespace App\Actions\Mailboxes;
 
+use App\Data\Mailboxes\UpdateMailboxData;
 use App\Models\Mailbox;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Validator;
 
 class UpdateMailbox
 {
@@ -18,7 +18,7 @@ class UpdateMailbox
     {
         Gate::forUser($actor)->authorize('update', $mailbox);
 
-        $validated = Validator::make($input, MailboxRules::for($mailbox->driver, $mailbox))->validate();
+        $validated = UpdateMailboxData::validateAndCreateWith($input, MailboxRules::connection($mailbox->driver, creating: false))->filled();
 
         if (isset($validated['settings'])) {
             $validated['settings'] = array_replace_recursive($mailbox->settings ?? [], $validated['settings']);

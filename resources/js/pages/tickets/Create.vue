@@ -24,18 +24,20 @@ import { firstListError } from '@/lib/files';
 import { search as searchContacts } from '@/routes/contacts';
 import { store } from '@/routes/desks/tickets';
 import { index } from '@/routes/tickets';
-import type { Contact, CustomField, CustomFieldValue, Desk } from '@/types';
+import type { CustomFieldValue } from '@/types';
 
 defineOptions({ layout: { title: 'New ticket' } });
 
 const { desks } = defineProps<{
-  desks: Desk[];
+  desks: App.Data.Desks.DeskData[];
   statuses: Record<string, string>;
   priorities: Record<string, string>;
 }>();
 
 /** Multi-selects need a list and checkboxes a boolean even before they're set. */
-function emptyValues(fields: CustomField[]): Record<string, CustomFieldValue> {
+function emptyValues(
+  fields: App.Data.CustomFields.CustomFieldData[],
+): Record<string, CustomFieldValue> {
   return Object.fromEntries(
     fields.map((field) => [
       field.id,
@@ -155,7 +157,7 @@ function submit(): void {
                   :url="searchContacts().url"
                   :has-error="hasError"
                   :display-value="
-                    (contact: Contact | null) =>
+                    (contact: App.Data.Contacts.ContactData | null) =>
                       contact ? `${contact.name} <${contact.email}>` : ''
                   "
                 />

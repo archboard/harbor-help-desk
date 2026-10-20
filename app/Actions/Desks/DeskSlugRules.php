@@ -4,28 +4,24 @@ namespace App\Actions\Desks;
 
 use App\Models\Desk;
 use App\Models\Workspace;
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Unique;
 
 /**
- * Validation rules for a desk slug: URL-safe and unique among the workspace's active desks.
+ * Desk slugs are URL-safe and unique among the workspace's active desks.
  */
 class DeskSlugRules
 {
     /**
-     * @return array<int, ValidationRule|string>
+     * @var list<string>
      */
-    public static function for(?Workspace $workspace, ?Desk $ignore = null): array
+    public const array FORMAT = ['string', 'max:255', 'alpha_dash:ascii'];
+
+    public static function unique(?Workspace $workspace, ?Desk $ignore = null): Unique
     {
-        return [
-            'required',
-            'string',
-            'max:255',
-            'alpha_dash:ascii',
-            Rule::unique('desks', 'slug')
-                ->where('workspace_id', $workspace?->getKey())
-                ->whereNull('archived_at')
-                ->ignore($ignore),
-        ];
+        return Rule::unique('desks', 'slug')
+            ->where('workspace_id', $workspace?->getKey())
+            ->whereNull('archived_at')
+            ->ignore($ignore);
     }
 }

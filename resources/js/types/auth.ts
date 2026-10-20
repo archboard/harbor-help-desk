@@ -1,22 +1,3 @@
-export type User = {
-  id: string;
-  name: string;
-  email: string;
-  avatar?: string;
-  email_verified_at: string | null;
-  timezone: string | null;
-  created_at: string;
-  updated_at: string;
-  [key: string]: unknown;
-};
-
 export type Auth = {
-  user: User;
-};
-
-export type CurrentWorkspace = {
-  id: string;
-  name: string;
-  subdomain: string;
-  is_admin: boolean;
+  user: App.Data.Users.CurrentUserData;
 };

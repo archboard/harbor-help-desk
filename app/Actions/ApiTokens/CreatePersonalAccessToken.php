@@ -2,25 +2,31 @@
 
 namespace App\Actions\ApiTokens;
 
+use App\Data\ApiTokens\CreatePersonalAccessTokenData;
 use App\Models\User;
 use App\Models\Workspace;
+use Illuminate\Validation\Rule;
 use Laravel\Passport\PersonalAccessTokenResult;
 
 class CreatePersonalAccessToken
 {
     /**
-     * Issue a personal access token scoped to the given workspaces. Workspaces the user
-     * doesn't belong to are dropped by the scope repository. The plain-text token is only
+     * Issue a personal access token scoped to `workspaces`, which must be ones the user belongs
+     * to. The scope repository drops any they leave later. The plain-text token is only
      * available on the result.
      *
-     * @param  list<string>  $workspaceIds
+     * @param  array<string, mixed>  $input
      * @return PersonalAccessTokenResult<mixed>
      */
-    public function handle(User $user, string $name, array $workspaceIds): PersonalAccessTokenResult
+    public function handle(User $user, array $input): PersonalAccessTokenResult
     {
+        $data = CreatePersonalAccessTokenData::validateAndCreateWith($input, [
+            'workspaces.*' => [Rule::in($user->workspaces()->pluck('workspaces.id'))],
+        ]);
+
         return $user->createToken(
-            $name,
-            array_map(fn (string $id): string => Workspace::TOKEN_SCOPE_PREFIX.$id, $workspaceIds),
+            $data->name,
+            array_map(fn (string $id): string => Workspace::TOKEN_SCOPE_PREFIX.$id, $data->workspaces),
         );
     }
 }

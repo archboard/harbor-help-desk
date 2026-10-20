@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import Pill from '@/components/Pill.vue';
-import type { TicketPriority } from '@/types';
 
-const { priority } = defineProps<{ priority: TicketPriority; label: string }>();
+const { priority } = defineProps<{
+  priority: App.Enums.TicketPriority;
+  label: string;
+}>();
 
 const colors = {
   low: 'gray',

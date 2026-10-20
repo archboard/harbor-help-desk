@@ -2,10 +2,11 @@
 
 namespace App\Actions\SavedViews;
 
+use App\Data\SavedViews\CreateSavedViewData;
 use App\Models\SavedView;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Validator;
+use Spatie\LaravelData\Optional;
 
 class CreateSavedView
 {
@@ -16,13 +17,13 @@ class CreateSavedView
     {
         Gate::forUser($actor)->authorize('create', SavedView::class);
 
-        $validated = Validator::make($input, SavedViewRules::for($input))->validate();
+        $data = CreateSavedViewData::validateAndCreate($input);
 
         return SavedView::create([
             'user_id' => $actor->getKey(),
-            'name' => $validated['name'],
-            'filters' => $validated['filters'],
-            'is_shared' => $validated['is_shared'] ?? false,
+            'name' => $data->name,
+            'filters' => $data->filters,
+            'is_shared' => $data->isShared instanceof Optional ? false : $data->isShared,
         ]);
     }
 }

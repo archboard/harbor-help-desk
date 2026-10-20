@@ -2,12 +2,12 @@
 
 namespace App\Actions\Contacts;
 
+use App\Data\Contacts\SearchContactsData;
 use App\Models\Contact;
 use App\Models\Desk;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Validator;
 
 class SearchContacts
 {
@@ -22,9 +22,7 @@ class SearchContacts
     {
         Gate::forUser($actor)->authorize('viewAny', Contact::class);
 
-        $search = trim((string) (Validator::make($filters, [
-            'search' => ['sometimes', 'nullable', 'string', 'max:255'],
-        ])->validate()['search'] ?? ''));
+        $search = trim((string) (SearchContactsData::validateAndCreate($filters)->filled()['search'] ?? ''));
 
         $like = '%'.addcslashes($search, '%_\\').'%';
 

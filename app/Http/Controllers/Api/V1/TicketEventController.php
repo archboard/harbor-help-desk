@@ -2,21 +2,23 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Data\Tickets\TicketEventData;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\TicketEventResource;
 use App\Models\Ticket;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
+use Spatie\LaravelData\PaginatedDataCollection;
 
 class TicketEventController extends Controller
 {
     /**
      * The ticket's audit trail, oldest first.
+     *
+     * @return PaginatedDataCollection<int, TicketEventData>
      */
-    public function index(Ticket $ticket): AnonymousResourceCollection
+    public function index(Ticket $ticket): PaginatedDataCollection
     {
         Gate::authorize('view', $ticket);
 
-        return TicketEventResource::collection($ticket->events()->with('actor')->paginate(100));
+        return TicketEventData::collect($ticket->events()->with('actor')->paginate(100), PaginatedDataCollection::class);
     }
 }

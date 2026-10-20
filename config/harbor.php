@@ -19,6 +19,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Horizon
+    |--------------------------------------------------------------------------
+    |
+    | In multitenant mode only these platform operators (comma-separated
+    | emails) may open the Horizon dashboard. Self-hosted, the workspace's
+    | owners and admins may.
+    |
+    */
+
+    'horizon_emails' => array_values(array_filter(array_map(
+        fn (string $email): string => strtolower(trim($email)),
+        explode(',', (string) env('HARBOR_HORIZON_EMAILS', '')),
+    ))),
+
+    /*
+    |--------------------------------------------------------------------------
     | Attachments
     |--------------------------------------------------------------------------
     |

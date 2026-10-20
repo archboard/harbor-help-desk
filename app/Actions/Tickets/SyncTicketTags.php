@@ -2,6 +2,7 @@
 
 namespace App\Actions\Tickets;
 
+use App\Data\Tickets\SyncTicketTagsData;
 use App\Enums\TicketEventType;
 use App\Models\Tag;
 use App\Models\Ticket;
@@ -10,7 +11,6 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Validator;
 
 class SyncTicketTags
 {
@@ -24,10 +24,7 @@ class SyncTicketTags
     {
         Gate::forUser($actor)->authorize('update', $ticket);
 
-        $names = Validator::make($input, [
-            'names' => ['present', 'array'],
-            'names.*' => ['required', 'string', 'max:255'],
-        ])->safe()->collect('names')
+        $names = collect(SyncTicketTagsData::validateAndCreate($input)->names)
             ->map(fn (string $name): string => trim($name))
             ->unique(fn (string $name): string => mb_strtolower($name));
 

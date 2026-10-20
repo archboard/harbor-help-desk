@@ -3,21 +3,23 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Tickets\SyncTicketTags;
+use App\Data\Tags\TagData;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\TagResource;
 use App\Models\Ticket;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Collection;
 
 class TicketTagController extends Controller
 {
     /**
      * Replace the ticket's tags with `names`, creating tags that don't exist yet.
+     *
+     * @return Collection<int, TagData>
      */
-    public function update(Request $request, Ticket $ticket, SyncTicketTags $syncTicketTags): AnonymousResourceCollection
+    public function update(Request $request, Ticket $ticket, SyncTicketTags $syncTicketTags): Collection
     {
         $syncTicketTags->handle($request->user(), $ticket, $request->all());
 
-        return TagResource::collection($ticket->tags()->orderBy('name')->get());
+        return TagData::collect($ticket->tags()->orderBy('name')->get());
     }
 }

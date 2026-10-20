@@ -1,5 +1,6 @@
 <?php
 
+use App\Data\Users\UserData;
 use App\Http\Controllers\Api\V1\AttachmentController;
 use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\CustomFieldController;
@@ -18,14 +19,13 @@ use App\Http\Controllers\Api\V1\TicketTagController;
 use App\Http\Controllers\Api\V1\WorkspaceController;
 use App\Http\Middleware\EnsureTokenCanAccessWorkspace;
 use App\Http\Middleware\ResolveWorkspace;
-use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->name('api.v1.')
     ->middleware([ResolveWorkspace::class, 'auth:api', EnsureTokenCanAccessWorkspace::class])
     ->group(function () {
-        Route::get('user', fn (Request $request) => new UserResource($request->user()))->name('user');
+        Route::get('user', fn (Request $request): UserData => UserData::from($request->user()))->name('user');
 
         Route::get('workspace', [WorkspaceController::class, 'show'])->name('workspace.show');
         Route::patch('workspace', [WorkspaceController::class, 'update'])->name('workspace.update');

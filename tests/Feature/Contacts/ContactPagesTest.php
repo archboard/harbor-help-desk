@@ -21,10 +21,18 @@ test('the list searches by name or email and counts visible tickets', function (
         ->get(route('contacts.index', ['search' => 'ACME']))
         ->assertInertia(fn (Assert $page) => $page
             ->component('contacts/Index')
-            ->has('contacts.data', 1)
-            ->where('contacts.data.0.id', $pat->id)
-            ->where('contacts.data.0.tickets_count', 1)
+            ->where('contacts.data', [['id' => $pat->id, 'name' => 'Pat Lee', 'email' => 'pat@acme.test', 'tickets_count' => 1]])
             ->where('filters', ['search' => 'ACME']));
+});
+
+test('the list scrolls through pages of 50 and merges them', function () {
+    Contact::factory()->count(51)->create();
+
+    $page = $this->actingAs($this->agent)->get(route('contacts.index'))->assertOk()->viewData('page');
+
+    expect($page['props']['contacts']['data'])->toHaveCount(50)
+        ->and($page['scrollProps']['contacts'])->toBe(['pageName' => 'page', 'previousPage' => null, 'nextPage' => 2, 'currentPage' => 1, 'reset' => false])
+        ->and($page['mergeProps'])->toContain('contacts.data');
 });
 
 test('the search endpoint returns matching contacts for pickers', function () {

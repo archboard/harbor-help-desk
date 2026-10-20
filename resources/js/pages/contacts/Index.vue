@@ -15,12 +15,12 @@ import Td from '@/components/tables/Td.vue';
 import Th from '@/components/tables/Th.vue';
 import Thead from '@/components/tables/Thead.vue';
 import { index, show, store } from '@/routes/contacts';
-import type { Contact, Paginated } from '@/types';
+import type { Paginated } from '@/types';
 
 defineOptions({ layout: { title: 'Contacts' } });
 
 const { filters } = defineProps<{
-  contacts: Paginated<Contact>;
+  contacts: Paginated<App.Data.Contacts.ContactData>;
   filters: { search?: string };
 }>();
 
@@ -40,7 +40,10 @@ watchDebounced(
 );
 
 const creating = ref(false);
-const form = useForm({ name: '', email: '' });
+const form = useForm({
+  name: '',
+  email: '',
+} satisfies App.Data.Contacts.CreateContactData);
 
 function openCreate(): void {
   form.reset();

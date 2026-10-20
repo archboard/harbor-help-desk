@@ -5,41 +5,43 @@ namespace App\Http\Controllers\Api\V1;
 use App\Actions\SavedViews\CreateSavedView;
 use App\Actions\SavedViews\DeleteSavedView;
 use App\Actions\SavedViews\UpdateSavedView;
+use App\Data\SavedViews\SavedViewData;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\SavedViewResource;
 use App\Models\SavedView;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 
 class SavedViewController extends Controller
 {
     /**
      * The user's own views and the ones shared with the workspace.
+     *
+     * @return Collection<int, SavedViewData>
      */
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request): Collection
     {
         Gate::authorize('viewAny', SavedView::class);
 
-        return SavedViewResource::collection(SavedView::visibleTo($request->user())->with('user')->orderBy('name')->get());
+        return SavedViewData::collect(SavedView::visibleTo($request->user())->with('user')->orderBy('name')->get());
     }
 
-    public function store(Request $request, CreateSavedView $createSavedView): SavedViewResource
+    public function store(Request $request, CreateSavedView $createSavedView): SavedViewData
     {
-        return new SavedViewResource($createSavedView->handle($request->user(), $request->all()));
+        return SavedViewData::from($createSavedView->handle($request->user(), $request->all()));
     }
 
-    public function show(SavedView $savedView): SavedViewResource
+    public function show(SavedView $savedView): SavedViewData
     {
         Gate::authorize('view', $savedView);
 
-        return new SavedViewResource($savedView->load('user'));
+        return SavedViewData::from($savedView->load('user'));
     }
 
-    public function update(Request $request, SavedView $savedView, UpdateSavedView $updateSavedView): SavedViewResource
+    public function update(Request $request, SavedView $savedView, UpdateSavedView $updateSavedView): SavedViewData
     {
-        return new SavedViewResource($updateSavedView->handle($request->user(), $savedView, $request->all()));
+        return SavedViewData::from($updateSavedView->handle($request->user(), $savedView, $request->all()));
     }
 
     public function destroy(Request $request, SavedView $savedView, DeleteSavedView $deleteSavedView): Response

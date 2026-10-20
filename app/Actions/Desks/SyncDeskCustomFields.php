@@ -2,11 +2,10 @@
 
 namespace App\Actions\Desks;
 
+use App\Data\Desks\SyncDeskCustomFieldsData;
 use App\Models\Desk;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 
 class SyncDeskCustomFields
 {
@@ -19,13 +18,10 @@ class SyncDeskCustomFields
     {
         Gate::forUser($actor)->authorize('update', $desk);
 
-        $ids = Validator::make($input, [
-            'field_ids' => ['present', 'array'],
-            'field_ids.*' => ['string', Rule::exists('custom_fields', 'id')->where('workspace_id', $desk->workspace_id)],
-        ])->safe()->collect('field_ids');
+        $ids = SyncDeskCustomFieldsData::validateAndCreate($input)->fieldIds;
 
         $desk->customFields()->sync(
-            $ids->mapWithKeys(fn (string $id): array => [$id => ['workspace_id' => $desk->workspace_id]])->all(),
+            collect($ids)->mapWithKeys(fn (string $id): array => [$id => ['workspace_id' => $desk->workspace_id]])->all(),
         );
 
         $desk->unsetRelation('customFields');

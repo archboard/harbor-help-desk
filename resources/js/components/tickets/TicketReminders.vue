@@ -14,11 +14,10 @@ import {
 import { formatDateTime, fromLocalDateTime } from '@/lib/dates';
 import { destroy } from '@/routes/reminders';
 import { store } from '@/routes/tickets/reminders';
-import type { TicketReminder } from '@/types';
 
 const { ticketId, canDeleteTicket } = defineProps<{
   ticketId: string;
-  reminders: TicketReminder[];
+  reminders: App.Data.Tickets.TicketReminderData[];
   editable: boolean;
   canDeleteTicket: boolean;
 }>();
@@ -34,7 +33,7 @@ const form = useForm({
 });
 
 /** Mirrors `TicketReminderPolicy@delete`. */
-function canCancel(reminder: TicketReminder): boolean {
+function canCancel(reminder: App.Data.Tickets.TicketReminderData): boolean {
   return (
     reminder.created_by === page.props.auth.user.id ||
     (reminder.for_assignees && canDeleteTicket)
@@ -56,7 +55,7 @@ function add(): void {
     });
 }
 
-function cancel(reminder: TicketReminder): void {
+function cancel(reminder: App.Data.Tickets.TicketReminderData): void {
   router.delete(destroy(reminder.id).url, {
     preserveScroll: true,
     onStart: () => (cancelling.value = reminder.id),

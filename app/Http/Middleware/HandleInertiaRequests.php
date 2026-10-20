@@ -2,7 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use App\Http\Resources\WorkspaceResource;
+use App\Data\Users\CurrentUserData;
+use App\Data\Workspaces\WorkspaceData;
 use App\Models\Workspace;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -41,10 +42,10 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $request->user() === null ? null : CurrentUserData::from($request->user()),
             ],
             // Lazy, because the workspace is resolved by route middleware that runs after this one.
-            'workspace' => fn (): ?WorkspaceResource => Workspace::current() === null ? null : new WorkspaceResource(Workspace::current()),
+            'workspace' => fn (): ?WorkspaceData => Workspace::current() === null ? null : WorkspaceData::from(Workspace::current()),
         ];
     }
 }

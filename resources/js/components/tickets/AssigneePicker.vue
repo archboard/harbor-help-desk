@@ -3,13 +3,12 @@ import { X } from '@lucide/vue';
 import { computed, ref, useId } from 'vue';
 import GenericObjectCombobox from '@/components/forms/GenericObjectCombobox.vue';
 import Pill from '@/components/Pill.vue';
-import type { DeskMember } from '@/types';
 
 /**
  * Assignees as removable pills, plus a search box over the desk members not yet assigned.
  */
 const { members, disabled = false } = defineProps<{
-  members: DeskMember[];
+  members: App.Data.Desks.DeskMemberData[];
   disabled?: boolean;
 }>();
 
@@ -28,7 +27,7 @@ const searchId = useId();
 /** Bumped after adding someone, to clear the search box. */
 const searchKey = ref(0);
 
-function add(member: DeskMember | null): void {
+function add(member: App.Data.Desks.DeskMemberData | null): void {
   if (member) {
     ids.value = [...ids.value, member.id];
     searchKey.value++;

@@ -8,19 +8,19 @@ use App\Actions\Tickets\DeleteTicket;
 use App\Actions\Tickets\RestoreTicket;
 use App\Actions\Tickets\SearchTickets;
 use App\Actions\Tickets\UpdateTicket;
+use App\Data\Desks\DeskData;
+use App\Data\Desks\DeskMemberData;
+use App\Data\SavedViews\SavedViewData;
+use App\Data\Tags\TagData;
+use App\Data\Tickets\AttachmentData;
+use App\Data\Tickets\TicketCommentData;
+use App\Data\Tickets\TicketData;
+use App\Data\Tickets\TicketEventData;
+use App\Data\Tickets\TicketReminderData;
+use App\Data\Users\UserData;
 use App\Enums\TicketEventType;
 use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
-use App\Http\Resources\AttachmentResource;
-use App\Http\Resources\DeskMemberResource;
-use App\Http\Resources\DeskResource;
-use App\Http\Resources\SavedViewResource;
-use App\Http\Resources\TagResource;
-use App\Http\Resources\TicketCommentResource;
-use App\Http\Resources\TicketEventResource;
-use App\Http\Resources\TicketReminderResource;
-use App\Http\Resources\TicketResource;
-use App\Http\Resources\UserResource;
 use App\Models\Desk;
 use App\Models\SavedView;
 use App\Models\Tag;
@@ -47,13 +47,13 @@ class TicketController extends Controller
             ->paginate(50);
 
         return Inertia::render('tickets/Index', [
-            'tickets' => Inertia::scroll(TicketResource::collection($tickets)),
+            'tickets' => Inertia::scroll(TicketData::collect($tickets)),
             'filters' => (object) $filters,
-            'savedViews' => SavedViewResource::collection(SavedView::visibleTo($request->user())->with('user')->orderBy('name')->get()),
-            'desks' => DeskResource::collection($desks),
+            'savedViews' => SavedViewData::collect(SavedView::visibleTo($request->user())->with('user')->orderBy('name')->get()),
+            'desks' => DeskData::collect($desks),
             'leadDeskIds' => $desks->filter(fn (Desk $desk): bool => $request->user()->can('update', $desk))->values()->modelKeys(),
-            'agents' => UserResource::collection(Workspace::current()->users()->orderBy('name')->get()),
-            'tags' => TagResource::collection(Tag::query()->orderBy('name')->get()),
+            'agents' => UserData::collect(Workspace::current()->users()->orderBy('name')->get()),
+            'tags' => TagData::collect(Tag::query()->orderBy('name')->get()),
             'statuses' => TicketStatus::options(),
             'priorities' => TicketPriority::options(),
         ]);
@@ -65,7 +65,7 @@ class TicketController extends Controller
     public function create(Request $request): Response
     {
         return Inertia::render('tickets/Create', [
-            'desks' => DeskResource::collection(Desk::visibleTo($request->user())
+            'desks' => DeskData::collect(Desk::visibleTo($request->user())
                 ->with(['customFields', 'users' => fn ($query) => $query->orderBy('name')])
                 ->orderBy('name')
                 ->get()),
@@ -110,21 +110,21 @@ class TicketController extends Controller
         $ticket->load(['desk.customFields', 'requester', 'assignees', 'tags']);
 
         return Inertia::render('tickets/Show', [
-            'ticket' => new TicketResource($ticket),
-            'comments' => TicketCommentResource::collection($ticket->comments()->with(['author', 'attachments'])->get()),
-            'events' => TicketEventResource::collection($ticket->events()
+            'ticket' => TicketData::from($ticket),
+            'comments' => TicketCommentData::collect($ticket->comments()->with(['author', 'attachments'])->get()),
+            'events' => TicketEventData::collect($ticket->events()
                 ->with('actor')
                 ->whereNotIn('type', self::EVENTS_SHOWN_AS_COMMENTS)
                 ->get()),
-            'attachments' => AttachmentResource::collection($ticket->attachments()->whereNull('ticket_comment_id')->oldest()->get()),
-            'reminders' => TicketReminderResource::collection($ticket->reminders()
+            'attachments' => AttachmentData::collect($ticket->attachments()->whereNull('ticket_comment_id')->oldest()->get()),
+            'reminders' => TicketReminderData::collect($ticket->reminders()
                 ->visibleTo($request->user())
                 ->whereNull('sent_at')
                 ->orderBy('remind_at')
                 ->get()),
-            'deskMembers' => DeskMemberResource::collection($ticket->desk->users()->orderBy('name')->get()),
-            'desks' => DeskResource::collection(Desk::visibleTo($request->user())->orderBy('name')->get()),
-            'tags' => TagResource::collection(Tag::query()->orderBy('name')->get()),
+            'deskMembers' => DeskMemberData::collect($ticket->desk->users()->orderBy('name')->get()),
+            'desks' => DeskData::collect(Desk::visibleTo($request->user())->orderBy('name')->get()),
+            'tags' => TagData::collect(Tag::query()->orderBy('name')->get()),
             'statuses' => TicketStatus::options(),
             'priorities' => TicketPriority::options(),
             'can' => [

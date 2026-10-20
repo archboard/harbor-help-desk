@@ -2,27 +2,17 @@
 
 namespace App\Actions\Tickets;
 
+use App\Data\Tickets\SearchTicketsData;
 use App\Enums\TicketPriority;
-use App\Enums\TicketStatus;
 use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 
 class SearchTickets
 {
-    private const array SORTS = ['updated', 'created', 'due', 'priority'];
-
-    /** Filters that take one value or a list. */
-    private const array LIST_FILTERS = ['desk_id', 'status', 'priority', 'tag'];
-
-    /** Every filter {@see handle()} understands. */
-    public const array FILTERS = [...self::LIST_FILTERS, 'search', 'assignee_id', 'requester_id', 'deleted', 'sort'];
-
     /**
      * The tickets the actor can see, narrowed by any of:
      *
@@ -42,9 +32,9 @@ class SearchTickets
     {
         Gate::forUser($actor)->authorize('viewAny', Ticket::class);
 
-        $validated = Validator::make($filters, self::rules($filters))->validate();
+        $validated = SearchTicketsData::validateAndCreate($filters)->filled();
 
-        foreach (self::LIST_FILTERS as $key) {
+        foreach (SearchTicketsData::LIST_FILTERS as $key) {
             if (isset($validated[$key])) {
                 $validated[$key] = Arr::wrap($validated[$key]);
             }
@@ -66,42 +56,6 @@ class SearchTickets
             ->when((bool) ($validated['deleted'] ?? false), fn (Builder $query) => $query->onlyTrashed());
 
         return $this->sort($query, $validated['sort'] ?? 'updated');
-    }
-
-    /**
-     * Rules for the filters. A list filter given one value is checked under its own key, so
-     * the error lands on `status` rather than `status.0`.
-     *
-     * @param  array<string, mixed>  $filters
-     * @return array<string, array<int, mixed>>
-     */
-    public static function rules(array $filters): array
-    {
-        $listRules = [
-            'desk_id' => ['string'],
-            'status' => [Rule::enum(TicketStatus::class)],
-            'priority' => [Rule::enum(TicketPriority::class)],
-            'tag' => ['string'],
-        ];
-
-        $rules = [
-            'search' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'assignee_id' => ['sometimes', 'string'],
-            'requester_id' => ['sometimes', 'string'],
-            'deleted' => ['sometimes', 'boolean'],
-            'sort' => ['sometimes', Rule::in(self::SORTS)],
-        ];
-
-        foreach ($listRules as $key => $itemRules) {
-            if (is_array($filters[$key] ?? null)) {
-                $rules[$key] = ['array'];
-                $rules["{$key}.*"] = $itemRules;
-            } else {
-                $rules[$key] = ['sometimes', ...$itemRules];
-            }
-        }
-
-        return $rules;
     }
 
     /**

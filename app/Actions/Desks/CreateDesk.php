@@ -2,11 +2,10 @@
 
 namespace App\Actions\Desks;
 
+use App\Data\Desks\CreateDeskData;
 use App\Models\Desk;
 use App\Models\User;
-use App\Models\Workspace;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class CreateDesk
@@ -22,11 +21,6 @@ class CreateDesk
 
         $input['slug'] ??= Str::slug((string) ($input['name'] ?? ''));
 
-        $validated = Validator::make($input, [
-            'name' => ['required', 'string', 'max:255'],
-            'slug' => DeskSlugRules::for(Workspace::current()),
-        ])->validate();
-
-        return Desk::create($validated);
+        return Desk::create(CreateDeskData::validateAndCreate($input)->filled());
     }
 }

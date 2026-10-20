@@ -12,10 +12,9 @@ import Modal from '@/components/modals/Modal.vue';
 import type { TicketQuery } from '@/components/tickets/TicketFilters.vue';
 import { cleanQuery, sameQuery } from '@/lib/tickets';
 import { destroy, store, update } from '@/routes/saved-views';
-import type { SavedView } from '@/types';
 
 const { views, filters } = defineProps<{
-  views: SavedView[];
+  views: App.Data.SavedViews.SavedViewData[];
   filters: TicketQuery;
 }>();
 
@@ -28,16 +27,16 @@ const activeView = computed(() =>
   views.find((view) => sameQuery(cleanQuery(view.filters), filters)),
 );
 
-function isOwner(view: SavedView): boolean {
+function isOwner(view: App.Data.SavedViews.SavedViewData): boolean {
   return view.user_id === page.props.auth.user.id;
 }
 
 /** Mirrors `SavedViewPolicy@update`. */
-function canEdit(view: SavedView): boolean {
+function canEdit(view: App.Data.SavedViews.SavedViewData): boolean {
   return isOwner(view) || (view.is_shared && !!page.props.workspace?.is_admin);
 }
 
-const editing = ref<SavedView | 'new' | null>(null);
+const editing = ref<App.Data.SavedViews.SavedViewData | 'new' | null>(null);
 const form = useForm({ name: '', is_shared: false });
 const deleting = ref(false);
 
@@ -46,7 +45,7 @@ const filtersError = computed(
   () => (form.errors as Record<string, string | undefined>).filters,
 );
 
-function open(view: SavedView | 'new'): void {
+function open(view: App.Data.SavedViews.SavedViewData | 'new'): void {
   form.defaults({
     name: view === 'new' ? '' : view.name,
     is_shared: view === 'new' ? false : view.is_shared,
@@ -61,17 +60,25 @@ function save(close: () => void): void {
 
   if (view === 'new') {
     form
-      .transform((data) => ({ ...data, filters }))
+      .transform((data): App.Data.SavedViews.CreateSavedViewData => ({
+        ...data,
+        filters,
+      }))
       .submit(store(), { preserveScroll: true, onSuccess: close });
   } else if (view) {
     // Only the owner decides whether a view is shared.
     form
-      .transform((data) => (isOwner(view) ? data : { name: data.name }))
+      .transform((data): App.Data.SavedViews.UpdateSavedViewData =>
+        isOwner(view) ? data : { name: data.name },
+      )
       .submit(update(view.id), { preserveScroll: true, onSuccess: close });
   }
 }
 
-function remove(view: SavedView, close: () => void): void {
+function remove(
+  view: App.Data.SavedViews.SavedViewData,
+  close: () => void,
+): void {
   router.delete(destroy(view.id).url, {
     preserveScroll: true,
     onStart: () => (deleting.value = true),

@@ -2,19 +2,15 @@
 
 namespace App\Actions\Tickets;
 
+use App\Data\Tickets\CreateTicketData;
 use App\Enums\TicketEventType;
-use App\Enums\TicketPriority;
-use App\Enums\TicketStatus;
 use App\Models\Contact;
 use App\Models\Desk;
 use App\Models\Ticket;
 use App\Models\User;
-use App\Models\Workspace;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 
 class CreateTicket
 {
@@ -38,23 +34,12 @@ class CreateTicket
             Gate::forUser($actor)->authorize('create', [Ticket::class, $desk]);
         }
 
-        $validated = Validator::make($input, [
-            'subject' => ['required', 'string', 'max:255'],
-            'status' => ['sometimes', Rule::enum(TicketStatus::class)],
-            'priority' => ['sometimes', Rule::enum(TicketPriority::class)],
-            'due_at' => ['sometimes', 'nullable', 'date'],
-            'requester_id' => ['required_without:requester', 'string', Rule::exists('contacts', 'id')->where('workspace_id', Workspace::current()?->getKey())],
-            'requester' => ['required_without:requester_id', 'array:name,email'],
-            'requester.email' => ['required_with:requester', 'email', 'max:255'],
-            'requester.name' => ['required_with:requester', 'string', 'max:255'],
-            'assignee_ids' => [$actor instanceof User ? 'sometimes' : 'prohibited', 'array'],
-            'mailbox_id' => [$actor instanceof Contact ? 'sometimes' : 'prohibited', 'nullable', 'string', Rule::exists('mailboxes', 'id')->where('workspace_id', Workspace::current()?->getKey())],
-            'message_id' => [$actor instanceof Contact ? 'sometimes' : 'prohibited', 'nullable', 'string', 'max:998'],
-            'body' => ['required_with:attachments', 'nullable', 'string', 'max:65535'],
-            'attachments' => ['sometimes', 'array', 'max:20'],
-            'attachments.*' => AddTicketAttachment::rules(),
+        $validated = CreateTicketData::validateAndCreateWith($input, [
+            'assignee_ids' => [$actor instanceof User ? 'sometimes' : 'prohibited'],
+            'mailbox_id' => [$actor instanceof Contact ? 'sometimes' : 'prohibited'],
+            'message_id' => [$actor instanceof Contact ? 'sometimes' : 'prohibited'],
             ...CustomFieldRules::for($desk, creating: true),
-        ])->validate();
+        ])->filled();
 
         return DB::transaction(function () use ($actor, $desk, $validated): Ticket {
             $ticket = Ticket::create([

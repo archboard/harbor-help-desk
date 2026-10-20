@@ -2,21 +2,16 @@
 
 namespace App\Actions\Tickets;
 
-use App\Enums\TicketPriority;
-use App\Enums\TicketStatus;
+use App\Data\Tickets\BulkUpdateTicketsData;
 use App\Models\Desk;
 use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class BulkUpdateTickets
 {
-    private const array OPERATIONS = ['status', 'priority', 'assignee_ids', 'add_tag', 'desk_id', 'delete'];
-
     public function __construct(
         protected UpdateTicket $updateTicket,
         protected SyncTicketAssignees $syncTicketAssignees,
@@ -38,19 +33,9 @@ class BulkUpdateTickets
      */
     public function handle(User $actor, array $input): int
     {
-        $validated = Validator::make($input, [
-            'ticket_ids' => ['required', 'array', 'min:1', 'max:100'],
-            'ticket_ids.*' => ['string', 'distinct'],
-            'status' => ['sometimes', Rule::enum(TicketStatus::class)],
-            'priority' => ['sometimes', Rule::enum(TicketPriority::class)],
-            'assignee_ids' => ['sometimes', 'present', 'array'],
-            'assignee_ids.*' => ['string', 'distinct'],
-            'add_tag' => ['sometimes', 'string', 'max:255'],
-            'desk_id' => ['sometimes', 'string'],
-            'delete' => ['sometimes', 'accepted'],
-        ])->validate();
+        $validated = BulkUpdateTicketsData::validateAndCreate($input)->filled();
 
-        $operations = array_values(array_intersect(self::OPERATIONS, array_keys($validated)));
+        $operations = array_values(array_intersect(BulkUpdateTicketsData::OPERATIONS, array_keys($validated)));
 
         if (count($operations) !== 1) {
             throw ValidationException::withMessages(['operation' => __('Choose exactly one change to make.')]);

@@ -15,9 +15,9 @@ const { ticketId } = defineProps<{ ticketId: string }>();
 
 const form = useForm({
   body: '',
-  is_internal: false,
+  is_internal: false as boolean,
   attachments: [] as File[],
-});
+} satisfies App.Data.Tickets.AddTicketCommentData);
 
 function addFiles(files: Iterable<File> | null): void {
   form.attachments = [...form.attachments, ...Array.from(files ?? [])];

@@ -4,22 +4,25 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Desks\RemoveDeskMember;
 use App\Actions\Desks\SetDeskMember;
+use App\Data\Desks\DeskMemberData;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\DeskMemberResource;
 use App\Models\Desk;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
+use Spatie\LaravelData\PaginatedDataCollection;
 
 class DeskMemberController extends Controller
 {
-    public function index(Desk $desk): AnonymousResourceCollection
+    /**
+     * @return PaginatedDataCollection<int, DeskMemberData>
+     */
+    public function index(Desk $desk): PaginatedDataCollection
     {
         Gate::authorize('view', $desk);
 
-        return DeskMemberResource::collection($desk->users()->orderBy('name')->paginate());
+        return DeskMemberData::collect($desk->users()->orderBy('name')->paginate(), PaginatedDataCollection::class);
     }
 
     /**

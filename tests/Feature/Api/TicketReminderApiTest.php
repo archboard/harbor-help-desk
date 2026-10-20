@@ -3,6 +3,7 @@
 use App\Models\Ticket;
 use App\Models\TicketReminder;
 use App\Models\Workspace;
+use Illuminate\Testing\Fluent\AssertableJson;
 
 beforeEach(function () {
     config(['harbor.multitenant' => true, 'harbor.domain' => 'harbor.test']);
@@ -17,10 +18,18 @@ test('agents set, list and cancel reminders and only see others ticket-level one
     actAs($agent, $workspace);
     $url = "http://acme.harbor.test/api/v1/tickets/{$ticket->id}/reminders";
 
-    $mine = $this->postJson($url, ['remind_at' => now()->addDay()->toIso8601String(), 'note' => 'Follow up'])
+    $remindAt = now()->addDay()->startOfSecond();
+    $mine = $this->postJson($url, ['remind_at' => $remindAt->toIso8601String(), 'note' => 'Follow up'])
         ->assertCreated()
-        ->assertJsonPath('for_assignees', false)
-        ->assertJsonPath('user_id', $agent->id)
+        ->assertJson(fn (AssertableJson $json) => $json
+            ->whereType('id', 'string')
+            ->where('ticket_id', $ticket->id)
+            ->where('user_id', $agent->id)
+            ->where('for_assignees', false)
+            ->where('created_by', $agent->id)
+            ->where('remind_at', $remindAt->toIso8601String())
+            ->where('note', 'Follow up')
+            ->where('sent_at', null))
         ->json('id');
 
     $this->getJson($url)->assertOk()->assertJsonPath('*.id', [$shared->id, $mine]);

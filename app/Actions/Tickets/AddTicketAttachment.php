@@ -2,6 +2,7 @@
 
 namespace App\Actions\Tickets;
 
+use App\Data\Tickets\AddTicketAttachmentData;
 use App\Enums\TicketEventType;
 use App\Models\Attachment;
 use App\Models\Contact;
@@ -13,9 +14,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
-use LogicException;
 use Throwable;
 
 class AddTicketAttachment
@@ -32,7 +31,7 @@ class AddTicketAttachment
             Gate::forUser($actor)->authorize('update', $ticket);
         }
 
-        $file = Validator::make($input, ['file' => ['required', ...self::rules()]])->safe()->file('file') ?? throw new LogicException('A validated upload is always present.');
+        $file = AddTicketAttachmentData::validateAndCreate($input)->file;
 
         if ($comment !== null && $comment->ticket_id !== $ticket->getKey()) {
             throw ValidationException::withMessages(['comment' => __('The comment belongs to another ticket.')]);

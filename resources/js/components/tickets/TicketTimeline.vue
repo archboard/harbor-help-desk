@@ -6,12 +6,11 @@ import Avatar from '@/components/Avatar.vue';
 import ReplyComposer from '@/components/tickets/ReplyComposer.vue';
 import TicketCommentCard from '@/components/tickets/TicketCommentCard.vue';
 import { formatDateTime, timeAgo } from '@/lib/dates';
-import type { TicketComment, TicketEvent } from '@/types';
 
 const { comments, events, canWork } = defineProps<{
   ticketId: string;
-  comments: TicketComment[];
-  events: TicketEvent[];
+  comments: App.Data.Tickets.TicketCommentData[];
+  events: App.Data.Tickets.TicketEventData[];
   /** Can reply and edit their own comments: may update and the ticket isn't deleted. */
   canWork: boolean;
   /** Can delete anyone's comment, like the ticket itself. */
@@ -33,7 +32,7 @@ const items = computed(() =>
 );
 
 /** Mirrors `TicketCommentPolicy`: authors edit their own comments on tickets they can work. */
-function isOwnComment(comment: TicketComment): boolean {
+function isOwnComment(comment: App.Data.Tickets.TicketCommentData): boolean {
   return (
     canWork &&
     comment.author_type === 'user' &&
@@ -42,7 +41,10 @@ function isOwnComment(comment: TicketComment): boolean {
 }
 
 /** Split "Jane Doe replied." so the name can stand out. */
-function sentence(event: TicketEvent): { actor: string; rest: string } {
+function sentence(event: App.Data.Tickets.TicketEventData): {
+  actor: string;
+  rest: string;
+} {
   return event.description.startsWith(event.actor_name)
     ? {
         actor: event.actor_name,
@@ -52,7 +54,7 @@ function sentence(event: TicketEvent): { actor: string; rest: string } {
 }
 
 /** Solving or closing a ticket gets a check instead of a plain dot. */
-function isResolution(event: TicketEvent): boolean {
+function isResolution(event: App.Data.Tickets.TicketEventData): boolean {
   return (
     event.type === 'status_changed' &&
     ['solved', 'closed'].includes(String(event.properties?.to))

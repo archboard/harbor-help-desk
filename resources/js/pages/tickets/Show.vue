@@ -23,28 +23,18 @@ import {
   toLocalDateTime,
 } from '@/lib/dates';
 import { destroy, index, restore, update } from '@/routes/tickets';
-import type {
-  Attachment,
-  Desk,
-  DeskMember,
-  Tag,
-  Ticket,
-  TicketComment,
-  TicketEvent,
-  TicketReminder,
-} from '@/types';
 
 defineOptions({ layout: { title: '' } });
 
 const { ticket, comments, events, can } = defineProps<{
-  ticket: Ticket;
-  comments: TicketComment[];
-  events: TicketEvent[];
-  attachments: Attachment[];
-  reminders: TicketReminder[];
-  deskMembers: DeskMember[];
-  desks: Desk[];
-  tags: Tag[];
+  ticket: App.Data.Tickets.TicketData;
+  comments: App.Data.Tickets.TicketCommentData[];
+  events: App.Data.Tickets.TicketEventData[];
+  attachments: App.Data.Tickets.AttachmentData[];
+  reminders: App.Data.Tickets.TicketReminderData[];
+  deskMembers: App.Data.Desks.DeskMemberData[];
+  desks: App.Data.Desks.DeskData[];
+  tags: App.Data.Tags.TagData[];
   statuses: Record<string, string>;
   priorities: Record<string, string>;
   can: { update: boolean; delete: boolean; restore: boolean };
@@ -54,7 +44,9 @@ const isDeleted = computed(() => ticket.deleted_at !== null);
 const canEdit = computed(() => !isDeleted.value);
 
 const editingSubject = ref(false);
-const subjectForm = useForm({ subject: ticket.subject });
+const subjectForm = useForm({
+  subject: ticket.subject,
+} satisfies App.Data.Tickets.UpdateTicketData);
 
 function saveSubject(): void {
   subjectForm.submit(update(ticket.id), {

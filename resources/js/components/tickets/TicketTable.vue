@@ -12,7 +12,6 @@ import PriorityPill from '@/components/tickets/PriorityPill.vue';
 import StatusPill from '@/components/tickets/StatusPill.vue';
 import { formatDateTime, timeAgo } from '@/lib/dates';
 import { show } from '@/routes/tickets';
-import type { Ticket } from '@/types';
 
 /**
  * A page of tickets that loads more as it scrolls. `prop` is the name of the
@@ -20,7 +19,7 @@ import type { Ticket } from '@/types';
  */
 const { tickets, hideRequester = false } = defineProps<{
   prop: string;
-  tickets: Ticket[];
+  tickets: App.Data.Tickets.TicketData[];
   hideRequester?: boolean;
 }>();
 

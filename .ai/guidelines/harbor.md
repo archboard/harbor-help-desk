@@ -2,11 +2,15 @@
 
 An open-source helpdesk. This app is the Inertia web UI and the backend. Other clients and MCP tools will be built on the same backend later. It runs either as a multi-tenant cloud app on one Postgres database or self-hosted with a single workspace.
 
+Follow the commands in the Workflow guidelines (`.ai/guidelines/workflow.md`) after every change.
+
 ## Product Shape
 
 - Put business logic in Action classes in `app/Actions`. Controllers, API endpoints, jobs and MCP tools call those Actions. Logic must never exist only in an Inertia controller.
-- Anything a user can do in the UI must also be possible through the versioned JSON API (`/api/v1`, Eloquent API Resources) once that API exists, so other clients and MCP tools have the same capabilities.
-- Model data leaves the app through Eloquent API Resources only, in API responses, Inertia page props and shared props alike. Never hand-build an array of model attributes (`$model->only()`, `get([...])`, `map(fn () => [...])`). Pass the resource itself, not `->resolve()`; resources are unwrapped globally (`JsonResource::withoutWrapping()`).
+- Anything a user can do in the UI must also be possible through the versioned JSON API (`/api/v1`, `spatie/laravel-data` objects) once that API exists, so other clients and MCP tools have the same capabilities.
+- Model data leaves the app through `spatie/laravel-data` objects only (`app/Data/{Domain}/{Model}Data`), in API responses, Inertia page props and shared props alike. Never hand-build an array of model attributes (`$model->only()`, `get([...])`, `map(fn () => [...])`). Relations use `Lazy::whenLoaded()`. Paginated API lists return `{Model}Data::collect($paginator, PaginatedDataCollection::class)`.
+- Every Action that takes input has an input Data class (`app/Data/{Domain}/{Action}Data`). The Action keeps an `array $input` parameter and calls `{Action}Data::validateAndCreate($input)` first. Never accept a pre-built Data object from callers. Rules that depend on loaded context (the model being updated, the desk, the actor) stay in the Action and go through `validateAndCreateWith($input, $contextRules)`, so every error is reported at once.
+- Frontend types come from `resources/js/types/generated.d.ts` (`composer run helpers`). Never hand-write a type that mirrors a Data class.
 
 ## Model IDs
 
@@ -66,7 +70,7 @@ Postgres is the only supported database, so use its features wherever they help:
 
 - The required services are PHP, Postgres, Redis and Reverb. Never add another. All of them ship with the self-hosted installation.
 - Cache, session and queues use Redis. Queues run under Horizon. Use `Cache::lock()` for cross-process locks that aren't tied to a database row. Row-level work claiming still uses Postgres (`lock('for update skip locked')`). Durable data never lives only in Redis.
-- Realtime features may rely on Reverb without a polling fallback. Broadcasts carry ids and event types only, never model data. Clients reload through policies and API Resources.
+- Realtime features may rely on Reverb without a polling fallback. Broadcasts carry ids and event types only, never model data. Clients reload through policies and Data objects.
 - Optional services (Redis, S3, external mail providers) sit behind config, with a database or local fallback.
 - Anything a workspace admin could reasonably change is a workspace setting, managed in the UI and the API, never an `.env` variable. That includes outbound mail, limits, integrations and feature toggles. `.env` holds only infrastructure (database, Redis, Reverb, storage, app keys), platform-operator settings (multitenant mode, landlord access, platform secrets) and hard caps the cloud operator enforces across tenants. A workspace setting may be limited by such a cap, or hidden in the cloud, but self-hosters configure it in the UI.
 
