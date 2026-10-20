@@ -59,3 +59,16 @@ test('moving a ticket pings the new and the old desk', function () {
         "private-desks.{$from->id}",
     ]);
 });
+
+test('the window that made the change is excluded by its socket id', function () {
+    $desk = Desk::factory()->create();
+    $agent = deskMember($this->workspace, $desk);
+    $ticket = Ticket::factory()->for($desk)->create();
+    Event::fake([TicketChanged::class]);
+
+    $this->actingAs($agent)
+        ->withHeader('X-Socket-ID', '123.456')
+        ->patch(route('tickets.update', $ticket), ['status' => 'pending']);
+
+    Event::assertDispatched(TicketChanged::class, fn (TicketChanged $event): bool => $event->socket === '123.456');
+});

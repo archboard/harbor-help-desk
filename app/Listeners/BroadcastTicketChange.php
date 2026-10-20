@@ -10,6 +10,8 @@ use App\Models\User;
 /**
  * Turn recorded ticket activity into a realtime ping. Not a queued listener on purpose:
  * it only builds the event, and {@see TicketChanged} is queued on `broadcasts` itself.
+ * The window that made the change (its `X-Socket-ID`) is excluded; queued and console
+ * contexts have no socket, so everyone gets the ping.
  */
 class BroadcastTicketChange
 {
@@ -18,12 +20,12 @@ class BroadcastTicketChange
         $ticketEvent = $event->ticketEvent;
         $moved = $ticketEvent->type === TicketEventType::DESK_CHANGED;
 
-        TicketChanged::dispatch(
+        broadcast(new TicketChanged(
             $ticketEvent->ticket_id,
             $ticketEvent->ticket->desk_id,
             $ticketEvent->type,
             $ticketEvent->actor instanceof User ? $ticketEvent->actor->getKey() : null,
             $moved ? $ticketEvent->properties['from_id'] ?? null : null,
-        );
+        ))->toOthers();
     }
 }
