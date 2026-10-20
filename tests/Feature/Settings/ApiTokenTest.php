@@ -1,6 +1,5 @@
 <?php
 
-use App\Actions\ApiTokens\CreatePersonalAccessToken;
 use App\Enums\WorkspaceRole;
 use App\Models\User;
 use App\Models\Workspace;
@@ -75,11 +74,10 @@ test('creating a token requires a workspace the user belongs to', function () {
         ->assertSessionHasErrors('workspaces');
 });
 
-test('workspaces the user does not belong to are dropped from new tokens', function () {
+test('the scope repository drops workspaces the user does not belong to from new tokens', function () {
     $stranger = Workspace::factory()->create();
 
-    $result = app(CreatePersonalAccessToken::class)
-        ->handle($this->user, 'CLI', [$this->workspace->id, $stranger->id]);
+    $result = $this->user->createToken('CLI', [$this->workspace->tokenScope(), $stranger->tokenScope()]);
 
     expect($result->token->scopes)->toBe([$this->workspace->tokenScope()]);
 });

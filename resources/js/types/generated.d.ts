@@ -9,6 +9,15 @@ declare namespace App {
         created_at: string | null;
         expires_at: string | null;
       };
+      export type CreatePersonalAccessTokenData = {
+        name: string;
+        workspaces: string[];
+      };
+    }
+    namespace Auth {
+      export type ResetUserPasswordData = {
+        password: string;
+      };
     }
     namespace Contacts {
       export type ContactData = {
@@ -83,6 +92,18 @@ declare namespace App {
       };
     }
     namespace Mailboxes {
+      export type CreateMailboxData = {
+        driver: App.Enums.MailboxDriver;
+        name: string;
+        address: string;
+        default_desk_id: string;
+        routing?: {
+          address: string;
+          desk_id: string;
+        }[];
+        signature?: string | null;
+        settings: Record<string, any>;
+      };
       export type MailboxData = {
         id: string;
         driver: App.Enums.MailboxDriver;
@@ -113,8 +134,24 @@ declare namespace App {
         username: string;
         folder?: string;
       };
+      export type UpdateMailboxData = {
+        name?: string;
+        address?: string;
+        default_desk_id?: string;
+        routing?: {
+          address: string;
+          desk_id: string;
+        }[];
+        signature?: string | null;
+        settings?: Record<string, any>;
+      };
     }
     namespace SavedViews {
+      export type CreateSavedViewData = {
+        name: string;
+        filters: Record<string, any>;
+        is_shared?: boolean;
+      };
       export type SavedViewData = {
         id: string;
         user_id: string;
@@ -124,6 +161,11 @@ declare namespace App {
         is_shared: boolean;
         created_at: string | null;
         updated_at: string | null;
+      };
+      export type UpdateSavedViewData = {
+        name?: string;
+        filters?: Record<string, any>;
+        is_shared?: boolean;
       };
     }
     namespace Tags {
@@ -216,6 +258,9 @@ declare namespace App {
       };
     }
     namespace Workspaces {
+      export type UpdateWorkspaceData = {
+        name: string;
+      };
       export type WorkspaceData = {
         id: string;
         name: string;

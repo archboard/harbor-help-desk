@@ -2,11 +2,11 @@
 
 namespace App\Actions\SavedViews;
 
+use App\Data\SavedViews\UpdateSavedViewData;
 use App\Models\SavedView;
 use App\Models\User;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Validator;
+use Spatie\LaravelData\Optional;
 
 class UpdateSavedView
 {
@@ -19,14 +19,13 @@ class UpdateSavedView
     {
         Gate::forUser($actor)->authorize('update', $savedView);
 
-        $rules = array_map(fn (array $rules): array => ['sometimes', ...$rules], SavedViewRules::for($input));
-        $validated = Validator::make($input, $rules)->validate();
+        $data = UpdateSavedViewData::validateAndCreate($input);
 
-        if (isset($validated['is_shared']) && (bool) $validated['is_shared'] !== $savedView->is_shared) {
+        if (! $data->isShared instanceof Optional && $data->isShared !== $savedView->is_shared) {
             Gate::forUser($actor)->authorize('share', $savedView);
         }
 
-        $savedView->update(Arr::only($validated, ['name', 'filters', 'is_shared']));
+        $savedView->update($data->filled());
 
         return $savedView;
     }

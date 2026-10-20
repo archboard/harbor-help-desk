@@ -7,7 +7,6 @@ use App\Actions\ApiTokens\RevokePersonalAccessToken;
 use App\Data\ApiTokens\ApiTokenData;
 use App\Data\Workspaces\WorkspaceData;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Settings\ApiTokenStoreRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -37,13 +36,9 @@ class ApiTokenController extends Controller
     /**
      * Create a personal access token and flash its plain-text value once.
      */
-    public function store(ApiTokenStoreRequest $request, CreatePersonalAccessToken $createToken): RedirectResponse
+    public function store(Request $request, CreatePersonalAccessToken $createToken): RedirectResponse
     {
-        $result = $createToken->handle(
-            $request->user(),
-            $request->validated('name'),
-            $request->validated('workspaces'),
-        );
+        $result = $createToken->handle($request->user(), $request->all());
 
         Inertia::flash('apiToken', $result->accessToken);
 

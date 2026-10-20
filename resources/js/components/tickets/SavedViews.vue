@@ -60,12 +60,17 @@ function save(close: () => void): void {
 
   if (view === 'new') {
     form
-      .transform((data) => ({ ...data, filters }))
+      .transform((data): App.Data.SavedViews.CreateSavedViewData => ({
+        ...data,
+        filters,
+      }))
       .submit(store(), { preserveScroll: true, onSuccess: close });
   } else if (view) {
     // Only the owner decides whether a view is shared.
     form
-      .transform((data) => (isOwner(view) ? data : { name: data.name }))
+      .transform((data): App.Data.SavedViews.UpdateSavedViewData =>
+        isOwner(view) ? data : { name: data.name },
+      )
       .submit(update(view.id), { preserveScroll: true, onSuccess: close });
   }
 }

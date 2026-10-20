@@ -32,7 +32,7 @@ const page = usePage();
 const form = useForm({
   name: '',
   workspaces: workspaces.length === 1 ? [workspaces[0].id] : ([] as string[]),
-});
+} satisfies App.Data.ApiTokens.CreatePersonalAccessTokenData);
 
 const revoking = ref<App.Data.ApiTokens.ApiTokenData | null>(null);
 const revokeLoading = ref(false);

@@ -116,7 +116,16 @@ function save(close: () => void): void {
 
   form
     .transform(
-      ({ name, address, default_desk_id, signature, routing, settings }) =>
+      ({
+        name,
+        address,
+        default_desk_id,
+        signature,
+        routing,
+        settings,
+      }):
+        | Omit<App.Data.Mailboxes.CreateMailboxData, 'driver'>
+        | App.Data.Mailboxes.UpdateMailboxData =>
         mailbox === 'new'
           ? { name, address, default_desk_id, settings }
           : { name, default_desk_id, signature: signature || null, routing },

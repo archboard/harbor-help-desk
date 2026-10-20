@@ -2,11 +2,10 @@
 
 namespace App\Actions\Mailboxes;
 
-use App\Enums\MailboxDriver;
+use App\Data\Mailboxes\CreateMailboxData;
 use App\Models\Mailbox;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Validator;
 
 class CreateMailbox
 {
@@ -20,9 +19,6 @@ class CreateMailbox
     {
         Gate::forUser($actor)->authorize('create', Mailbox::class);
 
-        $driver = MailboxDriver::tryFrom((string) ($input['driver'] ?? ''));
-        $validated = Validator::make($input, MailboxRules::for($driver))->validate();
-
-        return Mailbox::create($validated);
+        return Mailbox::create(CreateMailboxData::validateAndCreate($input)->filled());
     }
 }

@@ -3,28 +3,28 @@
 namespace App\Actions\Mailboxes;
 
 use App\Enums\MailboxDriver;
-use App\Models\Mailbox;
 use App\Models\Workspace;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
 
 /**
- * Validation rules for creating a mailbox (`$mailbox` null) or updating one. Hosted and OAuth
- * mailboxes can only change their name, signature, default desk and routing.
+ * Validation rules for creating or updating a mailbox. Hosted and OAuth mailboxes can only
+ * change their name, signature, default desk and routing.
  */
 class MailboxRules
 {
     /**
+     * Rules every mailbox shares, whatever its driver.
+     *
      * @return array<string, array<int, ValidationRule|Closure|string|object>>
      */
-    public static function for(?MailboxDriver $driver, ?Mailbox $mailbox = null): array
+    public static function common(bool $creating): array
     {
-        $required = $mailbox === null ? 'required' : 'sometimes';
-        $ownServer = $driver === MailboxDriver::IMAP;
+        $required = $creating ? 'required' : 'sometimes';
         $activeDesk = Rule::exists('desks', 'id')->where('workspace_id', Workspace::current()?->getKey())->whereNull('archived_at');
 
-        $rules = [
+        return [
             'name' => [$required, 'string', 'max:255'],
             'signature' => ['sometimes', 'nullable', 'string', 'max:10000'],
             'default_desk_id' => [$required, 'string', $activeDesk],
@@ -32,11 +32,26 @@ class MailboxRules
             'routing.*' => ['array:address,desk_id'],
             'routing.*.address' => ['required', 'string', 'email', 'max:255'],
             'routing.*.desk_id' => ['required', 'string', $activeDesk],
-            'address' => [$mailbox === null || $ownServer ? $required : 'missing', 'string', 'email', 'max:255'],
-            'settings' => [$mailbox === null || $ownServer ? $required : 'missing', 'array'],
+        ];
+    }
+
+    /**
+     * Rules for the address and connection settings, which depend on the driver: from the input
+     * when creating, from the mailbox when updating.
+     *
+     * @return array<string, array<int, ValidationRule|Closure|string|object>>
+     */
+    public static function connection(?MailboxDriver $driver, bool $creating): array
+    {
+        $required = $creating ? 'required' : 'sometimes';
+        $ownServer = $driver === MailboxDriver::IMAP;
+
+        $rules = [
+            'address' => [$creating || $ownServer ? $required : 'missing', 'string', 'email', 'max:255'],
+            'settings' => [$creating || $ownServer ? $required : 'missing', 'array'],
         ];
 
-        if ($mailbox === null) {
+        if ($creating) {
             $rules['driver'] = ['required', Rule::enum(MailboxDriver::class)->except(MailboxDriver::HOSTED)];
         }
 
@@ -54,7 +69,7 @@ class MailboxRules
             $rules['settings.imap.folder'] = ['sometimes', 'string', 'max:255'];
         }
 
-        if ($mailbox === null && $driver?->usesOAuth()) {
+        if ($creating && $driver?->usesOAuth()) {
             $rules['settings.access_token'] = ['required', 'string'];
             $rules['settings.refresh_token'] = ['required', 'string'];
             $rules['settings.expires_at'] = ['required', 'integer'];

@@ -2,10 +2,10 @@
 
 namespace App\Actions\Workspaces;
 
+use App\Data\Workspaces\UpdateWorkspaceData;
 use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Validator;
 
 class UpdateWorkspace
 {
@@ -16,11 +16,7 @@ class UpdateWorkspace
     {
         Gate::forUser($actor)->authorize('update', $workspace);
 
-        $validated = Validator::make($input, [
-            'name' => ['required', 'string', 'max:255'],
-        ])->validate();
-
-        $workspace->update($validated);
+        $workspace->update(UpdateWorkspaceData::validateAndCreate($input)->filled());
 
         return $workspace;
     }

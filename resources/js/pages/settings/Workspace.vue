@@ -12,7 +12,9 @@ defineOptions({ layout: { title: 'Workspace' } });
 
 const page = usePage();
 
-const form = useForm({ name: page.props.workspace?.name ?? '' });
+const form = useForm({
+  name: page.props.workspace?.name ?? '',
+} satisfies App.Data.Workspaces.UpdateWorkspaceData);
 </script>
 
 <template>
