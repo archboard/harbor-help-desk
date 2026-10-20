@@ -26,7 +26,7 @@ test('members read the workspace and admins update it', function () {
     actAs($this->admin, $this->acme);
     $this->patchJson('http://acme.harbor.test/api/v1/workspace', ['name' => 'Acme Support'])
         ->assertOk()
-        ->assertExactJson(['id' => $this->acme->id, 'name' => 'Acme Support', 'subdomain' => 'acme', 'is_admin' => true, 'settings' => ['mail_notification_mailbox_id' => null]]);
+        ->assertExactJson(['id' => $this->acme->id, 'name' => 'Acme Support', 'subdomain' => 'acme', 'is_admin' => true, 'settings' => ['mail_notification_mailbox_id' => null, 'mail_new_tickets_per_sender_per_hour' => 20]]);
 });
 
 test('agents cannot update the workspace', function () {

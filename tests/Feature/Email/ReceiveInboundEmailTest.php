@@ -190,7 +190,7 @@ test('a bounce of an emailed reply is logged on its ticket', function () {
 });
 
 test('new tickets per sender are rate limited but replies are not', function () {
-    config(['harbor.mail.new_tickets_per_sender_per_hour' => 2]);
+    $this->workspace->update(['settings' => ['mail_new_tickets_per_sender_per_hour' => 2]]);
 
     $first = receive(inboundEmail(['messageId' => 'one@mail.example.com']));
     receive(inboundEmail());
@@ -198,6 +198,21 @@ test('new tickets per sender are rate limited but replies are not', function () 
     expect(receive(inboundEmail()))->toBeNull();
     expect(receive(inboundEmail(['inReplyTo' => 'one@mail.example.com'])))->not->toBeNull();
     expect(Ticket::count())->toBe(2);
+});
+
+test('the new ticket limit is per workspace', function () {
+    $this->workspace->update(['settings' => ['mail_new_tickets_per_sender_per_hour' => 1]]);
+
+    receive(inboundEmail());
+    expect(receive(inboundEmail()))->toBeNull();
+
+    Workspace::factory()->create(['settings' => ['mail_new_tickets_per_sender_per_hour' => 3]])->makeCurrent();
+    $mailboxB = Mailbox::factory()->create(['default_desk_id' => Desk::sole()->id]);
+
+    foreach (range(1, 3) as $ignored) {
+        expect(receive(inboundEmail(), $mailboxB))->not->toBeNull();
+    }
+    expect(receive(inboundEmail(), $mailboxB))->toBeNull();
 });
 
 test('attachments are stored and blocked ones are skipped with a note', function () {

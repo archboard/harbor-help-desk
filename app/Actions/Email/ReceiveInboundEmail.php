@@ -168,7 +168,7 @@ class ReceiveInboundEmail
     {
         $key = "inbound-email:{$mailbox->workspace_id}:{$email->fromEmail}";
 
-        if (RateLimiter::tooManyAttempts($key, config('harbor.mail.new_tickets_per_sender_per_hour'))) {
+        if (RateLimiter::tooManyAttempts($key, $mailbox->workspace->settings->mailNewTicketsPerSenderPerHour)) {
             return true;
         }
 

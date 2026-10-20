@@ -333,6 +333,7 @@ declare namespace App {
       };
       export type UpdateWorkspaceSettingsData = {
         mail_notification_mailbox_id?: string | null;
+        mail_new_tickets_per_sender_per_hour?: number | null;
       };
       export type WorkspaceData = {
         id: string;
@@ -343,6 +344,7 @@ declare namespace App {
       };
       export type WorkspaceSettings = {
         mail_notification_mailbox_id: string | null;
+        mail_new_tickets_per_sender_per_hour: number;
       };
     }
   }

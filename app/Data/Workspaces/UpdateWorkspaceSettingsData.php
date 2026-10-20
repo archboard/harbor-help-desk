@@ -3,6 +3,7 @@
 namespace App\Data\Workspaces;
 
 use App\Data\InputData;
+use Spatie\LaravelData\Attributes\Validation\Between;
 use Spatie\LaravelData\Optional;
 
 /**
@@ -13,5 +14,7 @@ class UpdateWorkspaceSettingsData extends InputData
 {
     public function __construct(
         public string|Optional|null $mailNotificationMailboxId,
+        #[Between(1, 1000)]
+        public int|Optional|null $mailNewTicketsPerSenderPerHour,
     ) {}
 }

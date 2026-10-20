@@ -21,6 +21,8 @@ const {
   disabled = false,
   help,
   options = [],
+  min,
+  max,
 } = defineProps<{
   component?: 'AppInput' | 'AppSelect' | 'AppTextarea' | 'AppDatepicker';
   id?: string;
@@ -31,6 +33,8 @@ const {
   disabled?: boolean;
   help?: string;
   options?: OptionsInput;
+  min?: number;
+  max?: number;
 }>();
 
 const model = defineModel<string | number | boolean | null>();
@@ -62,7 +66,9 @@ const components = { AppDatepicker, AppInput, AppSelect, AppTextarea };
           :has-error="!!error"
           :disabled="disabled"
           v-bind="{
-            ...(component === 'AppInput' ? { type, placeholder } : {}),
+            ...(component === 'AppInput'
+              ? { type, placeholder, min, max }
+              : {}),
             ...(component === 'AppSelect' ? { options } : {}),
           }"
         />

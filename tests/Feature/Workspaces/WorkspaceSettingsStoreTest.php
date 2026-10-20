@@ -86,6 +86,20 @@ test('a mailbox from another workspace is rejected', function () {
     expect($this->workspace->fresh()->settings->mailNotificationMailboxId)->toBeNull();
 });
 
+test('the new ticket limit must be between 1 and 1000', function () {
+    foreach ([0, 1001] as $limit) {
+        $this->actingAs($this->admin)
+            ->patch(route('workspace.settings.update'), ['mail_new_tickets_per_sender_per_hour' => $limit])
+            ->assertSessionHasErrors('mail_new_tickets_per_sender_per_hour');
+    }
+
+    $this->actingAs($this->admin)
+        ->patch(route('workspace.settings.update'), ['mail_new_tickets_per_sender_per_hour' => 50])
+        ->assertSessionHasNoErrors();
+
+    expect($this->workspace->fresh()->settings->mailNewTicketsPerSenderPerHour)->toBe(50);
+});
+
 test('agents neither see nor update settings', function () {
     $this->actingAs($this->agent)
         ->get(route('desks.index'))

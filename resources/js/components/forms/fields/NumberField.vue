@@ -9,7 +9,9 @@ const {
   disabled = false,
   required = false,
   helpText,
-} = defineProps<FieldProps>();
+  min,
+  max,
+} = defineProps<FieldProps & { min?: number; max?: number }>();
 
 const model = defineModel<number | null>();
 </script>
@@ -23,6 +25,8 @@ const model = defineModel<number | null>();
     :required="required"
     :disabled="disabled"
     :placeholder="placeholder"
+    :min="min"
+    :max="max"
   >
     {{ label }}
   </FormField>

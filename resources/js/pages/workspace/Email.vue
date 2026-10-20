@@ -55,6 +55,8 @@ const page = usePage();
 const settingsForm = useForm({
   mail_notification_mailbox_id:
     page.props.workspace?.settings?.mail_notification_mailbox_id ?? '',
+  mail_new_tickets_per_sender_per_hour:
+    page.props.workspace?.settings?.mail_new_tickets_per_sender_per_hour ?? 20,
 });
 
 const notificationMailboxes = computed(() => [
@@ -278,9 +280,16 @@ function remove(close: () => void): void {
       <form
         @submit.prevent="
           settingsForm
-            .transform(({ mail_notification_mailbox_id }) => ({
-              mail_notification_mailbox_id: mail_notification_mailbox_id || null,
-            }))
+            .transform(
+              ({
+                mail_notification_mailbox_id,
+                mail_new_tickets_per_sender_per_hour,
+              }) => ({
+                mail_notification_mailbox_id:
+                  mail_notification_mailbox_id || null,
+                mail_new_tickets_per_sender_per_hour,
+              }),
+            )
             .submit(updateSettings(), { preserveScroll: true })
         "
       >
@@ -291,6 +300,15 @@ function remove(close: () => void): void {
               label="Send app email (notifications, sign-in links) from"
               :options="notificationMailboxes"
               :error="settingsForm.errors.mail_notification_mailbox_id"
+            />
+            <NumberField
+              v-model="settingsForm.mail_new_tickets_per_sender_per_hour"
+              label="New tickets per sender per hour"
+              help-text="Email beyond this is dropped. Replies to existing tickets don't count."
+              :error="settingsForm.errors.mail_new_tickets_per_sender_per_hour"
+              :min="1"
+              :max="1000"
+              required
             />
           </AppFieldset>
         </CardPadding>
