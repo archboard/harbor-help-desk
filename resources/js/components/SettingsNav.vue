@@ -3,6 +3,7 @@ import { Link } from '@inertiajs/vue3';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { edit as editApiTokens } from '@/routes/api-tokens';
 import { edit as editAppearance } from '@/routes/appearance';
+import { edit as editNotifications } from '@/routes/notification-preferences';
 import { edit as editProfile } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
 
@@ -11,6 +12,7 @@ const { isCurrentUrl } = useCurrentUrl();
 const tabs = [
   { label: 'Profile', href: editProfile().url },
   { label: 'Security', href: editSecurity().url },
+  { label: 'Notifications', href: editNotifications().url },
   { label: 'API tokens', href: editApiTokens().url },
   { label: 'Appearance', href: editAppearance().url },
 ];

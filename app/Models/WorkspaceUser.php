@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\NotificationChannel;
+use App\Enums\NotificationType;
 use App\Enums\WorkspaceRole;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Relations\Pivot;
@@ -24,6 +26,10 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|WorkspaceUser whereUserId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|WorkspaceUser whereWorkspaceId($value)
  *
+ * @property array<array-key, mixed> $notification_preferences
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|WorkspaceUser whereNotificationPreferences($value)
+ *
  * @mixin \Eloquent
  */
 class WorkspaceUser extends Pivot
@@ -37,6 +43,16 @@ class WorkspaceUser extends Pivot
     {
         return [
             'role' => WorkspaceRole::class,
+            'notification_preferences' => 'array',
         ];
+    }
+
+    /**
+     * Whether the member wants the notification on the channel; a choice they haven't made falls back to the type's default.
+     */
+    public function wantsNotification(NotificationType $type, NotificationChannel $channel): bool
+    {
+        return $this->notification_preferences[$type->value][$channel->value]
+            ?? in_array($channel, $type->defaultChannels(), true);
     }
 }

@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Enums\DeskRole;
+use App\Enums\NotificationChannel;
+use App\Enums\NotificationType;
 use App\Enums\WorkspaceRole;
 use Carbon\CarbonImmutable;
 use Database\Factories\UserFactory;
@@ -105,7 +107,7 @@ class User extends Authenticatable implements MustVerifyEmail, OAuthenticatable,
     {
         return $this->belongsToMany(Workspace::class, 'workspace_user')
             ->using(WorkspaceUser::class)
-            ->withPivot('role')
+            ->withPivot('role', 'notification_preferences')
             ->withTimestamps();
     }
 
@@ -128,6 +130,34 @@ class User extends Authenticatable implements MustVerifyEmail, OAuthenticatable,
     public function workspaceRole(Workspace $workspace): ?WorkspaceRole
     {
         return $this->workspaces()->whereKey($workspace->getKey())->first()?->pivot->role;
+    }
+
+    /**
+     * The user's membership of the given workspace, or null when they aren't a member.
+     */
+    public function membership(Workspace $workspace): ?WorkspaceUser
+    {
+        return $this->workspaces()->whereKey($workspace->getKey())->first()?->pivot;
+    }
+
+    /**
+     * The Laravel channels to notify the user on, for a notification's `via()`. Empty when they aren't a member.
+     *
+     * @return array<int, string>
+     */
+    public function notificationChannels(Workspace $workspace, NotificationType $type): array
+    {
+        $membership = $this->membership($workspace);
+
+        if ($membership === null) {
+            return [];
+        }
+
+        return collect(NotificationChannel::cases())
+            ->filter(fn (NotificationChannel $channel): bool => $membership->wantsNotification($type, $channel))
+            ->map(fn (NotificationChannel $channel): string => $channel->value)
+            ->values()
+            ->all();
     }
 
     /**

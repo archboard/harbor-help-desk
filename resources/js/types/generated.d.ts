@@ -149,6 +149,17 @@ declare namespace App {
         settings?: Record<string, any>;
       };
     }
+    namespace Notifications {
+      export type NotificationPreferenceData = {
+        type: App.Enums.NotificationType;
+        label: string;
+        description: string;
+        channels: Record<string, boolean>;
+      };
+      export type UpdateNotificationPreferencesData = {
+        preferences: Record<string, Record<string, boolean>>;
+      };
+    }
     namespace Realtime {
       export type RealtimeData = {
         key: string;
@@ -372,6 +383,14 @@ declare namespace App {
       | 'multi_select';
     export type DeskRole = 'lead' | 'agent';
     export type MailboxDriver = 'hosted' | 'imap' | 'google' | 'microsoft';
+    export type NotificationChannel = 'database' | 'mail';
+    export type NotificationType =
+      | 'new_ticket'
+      | 'assigned'
+      | 'requester_replied'
+      | 'ticket_updated'
+      | 'mentioned'
+      | 'reminder_due';
     export type TicketEventType =
       | 'created'
       | 'subject_changed'
