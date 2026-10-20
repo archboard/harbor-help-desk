@@ -5,16 +5,16 @@ namespace App\Notifications;
 use App\Enums\NotificationType;
 use App\Models\TicketEvent;
 use App\Models\User;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class TicketActivity extends Notification implements ShouldQueueAfterCommit
+/**
+ * Delivered synchronously: the listener that sends it is already queued, and its database row
+ * must exist before the next listener checks for unread repeats.
+ */
+class TicketActivity extends Notification
 {
-    use Queueable;
-
     public function __construct(public TicketEvent $ticketEvent, public NotificationType $type) {}
 
     /**
@@ -42,7 +42,7 @@ class TicketActivity extends Notification implements ShouldQueueAfterCommit
 
         return (new MailMessage)
             ->subject("#{$ticket->number} {$ticket->subject}")
-            ->line($this->ticketEvent->description())
+            ->line($this->ticketEvent->description($notifiable->timezone))
             ->action(__('Open ticket'), $ticket->workspace->url("/tickets/{$ticket->id}"));
     }
 
@@ -67,7 +67,7 @@ class TicketActivity extends Notification implements ShouldQueueAfterCommit
             'ticket_number' => $ticket->number,
             'subject' => $ticket->subject,
             'actor' => $this->ticketEvent->actorName(),
-            'description' => $this->ticketEvent->description(),
+            'description' => $this->ticketEvent->description($notifiable->timezone),
         ];
     }
 }

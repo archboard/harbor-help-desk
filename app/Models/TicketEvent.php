@@ -82,9 +82,10 @@ class TicketEvent extends Model
     }
 
     /**
-     * The event as a sentence for people to read.
+     * The event as a sentence for people to read. Times use `$timezone` when given (queued
+     * notifications have no signed-in viewer), else the signed-in user's.
      */
-    public function description(): string
+    public function description(?string $timezone = null): string
     {
         $properties = $this->properties;
         $replace = ['actor' => $this->actorName()];
@@ -96,7 +97,7 @@ class TicketEvent extends Model
             TicketEventType::PRIORITY_CHANGED => __(':actor changed the priority to :to.', $replace + ['to' => TicketPriority::from($properties['to'])->label()]),
             TicketEventType::DUE_DATE_CHANGED => $properties['to'] === null
                 ? __(':actor removed the due date.', $replace)
-                : __(':actor set the due date to :to.', $replace + ['to' => $this->localTime($properties['to'])]),
+                : __(':actor set the due date to :to.', $replace + ['to' => $this->localTime($properties['to'], $timezone)]),
             TicketEventType::DESK_CHANGED => __(':actor moved the ticket to :to.', $replace + ['to' => $properties['to']]),
             TicketEventType::CUSTOM_FIELD_CHANGED => $properties['to'] === null
                 ? __(':actor cleared :name.', $replace + ['name' => $properties['name']])
@@ -111,7 +112,7 @@ class TicketEvent extends Model
             TicketEventType::COMMENT_DELETED => __(':actor deleted a comment.', $replace),
             TicketEventType::ATTACHMENT_ADDED => __(':actor attached :filename.', $replace + ['filename' => $properties['filename']]),
             TicketEventType::ATTACHMENT_REMOVED => __(':actor removed the attachment :filename.', $replace + ['filename' => $properties['filename']]),
-            TicketEventType::REMINDER_SET => __(':actor set a reminder for :at.', $replace + ['at' => $this->localTime($properties['remind_at'])]),
+            TicketEventType::REMINDER_SET => __(':actor set a reminder for :at.', $replace + ['at' => $this->localTime($properties['remind_at'], $timezone)]),
             TicketEventType::EMAIL_BOUNCED => __('An emailed reply bounced: :reason', ['reason' => $properties['reason']]),
             TicketEventType::DELETED => __(':actor deleted the ticket.', $replace),
             TicketEventType::RESTORED => __(':actor restored the ticket.', $replace),
@@ -122,10 +123,10 @@ class TicketEvent extends Model
      * A stored time in the viewing user's timezone. Descriptions are built per request, so
      * each viewer reads their own local time.
      */
-    protected function localTime(string $time): string
+    protected function localTime(string $time, ?string $timezone = null): string
     {
         return CarbonImmutable::parse($time)
-            ->setTimezone(Auth::user()?->getAttribute('timezone') ?: config('app.timezone'))
+            ->setTimezone($timezone ?: Auth::user()?->getAttribute('timezone') ?: config('app.timezone'))
             ->toDayDateTimeString();
     }
 
