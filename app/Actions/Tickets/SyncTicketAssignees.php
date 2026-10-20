@@ -2,12 +2,12 @@
 
 namespace App\Actions\Tickets;
 
+use App\Data\Tickets\SyncTicketAssigneesData;
 use App\Enums\TicketEventType;
 use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 class SyncTicketAssignees
@@ -22,10 +22,7 @@ class SyncTicketAssignees
     {
         Gate::forUser($actor)->authorize('update', $ticket);
 
-        $userIds = Validator::make($input, [
-            'user_ids' => ['present', 'array'],
-            'user_ids.*' => ['string', 'distinct'],
-        ])->validate()['user_ids'];
+        $userIds = SyncTicketAssigneesData::validateAndCreate($input)->userIds;
 
         $members = $ticket->desk->users()->whereKey($userIds)->get();
 

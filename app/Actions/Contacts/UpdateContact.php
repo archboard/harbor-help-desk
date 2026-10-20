@@ -6,7 +6,6 @@ use App\Data\Contacts\UpdateContactData;
 use App\Models\Contact;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Validator;
 
 class UpdateContact
 {
@@ -17,8 +16,7 @@ class UpdateContact
     {
         Gate::forUser($actor)->authorize('update', $contact);
 
-        $data = UpdateContactData::validateAndCreate($input);
-        Validator::make($input, ['email' => ['sometimes', ContactRules::uniqueEmail($contact)]])->validate();
+        $data = UpdateContactData::validateAndCreateWith($input, ['email' => ['sometimes', ContactRules::uniqueEmail($contact)]]);
 
         $contact->update($data->filled());
 

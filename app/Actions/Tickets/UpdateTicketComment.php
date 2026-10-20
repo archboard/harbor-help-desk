@@ -2,12 +2,12 @@
 
 namespace App\Actions\Tickets;
 
+use App\Data\Tickets\UpdateTicketCommentData;
 use App\Enums\TicketEventType;
 use App\Models\TicketComment;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Validator;
 
 class UpdateTicketComment
 {
@@ -20,9 +20,7 @@ class UpdateTicketComment
     {
         Gate::forUser($actor)->authorize('update', $comment);
 
-        $validated = Validator::make($input, [
-            'body' => ['required', 'string', 'max:65535'],
-        ])->validate();
+        $validated = UpdateTicketCommentData::validateAndCreate($input)->filled();
 
         if ($validated['body'] === $comment->body) {
             return $comment;

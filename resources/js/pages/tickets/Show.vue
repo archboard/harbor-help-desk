@@ -44,7 +44,9 @@ const isDeleted = computed(() => ticket.deleted_at !== null);
 const canEdit = computed(() => !isDeleted.value);
 
 const editingSubject = ref(false);
-const subjectForm = useForm({ subject: ticket.subject });
+const subjectForm = useForm({
+  subject: ticket.subject,
+} satisfies App.Data.Tickets.UpdateTicketData);
 
 function saveSubject(): void {
   subjectForm.submit(update(ticket.id), {

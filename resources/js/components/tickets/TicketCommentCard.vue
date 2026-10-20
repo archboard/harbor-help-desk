@@ -17,7 +17,9 @@ const { comment } = defineProps<{
 }>();
 
 const editing = ref(false);
-const form = useForm({ body: comment.body });
+const form = useForm({
+  body: comment.body,
+} satisfies App.Data.Tickets.UpdateTicketCommentData);
 
 const deleting = ref(false);
 const deleteLoading = ref(false);

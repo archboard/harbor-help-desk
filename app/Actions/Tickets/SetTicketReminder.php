@@ -2,13 +2,13 @@
 
 namespace App\Actions\Tickets;
 
+use App\Data\Tickets\SetTicketReminderData;
 use App\Enums\TicketEventType;
 use App\Models\Ticket;
 use App\Models\TicketReminder;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Validator;
 
 class SetTicketReminder
 {
@@ -22,11 +22,7 @@ class SetTicketReminder
     {
         Gate::forUser($actor)->authorize('update', $ticket);
 
-        $validated = Validator::make($input, [
-            'remind_at' => ['required', 'date', 'after:now'],
-            'note' => ['sometimes', 'nullable', 'string', 'max:1000'],
-            'for_assignees' => ['sometimes', 'boolean'],
-        ])->validate();
+        $validated = SetTicketReminderData::validateAndCreate($input)->filled();
 
         return DB::transaction(function () use ($actor, $ticket, $validated): TicketReminder {
             $reminder = $ticket->reminders()->create([

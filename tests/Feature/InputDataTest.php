@@ -33,3 +33,15 @@ test('invalid input throws a validation exception with snake_case keys', functio
             expect($exception->errors())->toHaveKeys(['display_name', 'ticket_priority']);
         });
 });
+
+test('context rules are checked with the class rules and their errors reported together', function () {
+    expect(fn () => SampleInputData::validateAndCreateWith(['ticket_priority' => 'high'], ['internal_note' => ['required']]))
+        ->toThrow(function (ValidationException $exception) {
+            expect($exception->errors())->toHaveKeys(['display_name', 'internal_note']);
+        });
+
+    expect(fn () => SampleInputData::validateAndCreateWith(['display_name' => 'Jane'], ['internal_note' => ['required']]))
+        ->toThrow(function (ValidationException $exception) {
+            expect($exception->errors())->toHaveKeys(['internal_note'])->not->toHaveKey('display_name');
+        });
+});

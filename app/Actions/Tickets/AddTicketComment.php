@@ -2,6 +2,7 @@
 
 namespace App\Actions\Tickets;
 
+use App\Data\Tickets\AddTicketCommentData;
 use App\Enums\TicketEventType;
 use App\Jobs\SendTicketReplyEmail;
 use App\Models\Contact;
@@ -10,7 +11,6 @@ use App\Models\TicketComment;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Validator;
 
 class AddTicketComment
 {
@@ -30,13 +30,10 @@ class AddTicketComment
             Gate::forUser($actor)->authorize('update', $ticket);
         }
 
-        $validated = Validator::make($input, [
-            'body' => ['required', 'string', 'max:65535'],
-            'is_internal' => [$actor instanceof User ? 'sometimes' : 'prohibited', 'boolean'],
-            'message_id' => [$actor instanceof Contact ? 'sometimes' : 'prohibited', 'nullable', 'string', 'max:998'],
-            'attachments' => ['sometimes', 'array', 'max:20'],
-            'attachments.*' => AddTicketAttachment::rules(),
-        ])->validate();
+        $validated = AddTicketCommentData::validateAndCreateWith($input, [
+            'is_internal' => [$actor instanceof User ? 'sometimes' : 'prohibited'],
+            'message_id' => [$actor instanceof Contact ? 'sometimes' : 'prohibited'],
+        ])->filled();
 
         return DB::transaction(function () use ($actor, $ticket, $validated): TicketComment {
             $comment = new TicketComment([

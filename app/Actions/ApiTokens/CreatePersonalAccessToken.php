@@ -5,7 +5,6 @@ namespace App\Actions\ApiTokens;
 use App\Data\ApiTokens\CreatePersonalAccessTokenData;
 use App\Models\User;
 use App\Models\Workspace;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Laravel\Passport\PersonalAccessTokenResult;
 
@@ -21,10 +20,9 @@ class CreatePersonalAccessToken
      */
     public function handle(User $user, array $input): PersonalAccessTokenResult
     {
-        $data = CreatePersonalAccessTokenData::validateAndCreate($input);
-        Validator::make($input, [
+        $data = CreatePersonalAccessTokenData::validateAndCreateWith($input, [
             'workspaces.*' => [Rule::in($user->workspaces()->pluck('workspaces.id'))],
-        ])->validate();
+        ]);
 
         return $user->createToken(
             $data->name,

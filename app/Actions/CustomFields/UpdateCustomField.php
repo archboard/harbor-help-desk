@@ -6,7 +6,6 @@ use App\Data\CustomFields\UpdateCustomFieldData;
 use App\Models\CustomField;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class UpdateCustomField
@@ -23,12 +22,11 @@ class UpdateCustomField
 
         // ponytail: removing a select option leaves tickets that already use it as they are.
         // Rename or migrate their values here if that ever matters.
-        $data = UpdateCustomFieldData::validateAndCreate($input);
-        Validator::make($input, [
+        $data = UpdateCustomFieldData::validateAndCreateWith($input, [
             'name' => ['sometimes', CustomFieldNameRules::unique($field)],
             'type' => ['sometimes', Rule::in([$field->type->value])],
             'options' => $field->type->hasOptions() ? [] : ['prohibited'],
-        ])->validate();
+        ]);
 
         $field->update($data->filled());
 

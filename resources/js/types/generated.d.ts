@@ -30,6 +30,9 @@ declare namespace App {
         name: string;
         email: string;
       };
+      export type SearchContactsData = {
+        search?: string | null;
+      };
       export type UpdateContactData = {
         name?: string;
         email?: string;
@@ -175,6 +178,15 @@ declare namespace App {
       };
     }
     namespace Tickets {
+      export type AddTicketAttachmentData = {
+        file: File;
+      };
+      export type AddTicketCommentData = {
+        body: string;
+        is_internal?: boolean;
+        message_id?: string | null;
+        attachments?: File[];
+      };
       export type AttachmentData = {
         id: string;
         ticket_id: string;
@@ -187,6 +199,54 @@ declare namespace App {
         uploader_id: string;
         download_url: string;
         created_at: string | null;
+      };
+      export type BulkUpdateTicketsData = {
+        ticket_ids: string[];
+        status?: App.Enums.TicketStatus;
+        priority?: App.Enums.TicketPriority;
+        assignee_ids?: string[];
+        add_tag?: string;
+        desk_id?: string;
+        delete?: boolean;
+      };
+      export type CreateTicketData = {
+        subject: string;
+        status?: App.Enums.TicketStatus;
+        priority?: App.Enums.TicketPriority;
+        due_at?: string | null;
+        requester_id?: string;
+        requester?: {
+          name: string;
+          email: string;
+        };
+        assignee_ids?: string[];
+        mailbox_id?: string | null;
+        message_id?: string | null;
+        body?: string | null;
+        attachments?: File[];
+        custom_fields?: Record<string, any>;
+      };
+      export type SearchTicketsData = {
+        search?: string | null;
+        desk_id?: string | string[];
+        status?: string | string[];
+        priority?: string | string[];
+        tag?: string | string[];
+        assignee_id?: string;
+        requester_id?: string;
+        deleted?: boolean;
+        sort?: string;
+      };
+      export type SetTicketReminderData = {
+        remind_at: string;
+        note?: string | null;
+        for_assignees?: boolean;
+      };
+      export type SyncTicketAssigneesData = {
+        user_ids: string[];
+      };
+      export type SyncTicketTagsData = {
+        names: string[];
       };
       export type TicketCommentData = {
         id: string;
@@ -241,6 +301,16 @@ declare namespace App {
         remind_at: string;
         note: string | null;
         sent_at: string | null;
+      };
+      export type UpdateTicketCommentData = {
+        body: string;
+      };
+      export type UpdateTicketData = {
+        subject?: string;
+        status?: App.Enums.TicketStatus;
+        priority?: App.Enums.TicketPriority;
+        due_at?: string | null;
+        custom_fields?: Record<string, any>;
       };
     }
     namespace Users {

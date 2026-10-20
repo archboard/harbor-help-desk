@@ -2,17 +2,14 @@
 
 namespace App\Actions\Tickets;
 
+use App\Data\Tickets\UpdateTicketData;
 use App\Enums\TicketEventType;
-use App\Enums\TicketPriority;
-use App\Enums\TicketStatus;
 use App\Models\Ticket;
 use App\Models\User;
 use Closure;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 
 class UpdateTicket
 {
@@ -27,13 +24,7 @@ class UpdateTicket
     {
         Gate::forUser($actor)->authorize('update', $ticket);
 
-        $validated = Validator::make($input, [
-            'subject' => ['sometimes', 'required', 'string', 'max:255'],
-            'status' => ['sometimes', 'required', Rule::enum(TicketStatus::class)],
-            'priority' => ['sometimes', 'required', Rule::enum(TicketPriority::class)],
-            'due_at' => ['sometimes', 'nullable', 'date'],
-            ...CustomFieldRules::for($ticket->desk, creating: false),
-        ])->validate();
+        $validated = UpdateTicketData::validateAndCreateWith($input, CustomFieldRules::for($ticket->desk, creating: false))->filled();
 
         $incoming = Arr::pull($validated, 'custom_fields', []);
         $ticket->fill($validated);

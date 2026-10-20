@@ -2,13 +2,13 @@
 
 namespace App\Data\SavedViews;
 
-use App\Actions\Tickets\SearchTickets;
 use App\Data\InputData;
+use App\Data\Tickets\SearchTicketsData;
 use Spatie\LaravelData\Optional;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 /**
- * A view's filters are exactly what {@see SearchTickets} accepts, checked with its rules.
+ * A view's filters are exactly what {@see SearchTicketsData} accepts, checked with its rules.
  */
 class CreateSavedViewData extends InputData
 {
@@ -27,12 +27,13 @@ class CreateSavedViewData extends InputData
     public static function rules(ValidationContext $context): array
     {
         $filters = is_array($context->payload['filters'] ?? null) ? $context->payload['filters'] : [];
+        $filterContext = new ValidationContext($filters, $context->fullPayload, $context->path);
 
         return [
             'name' => ['required', 'string', 'max:255'],
-            'filters' => ['present', 'array:'.implode(',', SearchTickets::FILTERS)],
+            'filters' => ['present', 'array:'.implode(',', SearchTicketsData::FILTERS)],
             'is_shared' => ['sometimes', 'boolean'],
-            ...collect(SearchTickets::rules($filters))
+            ...collect(SearchTicketsData::rules($filterContext))
                 ->mapWithKeys(fn (array $rules, string $key): array => ["filters.{$key}" => $rules])
                 ->all(),
         ];

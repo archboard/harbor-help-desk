@@ -2,10 +2,12 @@
 
 namespace App\Providers;
 
+use Illuminate\Http\UploadedFile;
 use Spatie\LaravelTypeScriptTransformer\LaravelData\LaravelDataTypeScriptTransformerExtension;
 use Spatie\LaravelTypeScriptTransformer\TypeScriptTransformerApplicationServiceProvider;
 use Spatie\TypeScriptTransformer\Formatters\Formatter;
 use Spatie\TypeScriptTransformer\Transformers\EnumTransformer;
+use Spatie\TypeScriptTransformer\TypeScriptNodes\TypeScriptRaw;
 use Spatie\TypeScriptTransformer\TypeScriptTransformerConfigFactory;
 use Spatie\TypeScriptTransformer\Writers\GlobalNamespaceWriter;
 use Symfony\Component\Process\Process;
@@ -23,6 +25,7 @@ class TypeScriptTransformerServiceProvider extends TypeScriptTransformerApplicat
             ->extension(new LaravelDataTypeScriptTransformerExtension)
             ->transformer(EnumTransformer::class)
             ->transformDirectories(app_path('Data'), app_path('Enums'))
+            ->replaceType(UploadedFile::class, new TypeScriptRaw('File'))
             ->outputDirectory(resource_path('js/types'))
             ->writer(new GlobalNamespaceWriter('generated.d.ts'))
             ->formatter(new class implements Formatter
