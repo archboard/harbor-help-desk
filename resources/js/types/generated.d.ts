@@ -215,6 +215,7 @@ declare namespace App {
         is_internal?: boolean;
         message_id?: string | null;
         attachments?: File[];
+        mentioned_user_ids?: string[];
       };
       export type AttachmentData = {
         id: string;

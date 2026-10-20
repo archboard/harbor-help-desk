@@ -33,34 +33,56 @@ class SendTicketActivityNotifications implements ShouldQueue
             return;
         }
 
-        [$type, $candidates] = match (true) {
-            $ticketEvent->type === TicketEventType::CREATED => [
+        $sends = match (true) {
+            $ticketEvent->type === TicketEventType::CREATED => [[
                 NotificationType::NEW_TICKET,
                 $ticket->assignees()->doesntExist() ? $this->deskMembers($ticket) : collect(),
-            ],
-            $ticketEvent->type === TicketEventType::ASSIGNEE_ADDED => [
+            ]],
+            $ticketEvent->type === TicketEventType::ASSIGNEE_ADDED => [[
                 NotificationType::ASSIGNED,
                 User::query()->whereKey($ticketEvent->properties['user_id'])->get(),
-            ],
-            $ticketEvent->type === TicketEventType::COMMENT_ADDED && $ticketEvent->actor instanceof Contact => [
+            ]],
+            $ticketEvent->type === TicketEventType::COMMENT_ADDED && $ticketEvent->actor instanceof Contact => [[
                 NotificationType::REQUESTER_REPLIED,
                 $ticket->assignees()->get()->whenEmpty(fn () => $this->deskMembers($ticket)),
-            ],
-            $this->isTicketUpdate($ticketEvent) => [NotificationType::TICKET_UPDATED, $ticket->assignees()->get()],
-            default => [null, collect()],
+            ]],
+            $ticketEvent->type === TicketEventType::INTERNAL_NOTE_ADDED => $this->noteSends($ticketEvent, $ticket),
+            $this->isTicketUpdate($ticketEvent) => [[NotificationType::TICKET_UPDATED, $ticket->assignees()->get()]],
+            default => [],
         };
 
-        if ($type === null) {
-            return;
+        foreach ($sends as [$type, $candidates]) {
+            $recipients = $this->allowed($candidates, $ticketEvent, $ticket);
+
+            if ($type === NotificationType::TICKET_UPDATED) {
+                $this->sendCollapsed($recipients, $ticketEvent, $ticket);
+            } else {
+                Notification::sendNow($recipients, new TicketActivity($ticketEvent, $type));
+            }
         }
+    }
 
-        $recipients = $this->allowed($candidates, $ticketEvent, $ticket);
+    /**
+     * Mentioned users get `mentioned`; the other assignees get the usual update.
+     *
+     * @return list<array{NotificationType, Collection<int, User>}>
+     */
+    protected function noteSends(TicketEvent $ticketEvent, Ticket $ticket): array
+    {
+        $mentionedIds = $ticketEvent->properties['mentioned_user_ids'] ?? [];
 
-        if ($type !== NotificationType::TICKET_UPDATED) {
-            Notification::sendNow($recipients, new TicketActivity($ticketEvent, $type));
+        return [
+            [NotificationType::MENTIONED, User::query()->whereKey($mentionedIds)->get()],
+            [NotificationType::TICKET_UPDATED, $ticket->assignees()->get()->reject(fn (User $user): bool => in_array($user->id, $mentionedIds, true))],
+        ];
+    }
 
-            return;
-        }
+    /**
+     * @param  Collection<int, User>  $recipients
+     */
+    protected function sendCollapsed(Collection $recipients, TicketEvent $ticketEvent, Ticket $ticket): void
+    {
+        $type = NotificationType::TICKET_UPDATED;
 
         // ponytail: skip recipients with an unread update for this ticket. The ceiling is that an
         // agent who never reads the first one misses later changes; the fix is a delayed, unique job per ticket.
@@ -93,8 +115,7 @@ class SendTicketActivityNotifications implements ShouldQueue
             TicketEventType::TAG_ADDED,
             TicketEventType::TAG_REMOVED,
             TicketEventType::ATTACHMENT_ADDED,
-            TicketEventType::ATTACHMENT_REMOVED,
-            TicketEventType::INTERNAL_NOTE_ADDED => true,
+            TicketEventType::ATTACHMENT_REMOVED => true,
             TicketEventType::COMMENT_ADDED => $ticketEvent->actor instanceof User,
             default => false,
         };

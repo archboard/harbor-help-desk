@@ -11,6 +11,7 @@ use App\Models\TicketComment;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 
 class AddTicketComment
 {
@@ -21,6 +22,7 @@ class AddTicketComment
      * `attachments` are attached to the comment. An agent's public reply is emailed to the
      * requester once the transaction commits. A contact (replying by email) skips the policy
      * check, can't add internal notes, and alone may set `message_id` (the email's Message-ID).
+     * An internal note's `mentioned_user_ids` (desk members) are stored on its event.
      *
      * @param  array<string, mixed>  $input
      */
@@ -33,6 +35,8 @@ class AddTicketComment
         $validated = AddTicketCommentData::validateAndCreateWith($input, [
             'is_internal' => [$actor instanceof User ? 'sometimes' : 'prohibited'],
             'message_id' => [$actor instanceof Contact ? 'sometimes' : 'prohibited'],
+            'mentioned_user_ids' => [$actor instanceof User && filter_var($input['is_internal'] ?? false, FILTER_VALIDATE_BOOLEAN) ? 'sometimes' : 'prohibited'],
+            'mentioned_user_ids.*' => [Rule::in($ticket->desk->users()->pluck('users.id')->all())],
         ])->filled();
 
         return DB::transaction(function () use ($actor, $ticket, $validated): TicketComment {
@@ -47,7 +51,9 @@ class AddTicketComment
             $ticket->recordEvent(
                 $comment->is_internal ? TicketEventType::INTERNAL_NOTE_ADDED : TicketEventType::COMMENT_ADDED,
                 $actor,
-                ['comment_id' => $comment->id],
+                ['comment_id' => $comment->id] + ($comment->is_internal && filled($validated['mentioned_user_ids'] ?? null)
+                    ? ['mentioned_user_ids' => $validated['mentioned_user_ids']]
+                    : []),
             );
 
             // ponytail: every file is validated up front, so only a storage error mid-loop rolls back

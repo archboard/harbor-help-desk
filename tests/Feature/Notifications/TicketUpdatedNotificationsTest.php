@@ -78,3 +78,30 @@ test('a due date is described in the recipient\'s timezone', function () {
 
     expect($this->colleague->notifications()->sole()->data['description'])->toContain('2:30 PM');
 });
+
+test('a mentioned assignee gets mentioned only, and other assignees still get the update', function () {
+    $other = deskMember($this->workspace, $this->desk);
+    $this->ticket->assignees()->attach($other->id, ['workspace_id' => $this->workspace->id]);
+
+    app(AddTicketComment::class)->handle($this->actor, $this->ticket, [
+        'body' => 'Look, @Jane',
+        'is_internal' => true,
+        'mentioned_user_ids' => [$this->colleague->id],
+    ]);
+
+    expect($this->colleague->notifications()->pluck('type')->all())->toBe(['mentioned'])
+        ->and($other->notifications()->pluck('type')->all())->toBe(['ticket_updated'])
+        ->and($this->actor->notifications()->count())->toBe(0);
+});
+
+test('a mentioned desk member who is not an assignee is notified', function () {
+    $mentioned = deskMember($this->workspace, $this->desk);
+
+    app(AddTicketComment::class)->handle($this->actor, $this->ticket, [
+        'body' => 'FYI',
+        'is_internal' => true,
+        'mentioned_user_ids' => [$mentioned->id],
+    ]);
+
+    expect($mentioned->notifications()->pluck('type')->all())->toBe(['mentioned']);
+});

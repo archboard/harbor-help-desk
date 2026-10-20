@@ -228,6 +228,7 @@ function restoreTicket(): void {
       <section class="lg:col-span-2" aria-label="Activity">
         <TicketTimeline
           :ticket-id="ticket.id"
+          :desk-members="deskMembers"
           :comments="comments"
           :events="events"
           :can-work="can.update && canEdit"

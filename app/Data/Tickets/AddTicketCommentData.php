@@ -9,18 +9,20 @@ use Illuminate\Http\UploadedFile;
 use Spatie\LaravelData\Optional;
 
 /**
- * Who may set `is_internal` and `message_id` is checked by {@see AddTicketComment}.
+ * Who may set `is_internal`, `message_id` and `mentioned_user_ids` is checked by {@see AddTicketComment}.
  */
 class AddTicketCommentData extends InputData
 {
     /**
      * @param  list<UploadedFile>|Optional  $attachments
+     * @param  list<string>|Optional  $mentionedUserIds
      */
     public function __construct(
         public string $body,
         public bool|Optional $isInternal,
         public string|Optional|null $messageId,
         public array|Optional $attachments,
+        public array|Optional $mentionedUserIds,
     ) {}
 
     /**
@@ -33,6 +35,8 @@ class AddTicketCommentData extends InputData
             'message_id' => ['sometimes', 'nullable', 'string', 'max:998'],
             'attachments' => ['sometimes', 'array', 'max:20'],
             'attachments.*' => AddTicketAttachment::rules(),
+            'mentioned_user_ids' => ['sometimes', 'array'],
+            'mentioned_user_ids.*' => ['string', 'distinct'],
         ];
     }
 }

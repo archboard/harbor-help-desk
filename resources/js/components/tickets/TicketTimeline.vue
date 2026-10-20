@@ -9,6 +9,7 @@ import { formatDateTime, timeAgo } from '@/lib/dates';
 
 const { comments, events, canWork } = defineProps<{
   ticketId: string;
+  deskMembers: App.Data.Desks.DeskMemberData[];
   comments: App.Data.Tickets.TicketCommentData[];
   events: App.Data.Tickets.TicketEventData[];
   /** Can reply and edit their own comments: may update and the ticket isn't deleted. */
@@ -125,7 +126,11 @@ function isResolution(event: App.Data.Tickets.TicketEventData): boolean {
 
     <div v-if="canWork" class="mt-6 flex gap-x-3">
       <Avatar :name="page.props.auth.user.name" class="mt-1" />
-      <ReplyComposer class="flex-auto" :ticket-id="ticketId" />
+      <ReplyComposer
+        class="flex-auto"
+        :ticket-id="ticketId"
+        :desk-members="deskMembers"
+      />
     </div>
   </div>
 </template>

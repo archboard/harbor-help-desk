@@ -11,7 +11,10 @@ import FadeIn from '@/components/transitions/FadeIn.vue';
 import { firstListError } from '@/lib/files';
 import { store } from '@/routes/tickets/comments';
 
-const { ticketId } = defineProps<{ ticketId: string }>();
+const { ticketId, deskMembers } = defineProps<{
+  ticketId: string;
+  deskMembers: App.Data.Desks.DeskMemberData[];
+}>();
 
 const form = useForm({
   body: '',
@@ -41,11 +44,91 @@ const draggingFiles = computed(() => isOverPage.value && draggedFiles.value);
 const composer = useTemplateRef<HTMLElement>('composer');
 const { isOverDropZone: isOverComposer } = useDropZone(composer, addFiles);
 
+/**
+ * Typing `@` in an internal note suggests desk members. Picking one inserts `@Name` and tracks
+ * the id; on submit, ids whose `@Name` was deleted from the body are dropped.
+ */
+const mentionedMembers = ref<App.Data.Desks.DeskMemberData[]>([]);
+const mention = ref<{ query: string; start: number } | null>(null);
+const activeSuggestion = ref(0);
+
+const suggestions = computed(() =>
+  mention.value && form.is_internal
+    ? deskMembers
+        .filter((member) =>
+          member.name.toLowerCase().includes(mention.value!.query.toLowerCase()),
+        )
+        .slice(0, 5)
+    : [],
+);
+
+function detectMention(event: Event): void {
+  const textarea = event.target as HTMLTextAreaElement;
+  const found = /(?:^|\s)@([^\s@]*)$/.exec(
+    textarea.value.slice(0, textarea.selectionStart),
+  );
+
+  mention.value = found
+    ? { query: found[1], start: textarea.selectionStart - found[1].length - 1 }
+    : null;
+  activeSuggestion.value = 0;
+}
+
+function pick(member: App.Data.Desks.DeskMemberData): void {
+  if (!mention.value) {
+    return;
+  }
+
+  const { query, start } = mention.value;
+
+  form.body = `${form.body.slice(0, start)}@${member.name} ${form.body.slice(start + 1 + query.length)}`;
+
+  if (!mentionedMembers.value.some(({ id }) => id === member.id)) {
+    mentionedMembers.value.push(member);
+  }
+
+  mention.value = null;
+}
+
+function navigateSuggestions(event: KeyboardEvent): void {
+  if (suggestions.value.length === 0) {
+    return;
+  }
+
+  const count = suggestions.value.length;
+
+  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    activeSuggestion.value =
+      (activeSuggestion.value + (event.key === 'ArrowDown' ? 1 : count - 1)) %
+      count;
+  } else if (event.key === 'Enter') {
+    pick(suggestions.value[activeSuggestion.value]);
+  } else if (event.key === 'Escape') {
+    mention.value = null;
+  } else {
+    return;
+  }
+
+  event.preventDefault();
+}
+
 function send(): void {
-  form.submit(store(ticketId), {
-    preserveScroll: true,
-    onSuccess: () => form.reset(),
-  });
+  form
+    .transform((data) => ({
+      ...data,
+      mentioned_user_ids: data.is_internal
+        ? mentionedMembers.value
+            .filter(({ name }) => data.body.includes(`@${name}`))
+            .map(({ id }) => id)
+        : [],
+    }))
+    .submit(store(ticketId), {
+      preserveScroll: true,
+      onSuccess: () => {
+        form.reset();
+        mentionedMembers.value = [];
+      },
+    });
 }
 </script>
 
@@ -82,7 +165,11 @@ function send(): void {
       </button>
     </div>
 
-    <div class="space-y-1">
+    <div
+      class="relative space-y-1"
+      @input="detectMention"
+      @keydown="navigateSuggestions"
+    >
       <AppTextarea
         v-model="form.body"
         :aria-label="form.is_internal ? 'Internal note' : 'Reply'"
@@ -93,7 +180,32 @@ function send(): void {
         "
         :has-error="!!form.errors.body"
       />
+      <ul
+        v-if="suggestions.length > 0"
+        class="absolute z-10 w-64 rounded-md bg-white py-1 text-sm shadow-lg ring-1 ring-black/5 dark:bg-gray-900"
+        role="listbox"
+        aria-label="Mention an agent"
+      >
+        <li
+          v-for="(member, index) in suggestions"
+          :key="member.id"
+          role="option"
+          :aria-selected="index === activeSuggestion"
+          :class="[
+            'cursor-default px-3 py-1.5 select-none',
+            index === activeSuggestion
+              ? 'bg-primary-600 text-white'
+              : 'text-gray-900 dark:text-gray-100',
+          ]"
+          @mousedown.prevent="pick(member)"
+        >
+          {{ member.name }}
+        </li>
+      </ul>
       <FieldError v-if="form.errors.body">{{ form.errors.body }}</FieldError>
+      <FieldError v-if="firstListError(form.errors, 'mentioned_user_ids')">
+        {{ firstListError(form.errors, 'mentioned_user_ids') }}
+      </FieldError>
     </div>
 
     <FieldError v-if="firstListError(form.errors, 'attachments')">

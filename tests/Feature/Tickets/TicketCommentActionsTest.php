@@ -104,3 +104,19 @@ test('workspace b cannot read workspace a comments', function () {
 
     expect(TicketComment::find($commentA->id))->toBeNull();
 });
+
+test('an internal note stores its mentions and rejects non-members, repeats, public replies and contacts', function () {
+    $ticket = Ticket::factory()->create();
+    $agent = deskMember($this->workspace, $ticket->desk);
+    $colleague = deskMember($this->workspace, $ticket->desk);
+    $outsider = deskMember($this->workspace, Desk::factory()->create());
+    $add = fn ($actor, array $input) => fn () => app(AddTicketComment::class)->handle($actor, $ticket, ['body' => 'Hi', ...$input]);
+
+    $add($agent, ['is_internal' => true, 'mentioned_user_ids' => [$colleague->id]])();
+    expect($ticket->events()->where('type', TicketEventType::INTERNAL_NOTE_ADDED)->sole()->properties['mentioned_user_ids'])->toBe([$colleague->id]);
+
+    expect($add($agent, ['is_internal' => true, 'mentioned_user_ids' => [$outsider->id]]))->toThrow(ValidationException::class)
+        ->and($add($agent, ['is_internal' => true, 'mentioned_user_ids' => [$colleague->id, $colleague->id]]))->toThrow(ValidationException::class)
+        ->and($add($agent, ['mentioned_user_ids' => [$colleague->id]]))->toThrow(ValidationException::class)
+        ->and($add($ticket->requester, ['mentioned_user_ids' => [$colleague->id]]))->toThrow(ValidationException::class);
+});

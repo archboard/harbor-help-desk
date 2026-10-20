@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Desk;
 use App\Models\Ticket;
 use App\Models\TicketComment;
 use App\Models\Workspace;
@@ -78,4 +79,23 @@ test('another workspace comments are invisible', function () {
 
     $this->patchJson("http://acme.harbor.test/api/v1/comments/{$foreign->id}", ['body' => 'Hijacked'])->assertNotFound();
     $this->getJson("http://acme.harbor.test/api/v1/tickets/{$foreign->ticket_id}/comments")->assertNotFound();
+});
+
+test('an internal note via the API mentions desk members and rejects others', function () {
+    ['workspace' => $workspace, 'desk' => $desk, 'agent' => $agent] = acmeWithAgent();
+    $colleague = deskMember($workspace, $desk);
+    $outsider = deskMember($workspace, Desk::factory()->create());
+    $ticket = Ticket::factory()->for($desk)->create();
+    actAs($agent, $workspace);
+    $url = "http://acme.harbor.test/api/v1/tickets/{$ticket->id}/comments";
+    $headers = ['Accept' => 'application/json'];
+
+    $this->post($url, ['body' => 'Ping', 'is_internal' => true, 'mentioned_user_ids' => [$outsider->id]], $headers)
+        ->assertUnprocessable()->assertJsonValidationErrors('mentioned_user_ids.0');
+    $this->post($url, ['body' => 'Ping', 'mentioned_user_ids' => [$colleague->id]], $headers)
+        ->assertUnprocessable()->assertJsonValidationErrors('mentioned_user_ids');
+    $this->post($url, ['body' => 'Ping', 'is_internal' => true, 'mentioned_user_ids' => [$colleague->id]], $headers)
+        ->assertCreated();
+
+    expect($colleague->notifications()->pluck('type')->all())->toBe(['mentioned']);
 });
