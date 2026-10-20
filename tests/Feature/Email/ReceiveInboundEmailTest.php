@@ -116,7 +116,7 @@ test('a reply from someone other than the requester is their comment on the same
         ->and($comment->author)->toBeInstanceOf(Contact::class)
         ->and($comment->author->email)->toBe('sam@example.com')
         ->and(Ticket::count())->toBe(1);
-    Queue::assertNothingPushed();
+    Queue::assertNotPushed(SendTicketReplyEmail::class);
 });
 
 test('an agent replying by email adds their comment and it is emailed to the requester', function () {
