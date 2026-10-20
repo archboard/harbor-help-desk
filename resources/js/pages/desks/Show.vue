@@ -42,11 +42,14 @@ defineOptions({ layout: { title: 'Desk' } });
 
 const page = usePage();
 
-const form = useForm({ name: desk.name, slug: desk.slug });
+const form = useForm({
+  name: desk.name,
+  slug: desk.slug,
+} satisfies App.Data.Desks.UpdateDeskData);
 
 const fieldsForm = useForm({
   field_ids: (desk.custom_fields ?? []).map((field) => field.id),
-});
+} satisfies App.Data.Desks.SyncDeskCustomFieldsData);
 
 const addForm = useForm({
   user_id: null as string | null,
@@ -69,7 +72,7 @@ function addMember(): void {
   }
 
   addForm
-    .transform(({ role }) => ({ role }))
+    .transform(({ role }): App.Data.Desks.SetDeskMemberData => ({ role }))
     .submit(setMember({ desk: desk.id, user: addForm.user_id }), {
       preserveScroll: true,
       onSuccess: () => {

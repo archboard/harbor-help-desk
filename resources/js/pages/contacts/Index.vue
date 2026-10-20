@@ -40,7 +40,10 @@ watchDebounced(
 );
 
 const creating = ref(false);
-const form = useForm({ name: '', email: '' });
+const form = useForm({
+  name: '',
+  email: '',
+} satisfies App.Data.Contacts.CreateContactData);
 
 function openCreate(): void {
   form.reset();

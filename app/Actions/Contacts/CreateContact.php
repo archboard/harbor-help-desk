@@ -2,10 +2,10 @@
 
 namespace App\Actions\Contacts;
 
+use App\Data\Contacts\CreateContactData;
 use App\Models\Contact;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Validator;
 
 class CreateContact
 {
@@ -16,6 +16,6 @@ class CreateContact
     {
         Gate::forUser($actor)->authorize('create', Contact::class);
 
-        return Contact::create(Validator::make($input, ContactRules::for())->validate());
+        return Contact::create(CreateContactData::validateAndCreate($input)->filled());
     }
 }

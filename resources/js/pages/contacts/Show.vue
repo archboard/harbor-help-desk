@@ -16,7 +16,10 @@ const { contact } = defineProps<{
   tickets: Paginated<App.Data.Tickets.TicketData>;
 }>();
 
-const form = useForm({ name: contact.name, email: contact.email });
+const form = useForm({
+  name: contact.name,
+  email: contact.email,
+} satisfies App.Data.Contacts.UpdateContactData);
 </script>
 
 <template>

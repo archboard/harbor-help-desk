@@ -63,6 +63,8 @@ test('admins rename and delete fields', function () {
         ->assertOk()
         ->assertJsonPath('name', 'Order number')
         ->assertJsonPath('is_required', true);
+    $this->patchJson("http://acme.harbor.test/api/v1/custom-fields/{$field->id}", ['name' => '', 'type' => ''])
+        ->assertJsonValidationErrors(['name', 'type']);
     $this->deleteJson("http://acme.harbor.test/api/v1/custom-fields/{$field->id}")->assertNoContent();
 
     expect(CustomField::withoutGlobalScopes()->count())->toBe(0);

@@ -27,6 +27,7 @@ test('contacts are listed, created, shown and updated', function () {
     $this->patchJson("http://acme.harbor.test/api/v1/contacts/{$pat->id}", ['name' => 'Patricia'])
         ->assertOk()
         ->assertJsonPath('name', 'Patricia');
+    $this->patchJson("http://acme.harbor.test/api/v1/contacts/{$pat->id}", ['name' => ''])->assertJsonValidationErrors('name');
 
     $this->postJson('http://acme.harbor.test/api/v1/contacts', ['name' => 'Dup', 'email' => 'PAT@acme.test'])
         ->assertUnprocessable()

@@ -85,6 +85,8 @@ test('leads update their desk and agents cannot', function () {
     $this->patchJson("http://acme.harbor.test/api/v1/desks/{$this->acmeDesk->id}", ['name' => 'Renamed'])
         ->assertOk()
         ->assertJsonPath('name', 'Renamed');
+    $this->patchJson("http://acme.harbor.test/api/v1/desks/{$this->acmeDesk->id}", ['name' => '', 'slug' => ''])
+        ->assertJsonValidationErrors(['name', 'slug']);
 });
 
 test('desks are archived and restored, but never the last one', function () {

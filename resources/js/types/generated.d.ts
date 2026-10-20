@@ -17,8 +17,23 @@ declare namespace App {
         email: string;
         tickets_count?: number;
       };
+      export type CreateContactData = {
+        name: string;
+        email: string;
+      };
+      export type UpdateContactData = {
+        name?: string;
+        email?: string;
+      };
     }
     namespace CustomFields {
+      export type CreateCustomFieldData = {
+        name: string;
+        type: App.Enums.CustomFieldType;
+        options?: string[];
+        is_required?: boolean;
+        position?: number;
+      };
       export type CustomFieldData = {
         id: string;
         name: string;
@@ -29,8 +44,19 @@ declare namespace App {
         position: number;
         desks?: App.Data.Desks.DeskData[];
       };
+      export type UpdateCustomFieldData = {
+        name?: string;
+        type?: App.Enums.CustomFieldType;
+        options?: string[];
+        is_required?: boolean;
+        position?: number;
+      };
     }
     namespace Desks {
+      export type CreateDeskData = {
+        name: string;
+        slug: string;
+      };
       export type DeskData = {
         id: string;
         name: string;
@@ -44,6 +70,16 @@ declare namespace App {
         name: string;
         email: string;
         role: App.Enums.DeskRole | null;
+      };
+      export type SetDeskMemberData = {
+        role: App.Enums.DeskRole;
+      };
+      export type SyncDeskCustomFieldsData = {
+        field_ids: string[];
+      };
+      export type UpdateDeskData = {
+        name?: string;
+        slug?: string;
       };
     }
     namespace Mailboxes {

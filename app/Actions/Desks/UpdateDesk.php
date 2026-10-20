@@ -2,6 +2,7 @@
 
 namespace App\Actions\Desks;
 
+use App\Data\Desks\UpdateDeskData;
 use App\Models\Desk;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
@@ -16,12 +17,10 @@ class UpdateDesk
     {
         Gate::forUser($actor)->authorize('update', $desk);
 
-        $validated = Validator::make($input, [
-            'name' => ['sometimes', 'required', 'string', 'max:255'],
-            'slug' => ['sometimes', ...DeskSlugRules::for($desk->workspace, $desk)],
-        ])->validate();
+        $data = UpdateDeskData::validateAndCreate($input);
+        Validator::make($input, ['slug' => ['sometimes', DeskSlugRules::unique($desk->workspace, $desk)]])->validate();
 
-        $desk->update($validated);
+        $desk->update($data->filled());
 
         return $desk;
     }

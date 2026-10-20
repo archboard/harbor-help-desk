@@ -24,7 +24,10 @@ defineProps<{
 const creating = ref(false);
 const restoring = ref<string | null>(null);
 
-const form = useForm({ name: '', slug: '' });
+const form = useForm({
+  name: '',
+  slug: '',
+} satisfies App.Data.Desks.CreateDeskData);
 
 function create(): void {
   form
