@@ -28,17 +28,19 @@ import Thead from '@/components/tables/Thead.vue';
 import { formatDateTime, timeAgo } from '@/lib/dates';
 import { destroy, store, update } from '@/routes/email';
 import { redirect as connect } from '@/routes/mailboxes/oauth';
-import type { Mailbox, MailboxRoutingRule } from '@/types';
 
 defineOptions({ layout: { title: 'Email' } });
 
 const { desks } = defineProps<{
-  mailboxes: Mailbox[];
+  mailboxes: App.Data.Mailboxes.MailboxData[];
   desks: App.Data.Desks.DeskData[];
   oauthProviders: { google: boolean; microsoft: boolean };
 }>();
 
-const receivesBy: Record<Mailbox['receives_by'], string> = {
+const receivesBy: Record<
+  App.Data.Mailboxes.MailboxData['receives_by'],
+  string
+> = {
   webhook: 'Forwarded',
   push: 'Push',
   watch: 'Watching',
@@ -50,8 +52,8 @@ const encryptions = { ssl: 'SSL/TLS', starttls: 'STARTTLS', tls: 'TLS' };
 const { copy, copied } = useClipboard();
 
 /** The mailbox being edited, `'new'` while adding an IMAP/SMTP one, or null when closed. */
-const editing = ref<Mailbox | 'new' | null>(null);
-const deleting = ref<Mailbox | null>(null);
+const editing = ref<App.Data.Mailboxes.MailboxData | 'new' | null>(null);
+const deleting = ref<App.Data.Mailboxes.MailboxData | null>(null);
 const deleteLoading = ref(false);
 
 const form = useForm({
@@ -59,7 +61,7 @@ const form = useForm({
   address: '',
   default_desk_id: '',
   signature: '',
-  routing: [] as MailboxRoutingRule[],
+  routing: [] as App.Data.Mailboxes.MailboxRoutingRuleData[],
   settings: {
     imap: {
       host: '',
@@ -88,7 +90,7 @@ function deskName(id: string): string {
   return desks.find((desk) => desk.id === id)?.name ?? 'Archived desk';
 }
 
-function open(mailbox: Mailbox | 'new'): void {
+function open(mailbox: App.Data.Mailboxes.MailboxData | 'new'): void {
   form.clearErrors();
   form.reset();
 

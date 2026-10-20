@@ -43,16 +43,31 @@ test('admins connect, list, update and delete IMAP mailboxes without exposing pa
     $billing = $this->acme->execute(fn () => Desk::factory()->create());
     actAs($this->admin, $this->acme);
 
-    $id = $this->postJson('http://acme.harbor.test/api/v1/mailboxes', imapMailboxInput($this->desk, [
+    $response = $this->postJson('http://acme.harbor.test/api/v1/mailboxes', imapMailboxInput($this->desk, [
         'routing' => [['address' => 'billing@acme.com', 'desk_id' => $billing->id]],
-    ]))
-        ->assertCreated()
-        ->assertJsonPath('driver', 'imap')
-        ->assertJsonPath('settings.imap.host', '1.1.1.1')
-        ->assertJsonPath('routing.0.desk_id', $billing->id)
-        ->assertJsonMissingPath('settings.imap.password')
-        ->assertJsonMissingPath('settings.smtp.password')
-        ->json('id');
+    ]))->assertCreated();
+
+    $mailbox = $this->acme->execute(fn () => Mailbox::sole());
+    $response->assertExactJson([
+        'id' => $mailbox->id,
+        'driver' => 'imap',
+        'driver_label' => MailboxDriver::IMAP->label(),
+        'name' => 'Acme Support',
+        'address' => 'help@acme.com',
+        'inbound_address' => null,
+        'default_desk_id' => $this->desk->id,
+        'routing' => [['address' => 'billing@acme.com', 'desk_id' => $billing->id]],
+        'signature' => null,
+        'settings' => [
+            'imap' => ['host' => '1.1.1.1', 'port' => 993, 'encryption' => 'ssl', 'username' => 'help@acme.com'],
+            'smtp' => ['host' => '1.1.1.1', 'port' => 587, 'encryption' => 'starttls', 'username' => 'help@acme.com'],
+        ],
+        'receives_by' => 'poll',
+        'polled_at' => null,
+        'last_error' => null,
+        'created_at' => $mailbox->created_at->toIso8601String(),
+    ]);
+    $id = $mailbox->id;
 
     $this->getJson('http://acme.harbor.test/api/v1/mailboxes')->assertOk()->assertJsonPath('0.id', $id);
 
@@ -69,6 +84,20 @@ test('admins connect, list, update and delete IMAP mailboxes without exposing pa
 
     $this->deleteJson("http://acme.harbor.test/api/v1/mailboxes/{$id}")->assertNoContent();
     expect(Mailbox::withoutGlobalScopes()->count())->toBe(0);
+});
+
+test('OAuth mailboxes never expose their tokens or push secret', function () {
+    $google = $this->acme->execute(fn () => Mailbox::factory()->create([
+        'driver' => MailboxDriver::GOOGLE,
+        'settings' => ['access_token' => 'ya29.secret', 'refresh_token' => '1//secret'],
+        'push_secret' => 'push-secret',
+    ]));
+    actAs($this->admin, $this->acme);
+
+    $this->getJson("http://acme.harbor.test/api/v1/mailboxes/{$google->id}")
+        ->assertOk()
+        ->assertJsonMissingPath('settings')
+        ->assertDontSee('secret');
 });
 
 test('mailboxes are validated', function () {

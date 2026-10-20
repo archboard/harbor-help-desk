@@ -5,13 +5,13 @@ namespace App\Http\Controllers\Api\V1;
 use App\Actions\Mailboxes\CreateMailbox;
 use App\Actions\Mailboxes\DeleteMailbox;
 use App\Actions\Mailboxes\UpdateMailbox;
+use App\Data\Mailboxes\MailboxData;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\MailboxOAuthController;
-use App\Http\Resources\MailboxResource;
 use App\Models\Mailbox;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -20,28 +20,31 @@ use Illuminate\Support\Facades\Gate;
  */
 class MailboxController extends Controller
 {
-    public function index(): AnonymousResourceCollection
+    /**
+     * @return Collection<int, MailboxData>
+     */
+    public function index(): Collection
     {
         Gate::authorize('viewAny', Mailbox::class);
 
-        return MailboxResource::collection(Mailbox::query()->oldest('id')->get());
+        return MailboxData::collect(Mailbox::query()->oldest('id')->get());
     }
 
-    public function store(Request $request, CreateMailbox $createMailbox): MailboxResource
+    public function store(Request $request, CreateMailbox $createMailbox): MailboxData
     {
-        return new MailboxResource($createMailbox->handle($request->user(), $request->all()));
+        return MailboxData::from($createMailbox->handle($request->user(), $request->all()));
     }
 
-    public function show(Mailbox $mailbox): MailboxResource
+    public function show(Mailbox $mailbox): MailboxData
     {
         Gate::authorize('view', $mailbox);
 
-        return new MailboxResource($mailbox);
+        return MailboxData::from($mailbox);
     }
 
-    public function update(Request $request, Mailbox $mailbox, UpdateMailbox $updateMailbox): MailboxResource
+    public function update(Request $request, Mailbox $mailbox, UpdateMailbox $updateMailbox): MailboxData
     {
-        return new MailboxResource($updateMailbox->handle($request->user(), $mailbox, $request->all()));
+        return MailboxData::from($updateMailbox->handle($request->user(), $mailbox, $request->all()));
     }
 
     public function destroy(Request $request, Mailbox $mailbox, DeleteMailbox $deleteMailbox): Response

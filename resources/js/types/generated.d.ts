@@ -46,6 +46,38 @@ declare namespace App {
         role: App.Enums.DeskRole | null;
       };
     }
+    namespace Mailboxes {
+      export type MailboxData = {
+        id: string;
+        driver: App.Enums.MailboxDriver;
+        driver_label: string;
+        name: string;
+        address: string;
+        inbound_address: string | null;
+        default_desk_id: string;
+        routing: App.Data.Mailboxes.MailboxRoutingRuleData[];
+        signature: string | null;
+        settings?: {
+          imap: App.Data.Mailboxes.MailboxServerData;
+          smtp: App.Data.Mailboxes.MailboxServerData;
+        };
+        receives_by: 'webhook' | 'push' | 'watch' | 'poll';
+        polled_at: string | null;
+        last_error: string | null;
+        created_at: string | null;
+      };
+      export type MailboxRoutingRuleData = {
+        address: string;
+        desk_id: string;
+      };
+      export type MailboxServerData = {
+        host: string;
+        port: number;
+        encryption: 'ssl' | 'tls' | 'starttls';
+        username: string;
+        folder?: string;
+      };
+    }
     namespace SavedViews {
       export type SavedViewData = {
         id: string;

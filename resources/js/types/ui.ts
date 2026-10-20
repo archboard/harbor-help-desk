@@ -55,3 +55,11 @@ export type FieldProps = {
   required?: boolean;
   helpText?: string;
 };
+
+/** One page of a paginator, as `Inertia::scroll()` sends it. */
+export type Paginated<T> = {
+  data: T[];
+};
+
+/** A ticket's value for one custom field, by the field's type. */
+export type CustomFieldValue = string | number | boolean | string[] | null;

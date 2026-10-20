@@ -6,10 +6,10 @@ use App\Actions\Mailboxes\CreateMailbox;
 use App\Actions\Mailboxes\DeleteMailbox;
 use App\Actions\Mailboxes\UpdateMailbox;
 use App\Data\Desks\DeskData;
+use App\Data\Mailboxes\MailboxData;
 use App\Enums\MailboxDriver;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\MailboxOAuthController;
-use App\Http\Resources\MailboxResource;
 use App\Models\Desk;
 use App\Models\Mailbox;
 use Illuminate\Http\RedirectResponse;
@@ -29,7 +29,7 @@ class EmailController extends Controller
         Gate::authorize('viewAny', Mailbox::class);
 
         return Inertia::render('settings/Email', [
-            'mailboxes' => MailboxResource::collection(Mailbox::query()->oldest('id')->get()),
+            'mailboxes' => MailboxData::collect(Mailbox::query()->oldest('id')->get()),
             'desks' => DeskData::collect(Desk::query()->orderBy('name')->get()),
             'oauthProviders' => [
                 'google' => filled(config('services.google_mail.client_id')),
