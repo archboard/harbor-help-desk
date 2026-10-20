@@ -25,6 +25,7 @@ test('admins see the workspace page and rename the workspace', function () {
                 'name' => $this->workspace->name,
                 'subdomain' => $this->workspace->subdomain,
                 'is_admin' => true,
+                'settings' => ['mail_notification_mailbox_id' => null],
             ]));
 
     $this->actingAs($this->admin)

@@ -5,6 +5,8 @@ namespace App\Actions\Mailboxes;
 use App\Enums\MailboxDriver;
 use App\Models\Mailbox;
 use App\Models\User;
+use App\Models\Workspace;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 
@@ -23,6 +25,14 @@ class DeleteMailbox
             ]);
         }
 
-        $mailbox->delete();
+        DB::transaction(function () use ($mailbox): void {
+            $workspace = Workspace::query()->findOrFail($mailbox->workspace_id);
+
+            if ($workspace->settings->mailNotificationMailboxId === $mailbox->id) {
+                $workspace->update(['settings' => [...$workspace->settings->toArray(), 'mail_notification_mailbox_id' => null]]);
+            }
+
+            $mailbox->delete();
+        });
     }
 }

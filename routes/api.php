@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\V1\TicketEventController;
 use App\Http\Controllers\Api\V1\TicketReminderController;
 use App\Http\Controllers\Api\V1\TicketTagController;
 use App\Http\Controllers\Api\V1\WorkspaceController;
+use App\Http\Controllers\Api\V1\WorkspaceSettingsController;
 use App\Http\Middleware\EnsureTokenCanAccessWorkspace;
 use App\Http\Middleware\ResolveWorkspace;
 use Illuminate\Http\Request;
@@ -29,6 +30,7 @@ Route::prefix('v1')->name('api.v1.')
 
         Route::get('workspace', [WorkspaceController::class, 'show'])->name('workspace.show');
         Route::patch('workspace', [WorkspaceController::class, 'update'])->name('workspace.update');
+        Route::patch('workspace/settings', [WorkspaceSettingsController::class, 'update'])->name('workspace.settings.update');
 
         Route::apiResource('contacts', ContactController::class)->except('destroy');
 

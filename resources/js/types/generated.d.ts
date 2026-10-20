@@ -331,11 +331,18 @@ declare namespace App {
       export type UpdateWorkspaceData = {
         name: string;
       };
+      export type UpdateWorkspaceSettingsData = {
+        mail_notification_mailbox_id?: string | null;
+      };
       export type WorkspaceData = {
         id: string;
         name: string;
         subdomain: string;
         is_admin: boolean;
+        settings?: App.Data.Workspaces.WorkspaceSettings;
+      };
+      export type WorkspaceSettings = {
+        mail_notification_mailbox_id: string | null;
       };
     }
   }

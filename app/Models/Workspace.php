@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Actions\Mailboxes\CreateHostedMailbox;
+use App\Casts\WorkspaceSettingsCast;
+use App\Data\Workspaces\WorkspaceSettings;
 use Carbon\CarbonImmutable;
 use Database\Factories\WorkspaceFactory;
 use GrantHolle\Scru128Laravel\Concerns\HasScru128Ids;
@@ -18,11 +20,21 @@ use Spatie\Multitenancy\Contracts\IsTenant;
 use Spatie\Multitenancy\Models\Concerns\ImplementsTenant;
 
 /**
+ * ponytail: settings are flat prefixed keys (`mail_…`, `attachments_…`); split into nested Data
+ * groups when a group grows past a handful.
+ *
  * @property string $id
  * @property string $name
  * @property string $subdomain
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
+ * @property int $next_ticket_number
+ * @property WorkspaceSettings $settings
+ * @property-read Collection<int, Desk> $desks
+ * @property-read int|null $desks_count
+ * @property-read Collection<int, Mailbox> $mailboxes
+ * @property-read int|null $mailboxes_count
+ * @property-read WorkspaceUser|null $pivot
  * @property-read Collection<int, User> $users
  * @property-read int|null $users_count
  *
@@ -35,18 +47,10 @@ use Spatie\Multitenancy\Models\Concerns\ImplementsTenant;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereNextTicketNumber($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereSettings($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereSubdomain($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereUpdatedAt($value)
- *
- * @property-read Collection<int, Desk> $desks
- * @property-read int|null $desks_count
- * @property-read WorkspaceUser|null $pivot
- * @property int $next_ticket_number
- *
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereNextTicketNumber($value)
- *
- * @property-read Collection<int, Mailbox> $mailboxes
- * @property-read int|null $mailboxes_count
  *
  * @mixin \Eloquent
  */
@@ -71,6 +75,14 @@ class Workspace extends Model implements IsTenant
 
             app(CreateHostedMailbox::class)->handle($workspace, $desk);
         });
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return ['settings' => WorkspaceSettingsCast::class];
     }
 
     public function idPrefix(): string

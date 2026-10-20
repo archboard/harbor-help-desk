@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { Head, router, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { ArrowDown, ArrowUp, Copy, Check, X } from '@lucide/vue';
 import { useClipboard } from '@vueuse/core';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
+import CardAction from '@/components/CardAction.vue';
+import CardPadding from '@/components/CardPadding.vue';
+import CardWrapper from '@/components/CardWrapper.vue';
 import AppFieldset from '@/components/forms/AppFieldset.vue';
 import AppInput from '@/components/forms/AppInput.vue';
 import AppSelect from '@/components/forms/AppSelect.vue';
@@ -26,11 +29,12 @@ import Th from '@/components/tables/Th.vue';
 import Thead from '@/components/tables/Thead.vue';
 import { formatDateTime, timeAgo } from '@/lib/dates';
 import { destroy, store, update } from '@/routes/workspace/email';
+import { update as updateSettings } from '@/routes/workspace/settings';
 import { redirect as connect } from '@/routes/mailboxes/oauth';
 
 defineOptions({ layout: { title: 'Email' } });
 
-const { desks } = defineProps<{
+const { desks, mailboxes } = defineProps<{
   mailboxes: App.Data.Mailboxes.MailboxData[];
   desks: App.Data.Desks.DeskData[];
   oauthProviders: { google: boolean; microsoft: boolean };
@@ -45,6 +49,21 @@ const receivesBy: Record<
   watch: 'Watching',
   poll: 'Polling',
 };
+
+const page = usePage();
+
+const settingsForm = useForm({
+  mail_notification_mailbox_id:
+    page.props.workspace?.settings?.mail_notification_mailbox_id ?? '',
+});
+
+const notificationMailboxes = computed(() => [
+  { value: '', label: 'Default (oldest mailbox)' },
+  ...mailboxes.map((mailbox) => ({
+    value: mailbox.id,
+    label: `${mailbox.name} (${mailbox.address})`,
+  })),
+]);
 
 const encryptions = { ssl: 'SSL/TLS', starttls: 'STARTTLS', tls: 'TLS' };
 
@@ -254,6 +273,30 @@ function remove(close: () => void): void {
     <p v-else class="text-sm text-gray-500 dark:text-gray-400">
       There are no mailboxes yet.
     </p>
+
+    <CardWrapper>
+      <form
+        @submit.prevent="
+          settingsForm
+            .transform(({ mail_notification_mailbox_id }) => ({
+              mail_notification_mailbox_id: mail_notification_mailbox_id || null,
+            }))
+            .submit(updateSettings(), { preserveScroll: true })
+        "
+      >
+        <CardPadding>
+          <AppFieldset>
+            <SelectField
+              v-model="settingsForm.mail_notification_mailbox_id"
+              label="Send app email (notifications, sign-in links) from"
+              :options="notificationMailboxes"
+              :error="settingsForm.errors.mail_notification_mailbox_id"
+            />
+          </AppFieldset>
+        </CardPadding>
+        <CardAction :loading="settingsForm.processing" />
+      </form>
+    </CardWrapper>
   </div>
 
   <Modal

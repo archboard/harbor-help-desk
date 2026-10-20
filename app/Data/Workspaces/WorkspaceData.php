@@ -4,6 +4,7 @@ namespace App\Data\Workspaces;
 
 use App\Models\Workspace;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Lazy;
 
 class WorkspaceData extends Data
 {
@@ -12,15 +13,19 @@ class WorkspaceData extends Data
         public string $name,
         public string $subdomain,
         public bool $isAdmin,
+        public Lazy|WorkspaceSettings $settings,
     ) {}
 
     public static function fromModel(Workspace $workspace): self
     {
+        $user = request()->user();
+
         return new self(
             id: $workspace->id,
             name: $workspace->name,
             subdomain: $workspace->subdomain,
-            isAdmin: request()->user()?->can('update', $workspace) ?? false,
+            isAdmin: $user?->can('update', $workspace) ?? false,
+            settings: Lazy::when(fn (): bool => $user?->can('update', $workspace) ?? false, fn (): WorkspaceSettings => $workspace->settings),
         );
     }
 }
