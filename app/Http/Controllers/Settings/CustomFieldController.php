@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Settings;
 use App\Actions\CustomFields\CreateCustomField;
 use App\Actions\CustomFields\DeleteCustomField;
 use App\Actions\CustomFields\UpdateCustomField;
+use App\Data\CustomFields\CustomFieldData;
 use App\Enums\CustomFieldType;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\CustomFieldResource;
 use App\Models\CustomField;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,7 +25,7 @@ class CustomFieldController extends Controller
         Gate::authorize('create', CustomField::class);
 
         return Inertia::render('settings/CustomFields', [
-            'fields' => CustomFieldResource::collection(CustomField::query()->with('desks')->orderBy('position')->orderBy('id')->get()),
+            'fields' => CustomFieldData::collect(CustomField::query()->with('desks')->orderBy('position')->orderBy('id')->get()),
             'types' => CustomFieldType::options(),
         ]);
     }

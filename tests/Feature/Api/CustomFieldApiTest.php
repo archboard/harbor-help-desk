@@ -25,12 +25,17 @@ beforeEach(function () {
 test('admins define fields and every member can list them', function () {
     actAs($this->admin, $this->acme);
 
-    $this->postJson('http://acme.harbor.test/api/v1/custom-fields', ['name' => 'Size', 'type' => 'select', 'options' => ['S', 'L'], 'position' => 1])
-        ->assertCreated()
-        ->assertJsonPath('name', 'Size')
-        ->assertJsonPath('type', 'select')
-        ->assertJsonPath('options', ['S', 'L'])
-        ->assertJsonPath('is_required', false);
+    $response = $this->postJson('http://acme.harbor.test/api/v1/custom-fields', ['name' => 'Size', 'type' => 'select', 'options' => ['S', 'L'], 'position' => 1])
+        ->assertCreated();
+    $response->assertExactJson([
+        'id' => $response->json('id'),
+        'name' => 'Size',
+        'type' => 'select',
+        'type_label' => 'Select',
+        'options' => ['S', 'L'],
+        'is_required' => false,
+        'position' => 1,
+    ]);
     $this->postJson('http://acme.harbor.test/api/v1/custom-fields', ['name' => 'Order', 'type' => 'text', 'position' => 0])->assertCreated();
 
     actAs($this->agent, $this->acme);

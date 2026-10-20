@@ -9,7 +9,7 @@ import TicketTable from '@/components/tickets/TicketTable.vue';
 import type { TicketQuery } from '@/components/tickets/TicketFilters.vue';
 import { cleanQuery, sameQuery } from '@/lib/tickets';
 import { create, index } from '@/routes/tickets';
-import type { Desk, Paginated, SavedView, Tag, Ticket } from '@/types';
+import type { Paginated, SavedView, Tag, Ticket } from '@/types';
 
 defineOptions({ layout: { title: 'Tickets' } });
 
@@ -19,7 +19,7 @@ const { tickets, filters, leadDeskIds } = defineProps<{
   leadDeskIds: string[];
   filters: TicketQuery;
   savedViews: SavedView[];
-  desks: Desk[];
+  desks: App.Data.Desks.DeskData[];
   agents: App.Data.Users.UserData[];
   tags: Tag[];
   statuses: Record<string, string>;

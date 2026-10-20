@@ -10,6 +10,34 @@ declare namespace App {
         expires_at: string | null;
       };
     }
+    namespace CustomFields {
+      export type CustomFieldData = {
+        id: string;
+        name: string;
+        type: App.Enums.CustomFieldType;
+        type_label: string;
+        options: string[] | null;
+        is_required: boolean;
+        position: number;
+        desks?: App.Data.Desks.DeskData[];
+      };
+    }
+    namespace Desks {
+      export type DeskData = {
+        id: string;
+        name: string;
+        slug: string;
+        custom_fields?: App.Data.CustomFields.CustomFieldData[];
+        members?: App.Data.Desks.DeskMemberData[];
+        archived_at: string | null;
+      };
+      export type DeskMemberData = {
+        id: string;
+        name: string;
+        email: string;
+        role: App.Enums.DeskRole | null;
+      };
+    }
     namespace Users {
       export type CurrentUserData = {
         id: string;

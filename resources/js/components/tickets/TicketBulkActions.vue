@@ -7,7 +7,6 @@ import AppSelect from '@/components/forms/AppSelect.vue';
 import FieldError from '@/components/forms/FieldError.vue';
 import ConfirmationModal from '@/components/modals/ConfirmationModal.vue';
 import { bulk } from '@/routes/tickets';
-import type { Desk } from '@/types';
 
 /**
  * Applies one change to the selected tickets. Each change is sent on its own, all or
@@ -16,7 +15,7 @@ import type { Desk } from '@/types';
 const { ticketIds, agents } = defineProps<{
   ticketIds: string[];
   canDelete: boolean;
-  desks: Desk[];
+  desks: App.Data.Desks.DeskData[];
   agents: App.Data.Users.UserData[];
   statuses: Record<string, string>;
   priorities: Record<string, string>;

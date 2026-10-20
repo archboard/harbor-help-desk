@@ -12,13 +12,12 @@ import Th from '@/components/tables/Th.vue';
 import Thead from '@/components/tables/Thead.vue';
 import { formatDate } from '@/lib/dates';
 import { restore, show, store } from '@/routes/desks';
-import type { Desk } from '@/types';
 
 defineOptions({ layout: { title: 'Desks' } });
 
 defineProps<{
-  desks: Desk[];
-  archivedDesks: Desk[];
+  desks: App.Data.Desks.DeskData[];
+  archivedDesks: App.Data.Desks.DeskData[];
   canManageDesks: boolean;
 }>();
 
@@ -40,7 +39,7 @@ function openCreate(): void {
   creating.value = true;
 }
 
-function restoreDesk(desk: Desk): void {
+function restoreDesk(desk: App.Data.Desks.DeskData): void {
   router.post(
     restore(desk.id).url,
     {},

@@ -8,14 +8,13 @@ import {
   SelectField,
   TextareaField,
 } from '@/components/forms/fields';
-import type { CustomField } from '@/types';
 
 /**
  * The input for one custom field, picked by its type. Used on the ticket sidebar and the
  * new ticket form.
  */
 defineProps<{
-  field: CustomField;
+  field: App.Data.CustomFields.CustomFieldData;
   error?: string;
   disabled?: boolean;
 }>();

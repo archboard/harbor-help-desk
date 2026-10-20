@@ -29,7 +29,18 @@ test('admins list every desk and agents only their own', function () {
     $this->getJson('http://acme.harbor.test/api/v1/desks')
         ->assertOk()
         ->assertJsonCount(2, 'data')
-        ->assertJsonPath('data.0.id', $this->acmeDesk->id);
+        ->assertJsonPath('data.0', [
+            'id' => $this->acmeDesk->id,
+            'name' => $this->acmeDesk->name,
+            'slug' => $this->acmeDesk->slug,
+            'custom_fields' => [],
+            'archived_at' => null,
+        ])
+        ->assertExactJsonStructure([
+            'data' => ['*' => ['id', 'name', 'slug', 'custom_fields', 'archived_at']],
+            'links' => ['*' => ['url', 'label', 'page', 'active']],
+            'meta' => ['current_page', 'first_page_url', 'from', 'last_page', 'last_page_url', 'next_page_url', 'path', 'per_page', 'prev_page_url', 'to', 'total'],
+        ]);
 
     actAs($this->agent, $this->acme);
     $this->getJson('http://acme.harbor.test/api/v1/desks')->assertOk()->assertJsonCount(0, 'data');
@@ -101,8 +112,7 @@ test('members are added, listed with their role and removed', function () {
 
     $this->getJson($membersUrl)
         ->assertOk()
-        ->assertJsonPath('data.0.id', $this->agent->id)
-        ->assertJsonPath('data.0.role', 'lead');
+        ->assertJsonPath('data.0', ['id' => $this->agent->id, 'name' => $this->agent->name, 'email' => $this->agent->email, 'role' => 'lead']);
 
     $this->putJson("{$membersUrl}/{$this->agent->id}", ['role' => 'boss'])->assertJsonValidationErrors('role');
 

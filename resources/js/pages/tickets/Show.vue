@@ -25,8 +25,6 @@ import {
 import { destroy, index, restore, update } from '@/routes/tickets';
 import type {
   Attachment,
-  Desk,
-  DeskMember,
   Tag,
   Ticket,
   TicketComment,
@@ -42,8 +40,8 @@ const { ticket, comments, events, can } = defineProps<{
   events: TicketEvent[];
   attachments: Attachment[];
   reminders: TicketReminder[];
-  deskMembers: DeskMember[];
-  desks: Desk[];
+  deskMembers: App.Data.Desks.DeskMemberData[];
+  desks: App.Data.Desks.DeskData[];
   tags: Tag[];
   statuses: Record<string, string>;
   priorities: Record<string, string>;

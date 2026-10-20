@@ -8,13 +8,13 @@ use App\Actions\Tickets\DeleteTicket;
 use App\Actions\Tickets\RestoreTicket;
 use App\Actions\Tickets\SearchTickets;
 use App\Actions\Tickets\UpdateTicket;
+use App\Data\Desks\DeskData;
+use App\Data\Desks\DeskMemberData;
 use App\Data\Users\UserData;
 use App\Enums\TicketEventType;
 use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
 use App\Http\Resources\AttachmentResource;
-use App\Http\Resources\DeskMemberResource;
-use App\Http\Resources\DeskResource;
 use App\Http\Resources\SavedViewResource;
 use App\Http\Resources\TagResource;
 use App\Http\Resources\TicketCommentResource;
@@ -50,7 +50,7 @@ class TicketController extends Controller
             'tickets' => Inertia::scroll(TicketResource::collection($tickets)),
             'filters' => (object) $filters,
             'savedViews' => SavedViewResource::collection(SavedView::visibleTo($request->user())->with('user')->orderBy('name')->get()),
-            'desks' => DeskResource::collection($desks),
+            'desks' => DeskData::collect($desks),
             'leadDeskIds' => $desks->filter(fn (Desk $desk): bool => $request->user()->can('update', $desk))->values()->modelKeys(),
             'agents' => UserData::collect(Workspace::current()->users()->orderBy('name')->get()),
             'tags' => TagResource::collection(Tag::query()->orderBy('name')->get()),
@@ -65,7 +65,7 @@ class TicketController extends Controller
     public function create(Request $request): Response
     {
         return Inertia::render('tickets/Create', [
-            'desks' => DeskResource::collection(Desk::visibleTo($request->user())
+            'desks' => DeskData::collect(Desk::visibleTo($request->user())
                 ->with(['customFields', 'users' => fn ($query) => $query->orderBy('name')])
                 ->orderBy('name')
                 ->get()),
@@ -122,8 +122,8 @@ class TicketController extends Controller
                 ->whereNull('sent_at')
                 ->orderBy('remind_at')
                 ->get()),
-            'deskMembers' => DeskMemberResource::collection($ticket->desk->users()->orderBy('name')->get()),
-            'desks' => DeskResource::collection(Desk::visibleTo($request->user())->orderBy('name')->get()),
+            'deskMembers' => DeskMemberData::collect($ticket->desk->users()->orderBy('name')->get()),
+            'desks' => DeskData::collect(Desk::visibleTo($request->user())->orderBy('name')->get()),
             'tags' => TagResource::collection(Tag::query()->orderBy('name')->get()),
             'statuses' => TicketStatus::options(),
             'priorities' => TicketPriority::options(),

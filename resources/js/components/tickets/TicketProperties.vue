@@ -17,19 +17,12 @@ import { update as updateTicket } from '@/routes/tickets';
 import { update as moveTicket } from '@/routes/tickets/desk';
 import { update as syncAssignees } from '@/routes/tickets/assignees';
 import { update as syncTags } from '@/routes/tickets/tags';
-import type {
-  CustomField,
-  CustomFieldValue,
-  Desk,
-  DeskMember,
-  Tag,
-  Ticket,
-} from '@/types';
+import type { CustomFieldValue, Tag, Ticket } from '@/types';
 
 const { ticket } = defineProps<{
   ticket: Ticket;
-  desks: Desk[];
-  deskMembers: DeskMember[];
+  desks: App.Data.Desks.DeskData[];
+  deskMembers: App.Data.Desks.DeskMemberData[];
   tags: Tag[];
   editable: boolean;
 }>();
@@ -61,7 +54,9 @@ function save(
 const fields = ticket.desk?.custom_fields ?? [];
 
 /** Multi-selects need a list and checkboxes a boolean even before they're set. */
-function initialValue(field: CustomField): CustomFieldValue {
+function initialValue(
+  field: App.Data.CustomFields.CustomFieldData,
+): CustomFieldValue {
   const value = ticket.custom_fields[field.id];
 
   if (field.type === 'multi_select') {

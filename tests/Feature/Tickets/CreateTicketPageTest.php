@@ -23,9 +23,22 @@ test('the form lists the agent\'s desks with their fields and members', function
         ->get(route('tickets.create'))
         ->assertInertia(fn (Assert $page) => $page
             ->component('tickets/Create')
-            ->has('desks', 1)
-            ->where('desks.0.custom_fields.0.id', $field->id)
-            ->where('desks.0.members.0.id', $this->agent->id)
+            ->where('desks', [[
+                'id' => $this->desk->id,
+                'name' => $this->desk->name,
+                'slug' => $this->desk->slug,
+                'custom_fields' => [[
+                    'id' => $field->id,
+                    'name' => $field->name,
+                    'type' => $field->type->value,
+                    'type_label' => $field->type->label(),
+                    'options' => $field->options,
+                    'is_required' => $field->is_required,
+                    'position' => $field->position,
+                ]],
+                'members' => [['id' => $this->agent->id, 'name' => $this->agent->name, 'email' => $this->agent->email, 'role' => 'agent']],
+                'archived_at' => null,
+            ]])
             ->where('statuses.open', 'Open'));
 });
 

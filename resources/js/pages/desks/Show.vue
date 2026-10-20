@@ -28,14 +28,13 @@ import {
   destroy as removeMember,
   update as setMember,
 } from '@/routes/desks/members';
-import type { CustomField, Desk, DeskMember, DeskRole } from '@/types';
 
 const { desk } = defineProps<{
-  desk: Desk;
-  members: DeskMember[];
+  desk: App.Data.Desks.DeskData;
+  members: App.Data.Desks.DeskMemberData[];
   candidates: App.Data.Users.UserData[];
-  roles: Record<DeskRole, string>;
-  customFields: CustomField[];
+  roles: Record<App.Enums.DeskRole, string>;
+  customFields: App.Data.CustomFields.CustomFieldData[];
   can: { update: boolean; manageMembers: boolean; archive: boolean };
 }>();
 
@@ -51,13 +50,13 @@ const fieldsForm = useForm({
 
 const addForm = useForm({
   user_id: null as string | null,
-  role: 'agent' as DeskRole,
+  role: 'agent' as App.Enums.DeskRole,
 });
 
 /** Bumped after adding someone, to clear the combobox's selection. */
 const addFormKey = ref(0);
 
-const removing = ref<DeskMember | null>(null);
+const removing = ref<App.Data.Desks.DeskMemberData | null>(null);
 const removeLoading = ref(false);
 const archiving = ref(false);
 const archiveLoading = ref(false);
@@ -80,7 +79,10 @@ function addMember(): void {
     });
 }
 
-function changeRole(member: DeskMember, role: DeskRole): void {
+function changeRole(
+  member: App.Data.Desks.DeskMemberData,
+  role: App.Enums.DeskRole,
+): void {
   router.put(
     setMember({ desk: desk.id, user: member.id }).url,
     { role },
@@ -172,7 +174,9 @@ function archive(close: () => void): void {
                 hide-null
                 :aria-label="`Role for ${member.name}`"
                 class="max-w-40"
-                @update:model-value="changeRole(member, $event as DeskRole)"
+                @update:model-value="
+                  changeRole(member, $event as App.Enums.DeskRole)
+                "
               />
               <template v-else>
                 {{ member.role ? roles[member.role] : '—' }}

@@ -6,43 +6,47 @@ use App\Actions\Desks\ArchiveDesk;
 use App\Actions\Desks\CreateDesk;
 use App\Actions\Desks\RestoreDesk;
 use App\Actions\Desks\UpdateDesk;
+use App\Data\Desks\DeskData;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\DeskResource;
 use App\Models\Desk;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
+use Spatie\LaravelData\PaginatedDataCollection;
 
 class DeskController extends Controller
 {
     /**
      * The desks the user can see in the current workspace.
+     *
+     * @return PaginatedDataCollection<int, DeskData>
      */
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request): PaginatedDataCollection
     {
         Gate::authorize('viewAny', Desk::class);
 
-        return DeskResource::collection(
+        return DeskData::collect(
             Desk::visibleTo($request->user())->with('customFields')->orderBy('name')->paginate(),
+            PaginatedDataCollection::class,
         );
     }
 
-    public function store(Request $request, CreateDesk $createDesk): DeskResource
+    public function store(Request $request, CreateDesk $createDesk): DeskData
     {
-        return new DeskResource($createDesk->handle($request->user(), $request->all()));
+        return DeskData::from($createDesk->handle($request->user(), $request->all()));
     }
 
-    public function show(Desk $desk): DeskResource
+    public function show(Desk $desk): DeskData
     {
         Gate::authorize('view', $desk);
 
-        return new DeskResource($desk->load('customFields'));
+        return DeskData::from($desk->load('customFields'));
     }
 
-    public function update(Request $request, Desk $desk, UpdateDesk $updateDesk): DeskResource
+    public function update(Request $request, Desk $desk, UpdateDesk $updateDesk): DeskData
     {
-        return new DeskResource($updateDesk->handle($request->user(), $desk, $request->all()));
+        return DeskData::from($updateDesk->handle($request->user(), $desk, $request->all()));
     }
 
     /**
@@ -55,8 +59,8 @@ class DeskController extends Controller
         return response()->noContent();
     }
 
-    public function restore(Request $request, Desk $desk, RestoreDesk $restoreDesk): DeskResource
+    public function restore(Request $request, Desk $desk, RestoreDesk $restoreDesk): JsonResponse
     {
-        return new DeskResource($restoreDesk->handle($request->user(), $desk));
+        return response()->json(DeskData::from($restoreDesk->handle($request->user(), $desk)));
     }
 }

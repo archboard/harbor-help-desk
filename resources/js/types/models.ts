@@ -1,39 +1,3 @@
-export type Desk = {
-  id: string;
-  name: string;
-  slug: string;
-  archived_at: string | null;
-  custom_fields?: CustomField[];
-  members?: DeskMember[];
-};
-
-export type CustomFieldType =
-  | 'text'
-  | 'textarea'
-  | 'number'
-  | 'decimal'
-  | 'date'
-  | 'checkbox'
-  | 'select'
-  | 'multi_select';
-
-export type CustomField = {
-  id: string;
-  name: string;
-  type: CustomFieldType;
-  type_label: string;
-  options: string[] | null;
-  is_required: boolean;
-  position: number;
-  desks?: Desk[];
-};
-
-export type DeskRole = 'lead' | 'agent';
-
-export type DeskMember = App.Data.Users.UserData & {
-  role: DeskRole | null;
-};
-
 export type Contact = {
   id: string;
   name: string;
@@ -63,7 +27,7 @@ export type Ticket = {
   priority: TicketPriority;
   priority_label: string;
   desk_id: string;
-  desk?: Desk;
+  desk?: App.Data.Desks.DeskData;
   due_at: string | null;
   custom_fields: Record<string, CustomFieldValue>;
   requester?: Contact;

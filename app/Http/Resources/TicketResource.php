@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Data\Desks\DeskData;
 use App\Models\Ticket;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -25,7 +26,7 @@ class TicketResource extends JsonResource
             'priority' => $this->priority->value,
             'priority_label' => $this->priority->label(),
             'desk_id' => $this->desk_id,
-            'desk' => new DeskResource($this->whenLoaded('desk')),
+            'desk' => $this->whenLoaded('desk', fn (): DeskData => DeskData::from($this->desk)),
             'due_at' => $this->due_at?->toIso8601String(),
             'custom_fields' => (object) $this->custom_fields,
             'requester' => new ContactResource($this->whenLoaded('requester')),

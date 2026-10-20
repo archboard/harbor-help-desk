@@ -28,13 +28,13 @@ import Thead from '@/components/tables/Thead.vue';
 import { formatDateTime, timeAgo } from '@/lib/dates';
 import { destroy, store, update } from '@/routes/email';
 import { redirect as connect } from '@/routes/mailboxes/oauth';
-import type { Desk, Mailbox, MailboxRoutingRule } from '@/types';
+import type { Mailbox, MailboxRoutingRule } from '@/types';
 
 defineOptions({ layout: { title: 'Email' } });
 
 const { desks } = defineProps<{
   mailboxes: Mailbox[];
-  desks: Desk[];
+  desks: App.Data.Desks.DeskData[];
   oauthProviders: { google: boolean; microsoft: boolean };
 }>();
 

@@ -20,23 +20,22 @@ import Td from '@/components/tables/Td.vue';
 import Th from '@/components/tables/Th.vue';
 import Thead from '@/components/tables/Thead.vue';
 import { destroy, store, update } from '@/routes/custom-fields';
-import type { CustomField, CustomFieldType } from '@/types';
 
 defineOptions({ layout: { title: 'Custom fields' } });
 
 const { fields } = defineProps<{
-  fields: CustomField[];
-  types: Record<CustomFieldType, string>;
+  fields: App.Data.CustomFields.CustomFieldData[];
+  types: Record<App.Enums.CustomFieldType, string>;
 }>();
 
 /** The field being edited, `'new'` while creating one, or null when the modal is closed. */
-const editing = ref<CustomField | 'new' | null>(null);
-const deleting = ref<CustomField | null>(null);
+const editing = ref<App.Data.CustomFields.CustomFieldData | 'new' | null>(null);
+const deleting = ref<App.Data.CustomFields.CustomFieldData | null>(null);
 const deleteLoading = ref(false);
 
 const form = useForm({
   name: '',
-  type: 'text' as CustomFieldType,
+  type: 'text' as App.Enums.CustomFieldType,
   options: '',
   is_required: false,
   position: 0 as number | null,
@@ -55,7 +54,7 @@ const optionsError = computed(
     )?.[1],
 );
 
-function open(field: CustomField | 'new'): void {
+function open(field: App.Data.CustomFields.CustomFieldData | 'new'): void {
   form.clearErrors();
   form.defaults({
     name: field === 'new' ? '' : field.name,
