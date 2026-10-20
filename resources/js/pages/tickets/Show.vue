@@ -22,6 +22,7 @@ import {
   timeAgo,
   toLocalDateTime,
 } from '@/lib/dates';
+import { useLiveReload } from '@/composables/useLiveReload';
 import { destroy, index, restore, update } from '@/routes/tickets';
 
 defineOptions({ layout: { title: '' } });
@@ -39,6 +40,11 @@ const { ticket, comments, events, can } = defineProps<{
   priorities: Record<string, string>;
   can: { update: boolean; delete: boolean; restore: boolean };
 }>();
+
+useLiveReload({
+  channels: [`tickets.${ticket.id}`],
+  only: ['ticket', 'comments', 'events', 'tags', 'attachments'],
+});
 
 const isDeleted = computed(() => ticket.deleted_at !== null);
 const canEdit = computed(() => !isDeleted.value);

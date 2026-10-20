@@ -7,13 +7,14 @@ import TicketBulkActions from '@/components/tickets/TicketBulkActions.vue';
 import TicketFilters from '@/components/tickets/TicketFilters.vue';
 import TicketTable from '@/components/tickets/TicketTable.vue';
 import type { TicketQuery } from '@/components/tickets/TicketFilters.vue';
+import { useLiveReload } from '@/composables/useLiveReload';
 import { cleanQuery, sameQuery } from '@/lib/tickets';
 import { create, index } from '@/routes/tickets';
 import type { Paginated } from '@/types';
 
 defineOptions({ layout: { title: 'Tickets' } });
 
-const { tickets, filters, leadDeskIds } = defineProps<{
+const { tickets, filters, leadDeskIds, desks } = defineProps<{
   tickets: Paginated<App.Data.Tickets.TicketData>;
   /** Desks whose tickets the user may delete. */
   leadDeskIds: string[];
@@ -25,6 +26,12 @@ const { tickets, filters, leadDeskIds } = defineProps<{
   statuses: Record<string, string>;
   priorities: Record<string, string>;
 }>();
+
+useLiveReload({
+  channels: desks.map((desk) => `desks.${desk.id}`),
+  only: ['tickets'],
+  reset: ['tickets'],
+});
 
 const quickFilters: Array<{ label: string; query: TicketQuery }> = [
   { label: 'All', query: {} },

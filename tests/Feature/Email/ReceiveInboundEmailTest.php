@@ -5,6 +5,7 @@ use App\Enums\DeskRole;
 use App\Enums\TicketEventType;
 use App\Enums\TicketStatus;
 use App\Enums\WorkspaceRole;
+use App\Events\TicketChanged;
 use App\Jobs\SendTicketReplyEmail;
 use App\Mail\Inbound\InboundEmail;
 use App\Models\Contact;
@@ -14,6 +15,7 @@ use App\Models\Ticket;
 use App\Models\TicketComment;
 use App\Models\User;
 use App\Models\Workspace;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Tests\Concerns\InWorkspace;
@@ -105,6 +107,7 @@ test('replies thread by the ticket number in the subject', function () {
 
 test('a reply from someone other than the requester is their comment on the same ticket', function () {
     Queue::fake();
+    Event::fake([TicketChanged::class]);
     $ticket = receive(inboundEmail())->ticket;
 
     $comment = receive(inboundEmail(['subject' => "Re: Printer jam [#{$ticket->number}]", 'fromEmail' => 'sam@example.com', 'fromName' => 'Sam']));

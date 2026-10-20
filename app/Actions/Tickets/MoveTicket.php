@@ -24,7 +24,12 @@ class MoveTicket
         }
 
         DB::transaction(function () use ($actor, $ticket, $desk): void {
-            $ticket->recordEvent(TicketEventType::DESK_CHANGED, $actor, ['from' => $ticket->desk->name, 'to' => $desk->name]);
+            $ticket->recordEvent(TicketEventType::DESK_CHANGED, $actor, [
+                'from' => $ticket->desk->name,
+                'to' => $desk->name,
+                'from_id' => $ticket->desk_id,
+                'to_id' => $desk->getKey(),
+            ]);
             $ticket->desk()->associate($desk)->save();
         });
 
