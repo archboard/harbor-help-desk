@@ -147,6 +147,19 @@ class Workspace extends Model implements IsTenant
     }
 
     /**
+     * The mailbox app email (notifications, sign-in links) is sent from: the one in the settings,
+     * else the oldest. A chosen mailbox that no longer exists counts as unset.
+     */
+    public function notificationMailbox(): ?Mailbox
+    {
+        return $this->execute(function (): ?Mailbox {
+            $id = $this->settings->mailNotificationMailboxId;
+
+            return ($id ? Mailbox::query()->find($id) : null) ?? Mailbox::query()->oldest('id')->first();
+        });
+    }
+
+    /**
      * @return HasMany<Mailbox, $this>
      */
     public function mailboxes(): HasMany

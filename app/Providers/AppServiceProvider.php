@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Http\Controllers\OAuth\ApproveAuthorizationController;
 use App\Http\Controllers\OAuth\AuthorizationController;
+use App\Mail\WorkspaceTransport;
 use App\Models\Attachment;
 use App\Models\Contact;
 use App\Models\CustomField;
@@ -24,9 +25,11 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
+use InvalidArgumentException;
 use Laravel\Passkeys\Passkeys;
 use Laravel\Passport\Bridge\ScopeRepository;
 use Laravel\Passport\Http\Controllers\ApproveAuthorizationController as PassportApproveAuthorizationController;
@@ -65,6 +68,15 @@ class AppServiceProvider extends ServiceProvider
     protected function configureDefaults(): void
     {
         Date::use(CarbonImmutable::class);
+
+        Mail::extend('workspace', function (): WorkspaceTransport {
+            // The platform mailer is the transport's fallback, so pointing it back here would recurse.
+            if (config('harbor.mail.platform_mailer') === 'workspace') {
+                throw new InvalidArgumentException('HARBOR_PLATFORM_MAILER cannot be "workspace". Use a real mailer such as smtp, postmark or log.');
+            }
+
+            return new WorkspaceTransport;
+        });
 
         Passkeys::usePasskeyModel(Passkey::class);
 

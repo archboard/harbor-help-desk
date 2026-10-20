@@ -20,6 +20,7 @@ use Illuminate\Mail\Mailables\Address;
 use Illuminate\Support\Facades\Mail;
 use Symfony\Component\Mailer\Transport\Smtp\Auth\XOAuth2Authenticator;
 use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
+use Symfony\Component\Mailer\Transport\TransportInterface;
 
 /**
  * An email inbox that belongs to the workspace. Mail it receives goes to the desk picked by
@@ -122,13 +123,30 @@ class Mailbox extends Model
     }
 
     /**
-     * The mailer that sends as this mailbox: the app's default mailer (Postmark in the cloud)
-     * for the hosted mailbox, otherwise the workspace's own SMTP server (XOAUTH2 for OAuth ones).
+     * The mailer that sends as this mailbox.
      */
     public function mailer(): Mailer
     {
+        return Mail::mailer($this->mailerName());
+    }
+
+    /**
+     * The transport that sends as this mailbox: the platform mailer's (Postmark in the cloud)
+     * for the hosted mailbox, otherwise the workspace's own SMTP server (XOAUTH2 for OAuth ones).
+     */
+    public function transport(): TransportInterface
+    {
+        return Mail::mailer($this->mailerName())->getSymfonyTransport();
+    }
+
+    /**
+     * The name of the configured mailer that sends as this mailbox. The hosted mailbox uses the
+     * platform mailer explicitly, never the default `workspace` one, which would loop back here.
+     */
+    private function mailerName(): string
+    {
         if ($this->driver === MailboxDriver::HOSTED) {
-            return Mail::mailer();
+            return config('harbor.mail.platform_mailer');
         }
 
         $name = "mailbox-{$this->id}";
@@ -155,7 +173,7 @@ class Mailbox extends Model
             }
         }
 
-        return Mail::mailer($name);
+        return $name;
     }
 
     /**

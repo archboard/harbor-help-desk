@@ -26,7 +26,8 @@
         <env name="DB_CONNECTION" value="pgsql"/>
         <env name="DB_DATABASE" value="harbor_help_testing"/>
         <env name="DB_URL" value=""/>
-        <env name="MAIL_MAILER" value="array"/>
+        <env name="MAIL_MAILER" value="workspace"/>
+        <env name="HARBOR_PLATFORM_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>

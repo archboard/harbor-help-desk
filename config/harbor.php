@@ -64,6 +64,9 @@ return [
     'mail' => [
         'inbound_domain' => env('HARBOR_INBOUND_DOMAIN'),
         'postmark_webhook_secret' => env('HARBOR_POSTMARK_WEBHOOK_SECRET'),
+        // The mailer for app email that has no workspace mailbox to go through (outside a
+        // workspace, or a workspace with no mailbox), and for the hosted mailbox's replies.
+        'platform_mailer' => env('HARBOR_PLATFORM_MAILER', 'log'),
         'new_tickets_per_sender_per_hour' => (int) env('HARBOR_NEW_TICKETS_PER_SENDER_PER_HOUR', 20),
 
         // Lets Gmail and Microsoft Graph push new-mail notifications to Harbor: the token on the

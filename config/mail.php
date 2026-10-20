@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'log'),
+    'default' => env('MAIL_MAILER', 'workspace'),
 
     /*
     |--------------------------------------------------------------------------
@@ -36,6 +36,11 @@ return [
     */
 
     'mailers' => [
+
+        // Sends through the current workspace's notification mailbox; see WorkspaceTransport.
+        'workspace' => [
+            'transport' => 'workspace',
+        ],
 
         'smtp' => [
             'transport' => 'smtp',
