@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\TicketEventType;
 use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
+use App\Events\TicketActivityRecorded;
 use App\Models\Concerns\BelongsToWorkspace;
 use Carbon\CarbonImmutable;
 use Database\Factories\TicketFactory;
@@ -215,6 +216,8 @@ class Ticket extends Model
         $event = new TicketEvent(['type' => $type, 'properties' => $properties]);
         $event->actor()->associate($actor);
         $event->ticket()->associate($this)->saveOrFail();
+
+        TicketActivityRecorded::dispatch($event);
 
         return $event;
     }
