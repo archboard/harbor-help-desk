@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\CustomFieldController;
 use App\Http\Controllers\Api\V1\DeskController;
 use App\Http\Controllers\Api\V1\DeskCustomFieldController;
 use App\Http\Controllers\Api\V1\DeskMemberController;
+use App\Http\Controllers\Api\V1\MacroController;
 use App\Http\Controllers\Api\V1\MailboxController;
 use App\Http\Controllers\Api\V1\MarkNotificationsReadController;
 use App\Http\Controllers\Api\V1\NotificationController;
@@ -57,6 +58,7 @@ Route::prefix('v1')->name('api.v1.')
         Route::put('desks/{desk}/custom-fields', [DeskCustomFieldController::class, 'update'])->name('desks.custom-fields.update');
 
         Route::apiResource('saved-views', SavedViewController::class);
+        Route::apiResource('macros', MacroController::class);
 
         Route::apiResource('mailboxes', MailboxController::class);
 

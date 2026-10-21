@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Settings\ApiTokenController;
+use App\Http\Controllers\Settings\MacroController;
 use App\Http\Controllers\Settings\NotificationPreferenceController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
@@ -34,6 +35,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('settings/notifications', [NotificationPreferenceController::class, 'edit'])->name('notification-preferences.edit');
     Route::put('settings/notifications', [NotificationPreferenceController::class, 'update'])->name('notification-preferences.update');
+
+    Route::resource('settings/macros', MacroController::class)->only(['index', 'store', 'update', 'destroy']);
 
     Route::inertia('settings/appearance', 'settings/Appearance')->name('appearance.edit');
 });

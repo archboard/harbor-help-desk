@@ -52,6 +52,7 @@ These apply to every agent, including subagents executing a plan step:
 | `rmd_` | `TicketReminder` |
 | `svw_` | `SavedView`      |
 | `mbx_` | `Mailbox`        |
+| `mac_` | `Macro`          |
 
 ## Tenancy
 

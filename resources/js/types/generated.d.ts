@@ -98,6 +98,41 @@ declare namespace App {
         assignment_strategy?: App.Enums.AssignmentStrategy;
       };
     }
+    namespace Macros {
+      export type CreateMacroData = {
+        name: string;
+        scope: App.Enums.MacroScope;
+        desk_id?: string;
+        body?: string | null;
+        body_is_internal?: boolean;
+        actions?: Record<string, any>;
+      };
+      export type MacroActionsData = {
+        status: App.Enums.TicketStatus | null;
+        priority: App.Enums.TicketPriority | null;
+        add_tags: string[];
+        remove_tags: string[];
+        assign_to_me: boolean;
+      };
+      export type MacroData = {
+        id: string;
+        name: string;
+        scope: App.Enums.MacroScope;
+        user_id: string | null;
+        desk_id: string | null;
+        body: string | null;
+        body_is_internal: boolean;
+        actions: App.Data.Macros.MacroActionsData;
+        created_at: string | null;
+        updated_at: string | null;
+      };
+      export type UpdateMacroData = {
+        name?: string;
+        body?: string | null;
+        body_is_internal?: boolean;
+        actions?: Record<string, any>;
+      };
+    }
     namespace Mailboxes {
       export type CreateMailboxData = {
         driver: App.Enums.MailboxDriver;
@@ -402,6 +437,7 @@ declare namespace App {
       | 'select'
       | 'multi_select';
     export type DeskRole = 'lead' | 'agent';
+    export type MacroScope = 'personal' | 'workspace' | 'desk';
     export type MailboxDriver = 'hosted' | 'imap' | 'google' | 'microsoft';
     export type NotificationChannel = 'database' | 'mail';
     export type NotificationType =
