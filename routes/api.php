@@ -3,6 +3,7 @@
 use App\Data\Users\UserData;
 use App\Http\Controllers\Api\V1\ApplyMacroController;
 use App\Http\Controllers\Api\V1\AttachmentController;
+use App\Http\Controllers\Api\V1\BusinessScheduleController;
 use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\CustomFieldController;
 use App\Http\Controllers\Api\V1\DeskController;
@@ -60,6 +61,7 @@ Route::prefix('v1')->name('api.v1.')
 
         Route::apiResource('saved-views', SavedViewController::class);
         Route::apiResource('macros', MacroController::class);
+        Route::apiResource('business-schedules', BusinessScheduleController::class);
 
         Route::apiResource('mailboxes', MailboxController::class);
 

@@ -38,6 +38,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder<static>|Macro query()
  * @method static Builder<static>|Macro usableOn(\App\Models\Ticket $ticket)
  * @method static Builder<static>|Macro visibleTo(\App\Models\User $user)
+ * @method static Builder<static>|Macro whereActions($value)
+ * @method static Builder<static>|Macro whereBody($value)
+ * @method static Builder<static>|Macro whereBodyIsInternal($value)
+ * @method static Builder<static>|Macro whereCreatedAt($value)
+ * @method static Builder<static>|Macro whereCreatedBy($value)
+ * @method static Builder<static>|Macro whereDeskId($value)
+ * @method static Builder<static>|Macro whereId($value)
+ * @method static Builder<static>|Macro whereName($value)
+ * @method static Builder<static>|Macro whereUpdatedAt($value)
+ * @method static Builder<static>|Macro whereUserId($value)
+ * @method static Builder<static>|Macro whereWorkspaceId($value)
  *
  * @mixin \Eloquent
  */

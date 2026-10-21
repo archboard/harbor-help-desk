@@ -19,6 +19,29 @@ declare namespace App {
         password: string;
       };
     }
+    namespace BusinessSchedules {
+      export type BusinessScheduleData = {
+        id: string;
+        name: string;
+        timezone: string;
+        weekly_hours: Record<string, string[][]>;
+        holidays: string[];
+        created_at: string | null;
+        updated_at: string | null;
+      };
+      export type CreateBusinessScheduleData = {
+        name: string;
+        timezone: string;
+        weekly_hours: Record<string, string[][]>;
+        holidays?: string[];
+      };
+      export type UpdateBusinessScheduleData = {
+        name?: string;
+        timezone?: string;
+        weekly_hours?: Record<string, string[][]>;
+        holidays?: string[];
+      };
+    }
     namespace Contacts {
       export type ContactData = {
         id: string;
