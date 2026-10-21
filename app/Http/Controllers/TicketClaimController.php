@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Tickets\ClaimNextTicket;
+use App\Http\Flash;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 
 class TicketClaimController extends Controller
 {
@@ -14,7 +14,7 @@ class TicketClaimController extends Controller
         $ticket = $claimNextTicket->handle($request->user());
 
         if ($ticket === null) {
-            Inertia::flash('toast', ['type' => 'info', 'message' => __('Nothing waiting.')]);
+            Flash::info(__('Nothing waiting.'));
 
             return back();
         }

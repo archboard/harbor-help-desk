@@ -6,6 +6,7 @@ use App\Actions\Notifications\UpdateNotificationPreferences;
 use App\Data\Notifications\NotificationPreferenceData;
 use App\Enums\NotificationChannel;
 use App\Http\Controllers\Controller;
+use App\Http\Flash;
 use App\Models\Workspace;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,7 +33,7 @@ class NotificationPreferenceController extends Controller
     {
         $updateNotificationPreferences->handle($request->user(), $request->all());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Notification preferences saved.')]);
+        Flash::success(__('Notification preferences saved.'));
 
         return back();
     }

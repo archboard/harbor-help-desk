@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Tickets\SyncTicketTags;
+use App\Http\Flash;
 use App\Models\Ticket;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 
 class TicketTagController extends Controller
 {
@@ -17,7 +17,7 @@ class TicketTagController extends Controller
     {
         $syncTicketTags->handle($request->user(), $ticket, $request->all());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Tags updated.')]);
+        Flash::success(__('Tags updated.'));
 
         return back();
     }

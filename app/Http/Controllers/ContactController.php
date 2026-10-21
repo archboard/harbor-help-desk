@@ -8,6 +8,7 @@ use App\Actions\Contacts\UpdateContact;
 use App\Actions\Tickets\SearchTickets;
 use App\Data\Contacts\ContactData;
 use App\Data\Tickets\TicketData;
+use App\Http\Flash;
 use App\Models\Contact;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -42,7 +43,7 @@ class ContactController extends Controller
     {
         $contact = $createContact->handle($request->user(), $request->all());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Contact created.')]);
+        Flash::success(__('Contact created.'));
 
         return to_route('contacts.show', $contact);
     }
@@ -68,7 +69,7 @@ class ContactController extends Controller
     {
         $updateContact->handle($request->user(), $contact, $request->all());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Contact updated.')]);
+        Flash::success(__('Contact updated.'));
 
         return back();
     }

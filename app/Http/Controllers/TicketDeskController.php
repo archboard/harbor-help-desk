@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Tickets\MoveTicket;
+use App\Http\Flash;
 use App\Models\Desk;
 use App\Models\Ticket;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 
 class TicketDeskController extends Controller
 {
@@ -20,7 +20,7 @@ class TicketDeskController extends Controller
 
         $moveTicket->handle($request->user(), $ticket, Desk::findOrFail($request->string('desk_id')->value()));
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Ticket moved.')]);
+        Flash::success(__('Ticket moved.'));
 
         return back();
     }

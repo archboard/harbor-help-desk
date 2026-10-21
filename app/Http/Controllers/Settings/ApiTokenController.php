@@ -7,6 +7,7 @@ use App\Actions\ApiTokens\RevokePersonalAccessToken;
 use App\Data\ApiTokens\ApiTokenData;
 use App\Data\Workspaces\WorkspaceData;
 use App\Http\Controllers\Controller;
+use App\Http\Flash;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -52,7 +53,7 @@ class ApiTokenController extends Controller
     {
         $revokeToken->handle($request->user(), $tokenId);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Token revoked.')]);
+        Flash::success(__('Token revoked.'));
 
         return back();
     }

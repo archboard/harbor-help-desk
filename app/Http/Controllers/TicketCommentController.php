@@ -5,11 +5,11 @@ namespace App\Http\Controllers;
 use App\Actions\Tickets\AddTicketComment;
 use App\Actions\Tickets\DeleteTicketComment;
 use App\Actions\Tickets\UpdateTicketComment;
+use App\Http\Flash;
 use App\Models\Ticket;
 use App\Models\TicketComment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 
 class TicketCommentController extends Controller
 {
@@ -20,7 +20,7 @@ class TicketCommentController extends Controller
     {
         $comment = $addTicketComment->handle($request->user(), $ticket, $request->all());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => $comment->is_internal ? __('Note added.') : __('Reply sent.')]);
+        Flash::success($comment->is_internal ? __('Note added.') : __('Reply sent.'));
 
         return back();
     }
@@ -29,7 +29,7 @@ class TicketCommentController extends Controller
     {
         $updateTicketComment->handle($request->user(), $comment, $request->all());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Comment updated.')]);
+        Flash::success(__('Comment updated.'));
 
         return back();
     }
@@ -38,7 +38,7 @@ class TicketCommentController extends Controller
     {
         $deleteTicketComment->handle($request->user(), $comment);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Comment deleted.')]);
+        Flash::success(__('Comment deleted.'));
 
         return back();
     }

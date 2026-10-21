@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Tickets\SyncTicketAssignees;
+use App\Http\Flash;
 use App\Models\Ticket;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 
 class TicketAssigneeController extends Controller
 {
@@ -17,7 +17,7 @@ class TicketAssigneeController extends Controller
     {
         $syncTicketAssignees->handle($request->user(), $ticket, $request->all());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Assignees updated.')]);
+        Flash::success(__('Assignees updated.'));
 
         return back();
     }

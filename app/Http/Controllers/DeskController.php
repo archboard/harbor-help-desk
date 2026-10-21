@@ -12,6 +12,7 @@ use App\Data\Desks\DeskMemberData;
 use App\Data\Users\UserData;
 use App\Enums\AssignmentStrategy;
 use App\Enums\DeskRole;
+use App\Http\Flash;
 use App\Models\CustomField;
 use App\Models\Desk;
 use App\Models\Workspace;
@@ -40,7 +41,7 @@ class DeskController extends Controller
     {
         $desk = $createDesk->handle($request->user(), $request->all());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Desk created.')]);
+        Flash::success(__('Desk created.'));
 
         return to_route('desks.show', $desk);
     }
@@ -73,7 +74,7 @@ class DeskController extends Controller
     {
         $updateDesk->handle($request->user(), $desk, $request->all());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Desk updated.')]);
+        Flash::success(__('Desk updated.'));
 
         return back();
     }
@@ -85,7 +86,7 @@ class DeskController extends Controller
     {
         $archiveDesk->handle($request->user(), $desk);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Desk archived.')]);
+        Flash::success(__('Desk archived.'));
 
         return to_route('desks.index');
     }
@@ -94,7 +95,7 @@ class DeskController extends Controller
     {
         $restoreDesk->handle($request->user(), $desk);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Desk restored.')]);
+        Flash::success(__('Desk restored.'));
 
         return back();
     }

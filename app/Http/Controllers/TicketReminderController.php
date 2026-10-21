@@ -4,11 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Actions\Tickets\CancelTicketReminder;
 use App\Actions\Tickets\SetTicketReminder;
+use App\Http\Flash;
 use App\Models\Ticket;
 use App\Models\TicketReminder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 
 class TicketReminderController extends Controller
 {
@@ -16,7 +16,7 @@ class TicketReminderController extends Controller
     {
         $setTicketReminder->handle($request->user(), $ticket, $request->all());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Reminder set.')]);
+        Flash::success(__('Reminder set.'));
 
         return back();
     }
@@ -25,7 +25,7 @@ class TicketReminderController extends Controller
     {
         $cancelTicketReminder->handle($request->user(), $reminder);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Reminder cancelled.')]);
+        Flash::success(__('Reminder cancelled.'));
 
         return back();
     }

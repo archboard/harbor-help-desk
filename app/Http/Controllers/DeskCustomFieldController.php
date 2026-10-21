@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Desks\SyncDeskCustomFields;
+use App\Http\Flash;
 use App\Models\Desk;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 
 class DeskCustomFieldController extends Controller
 {
@@ -17,7 +17,7 @@ class DeskCustomFieldController extends Controller
     {
         $syncDeskCustomFields->handle($request->user(), $desk, $request->all());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Custom fields saved.')]);
+        Flash::success(__('Custom fields saved.'));
 
         return back();
     }

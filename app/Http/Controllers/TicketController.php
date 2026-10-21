@@ -21,6 +21,7 @@ use App\Data\Users\UserData;
 use App\Enums\TicketEventType;
 use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
+use App\Http\Flash;
 use App\Models\Desk;
 use App\Models\SavedView;
 use App\Models\Tag;
@@ -78,7 +79,7 @@ class TicketController extends Controller
     {
         $ticket = $createTicket->handle($request->user(), $desk, $request->all());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Ticket #:number created.', ['number' => $ticket->number])]);
+        Flash::success(__('Ticket #:number created.', ['number' => $ticket->number]));
 
         return to_route('tickets.show', $ticket);
     }
@@ -90,7 +91,7 @@ class TicketController extends Controller
     {
         $count = $bulkUpdateTickets->handle($request->user(), $request->all());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => trans_choice(':count ticket updated.|:count tickets updated.', $count)]);
+        Flash::success(trans_choice(':count ticket updated.|:count tickets updated.', $count));
 
         return back();
     }
@@ -139,7 +140,7 @@ class TicketController extends Controller
     {
         $updateTicket->handle($request->user(), $ticket, $request->all());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Ticket updated.')]);
+        Flash::success(__('Ticket updated.'));
 
         return back();
     }
@@ -148,7 +149,7 @@ class TicketController extends Controller
     {
         $deleteTicket->handle($request->user(), $ticket);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Ticket deleted.')]);
+        Flash::success(__('Ticket deleted.'));
 
         return to_route('tickets.index');
     }
@@ -157,7 +158,7 @@ class TicketController extends Controller
     {
         $restoreTicket->handle($request->user(), $ticket);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Ticket restored.')]);
+        Flash::success(__('Ticket restored.'));
 
         return back();
     }

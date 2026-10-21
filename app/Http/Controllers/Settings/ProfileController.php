@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Http\Flash;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
 use DateTimeZone;
@@ -40,7 +41,7 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Profile updated.')]);
+        Flash::success(__('Profile updated.'));
 
         return to_route('profile.edit');
     }
@@ -55,7 +56,7 @@ class ProfileController extends Controller
 
         $request->user()->update($validated);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Timezone updated.')]);
+        Flash::success(__('Timezone updated.'));
 
         return back();
     }

@@ -4,12 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Actions\Tickets\AddTicketAttachment;
 use App\Actions\Tickets\DeleteTicketAttachment;
+use App\Http\Flash;
 use App\Models\Attachment;
 use App\Models\Ticket;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class TicketAttachmentController extends Controller
@@ -21,7 +21,7 @@ class TicketAttachmentController extends Controller
     {
         $addTicketAttachment->handle($request->user(), $ticket, $request->all());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('File attached.')]);
+        Flash::success(__('File attached.'));
 
         return back();
     }
@@ -30,7 +30,7 @@ class TicketAttachmentController extends Controller
     {
         $deleteTicketAttachment->handle($request->user(), $attachment);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('File removed.')]);
+        Flash::success(__('File removed.'));
 
         return back();
     }

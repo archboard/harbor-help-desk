@@ -8,6 +8,7 @@ use App\Actions\CustomFields\UpdateCustomField;
 use App\Data\CustomFields\CustomFieldData;
 use App\Enums\CustomFieldType;
 use App\Http\Controllers\Controller;
+use App\Http\Flash;
 use App\Models\CustomField;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,7 +35,7 @@ class CustomFieldController extends Controller
     {
         $createCustomField->handle($request->user(), $request->all());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Custom field created.')]);
+        Flash::success(__('Custom field created.'));
 
         return back();
     }
@@ -43,7 +44,7 @@ class CustomFieldController extends Controller
     {
         $updateCustomField->handle($request->user(), $customField, $request->all());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Custom field updated.')]);
+        Flash::success(__('Custom field updated.'));
 
         return back();
     }
@@ -52,7 +53,7 @@ class CustomFieldController extends Controller
     {
         $deleteCustomField->handle($request->user(), $customField);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Custom field deleted.')]);
+        Flash::success(__('Custom field deleted.'));
 
         return back();
     }

@@ -5,10 +5,10 @@ namespace App\Http\Controllers;
 use App\Actions\SavedViews\CreateSavedView;
 use App\Actions\SavedViews\DeleteSavedView;
 use App\Actions\SavedViews\UpdateSavedView;
+use App\Http\Flash;
 use App\Models\SavedView;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 
 class SavedViewController extends Controller
 {
@@ -16,7 +16,7 @@ class SavedViewController extends Controller
     {
         $createSavedView->handle($request->user(), $request->all());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('View saved.')]);
+        Flash::success(__('View saved.'));
 
         return back();
     }
@@ -25,7 +25,7 @@ class SavedViewController extends Controller
     {
         $updateSavedView->handle($request->user(), $savedView, $request->all());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('View updated.')]);
+        Flash::success(__('View updated.'));
 
         return back();
     }
@@ -34,7 +34,7 @@ class SavedViewController extends Controller
     {
         $deleteSavedView->handle($request->user(), $savedView);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('View deleted.')]);
+        Flash::success(__('View deleted.'));
 
         return back();
     }

@@ -10,6 +10,7 @@ use App\Data\Mailboxes\MailboxData;
 use App\Enums\MailboxDriver;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\MailboxOAuthController;
+use App\Http\Flash;
 use App\Models\Desk;
 use App\Models\Mailbox;
 use Illuminate\Http\RedirectResponse;
@@ -42,7 +43,7 @@ class EmailController extends Controller
     {
         $createMailbox->handle($request->user(), [...$request->all(), 'driver' => MailboxDriver::IMAP->value]);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Mailbox added.')]);
+        Flash::success(__('Mailbox added.'));
 
         return back();
     }
@@ -51,7 +52,7 @@ class EmailController extends Controller
     {
         $updateMailbox->handle($request->user(), $mailbox, $request->all());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Mailbox updated.')]);
+        Flash::success(__('Mailbox updated.'));
 
         return back();
     }
@@ -60,7 +61,7 @@ class EmailController extends Controller
     {
         $deleteMailbox->handle($request->user(), $mailbox);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Mailbox deleted.')]);
+        Flash::success(__('Mailbox deleted.'));
 
         return back();
     }

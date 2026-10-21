@@ -4,11 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Actions\Desks\RemoveDeskMember;
 use App\Actions\Desks\SetDeskMember;
+use App\Http\Flash;
 use App\Models\Desk;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 
 class DeskMemberController extends Controller
 {
@@ -19,7 +19,7 @@ class DeskMemberController extends Controller
     {
         $setDeskMember->handle($request->user(), $desk, $user, $request->all());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Desk member saved.')]);
+        Flash::success(__('Desk member saved.'));
 
         return back();
     }
@@ -28,7 +28,7 @@ class DeskMemberController extends Controller
     {
         $removeDeskMember->handle($request->user(), $desk, $user);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Desk member removed.')]);
+        Flash::success(__('Desk member removed.'));
 
         return back();
     }
