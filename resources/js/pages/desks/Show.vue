@@ -30,12 +30,13 @@ import {
   update as setMember,
 } from '@/routes/desks/members';
 
-const { desk } = defineProps<{
+const { desk, slaPolicies } = defineProps<{
   desk: App.Data.Desks.DeskData;
   members: App.Data.Desks.DeskMemberData[];
   candidates: App.Data.Users.UserData[];
   roles: Record<App.Enums.DeskRole, string>;
   strategies: Record<App.Enums.AssignmentStrategy, string>;
+  slaPolicies: App.Data.SlaPolicies.SlaPolicyData[];
   customFields: App.Data.CustomFields.CustomFieldData[];
   can: { update: boolean; manageMembers: boolean; archive: boolean };
 }>();
@@ -48,7 +49,13 @@ const form = useForm({
   name: desk.name,
   slug: desk.slug,
   assignment_strategy: desk.assignment_strategy,
-} satisfies App.Data.Desks.UpdateDeskData);
+  sla_policy_id: desk.sla_policy_id ?? '',
+});
+
+const policyOptions = {
+  '': 'No SLA',
+  ...Object.fromEntries(slaPolicies.map(({ id, name }) => [id, name])),
+};
 
 const fieldsForm = useForm({
   field_ids: (desk.custom_fields ?? []).map((field) => field.id),
@@ -134,7 +141,14 @@ function archive(close: () => void): void {
   <div class="space-y-6">
     <CardWrapper v-if="can.update">
       <form
-        @submit.prevent="form.submit(update(desk.id), { preserveScroll: true })"
+        @submit.prevent="
+          form
+            .transform((data) => ({
+              ...data,
+              sla_policy_id: data.sla_policy_id || null,
+            }))
+            .submit(update(desk.id), { preserveScroll: true })
+        "
       >
         <CardPadding>
           <CardHeader class="mb-4">{{ desk.name }}</CardHeader>
@@ -157,6 +171,12 @@ function archive(close: () => void): void {
               :options="strategies"
               hide-null
               :error="form.errors.assignment_strategy"
+            />
+            <SelectField
+              v-model="form.sla_policy_id"
+              label="SLA policy"
+              :options="policyOptions"
+              :error="form.errors.sla_policy_id"
             />
           </AppFieldset>
         </CardPadding>

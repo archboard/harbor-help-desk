@@ -9,12 +9,14 @@ use App\Actions\Desks\UpdateDesk;
 use App\Data\CustomFields\CustomFieldData;
 use App\Data\Desks\DeskData;
 use App\Data\Desks\DeskMemberData;
+use App\Data\SlaPolicies\SlaPolicyData;
 use App\Data\Users\UserData;
 use App\Enums\AssignmentStrategy;
 use App\Enums\DeskRole;
 use App\Http\Flash;
 use App\Models\CustomField;
 use App\Models\Desk;
+use App\Models\SlaPolicy;
 use App\Models\Workspace;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -62,6 +64,7 @@ class DeskController extends Controller
             'roles' => DeskRole::options(),
             'strategies' => AssignmentStrategy::options(),
             'customFields' => CustomFieldData::collect(CustomField::query()->orderBy('position')->orderBy('id')->get()),
+            'slaPolicies' => SlaPolicyData::collect(SlaPolicy::query()->orderBy('name')->get()),
             'can' => [
                 'update' => $request->user()->can('update', $desk),
                 'manageMembers' => $canManageMembers,

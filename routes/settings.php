@@ -6,6 +6,7 @@ use App\Http\Controllers\Settings\MacroController;
 use App\Http\Controllers\Settings\NotificationPreferenceController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
+use App\Http\Controllers\Settings\SlaPolicyController;
 use Illuminate\Auth\Middleware\RequirePassword;
 use Illuminate\Support\Facades\Route;
 
@@ -40,6 +41,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('settings/macros', MacroController::class)->only(['index', 'store', 'update', 'destroy']);
 
     Route::resource('settings/business-hours', BusinessScheduleController::class)->parameters(['business-hours' => 'businessSchedule'])->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('settings/sla-policies', SlaPolicyController::class)->parameters(['sla-policies' => 'slaPolicy'])->only(['index', 'store', 'update', 'destroy']);
 
     Route::inertia('settings/appearance', 'settings/Appearance')->name('appearance.edit');
 });

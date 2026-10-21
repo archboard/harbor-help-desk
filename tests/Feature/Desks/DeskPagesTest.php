@@ -4,6 +4,7 @@ use App\Enums\DeskRole;
 use App\Enums\WorkspaceRole;
 use App\Models\CustomField;
 use App\Models\Desk;
+use App\Models\SlaPolicy;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Concerns\InWorkspace;
@@ -121,4 +122,18 @@ test('desk leads choose the desk\'s fields and agents cannot', function () {
         ->put(route('desks.custom-fields.update', $this->desk), ['field_ids' => []])
         ->assertSessionHasNoErrors();
     expect($this->desk->customFields()->count())->toBe(0);
+});
+
+test('the desk page offers the workspace\'s SLA policies and the policy can be set', function () {
+    $policy = SlaPolicy::factory()->create();
+
+    $this->actingAs($this->admin)
+        ->get(route('desks.show', $this->desk))
+        ->assertInertia(fn (Assert $page) => $page->has('slaPolicies', 1)->where('slaPolicies.0.id', $policy->id));
+
+    $this->put(route('desks.update', $this->desk), ['sla_policy_id' => $policy->id])->assertSessionHasNoErrors();
+    expect($this->desk->fresh()->sla_policy_id)->toBe($policy->id);
+
+    $this->put(route('desks.update', $this->desk), ['sla_policy_id' => null])->assertSessionHasNoErrors();
+    expect($this->desk->fresh()->sla_policy_id)->toBeNull();
 });

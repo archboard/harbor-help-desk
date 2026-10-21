@@ -4,6 +4,7 @@ import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { edit as editApiTokens } from '@/routes/api-tokens';
 import { edit as editAppearance } from '@/routes/appearance';
 import { index as businessHours } from '@/routes/business-hours';
+import { index as slaPolicies } from '@/routes/sla-policies';
 import { index as macros } from '@/routes/macros';
 import { edit as editNotifications } from '@/routes/notification-preferences';
 import { edit as editProfile } from '@/routes/profile';
@@ -17,6 +18,7 @@ const tabs = [
   { label: 'Notifications', href: editNotifications().url },
   { label: 'Macros', href: macros().url },
   { label: 'Business hours', href: businessHours().url },
+  { label: 'SLA policies', href: slaPolicies().url },
   { label: 'API tokens', href: editApiTokens().url },
   { label: 'Appearance', href: editAppearance().url },
 ];
