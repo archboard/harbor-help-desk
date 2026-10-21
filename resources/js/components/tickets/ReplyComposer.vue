@@ -267,6 +267,8 @@ function send(skipStaleCheck = false): void {
       class="relative space-y-1"
       @input="detectMention"
       @keydown="navigateSuggestions"
+      @keydown.meta.enter.exact.prevent="!form.processing && send()"
+      @keydown.ctrl.enter.exact.prevent="!form.processing && send()"
     >
       <AppTextarea
         v-model="form.body"

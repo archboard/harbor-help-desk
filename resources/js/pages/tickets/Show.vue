@@ -171,7 +171,7 @@ function restoreTicket(): void {
           :key="viewer.id"
           class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400"
         >
-          <Avatar :name="viewer.name" />
+          <Avatar :name="viewer.name" class="ring-2 ring-primary-500" />
           <span v-if="typingUserIds.includes(viewer.id)">
             {{ viewer.name }} is typing a reply…
           </span>
