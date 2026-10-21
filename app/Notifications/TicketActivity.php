@@ -66,7 +66,7 @@ class TicketActivity extends Notification
     {
         $commentId = $this->ticketEvent->properties['comment_id'] ?? null;
 
-        return $commentId === null ? null : TicketComment::query()->find($commentId)?->body;
+        return $commentId === null ? null : TicketComment::query()->whereKey($commentId)->first()?->body;
     }
 
     /**

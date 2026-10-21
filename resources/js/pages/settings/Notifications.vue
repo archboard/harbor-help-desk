@@ -25,7 +25,10 @@ const { preferences, channels } = defineProps<{
 
 const form = useForm({
   preferences: Object.fromEntries(
-    preferences.map((preference) => [preference.type, { ...preference.channels }]),
+    preferences.map((preference) => [
+      preference.type,
+      { ...preference.channels },
+    ]),
   ),
 });
 </script>

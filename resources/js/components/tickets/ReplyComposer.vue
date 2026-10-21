@@ -56,7 +56,9 @@ const suggestions = computed(() =>
   mention.value && form.is_internal
     ? deskMembers
         .filter((member) =>
-          member.name.toLowerCase().includes(mention.value!.query.toLowerCase()),
+          member.name
+            .toLowerCase()
+            .includes(mention.value!.query.toLowerCase()),
         )
         .slice(0, 5)
     : [],
