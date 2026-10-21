@@ -32,6 +32,6 @@ class WorkspaceSettingsCast implements CastsAttributes
             ARRAY_FILTER_USE_BOTH,
         );
 
-        return json_encode((object) $overrides);
+        return json_encode((object) $overrides, JSON_THROW_ON_ERROR);
     }
 }

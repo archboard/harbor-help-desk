@@ -76,7 +76,7 @@ class AddTicketAttachment
     public static function rules(): array
     {
         // ponytail: falls back to the defaults where no workspace is current.
-        $settings = Workspace::current()?->settings ?? new WorkspaceSettings;
+        $settings = Workspace::current()->settings ?? new WorkspaceSettings;
         $blocked = $settings->effectiveBlockedExtensions();
 
         return [

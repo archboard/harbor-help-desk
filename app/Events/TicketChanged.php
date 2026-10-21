@@ -32,11 +32,11 @@ class TicketChanged implements ShouldBroadcast
     {
         return array_map(
             fn (string $name): PrivateChannel => new PrivateChannel($name),
-            array_values(array_filter([
+            array_filter([
                 "tickets.{$this->ticket_id}",
                 "desks.{$this->desk_id}",
                 $this->from_desk_id === null ? null : "desks.{$this->from_desk_id}",
-            ])),
+            ]),
         );
     }
 
