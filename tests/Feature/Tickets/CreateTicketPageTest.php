@@ -61,7 +61,7 @@ test('agents open a ticket for an existing contact with a first message and file
     $ticket = Ticket::sole();
     $comment = $ticket->comments()->with('attachments')->sole();
 
-    expect($ticket)->requester_id->toBe($contact->id)->priority->value->toBe('high')
+    expect($ticket)->requester_id->toBe($contact->id)->priority->value->toBe('high')->source->value->toBe('web')
         ->and($ticket->assignees()->pluck('users.id')->all())->toBe([$this->agent->id])
         ->and($comment)->body->toBe('It jams on double-sided prints.')->is_internal->toBeFalse()
         ->and($comment->attachments->sole()->filename)->toBe('photo.txt');

@@ -88,6 +88,11 @@ class UpdateTicket
             'status' => fn (): array => [TicketEventType::STATUS_CHANGED, ['from' => $ticket->getOriginal('status')->value, 'to' => $ticket->status->value]],
             'priority' => fn (): array => [TicketEventType::PRIORITY_CHANGED, ['from' => $ticket->getOriginal('priority')->value, 'to' => $ticket->priority->value]],
             'due_at' => fn (): array => [TicketEventType::DUE_DATE_CHANGED, ['from' => $ticket->getOriginal('due_at')?->toIso8601String(), 'to' => $ticket->due_at?->toIso8601String()]],
+            'sla_policy_id' => fn (): array => [TicketEventType::SLA_POLICY_CHANGED, [
+                'from' => $ticket->getOriginal('sla_policy_id'),
+                'to' => $ticket->sla_policy_id,
+                'to_name' => $ticket->unsetRelation('slaPolicy')->slaPolicy?->name,
+            ]],
         ];
 
         return collect($events)

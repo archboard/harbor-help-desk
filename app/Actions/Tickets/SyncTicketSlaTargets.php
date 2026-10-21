@@ -29,12 +29,13 @@ class SyncTicketSlaTargets
             TicketEventType::STATUS_CHANGED,
             TicketEventType::PRIORITY_CHANGED,
             TicketEventType::DESK_CHANGED,
+            TicketEventType::SLA_POLICY_CHANGED,
         ], true)) {
             return;
         }
 
         // Null when the ticket was deleted before the listener ran.
-        $ticket = $ticket->fresh(['desk.slaPolicy.businessSchedule', 'slaTargets']);
+        $ticket = $ticket->fresh(['slaPolicy.businessSchedule', 'desk.slaPolicy.businessSchedule', 'slaTargets']);
 
         if ($ticket === null) {
             return;
@@ -66,7 +67,7 @@ class SyncTicketSlaTargets
 
         $to = TicketStatus::from($event->properties['to']);
         $at = $event->created_at;
-        $schedule = $ticket->desk->slaPolicy?->businessSchedule;
+        $schedule = $ticket->effectiveSlaPolicy()?->businessSchedule;
 
         // Time spent met counts like a pause: the clock resumes with the time already used.
         if ($target->achieved_at !== null && ! $to->isResolved()) {
@@ -87,17 +88,17 @@ class SyncTicketSlaTargets
             $target->achieved_at = $at;
         }
 
-        $target->recalculate($schedule, $ticket->desk->slaPolicy?->warning_percent ?? 75);
+        $target->recalculate($schedule, $ticket->effectiveSlaPolicy()?->warning_percent ?? 75);
         $target->save();
     }
 
     /**
-     * Create, retarget or delete each metric's target to match the desk's current policy and the
+     * Create, retarget or delete each metric's target to match the ticket's current policy (its own, else the desk's) and the
      * ticket's priority. Met targets are left alone, and a breached one is never deleted.
      */
     protected function retarget(Ticket $ticket, CarbonInterface $at): void
     {
-        $policy = $ticket->desk->slaPolicy;
+        $policy = $ticket->effectiveSlaPolicy();
 
         foreach (SlaMetric::cases() as $metric) {
             $minutes = $policy?->targetFor($ticket->priority, $metric);

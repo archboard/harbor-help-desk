@@ -110,6 +110,7 @@ class SendTicketActivityNotifications implements ShouldQueue
             TicketEventType::PRIORITY_CHANGED,
             TicketEventType::DUE_DATE_CHANGED,
             TicketEventType::DESK_CHANGED,
+            TicketEventType::SLA_POLICY_CHANGED,
             TicketEventType::CUSTOM_FIELD_CHANGED,
             TicketEventType::ASSIGNEE_REMOVED,
             TicketEventType::TAG_ADDED,

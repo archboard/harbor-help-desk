@@ -21,6 +21,7 @@ use App\Data\Tickets\TicketReminderData;
 use App\Data\Users\UserData;
 use App\Enums\TicketEventType;
 use App\Enums\TicketPriority;
+use App\Enums\TicketSource;
 use App\Enums\TicketStatus;
 use App\Http\Flash;
 use App\Models\Desk;
@@ -79,7 +80,7 @@ class TicketController extends Controller
 
     public function store(Request $request, Desk $desk, CreateTicket $createTicket): RedirectResponse
     {
-        $ticket = $createTicket->handle($request->user(), $desk, $request->all());
+        $ticket = $createTicket->handle($request->user(), $desk, $request->all(), TicketSource::WEB);
 
         Flash::success(__('Ticket #:number created.', ['number' => $ticket->number]));
 

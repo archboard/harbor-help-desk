@@ -6,6 +6,7 @@ use App\Actions\Tickets\UpdateTicket;
 use App\Data\InputData;
 use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
+use App\Models\Workspace;
 use Illuminate\Validation\Rule;
 use Spatie\LaravelData\Optional;
 
@@ -23,6 +24,7 @@ class UpdateTicketData extends InputData
         public TicketPriority|Optional $priority,
         public string|Optional|null $dueAt,
         public array|Optional $customFields,
+        public string|Optional|null $slaPolicyId,
     ) {}
 
     /**
@@ -35,6 +37,7 @@ class UpdateTicketData extends InputData
             'status' => ['sometimes', 'required', Rule::enum(TicketStatus::class)],
             'priority' => ['sometimes', 'required', Rule::enum(TicketPriority::class)],
             'due_at' => ['sometimes', 'nullable', 'date'],
+            'sla_policy_id' => ['sometimes', 'nullable', 'string', Rule::exists('sla_policies', 'id')->where('workspace_id', Workspace::current()?->getKey())],
         ];
     }
 }

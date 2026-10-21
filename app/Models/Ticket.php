@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\TicketEventType;
 use App\Enums\TicketPriority;
+use App\Enums\TicketSource;
 use App\Enums\TicketStatus;
 use App\Events\TicketActivityRecorded;
 use App\Models\Concerns\BelongsToWorkspace;
@@ -85,6 +86,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *
  * @property-read Collection<int, TicketSlaTarget> $slaTargets
  * @property-read int|null $sla_targets_count
+ * @property TicketSource $source
+ * @property-read SlaPolicy|null $slaPolicy
  *
  * @mixin \Eloquent
  */
@@ -100,6 +103,7 @@ class Ticket extends Model
     protected $attributes = [
         'status' => TicketStatus::OPEN->value,
         'priority' => TicketPriority::NORMAL->value,
+        'source' => TicketSource::WEB->value,
         'custom_fields' => '{}',
     ];
 
@@ -145,6 +149,24 @@ class Ticket extends Model
     public function mailbox(): BelongsTo
     {
         return $this->belongsTo(Mailbox::class);
+    }
+
+    /**
+     * The ticket's own SLA policy, which overrides its desk's.
+     *
+     * @return BelongsTo<SlaPolicy, $this>
+     */
+    public function slaPolicy(): BelongsTo
+    {
+        return $this->belongsTo(SlaPolicy::class);
+    }
+
+    /**
+     * The policy that sets the ticket's SLA targets: its own, else its desk's.
+     */
+    public function effectiveSlaPolicy(): ?SlaPolicy
+    {
+        return $this->slaPolicy ?? $this->desk->slaPolicy;
     }
 
     /**
@@ -256,6 +278,7 @@ class Ticket extends Model
             'number' => 'integer',
             'status' => TicketStatus::class,
             'priority' => TicketPriority::class,
+            'source' => TicketSource::class,
             'due_at' => 'datetime',
         ];
     }

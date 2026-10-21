@@ -6,6 +6,7 @@ use App\Actions\Tickets\AddTicketAttachment;
 use App\Actions\Tickets\AddTicketComment;
 use App\Actions\Tickets\CreateTicket;
 use App\Enums\TicketEventType;
+use App\Enums\TicketSource;
 use App\Enums\TicketStatus;
 use App\Mail\Inbound\InboundEmail;
 use App\Models\Contact;
@@ -82,7 +83,7 @@ class ReceiveInboundEmail
                     'subject' => Str::limit($email->subject, 250) ?: __('(no subject)'),
                     'requester_id' => $author->id,
                     'mailbox_id' => $mailbox->id,
-                ])->comments()->sole()
+                ], TicketSource::EMAIL)->comments()->sole()
                 : $this->reply($author, $ticket, $input);
         } catch (UniqueConstraintViolationException) {
             Log::info('Inbound email dropped: duplicate', $context);

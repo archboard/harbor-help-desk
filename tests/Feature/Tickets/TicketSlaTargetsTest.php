@@ -6,11 +6,13 @@ use App\Actions\Tickets\MoveTicket;
 use App\Actions\Tickets\UpdateTicket;
 use App\Enums\DeskRole;
 use App\Enums\SlaMetric;
+use App\Enums\TicketEventType;
 use App\Models\Desk;
 use App\Models\SlaPolicy;
 use App\Models\Ticket;
 use App\Models\TicketSlaTarget;
 use App\Models\Workspace;
+use Illuminate\Validation\ValidationException;
 use Tests\Concerns\InWorkspace;
 
 uses(InWorkspace::class);
@@ -157,6 +159,36 @@ test('moving to a desk with a policy starts the missing targets from creation', 
     app(MoveTicket::class)->handle($this->agent, $ticket, $other);
 
     expect(slaTarget($ticket, SlaMetric::RESOLUTION)->due_at->equalTo($this->start->addMinutes(2880)))->toBeTrue();
+});
+
+test('a ticket policy overrides its desk and changing it retargets and records the change', function () {
+    $ticket = openTicket();
+    $gold = SlaPolicy::factory()->create(['targets' => ['normal' => ['first_response' => 30, 'resolution' => 120]]]);
+    $update = app(UpdateTicket::class);
+
+    expect(slaTarget($ticket, SlaMetric::FIRST_RESPONSE)->target_minutes)->toBe(480);
+
+    $update->handle($this->agent, $ticket, ['sla_policy_id' => $gold->id]);
+
+    expect($ticket->fresh()->sla_policy_id)->toBe($gold->id)
+        ->and(slaTarget($ticket, SlaMetric::FIRST_RESPONSE)->target_minutes)->toBe(30)
+        ->and(slaTarget($ticket, SlaMetric::RESOLUTION)->target_minutes)->toBe(120)
+        ->and($ticket->events()->where('type', TicketEventType::SLA_POLICY_CHANGED)->sole()->properties)
+        ->toMatchArray(['from' => null, 'to' => $gold->id]);
+
+    $update->handle($this->agent, $ticket, ['sla_policy_id' => null]);
+
+    expect(slaTarget($ticket, SlaMetric::FIRST_RESPONSE)->target_minutes)->toBe(480)
+        ->and($ticket->events()->where('type', TicketEventType::SLA_POLICY_CHANGED)->count())->toBe(2);
+});
+
+test('a ticket cannot take another workspace policy', function () {
+    $ticket = openTicket();
+    $foreign = Workspace::factory()->create()->execute(fn () => SlaPolicy::factory()->create());
+
+    expect(fn () => app(UpdateTicket::class)->handle($this->agent, $ticket, ['sla_policy_id' => $foreign->id]))
+        ->toThrow(ValidationException::class);
+    expect($ticket->fresh()->sla_policy_id)->toBeNull();
 });
 
 test('targets are isolated between workspaces', function () {

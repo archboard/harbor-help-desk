@@ -99,6 +99,9 @@ class TicketEvent extends Model
                 ? __(':actor removed the due date.', $replace)
                 : __(':actor set the due date to :to.', $replace + ['to' => $this->localTime($properties['to'], $timezone)]),
             TicketEventType::DESK_CHANGED => __(':actor moved the ticket to :to.', $replace + ['to' => $properties['to']]),
+            TicketEventType::SLA_POLICY_CHANGED => $properties['to'] === null
+                ? __(':actor removed the ticket’s SLA policy.', $replace)
+                : __(':actor set the ticket’s SLA policy to :to.', $replace + ['to' => $properties['to_name']]),
             TicketEventType::CUSTOM_FIELD_CHANGED => $properties['to'] === null
                 ? __(':actor cleared :name.', $replace + ['name' => $properties['name']])
                 : __(':actor set :name to :to.', $replace + ['name' => $properties['name'], 'to' => $this->customFieldValue($properties['to'])]),

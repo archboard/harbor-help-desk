@@ -391,7 +391,9 @@ declare namespace App {
         status_label: string;
         priority: App.Enums.TicketPriority;
         priority_label: string;
+        source: App.Enums.TicketSource;
         desk_id: string;
+        sla_policy_id: string | null;
         desk?: App.Data.Desks.DeskData;
         due_at: string | null;
         custom_fields: Record<
@@ -445,6 +447,7 @@ declare namespace App {
         priority?: App.Enums.TicketPriority;
         due_at?: string | null;
         custom_fields?: Record<string, any>;
+        sla_policy_id?: string | null;
       };
     }
     namespace Users {
@@ -520,6 +523,7 @@ declare namespace App {
       | 'priority_changed'
       | 'due_date_changed'
       | 'desk_changed'
+      | 'sla_policy_changed'
       | 'custom_field_changed'
       | 'assignee_added'
       | 'assignee_removed'
@@ -536,6 +540,12 @@ declare namespace App {
       | 'deleted'
       | 'restored';
     export type TicketPriority = 'low' | 'normal' | 'high' | 'urgent';
+    export type TicketSource =
+      | 'email'
+      | 'web'
+      | 'api'
+      | 'webhook'
+      | 'automation';
     export type TicketStatus =
       | 'open'
       | 'pending'

@@ -59,7 +59,8 @@ test('new mail opens a ticket on the default desk from a new contact', function 
     expect($ticket)
         ->subject->toBe('Printer jam')
         ->desk_id->toBe($this->desk->id)
-        ->mailbox_id->toBe($this->mailbox->id);
+        ->mailbox_id->toBe($this->mailbox->id)
+        ->source->value->toBe('email');
     expect($ticket->requester->only('name', 'email'))->toBe(['name' => 'Pat Lee', 'email' => 'pat@example.com']);
     expect($comment)
         ->body->toBe('It is jammed again.')

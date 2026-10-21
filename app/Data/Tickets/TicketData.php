@@ -7,6 +7,7 @@ use App\Data\Desks\DeskData;
 use App\Data\Tags\TagData;
 use App\Data\Users\UserData;
 use App\Enums\TicketPriority;
+use App\Enums\TicketSource;
 use App\Enums\TicketStatus;
 use App\Models\Ticket;
 use Carbon\CarbonImmutable;
@@ -32,7 +33,9 @@ class TicketData extends Data
         public string $statusLabel,
         public TicketPriority $priority,
         public string $priorityLabel,
+        public TicketSource $source,
         public string $deskId,
+        public ?string $slaPolicyId,
         public DeskData|Lazy $desk,
         public ?CarbonImmutable $dueAt,
         #[LiteralTypeScriptType('Record<string, string | number | boolean | string[] | null>')]
@@ -56,7 +59,9 @@ class TicketData extends Data
             statusLabel: $ticket->status->label(),
             priority: $ticket->priority,
             priorityLabel: $ticket->priority->label(),
+            source: $ticket->source,
             deskId: $ticket->desk_id,
+            slaPolicyId: $ticket->sla_policy_id,
             desk: Lazy::whenLoaded('desk', $ticket, fn (): DeskData => DeskData::from($ticket->desk)),
             dueAt: $ticket->due_at,
             customFields: (object) $ticket->custom_fields,

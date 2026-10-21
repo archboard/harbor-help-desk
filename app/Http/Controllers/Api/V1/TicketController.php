@@ -9,6 +9,7 @@ use App\Actions\Tickets\RestoreTicket;
 use App\Actions\Tickets\SearchTickets;
 use App\Actions\Tickets\UpdateTicket;
 use App\Data\Tickets\TicketData;
+use App\Enums\TicketSource;
 use App\Http\Controllers\Controller;
 use App\Models\Desk;
 use App\Models\Ticket;
@@ -37,7 +38,7 @@ class TicketController extends Controller
 
     public function store(Request $request, Desk $desk, CreateTicket $createTicket): TicketData
     {
-        return TicketData::from($createTicket->handle($request->user(), $desk, $request->all())->load(self::RELATIONS));
+        return TicketData::from($createTicket->handle($request->user(), $desk, $request->all(), TicketSource::API)->load(self::RELATIONS));
     }
 
     /**
