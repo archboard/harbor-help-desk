@@ -104,6 +104,20 @@ test('the notification carries the ticket and a readable description', function 
     });
 });
 
+test('the email quotes the comment as escaped plain text', function () {
+    $this->ticket->assignees()->attach($this->colleague, ['workspace_id' => $this->workspace->id]);
+
+    app(AddTicketComment::class)->handle($this->ticket->requester, $this->ticket, ['body' => "# Still broken\n[reset](https://evil.test) <b>now</b>"]);
+
+    Notification::assertSentTo($this->colleague, TicketActivity::class, function (TicketActivity $notification) {
+        $html = (string) $notification->toMail($this->colleague)->render();
+
+        return str_contains($html, '# Still broken')
+            && str_contains($html, '[reset](https://evil.test) &lt;b&gt;now&lt;/b&gt;')
+            && ! str_contains($html, 'href="https://evil.test"');
+    });
+});
+
 test('the queued listener runs inside the workspace of the event', function () {
     config(['queue.default' => 'database']);
     app(AddTicketComment::class)->handle($this->ticket->requester, $this->ticket, ['body' => 'Hello']);

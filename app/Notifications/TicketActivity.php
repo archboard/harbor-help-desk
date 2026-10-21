@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Enums\NotificationType;
+use App\Models\TicketComment;
 use App\Models\TicketEvent;
 use App\Models\User;
 use Illuminate\Notifications\Messages\BroadcastMessage;
@@ -40,10 +41,32 @@ class TicketActivity extends Notification
     {
         $ticket = $this->ticketEvent->ticket;
 
+        $description = $this->ticketEvent->description($notifiable->timezone);
+        $url = $ticket->workspace->url("/tickets/{$ticket->id}");
+
+        // A plain view, not markdown lines: comment bodies are plain text, and CommonMark would
+        // reformat them and turn a requester's `[text](url)` into a live link.
         return (new MailMessage)
             ->subject("#{$ticket->number} {$ticket->subject}")
-            ->line($this->ticketEvent->description($notifiable->timezone))
-            ->action(__('Open ticket'), $ticket->workspace->url("/tickets/{$ticket->id}"));
+            ->line($description)
+            ->action(__('Open ticket'), $url)
+            ->view(['mail.ticket-activity', 'mail.ticket-activity-text'], [
+                'description' => $description,
+                'body' => $this->commentBody(),
+                'url' => $url,
+                'ticket' => $ticket,
+                'workspaceName' => $ticket->workspace->name,
+            ]);
+    }
+
+    /**
+     * The comment's text for reply and note events, or null when there's none or it was deleted.
+     */
+    protected function commentBody(): ?string
+    {
+        $commentId = $this->ticketEvent->properties['comment_id'] ?? null;
+
+        return $commentId === null ? null : TicketComment::query()->find($commentId)?->body;
     }
 
     /**
