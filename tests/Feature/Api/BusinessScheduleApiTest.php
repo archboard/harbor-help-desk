@@ -76,6 +76,7 @@ test('admins update and delete schedules', function () {
         ->assertJsonPath('holidays', ['2026-01-01'])
         ->assertJsonPath('weekly_hours.mon', [['09:00', '17:00']]);
     $this->patchJson("{$this->url}/{$schedule->id}", ['weekly_hours' => ['mon' => []]])->assertJsonValidationErrors('weekly_hours');
+    $this->patchJson("{$this->url}/{$schedule->id}", ['weekly_hours' => []])->assertJsonValidationErrors('weekly_hours');
     $this->deleteJson("{$this->url}/{$schedule->id}")->assertNoContent();
 
     expect(BusinessSchedule::withoutGlobalScopes()->count())->toBe(0);

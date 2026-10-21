@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Settings\ApiTokenController;
+use App\Http\Controllers\Settings\BusinessScheduleController;
 use App\Http\Controllers\Settings\MacroController;
 use App\Http\Controllers\Settings\NotificationPreferenceController;
 use App\Http\Controllers\Settings\ProfileController;
@@ -37,6 +38,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('settings/notifications', [NotificationPreferenceController::class, 'update'])->name('notification-preferences.update');
 
     Route::resource('settings/macros', MacroController::class)->only(['index', 'store', 'update', 'destroy']);
+
+    Route::resource('settings/business-hours', BusinessScheduleController::class)->parameters(['business-hours' => 'businessSchedule'])->only(['index', 'store', 'update', 'destroy']);
 
     Route::inertia('settings/appearance', 'settings/Appearance')->name('appearance.edit');
 });
