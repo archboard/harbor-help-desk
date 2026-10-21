@@ -53,6 +53,7 @@ These apply to every agent, including subagents executing a plan step:
 | `svw_` | `SavedView`      |
 | `mbx_` | `Mailbox`        |
 | `mac_` | `Macro`          |
+| `bsc_` | `BusinessSchedule` |
 
 ## Tenancy
 
