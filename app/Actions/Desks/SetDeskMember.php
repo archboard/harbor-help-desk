@@ -28,7 +28,11 @@ class SetDeskMember
         }
 
         $desk->users()->syncWithoutDetaching([
-            $member->getKey() => ['role' => $data->role, 'workspace_id' => $desk->workspace_id],
+            $member->getKey() => [
+                'role' => $data->role,
+                'workspace_id' => $desk->workspace_id,
+                ...array_intersect_key($data->filled(), ['in_rotation' => true]),
+            ],
         ]);
     }
 }

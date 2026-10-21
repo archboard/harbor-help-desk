@@ -41,6 +41,7 @@ test('api tokens page lists only active personal access tokens', function () {
                 'name' => $this->workspace->name,
                 'subdomain' => $this->workspace->subdomain,
                 'is_admin' => false,
+                'away_at' => null,
             ]]),
         );
 });

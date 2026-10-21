@@ -30,6 +30,10 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|WorkspaceUser whereNotificationPreferences($value)
  *
+ * @property CarbonImmutable|null $away_at
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|WorkspaceUser whereAwayAt($value)
+ *
  * @mixin \Eloquent
  */
 class WorkspaceUser extends Pivot
@@ -44,6 +48,7 @@ class WorkspaceUser extends Pivot
         return [
             'role' => WorkspaceRole::class,
             'notification_preferences' => 'array',
+            'away_at' => 'datetime',
         ];
     }
 

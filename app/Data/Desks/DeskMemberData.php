@@ -17,6 +17,7 @@ class DeskMemberData extends Data
         public string $name,
         public string $email,
         public ?DeskRole $role,
+        public bool $inRotation,
     ) {}
 
     public static function fromModel(User $user): self
@@ -28,6 +29,7 @@ class DeskMemberData extends Data
             name: $user->name,
             email: $user->email,
             role: $membership instanceof DeskUser ? $membership->role : null,
+            inRotation: $membership instanceof DeskUser && $membership->in_rotation,
         );
     }
 }

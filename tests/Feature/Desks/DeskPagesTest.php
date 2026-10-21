@@ -61,7 +61,7 @@ test('the desk page lists members, candidates and abilities', function () {
                 'custom_fields' => [],
                 'archived_at' => null,
             ])
-            ->where('members', [['id' => $this->agent->id, 'name' => $this->agent->name, 'email' => $this->agent->email, 'role' => 'lead']])
+            ->where('members', [['id' => $this->agent->id, 'name' => $this->agent->name, 'email' => $this->agent->email, 'role' => 'lead', 'in_rotation' => true]])
             ->where('roles', ['lead' => 'Lead', 'agent' => 'Agent'])
             ->where('candidates', [['id' => $this->admin->id, 'name' => $this->admin->name, 'email' => $this->admin->email]])
             ->where('can', ['update' => true, 'manageMembers' => true, 'archive' => true]));

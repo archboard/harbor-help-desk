@@ -3,6 +3,7 @@
 namespace App\Data\Workspaces;
 
 use App\Models\Workspace;
+use Carbon\CarbonImmutable;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelData\Lazy;
 
@@ -13,6 +14,7 @@ class WorkspaceData extends Data
         public string $name,
         public string $subdomain,
         public bool $isAdmin,
+        public ?CarbonImmutable $awayAt,
         public Lazy|WorkspaceSettings $settings,
     ) {}
 
@@ -25,6 +27,7 @@ class WorkspaceData extends Data
             name: $workspace->name,
             subdomain: $workspace->subdomain,
             isAdmin: $user?->can('update', $workspace) ?? false,
+            awayAt: $user?->membership($workspace)?->away_at,
             settings: Lazy::when(fn (): bool => $user?->can('update', $workspace) ?? false, fn (): WorkspaceSettings => $workspace->settings),
         );
     }

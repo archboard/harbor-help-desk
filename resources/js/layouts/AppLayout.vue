@@ -7,10 +7,11 @@ import {
   PopoverButton,
   PopoverPanel,
 } from '@headlessui/vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import { ChevronDown, Menu as MenuIcon, X } from '@lucide/vue';
 import { computed, watch } from 'vue';
 import Container from '@/components/Container.vue';
+import AppCheckbox from '@/components/forms/AppCheckbox.vue';
 import ArchboardLogo from '@/components/icons/ArchboardLogo.vue';
 import NotificationBell from '@/components/NotificationBell.vue';
 import Notifications from '@/components/Notifications.vue';
@@ -19,6 +20,7 @@ import ScaleIn from '@/components/transitions/ScaleIn.vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { setDisplayTimezone } from '@/lib/dates';
 import { logout } from '@/routes';
+import { update as updateAvailability } from '@/routes/availability';
 import { edit as editApiTokens } from '@/routes/api-tokens';
 import { index as contacts } from '@/routes/contacts';
 import { edit as editAppearance } from '@/routes/appearance';
@@ -45,6 +47,12 @@ const navigation = computed(() => [
     ? [{ label: 'Workspace', href: workspaceSettings().url }]
     : []),
 ]);
+
+const isAway = computed(() => page.props.workspace?.away_at != null);
+
+function setAway(away: boolean): void {
+  router.put(updateAvailability().url, { away }, { preserveScroll: true });
+}
 
 const userNavigation = [
   { label: 'Profile', href: editProfile().url },
@@ -95,6 +103,11 @@ const userNavigation = [
               <PopoverButton
                 class="flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 focus:ring-2 focus:ring-primary-500 focus:outline-hidden dark:text-gray-200 dark:hover:bg-gray-800"
               >
+                <span
+                  v-if="isAway"
+                  class="size-2 rounded-full bg-amber-500"
+                  title="Away"
+                />
                 {{ page.props.auth.user.name }}
                 <ChevronDown
                   class="size-4 transition-transform"
@@ -118,6 +131,14 @@ const userNavigation = [
                     >
                       {{ item.label }}
                     </Link>
+                  </div>
+                  <div class="px-4 py-2">
+                    <AppCheckbox
+                      :model-value="isAway"
+                      @update:model-value="setAway(Boolean($event))"
+                    >
+                      Away
+                    </AppCheckbox>
                   </div>
                   <div class="p-1">
                     <Link
@@ -180,6 +201,14 @@ const userNavigation = [
           >
             {{ item.label }}
           </Link>
+          <div class="px-3 py-2">
+            <AppCheckbox
+              :model-value="isAway"
+              @update:model-value="setAway(Boolean($event))"
+            >
+              Away
+            </AppCheckbox>
+          </div>
           <Link
             :href="logout()"
             method="post"

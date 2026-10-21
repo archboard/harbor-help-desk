@@ -7,6 +7,7 @@ import CardHeader from '@/components/CardHeader.vue';
 import CardPadding from '@/components/CardPadding.vue';
 import CardWrapper from '@/components/CardWrapper.vue';
 import AppFieldset from '@/components/forms/AppFieldset.vue';
+import AppCheckbox from '@/components/forms/AppCheckbox.vue';
 import AppSelect from '@/components/forms/AppSelect.vue';
 import {
   CheckboxListField,
@@ -93,6 +94,17 @@ function changeRole(
   );
 }
 
+function setInRotation(
+  member: App.Data.Desks.DeskMemberData,
+  inRotation: boolean,
+): void {
+  router.put(
+    setMember({ desk: desk.id, user: member.id }).url,
+    { role: member.role, in_rotation: inRotation },
+    { preserveScroll: true },
+  );
+}
+
 function remove(close: () => void): void {
   router.delete(removeMember({ desk: desk.id, user: removing.value!.id }).url, {
     preserveScroll: true,
@@ -160,6 +172,7 @@ function archive(close: () => void): void {
             <Th>Name</Th>
             <Th>Email</Th>
             <Th>Role</Th>
+            <Th>In rotation</Th>
             <Th v-if="can.manageMembers" right>
               <span class="sr-only">Actions</span>
             </Th>
@@ -184,6 +197,17 @@ function archive(close: () => void): void {
               <template v-else>
                 {{ member.role ? roles[member.role] : '—' }}
               </template>
+            </Td>
+            <Td>
+              <AppCheckbox
+                v-if="can.manageMembers"
+                :model-value="member.in_rotation"
+                :aria-label="`In rotation: ${member.name}`"
+                @update:model-value="setInRotation(member, Boolean($event))"
+              />
+              <template v-else>{{
+                member.in_rotation ? 'Yes' : 'No'
+              }}</template>
             </Td>
             <Td v-if="can.manageMembers" class="text-end">
               <AppButton

@@ -114,7 +114,7 @@ test('members are added, listed with their role and removed', function () {
 
     $this->getJson($membersUrl)
         ->assertOk()
-        ->assertJsonPath('data.0', ['id' => $this->agent->id, 'name' => $this->agent->name, 'email' => $this->agent->email, 'role' => 'lead']);
+        ->assertJsonPath('data.0', ['id' => $this->agent->id, 'name' => $this->agent->name, 'email' => $this->agent->email, 'role' => 'lead', 'in_rotation' => true]);
 
     $this->putJson("{$membersUrl}/{$this->agent->id}", ['role' => 'boss'])->assertJsonValidationErrors('role');
 

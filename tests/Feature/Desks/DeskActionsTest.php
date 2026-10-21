@@ -98,3 +98,25 @@ test('only workspace members can be added to a desk', function () {
     expect(fn () => app(SetDeskMember::class)->handle($this->admin, Desk::sole(), $stranger, ['role' => DeskRole::AGENT->value]))
         ->toThrow(ValidationException::class);
 });
+
+test('the rotation flag is only written when given, so a role change keeps it', function () {
+    $desk = Desk::sole();
+    $pivot = fn () => $desk->users()->whereKey($this->agent->id)->first()->pivot;
+
+    app(SetDeskMember::class)->handle($this->admin, $desk, $this->agent, ['role' => DeskRole::AGENT->value]);
+    expect($pivot()->in_rotation)->toBeTrue();
+
+    app(SetDeskMember::class)->handle($this->admin, $desk, $this->agent, ['role' => DeskRole::AGENT->value, 'in_rotation' => false]);
+    expect($pivot()->in_rotation)->toBeFalse();
+
+    app(SetDeskMember::class)->handle($this->admin, $desk, $this->agent, ['role' => DeskRole::LEAD->value]);
+    expect($pivot()->in_rotation)->toBeFalse();
+});
+
+test('setting the rotation flag needs the manageMembers ability', function () {
+    $desk = Desk::sole();
+    $desk->users()->attach($this->agent, ['role' => DeskRole::AGENT, 'workspace_id' => $this->workspace->id]);
+
+    expect(fn () => app(SetDeskMember::class)->handle($this->agent, $desk, $this->agent, ['role' => DeskRole::AGENT->value, 'in_rotation' => false]))
+        ->toThrow(AuthorizationException::class);
+});

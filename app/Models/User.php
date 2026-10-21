@@ -118,7 +118,7 @@ class User extends Authenticatable implements MustVerifyEmail, OAuthenticatable,
     {
         return $this->belongsToMany(Workspace::class, 'workspace_user')
             ->using(WorkspaceUser::class)
-            ->withPivot('role', 'notification_preferences')
+            ->withPivot('role', 'notification_preferences', 'away_at')
             ->withTimestamps();
     }
 
@@ -131,7 +131,7 @@ class User extends Authenticatable implements MustVerifyEmail, OAuthenticatable,
     {
         return $this->belongsToMany(Desk::class, 'desk_user')
             ->using(DeskUser::class)
-            ->withPivot('role')
+            ->withPivot('role', 'in_rotation', 'last_assigned_at')
             ->withTimestamps();
     }
 

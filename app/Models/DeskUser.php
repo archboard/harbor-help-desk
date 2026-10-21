@@ -26,6 +26,12 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|DeskUser whereUserId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|DeskUser whereWorkspaceId($value)
  *
+ * @property bool $in_rotation
+ * @property CarbonImmutable|null $last_assigned_at
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DeskUser whereInRotation($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|DeskUser whereLastAssignedAt($value)
+ *
  * @mixin \Eloquent
  */
 class DeskUser extends Pivot
@@ -39,6 +45,8 @@ class DeskUser extends Pivot
     {
         return [
             'role' => DeskRole::class,
+            'in_rotation' => 'boolean',
+            'last_assigned_at' => 'datetime',
         ];
     }
 }

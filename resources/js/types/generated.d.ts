@@ -82,9 +82,11 @@ declare namespace App {
         name: string;
         email: string;
         role: App.Enums.DeskRole | null;
+        in_rotation: boolean;
       };
       export type SetDeskMemberData = {
         role: App.Enums.DeskRole;
+        in_rotation?: boolean;
       };
       export type SyncDeskCustomFieldsData = {
         field_ids: string[];
@@ -358,6 +360,9 @@ declare namespace App {
       };
     }
     namespace Workspaces {
+      export type SetAwayData = {
+        away: boolean;
+      };
       export type UpdateWorkspaceData = {
         name: string;
       };
@@ -372,6 +377,7 @@ declare namespace App {
         name: string;
         subdomain: string;
         is_admin: boolean;
+        away_at: string | null;
         settings?: App.Data.Workspaces.WorkspaceSettings;
       };
       export type WorkspaceSettings = {

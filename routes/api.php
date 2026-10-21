@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\MarkNotificationsReadController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\NotificationPreferenceController;
 use App\Http\Controllers\Api\V1\SavedViewController;
+use App\Http\Controllers\Api\V1\SetAwayController;
 use App\Http\Controllers\Api\V1\TicketAssigneeController;
 use App\Http\Controllers\Api\V1\TicketCommentController;
 use App\Http\Controllers\Api\V1\TicketController;
@@ -34,6 +35,8 @@ Route::prefix('v1')->name('api.v1.')
         Route::get('workspace', [WorkspaceController::class, 'show'])->name('workspace.show');
         Route::patch('workspace', [WorkspaceController::class, 'update'])->name('workspace.update');
         Route::patch('workspace/settings', [WorkspaceSettingsController::class, 'update'])->name('workspace.settings.update');
+
+        Route::put('availability', SetAwayController::class)->name('availability.update');
 
         Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
         Route::post('notifications/read', MarkNotificationsReadController::class)->name('notifications.read');

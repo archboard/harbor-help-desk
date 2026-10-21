@@ -93,7 +93,7 @@ class Desk extends Model
     {
         return $this->belongsToMany(User::class, 'desk_user')
             ->using(DeskUser::class)
-            ->withPivot('role')
+            ->withPivot('role', 'in_rotation', 'last_assigned_at')
             ->withTimestamps();
     }
 

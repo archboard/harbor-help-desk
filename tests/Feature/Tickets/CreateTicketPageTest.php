@@ -36,7 +36,7 @@ test('the form lists the agent\'s desks with their fields and members', function
                     'is_required' => $field->is_required,
                     'position' => $field->position,
                 ]],
-                'members' => [['id' => $this->agent->id, 'name' => $this->agent->name, 'email' => $this->agent->email, 'role' => 'agent']],
+                'members' => [['id' => $this->agent->id, 'name' => $this->agent->name, 'email' => $this->agent->email, 'role' => 'agent', 'in_rotation' => true]],
                 'archived_at' => null,
             ]])
             ->where('statuses.open', 'Open'));
