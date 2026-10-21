@@ -10,6 +10,8 @@ import { formatDateTime, timeAgo } from '@/lib/dates';
 const { comments, events, canWork } = defineProps<{
   ticketId: string;
   deskMembers: App.Data.Desks.DeskMemberData[];
+  /** Undefined while the deferred prop loads. */
+  macros?: App.Data.Macros.MacroData[];
   comments: App.Data.Tickets.TicketCommentData[];
   events: App.Data.Tickets.TicketEventData[];
   /** Can reply and edit their own comments: may update and the ticket isn't deleted. */
@@ -130,6 +132,7 @@ function isResolution(event: App.Data.Tickets.TicketEventData): boolean {
         class="flex-auto"
         :ticket-id="ticketId"
         :desk-members="deskMembers"
+        :macros="macros"
       />
     </div>
   </div>

@@ -36,6 +36,7 @@ const { ticket, comments, events, can } = defineProps<{
   deskMembers: App.Data.Desks.DeskMemberData[];
   desks: App.Data.Desks.DeskData[];
   tags: App.Data.Tags.TagData[];
+  macros?: App.Data.Macros.MacroData[];
   statuses: Record<string, string>;
   priorities: Record<string, string>;
   can: { update: boolean; delete: boolean; restore: boolean };
@@ -229,6 +230,7 @@ function restoreTicket(): void {
         <TicketTimeline
           :ticket-id="ticket.id"
           :desk-members="deskMembers"
+          :macros="macros"
           :comments="comments"
           :events="events"
           :can-work="can.update && canEdit"

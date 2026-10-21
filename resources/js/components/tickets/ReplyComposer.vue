@@ -1,19 +1,23 @@
 <script setup lang="ts">
-import { useForm } from '@inertiajs/vue3';
+import { router, useForm, useHttp } from '@inertiajs/vue3';
 import { Upload } from '@lucide/vue';
 import { useDropZone } from '@vueuse/core';
-import { computed, ref, useTemplateRef } from 'vue';
+import { computed, nextTick, ref, useTemplateRef } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import AppTextarea from '@/components/forms/AppTextarea.vue';
+import GenericObjectCombobox from '@/components/forms/GenericObjectCombobox.vue';
 import FieldError from '@/components/forms/FieldError.vue';
 import FilePicker from '@/components/forms/FilePicker.vue';
 import FadeIn from '@/components/transitions/FadeIn.vue';
 import { firstListError } from '@/lib/files';
+import { apply } from '@/routes/tickets/macros';
 import { store } from '@/routes/tickets/comments';
 
-const { ticketId, deskMembers } = defineProps<{
+const { ticketId, deskMembers, macros } = defineProps<{
   ticketId: string;
   deskMembers: App.Data.Desks.DeskMemberData[];
+  /** Undefined while the deferred prop loads. */
+  macros?: App.Data.Macros.MacroData[];
 }>();
 
 const form = useForm({
@@ -21,6 +25,51 @@ const form = useForm({
   is_internal: false as boolean,
   attachments: [] as File[],
 } satisfies App.Data.Tickets.AddTicketCommentData);
+
+/**
+ * Applying a macro runs its actions on the server right away. Its body is appended to the
+ * composer for the agent to edit and send, and the composer switches to match.
+ */
+const pickingMacro = ref(false);
+const macroError = ref('');
+const http = useHttp({});
+
+async function toggleMacroPicker(): Promise<void> {
+  pickingMacro.value = !pickingMacro.value;
+
+  if (pickingMacro.value) {
+    await nextTick();
+    document.getElementById('macro-picker')?.focus();
+  }
+}
+
+async function applyMacro(
+  macro: App.Data.Macros.MacroData | null,
+): Promise<void> {
+  if (!macro) {
+    return;
+  }
+
+  macroError.value = '';
+
+  try {
+    const applied = (await http.post(
+      apply.url({ ticket: ticketId, macro: macro.id }),
+    )) as App.Data.Macros.AppliedMacroData;
+
+    if (applied.body) {
+      form.body = form.body ? `${form.body}\n\n${applied.body}` : applied.body;
+      form.is_internal = applied.is_internal;
+    }
+
+    pickingMacro.value = false;
+    router.reload({ only: ['ticket', 'events', 'tags'] });
+  } catch {
+    macroError.value =
+      Object.values<string>(http.errors)[0] ??
+      'The macro could not be applied.';
+  }
+}
 
 function addFiles(files: Iterable<File> | null): void {
   form.attachments = [...form.attachments, ...Array.from(files ?? [])];
@@ -145,26 +194,47 @@ function send(): void {
     ]"
     @submit.prevent="send"
   >
-    <div class="flex gap-1" role="radiogroup" aria-label="Message type">
+    <div class="flex items-center gap-1">
+      <div class="flex gap-1" role="radiogroup" aria-label="Message type">
+        <button
+          v-for="option in [
+            { internal: false, label: 'Reply' },
+            { internal: true, label: 'Internal note' },
+          ]"
+          :key="option.label"
+          type="button"
+          role="radio"
+          :aria-checked="form.is_internal === option.internal"
+          :class="[
+            'rounded-md px-3 py-1.5 text-sm font-medium',
+            form.is_internal === option.internal
+              ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900'
+              : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800',
+          ]"
+          @click="form.is_internal = option.internal"
+        >
+          {{ option.label }}
+        </button>
+      </div>
       <button
-        v-for="option in [
-          { internal: false, label: 'Reply' },
-          { internal: true, label: 'Internal note' },
-        ]"
-        :key="option.label"
         type="button"
-        role="radio"
-        :aria-checked="form.is_internal === option.internal"
-        :class="[
-          'rounded-md px-3 py-1.5 text-sm font-medium',
-          form.is_internal === option.internal
-            ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900'
-            : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800',
-        ]"
-        @click="form.is_internal = option.internal"
+        class="ml-auto rounded-md px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:animate-pulse disabled:opacity-50 dark:text-gray-300 dark:hover:bg-gray-800"
+        :disabled="macros === undefined || http.processing"
+        @click="toggleMacroPicker"
       >
-        {{ option.label }}
+        Macros
       </button>
+    </div>
+
+    <div v-if="pickingMacro && macros" class="space-y-1">
+      <GenericObjectCombobox
+        id="macro-picker"
+        :options="macros as unknown as Record<string, unknown>[]"
+        @update:model-value="
+          applyMacro($event as App.Data.Macros.MacroData | null)
+        "
+      />
+      <FieldError v-if="macroError">{{ macroError }}</FieldError>
     </div>
 
     <div

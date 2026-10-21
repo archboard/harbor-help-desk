@@ -10,6 +10,7 @@ use App\Actions\Tickets\SearchTickets;
 use App\Actions\Tickets\UpdateTicket;
 use App\Data\Desks\DeskData;
 use App\Data\Desks\DeskMemberData;
+use App\Data\Macros\MacroData;
 use App\Data\SavedViews\SavedViewData;
 use App\Data\Tags\TagData;
 use App\Data\Tickets\AttachmentData;
@@ -23,6 +24,7 @@ use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
 use App\Http\Flash;
 use App\Models\Desk;
+use App\Models\Macro;
 use App\Models\SavedView;
 use App\Models\Tag;
 use App\Models\Ticket;
@@ -126,6 +128,7 @@ class TicketController extends Controller
             'deskMembers' => DeskMemberData::collect($ticket->desk->users()->orderBy('name')->get()),
             'desks' => DeskData::collect(Desk::visibleTo($request->user())->orderBy('name')->get()),
             'tags' => TagData::collect(Tag::query()->orderBy('name')->get()),
+            'macros' => Inertia::defer(fn () => MacroData::collect(Macro::visibleTo($request->user())->usableOn($ticket)->orderBy('name')->get())),
             'statuses' => TicketStatus::options(),
             'priorities' => TicketPriority::options(),
             'can' => [

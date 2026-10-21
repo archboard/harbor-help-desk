@@ -99,6 +99,10 @@ declare namespace App {
       };
     }
     namespace Macros {
+      export type AppliedMacroData = {
+        body: string | null;
+        is_internal: boolean;
+      };
       export type CreateMacroData = {
         name: string;
         scope: App.Enums.MacroScope;

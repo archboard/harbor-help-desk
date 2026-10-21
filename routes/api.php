@@ -1,6 +1,7 @@
 <?php
 
 use App\Data\Users\UserData;
+use App\Http\Controllers\Api\V1\ApplyMacroController;
 use App\Http\Controllers\Api\V1\AttachmentController;
 use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\CustomFieldController;
@@ -70,6 +71,7 @@ Route::prefix('v1')->name('api.v1.')
         Route::put('tickets/{ticket}/desk', [TicketDeskController::class, 'update'])->name('tickets.desk.update');
         Route::put('tickets/{ticket}/assignees', [TicketAssigneeController::class, 'update'])->name('tickets.assignees.update');
         Route::put('tickets/{ticket}/tags', [TicketTagController::class, 'update'])->name('tickets.tags.update');
+        Route::post('tickets/{ticket}/macros/{macro}/apply', ApplyMacroController::class)->name('tickets.macros.apply');
         Route::get('tickets/{ticket}/events', [TicketEventController::class, 'index'])->name('tickets.events.index');
 
         Route::apiResource('tickets.comments', TicketCommentController::class)->shallow()->except('show');
