@@ -3,6 +3,7 @@
 use App\Enums\DeskRole;
 use App\Enums\WorkspaceRole;
 use App\Models\Desk;
+use App\Models\SlaPolicy;
 use App\Models\User;
 use App\Models\Workspace;
 
@@ -34,11 +35,12 @@ test('admins list every desk and agents only their own', function () {
             'name' => $this->acmeDesk->name,
             'slug' => $this->acmeDesk->slug,
             'assignment_strategy' => 'manual',
+            'sla_policy_id' => null,
             'custom_fields' => [],
             'archived_at' => null,
         ])
         ->assertExactJsonStructure([
-            'data' => ['*' => ['id', 'name', 'slug', 'assignment_strategy', 'custom_fields', 'archived_at']],
+            'data' => ['*' => ['id', 'name', 'slug', 'assignment_strategy', 'sla_policy_id', 'custom_fields', 'archived_at']],
             'links' => ['*' => ['url', 'label', 'page', 'active']],
             'meta' => ['current_page', 'first_page_url', 'from', 'last_page', 'last_page_url', 'next_page_url', 'path', 'per_page', 'prev_page_url', 'to', 'total'],
         ]);
@@ -93,6 +95,24 @@ test('leads update their desk and agents cannot', function () {
         ->assertJsonPath('assignment_strategy', 'round_robin');
     $this->patchJson("http://acme.harbor.test/api/v1/desks/{$this->acmeDesk->id}", ['assignment_strategy' => 'random'])
         ->assertJsonValidationErrors(['assignment_strategy']);
+});
+
+test('a desk lead picks the desk\'s SLA policy from the workspace\'s own', function () {
+    $mine = $this->acme->execute(fn () => SlaPolicy::factory()->create());
+    $theirs = $this->other->execute(fn () => SlaPolicy::factory()->create());
+    $this->acmeDesk->users()->attach($this->agent, ['role' => DeskRole::LEAD, 'workspace_id' => $this->acme->id]);
+    actAs($this->agent, $this->acme);
+    $url = "http://acme.harbor.test/api/v1/desks/{$this->acmeDesk->id}";
+
+    $this->patchJson($url, ['sla_policy_id' => $mine->id])->assertOk()->assertJsonPath('sla_policy_id', $mine->id);
+    $this->patchJson($url, ['sla_policy_id' => $theirs->id])->assertJsonValidationErrors('sla_policy_id');
+    expect($this->acmeDesk->fresh()->sla_policy_id)->toBe($mine->id);
+
+    $this->patchJson($url, ['sla_policy_id' => null])->assertOk()->assertJsonPath('sla_policy_id', null);
+
+    $this->patchJson($url, ['sla_policy_id' => $mine->id]);
+    $mine->delete();
+    expect($this->acmeDesk->fresh()->sla_policy_id)->toBeNull();
 });
 
 test('desks are archived and restored, but never the last one', function () {

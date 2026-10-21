@@ -97,6 +97,7 @@ declare namespace App {
         name: string;
         slug: string;
         assignment_strategy: App.Enums.AssignmentStrategy;
+        sla_policy_id: string | null;
         custom_fields?: App.Data.CustomFields.CustomFieldData[];
         members?: App.Data.Desks.DeskMemberData[];
         archived_at: string | null;
@@ -119,6 +120,7 @@ declare namespace App {
         name?: string;
         slug?: string;
         assignment_strategy?: App.Enums.AssignmentStrategy;
+        sla_policy_id?: string | null;
       };
     }
     namespace Macros {
@@ -264,6 +266,30 @@ declare namespace App {
         name?: string;
         filters?: Record<string, any>;
         is_shared?: boolean;
+      };
+    }
+    namespace SlaPolicies {
+      export type CreateSlaPolicyData = {
+        name: string;
+        targets: Record<string, Record<string, number>>;
+        business_schedule_id?: string | null;
+        warning_percent?: number;
+      };
+      export type SlaPolicyData = {
+        id: string;
+        name: string;
+        business_schedule_id: string | null;
+        warning_percent: number;
+        targets: Record<string, Record<string, number>>;
+        business_schedule?: App.Data.BusinessSchedules.BusinessScheduleData | null;
+        created_at: string | null;
+        updated_at: string | null;
+      };
+      export type UpdateSlaPolicyData = {
+        name?: string;
+        targets?: Record<string, Record<string, number>>;
+        business_schedule_id?: string | null;
+        warning_percent?: number;
       };
     }
     namespace Tags {
@@ -475,6 +501,7 @@ declare namespace App {
       | 'ticket_updated'
       | 'mentioned'
       | 'reminder_due';
+    export type SlaMetric = 'first_response' | 'resolution';
     export type TicketEventType =
       | 'created'
       | 'subject_changed'

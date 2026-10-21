@@ -54,6 +54,7 @@ These apply to every agent, including subagents executing a plan step:
 | `mbx_` | `Mailbox`          |
 | `mac_` | `Macro`            |
 | `bsc_` | `BusinessSchedule` |
+| `slp_` | `SlaPolicy`        |
 
 ## Tenancy
 

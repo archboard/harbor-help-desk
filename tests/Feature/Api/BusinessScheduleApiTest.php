@@ -2,6 +2,7 @@
 
 use App\Enums\WorkspaceRole;
 use App\Models\BusinessSchedule;
+use App\Models\SlaPolicy;
 use App\Models\User;
 use App\Models\Workspace;
 
@@ -92,4 +93,16 @@ test('another workspace\'s schedules are invisible and untouchable', function ()
     $this->deleteJson("{$this->url}/{$theirs->id}")->assertNotFound();
 
     expect($theirs->fresh()->name)->toBe('Theirs');
+});
+
+test('a schedule cannot be deleted while an SLA policy uses it', function () {
+    $schedule = $this->acme->execute(fn () => BusinessSchedule::factory()->create());
+    $policy = $this->acme->execute(fn () => SlaPolicy::factory()->create(['business_schedule_id' => $schedule->id]));
+    actAs($this->admin, $this->acme);
+
+    $this->deleteJson("{$this->url}/{$schedule->id}")->assertUnprocessable()->assertJsonValidationErrors('business_schedule');
+    expect($schedule->fresh())->not->toBeNull();
+
+    $policy->delete();
+    $this->deleteJson("{$this->url}/{$schedule->id}")->assertNoContent();
 });
