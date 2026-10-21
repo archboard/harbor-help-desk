@@ -9,7 +9,7 @@ use Illuminate\Http\UploadedFile;
 use Spatie\LaravelData\Optional;
 
 /**
- * Who may set `is_internal`, `message_id` and `mentioned_user_ids` is checked by {@see AddTicketComment}.
+ * Who may set `is_internal`, `message_id`, `mentioned_user_ids` and `last_seen_comment_id` is checked by {@see AddTicketComment}.
  */
 class AddTicketCommentData extends InputData
 {
@@ -23,6 +23,7 @@ class AddTicketCommentData extends InputData
         public string|Optional|null $messageId,
         public array|Optional $attachments,
         public array|Optional $mentionedUserIds,
+        public string|Optional|null $lastSeenCommentId,
     ) {}
 
     /**
@@ -33,6 +34,7 @@ class AddTicketCommentData extends InputData
         return [
             'body' => ['required', 'string', 'max:65535'],
             'message_id' => ['sometimes', 'nullable', 'string', 'max:998'],
+            'last_seen_comment_id' => ['sometimes', 'nullable', 'string'],
             'attachments' => ['sometimes', 'array', 'max:20'],
             'attachments.*' => AddTicketAttachment::rules(),
             'mentioned_user_ids' => ['sometimes', 'array'],

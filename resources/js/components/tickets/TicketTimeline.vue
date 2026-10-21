@@ -133,6 +133,12 @@ function isResolution(event: App.Data.Tickets.TicketEventData): boolean {
         :ticket-id="ticketId"
         :desk-members="deskMembers"
         :macros="macros"
+        :last-seen-comment-id="
+          comments.reduce<string | null>(
+            (newest, { id }) => (newest === null || id > newest ? id : newest),
+            null,
+          )
+        "
       />
     </div>
   </div>

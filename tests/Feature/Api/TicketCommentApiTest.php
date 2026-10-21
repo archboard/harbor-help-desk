@@ -99,3 +99,17 @@ test('an internal note via the API mentions desk members and rejects others', fu
 
     expect($colleague->notifications()->pluck('type')->all())->toBe(['mentioned']);
 });
+
+test('the stale reply guard blocks only clients that send last_seen_comment_id', function () {
+    ['workspace' => $workspace, 'desk' => $desk, 'agent' => $agent] = acmeWithAgent();
+    $ticket = Ticket::factory()->for($desk)->create();
+    $seen = TicketComment::factory()->for($ticket)->create();
+    actAs($agent, $workspace);
+    $url = "http://acme.harbor.test/api/v1/tickets/{$ticket->id}/comments";
+    $headers = ['Accept' => 'application/json'];
+
+    $this->post($url, ['body' => 'Hi'], $headers)->assertCreated();
+    $this->post($url, ['body' => 'Hi', 'last_seen_comment_id' => ''], $headers)->assertUnprocessable()->assertJsonValidationErrors('last_seen_comment_id');
+    $this->post($url, ['body' => 'Hi', 'last_seen_comment_id' => TicketComment::query()->latest('id')->value('id')], $headers)->assertCreated();
+    expect($seen->id)->toBeString();
+});

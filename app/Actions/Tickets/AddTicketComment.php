@@ -12,6 +12,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class AddTicketComment
 {
@@ -22,6 +23,8 @@ class AddTicketComment
      * `attachments` are attached to the comment. An agent's public reply is emailed to the
      * requester once the transaction commits. A contact (replying by email) skips the policy
      * check, can't add internal notes, and alone may set `message_id` (the email's Message-ID).
+     * A user may send `last_seen_comment_id` (null when none were shown): if anyone else commented
+     * after it, the reply is rejected so two people don't answer at once. Omitting it skips the check.
      * An internal note's `mentioned_user_ids` (desk members) are stored on its event.
      *
      * @param  array<string, mixed>  $input
@@ -35,11 +38,16 @@ class AddTicketComment
         $validated = AddTicketCommentData::validateAndCreateWith($input, [
             'is_internal' => [$actor instanceof User ? 'sometimes' : 'prohibited'],
             'message_id' => [$actor instanceof Contact ? 'sometimes' : 'prohibited'],
+            'last_seen_comment_id' => [$actor instanceof User ? 'sometimes' : 'prohibited'],
             'mentioned_user_ids' => [$actor instanceof User && filter_var($input['is_internal'] ?? false, FILTER_VALIDATE_BOOLEAN) ? 'sometimes' : 'prohibited'],
             'mentioned_user_ids.*' => [Rule::in($ticket->desk->users()->pluck('users.id')->all())],
         ])->filled();
 
         return DB::transaction(function () use ($actor, $ticket, $validated): TicketComment {
+            if ($actor instanceof User && array_key_exists('last_seen_comment_id', $validated)) {
+                $this->ensureNoNewReplies($actor, $ticket, $validated['last_seen_comment_id']);
+            }
+
             $comment = new TicketComment([
                 'body' => $validated['body'],
                 'is_internal' => $validated['is_internal'] ?? false,
@@ -68,5 +76,24 @@ class AddTicketComment
 
             return $comment;
         });
+    }
+
+    /**
+     * @throws ValidationException
+     */
+    protected function ensureNoNewReplies(User|Contact $actor, Ticket $ticket, ?string $lastSeenCommentId): void
+    {
+        $newest = $ticket->comments()
+            ->when($lastSeenCommentId, fn ($query) => $query->where('id', '>', $lastSeenCommentId))
+            ->whereNot(fn ($query) => $query->whereMorphedTo('author', $actor))
+            ->with('author')
+            ->latest('id')
+            ->first();
+
+        if ($newest) {
+            throw ValidationException::withMessages([
+                'last_seen_comment_id' => __(':name replied while you were writing.', ['name' => $newest->author->getAttribute('name')]),
+            ]);
+        }
     }
 }

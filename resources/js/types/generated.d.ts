@@ -259,6 +259,7 @@ declare namespace App {
         message_id?: string | null;
         attachments?: File[];
         mentioned_user_ids?: string[];
+        last_seen_comment_id?: string | null;
       };
       export type AttachmentData = {
         id: string;

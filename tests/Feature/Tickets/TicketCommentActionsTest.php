@@ -120,3 +120,49 @@ test('an internal note stores its mentions and rejects non-members, repeats, pub
         ->and($add($agent, ['mentioned_user_ids' => [$colleague->id]]))->toThrow(ValidationException::class)
         ->and($add($ticket->requester, ['mentioned_user_ids' => [$colleague->id]]))->toThrow(ValidationException::class);
 });
+
+test('a stale reply is blocked when someone else commented after the last seen comment', function (string $who) {
+    $ticket = Ticket::factory()->create();
+    $agent = deskMember($this->workspace, $ticket->desk);
+    $seen = app(AddTicketComment::class)->handle($ticket->requester, $ticket, ['body' => 'Hello?']);
+    $other = $who === 'contact' ? $ticket->requester : deskMember($this->workspace, $ticket->desk);
+    app(AddTicketComment::class)->handle($other, $ticket, ['body' => 'Anyone there?']);
+
+    try {
+        app(AddTicketComment::class)->handle($agent, $ticket, ['body' => 'Hi', 'last_seen_comment_id' => $seen->id]);
+        $this->fail('Expected a ValidationException.');
+    } catch (ValidationException $e) {
+        expect($e->errors()['last_seen_comment_id'])->toBe([$other->name.' replied while you were writing.']);
+    }
+
+    expect($ticket->comments()->count())->toBe(2);
+})->with(['another agent' => 'agent', 'the contact' => 'contact']);
+
+test('a stale reply guard with a null id blocks on any comment from someone else', function () {
+    $ticket = Ticket::factory()->create();
+    $agent = deskMember($this->workspace, $ticket->desk);
+    app(AddTicketComment::class)->handle($ticket->requester, $ticket, ['body' => 'Hello?']);
+
+    expect(fn () => app(AddTicketComment::class)->handle($agent, $ticket, ['body' => 'Hi', 'last_seen_comment_id' => null]))
+        ->toThrow(ValidationException::class);
+});
+
+test('the stale reply guard ignores the actor own comments and an omitted field', function () {
+    $ticket = Ticket::factory()->create();
+    $agent = deskMember($this->workspace, $ticket->desk);
+    $mine = app(AddTicketComment::class)->handle($agent, $ticket, ['body' => 'First.']);
+    app(AddTicketComment::class)->handle($agent, $ticket, ['body' => 'Second.', 'last_seen_comment_id' => null]);
+    app(AddTicketComment::class)->handle($agent, $ticket, ['body' => 'Third.', 'last_seen_comment_id' => $mine->id]);
+
+    app(AddTicketComment::class)->handle($ticket->requester, $ticket, ['body' => 'Thanks']);
+    app(AddTicketComment::class)->handle($agent, $ticket, ['body' => 'Fourth.']);
+
+    expect($ticket->comments()->count())->toBe(5);
+});
+
+test('contacts cannot send last_seen_comment_id', function () {
+    $ticket = Ticket::factory()->create();
+
+    expect(fn () => app(AddTicketComment::class)->handle($ticket->requester, $ticket, ['body' => 'Hi', 'last_seen_comment_id' => 'cmt_x']))
+        ->toThrow(ValidationException::class);
+});

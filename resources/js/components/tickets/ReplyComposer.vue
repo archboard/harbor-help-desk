@@ -3,6 +3,7 @@ import { router, useForm, useHttp } from '@inertiajs/vue3';
 import { Upload } from '@lucide/vue';
 import { useDropZone } from '@vueuse/core';
 import { computed, nextTick, ref, useTemplateRef } from 'vue';
+import SimpleAlert from '@/components/alerts/SimpleAlert.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppTextarea from '@/components/forms/AppTextarea.vue';
 import GenericObjectCombobox from '@/components/forms/GenericObjectCombobox.vue';
@@ -13,15 +14,18 @@ import { firstListError } from '@/lib/files';
 import { apply } from '@/routes/tickets/macros';
 import { store } from '@/routes/tickets/comments';
 
-const { ticketId, deskMembers, macros } = defineProps<{
+const { ticketId, deskMembers, macros, lastSeenCommentId } = defineProps<{
   ticketId: string;
   deskMembers: App.Data.Desks.DeskMemberData[];
   /** Undefined while the deferred prop loads. */
   macros?: App.Data.Macros.MacroData[];
+  /** The newest comment rendered, or null when there are none. */
+  lastSeenCommentId: string | null;
 }>();
 
 const form = useForm({
   body: '',
+  last_seen_comment_id: null as string | null,
   is_internal: false as boolean,
   attachments: [] as File[],
 } satisfies App.Data.Tickets.AddTicketCommentData);
@@ -163,10 +167,12 @@ function navigateSuggestions(event: KeyboardEvent): void {
   event.preventDefault();
 }
 
-function send(): void {
+/** Set to skip the stale-reply check after the agent chose "Send anyway". */
+function send(skipStaleCheck = false): void {
   form
-    .transform((data) => ({
+    .transform(({ last_seen_comment_id: _, ...data }) => ({
       ...data,
+      ...(skipStaleCheck ? {} : { last_seen_comment_id: lastSeenCommentId }),
       mentioned_user_ids: data.is_internal
         ? mentionedMembers.value
             .filter(({ name }) => data.body.includes(`@${name}`))
@@ -177,6 +183,7 @@ function send(): void {
       preserveScroll: true,
       onSuccess: () => {
         form.reset();
+        form.clearErrors();
         mentionedMembers.value = [];
       },
     });
@@ -192,7 +199,7 @@ function send(): void {
         ? 'bg-yellow-50 ring-yellow-300 dark:bg-yellow-950 dark:ring-yellow-800'
         : 'bg-white ring-gray-300 dark:bg-gray-900 dark:ring-gray-700',
     ]"
-    @submit.prevent="send"
+    @submit.prevent="send()"
   >
     <div class="flex items-center gap-1">
       <div class="flex gap-1" role="radiogroup" aria-label="Message type">
@@ -283,6 +290,25 @@ function send(): void {
     <FieldError v-if="firstListError(form.errors, 'attachments')">
       {{ firstListError(form.errors, 'attachments') }}
     </FieldError>
+
+    <SimpleAlert v-if="form.errors.last_seen_comment_id" level="warning">
+      {{ form.errors.last_seen_comment_id }}
+      <button
+        type="button"
+        class="ml-2 underline"
+        @click="
+          router.reload({
+            only: ['ticket', 'comments', 'events', 'tags', 'attachments'],
+            onSuccess: () => form.clearErrors('last_seen_comment_id'),
+          })
+        "
+      >
+        Show it
+      </button>
+      <button type="button" class="ml-2 underline" @click="send(true)">
+        Send anyway
+      </button>
+    </SimpleAlert>
 
     <div class="flex items-end justify-between gap-3">
       <FilePicker v-model="form.attachments" />
