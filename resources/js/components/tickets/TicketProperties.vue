@@ -10,8 +10,10 @@ import AppLabel from '@/components/forms/AppLabel.vue';
 import AppSelect from '@/components/forms/AppSelect.vue';
 import FieldError from '@/components/forms/FieldError.vue';
 import Pill from '@/components/Pill.vue';
+import RelativeTime from '@/components/RelativeTime.vue';
 import AssigneePicker from '@/components/tickets/AssigneePicker.vue';
 import CustomFieldInput from '@/components/tickets/CustomFieldInput.vue';
+import { formatDuration } from '@/lib/dates';
 import { show as showContact } from '@/routes/contacts';
 import { update as updateTicket } from '@/routes/tickets';
 import { update as moveTicket } from '@/routes/tickets/desk';
@@ -119,6 +121,21 @@ function removeTag(name: string): void {
     names: tagNames().filter((tag) => tag !== name),
   });
 }
+
+/** Breached is red, then met green, then warned amber. */
+function slaColor(target: App.Data.Tickets.TicketSlaTargetData): string {
+  if (target.breached_at) {
+    return 'text-red-600 dark:text-red-400';
+  }
+
+  if (target.achieved_at) {
+    return 'text-green-600 dark:text-green-400';
+  }
+
+  return target.warned_at
+    ? 'text-amber-600 dark:text-amber-400'
+    : 'text-gray-900 dark:text-gray-100';
+}
 </script>
 
 <template>
@@ -152,6 +169,30 @@ function removeTag(name: string): void {
           "
         />
         <FieldError v-if="errors.desk_id">{{ errors.desk_id }}</FieldError>
+      </div>
+
+      <div v-if="ticket.sla_targets?.length" class="space-y-1">
+        <h2 class="font-medium text-gray-500 dark:text-gray-400">SLA</h2>
+        <p
+          v-for="target in ticket.sla_targets"
+          :key="target.metric"
+          :class="slaColor(target)"
+        >
+          {{ target.metric_label }}
+          <template v-if="target.achieved_at">
+            met in {{ formatDuration(target.started_at, target.achieved_at)
+            }}{{ target.breached_at ? ' (breached)' : '' }}
+          </template>
+          <template v-else-if="target.breached_at">
+            breached <RelativeTime :datetime="target.breached_at" />
+          </template>
+          <template v-else-if="target.paused || !target.due_at"
+            >paused</template
+          >
+          <template v-else
+            >due <RelativeTime :datetime="target.due_at"
+          /></template>
+        </p>
       </div>
 
       <div class="space-y-2">

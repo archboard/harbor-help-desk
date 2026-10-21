@@ -54,6 +54,22 @@ export function timeAgo(iso: string | null): string {
 }
 
 /**
+ * The span between two ISO dates, e.g. "45m" or "2h 10m".
+ */
+export function formatDuration(from: string, to: string): string {
+  const minutes = Math.max(0, dayjs(to).diff(dayjs(from), 'minute'));
+  const days = Math.floor(minutes / 1440);
+  const hours = Math.floor((minutes % 1440) / 60);
+  const parts = [
+    days && `${days}d`,
+    hours && `${hours}h`,
+    (minutes % 60 || !minutes) && `${minutes % 60}m`,
+  ];
+
+  return parts.filter(Boolean).join(' ');
+}
+
+/**
  * A localized date, e.g. "Oct 19, 2026".
  */
 export function formatDate(iso: string | null): string {
