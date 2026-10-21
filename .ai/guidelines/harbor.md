@@ -55,6 +55,7 @@ These apply to every agent, including subagents executing a plan step:
 | `mac_` | `Macro`            |
 | `bsc_` | `BusinessSchedule` |
 | `slp_` | `SlaPolicy`        |
+| `slt_` | `TicketSlaTarget`  |
 
 ## Tenancy
 

@@ -22,6 +22,7 @@ class TicketData extends Data
      * @param  stdClass  $customFields  Values keyed by custom field id, as an object even when empty.
      * @param  Collection<int, UserData>|Lazy  $assignees
      * @param  Collection<int, TagData>|Lazy  $tags
+     * @param  Collection<int, TicketSlaTargetData>|Lazy  $slaTargets
      */
     public function __construct(
         public string $id,
@@ -39,6 +40,7 @@ class TicketData extends Data
         public ContactData|Lazy $requester,
         public Collection|Lazy $assignees,
         public Collection|Lazy $tags,
+        public Collection|Lazy $slaTargets,
         public ?CarbonImmutable $createdAt,
         public ?CarbonImmutable $updatedAt,
         public ?CarbonImmutable $deletedAt,
@@ -61,6 +63,7 @@ class TicketData extends Data
             requester: Lazy::whenLoaded('requester', $ticket, fn (): ContactData => ContactData::from($ticket->requester)),
             assignees: Lazy::whenLoaded('assignees', $ticket, fn (): Collection => UserData::collect($ticket->assignees)),
             tags: Lazy::whenLoaded('tags', $ticket, fn (): Collection => TagData::collect($ticket->tags)),
+            slaTargets: Lazy::whenLoaded('slaTargets', $ticket, fn (): Collection => TicketSlaTargetData::collect($ticket->slaTargets)),
             createdAt: $ticket->created_at,
             updatedAt: $ticket->updated_at,
             deletedAt: $ticket->deleted_at,

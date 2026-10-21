@@ -401,6 +401,7 @@ declare namespace App {
         requester?: App.Data.Contacts.ContactData;
         assignees?: App.Data.Users.UserData[];
         tags?: App.Data.Tags.TagData[];
+        sla_targets?: App.Data.Tickets.TicketSlaTargetData[];
         created_at: string | null;
         updated_at: string | null;
         deleted_at: string | null;
@@ -424,6 +425,16 @@ declare namespace App {
         remind_at: string;
         note: string | null;
         sent_at: string | null;
+      };
+      export type TicketSlaTargetData = {
+        metric: App.Enums.SlaMetric;
+        metric_label: string;
+        started_at: string;
+        due_at: string | null;
+        paused: boolean;
+        warned_at: string | null;
+        breached_at: string | null;
+        achieved_at: string | null;
       };
       export type UpdateTicketCommentData = {
         body: string;

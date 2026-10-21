@@ -40,6 +40,7 @@ test('agents open tickets on their desk', function () {
         'requester' => ['id' => $ticket->requester_id, 'name' => 'Pat Lee', 'email' => 'pat@example.com'],
         'assignees' => [['id' => $agent->id, 'name' => $agent->name, 'email' => $agent->email]],
         'tags' => [],
+        'sla_targets' => [],
         'created_at' => $ticket->created_at->toIso8601String(),
         'updated_at' => $ticket->updated_at->toIso8601String(),
         'deleted_at' => null,

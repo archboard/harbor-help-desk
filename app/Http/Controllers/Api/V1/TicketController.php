@@ -20,7 +20,7 @@ use Spatie\LaravelData\PaginatedDataCollection;
 
 class TicketController extends Controller
 {
-    protected const array RELATIONS = ['requester', 'assignees', 'tags'];
+    protected const array RELATIONS = ['requester', 'assignees', 'tags', 'slaTargets'];
 
     /**
      * The tickets the user can see, filtered by the query string.

@@ -24,4 +24,26 @@ enum TicketStatus: string
             self::CLOSED => __('Closed'),
         };
     }
+
+    /**
+     * Whether the resolution clock stops while the ticket waits in this status.
+     */
+    public function pausesSla(): bool
+    {
+        return match ($this) {
+            self::PENDING, self::ON_HOLD => true,
+            self::OPEN, self::SOLVED, self::CLOSED => false,
+        };
+    }
+
+    /**
+     * Whether the ticket's work is done.
+     */
+    public function isResolved(): bool
+    {
+        return match ($this) {
+            self::SOLVED, self::CLOSED => true,
+            self::OPEN, self::PENDING, self::ON_HOLD => false,
+        };
+    }
 }

@@ -83,6 +83,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *
  * @method static Builder<static>|Ticket whereMailboxId($value)
  *
+ * @property-read Collection<int, TicketSlaTarget> $slaTargets
+ * @property-read int|null $sla_targets_count
+ *
  * @mixin \Eloquent
  */
 #[Unguarded]
@@ -194,6 +197,14 @@ class Ticket extends Model
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(Tag::class)->withTimestamps();
+    }
+
+    /**
+     * @return HasMany<TicketSlaTarget, $this>
+     */
+    public function slaTargets(): HasMany
+    {
+        return $this->hasMany(TicketSlaTarget::class);
     }
 
     /**
