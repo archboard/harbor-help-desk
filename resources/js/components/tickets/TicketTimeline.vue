@@ -7,6 +7,8 @@ import ReplyComposer from '@/components/tickets/ReplyComposer.vue';
 import TicketCommentCard from '@/components/tickets/TicketCommentCard.vue';
 import { formatDateTime, timeAgo } from '@/lib/dates';
 
+const typing = defineModel<boolean>('typing', { default: false });
+
 const { comments, events, canWork } = defineProps<{
   ticketId: string;
   deskMembers: App.Data.Desks.DeskMemberData[];
@@ -129,6 +131,7 @@ function isResolution(event: App.Data.Tickets.TicketEventData): boolean {
     <div v-if="canWork" class="mt-6 flex gap-x-3">
       <Avatar :name="page.props.auth.user.name" class="mt-1" />
       <ReplyComposer
+        v-model:typing="typing"
         class="flex-auto"
         :ticket-id="ticketId"
         :desk-members="deskMembers"

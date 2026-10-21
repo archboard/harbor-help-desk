@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { router, useForm, useHttp } from '@inertiajs/vue3';
 import { Upload } from '@lucide/vue';
-import { useDropZone } from '@vueuse/core';
-import { computed, nextTick, ref, useTemplateRef } from 'vue';
+import { useDropZone, useTimeoutFn } from '@vueuse/core';
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue';
 import SimpleAlert from '@/components/alerts/SimpleAlert.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppTextarea from '@/components/forms/AppTextarea.vue';
@@ -23,12 +23,31 @@ const { ticketId, deskMembers, macros, lastSeenCommentId } = defineProps<{
   lastSeenCommentId: string | null;
 }>();
 
+/** True while the body is non-empty and was edited in the last 3 seconds. */
+const typing = defineModel<boolean>('typing', { default: false });
+const { start: startIdleTimer } = useTimeoutFn(
+  () => (typing.value = false),
+  3000,
+  { immediate: false },
+);
+
 const form = useForm({
   body: '',
   last_seen_comment_id: null as string | null,
   is_internal: false as boolean,
   attachments: [] as File[],
 } satisfies App.Data.Tickets.AddTicketCommentData);
+
+watch(
+  () => form.body,
+  (body) => {
+    typing.value = body !== '';
+
+    if (typing.value) {
+      startIdleTimer();
+    }
+  },
+);
 
 /**
  * Applying a macro runs its actions on the server right away. Its body is appended to the

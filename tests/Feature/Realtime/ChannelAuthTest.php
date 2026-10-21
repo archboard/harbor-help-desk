@@ -31,10 +31,10 @@ beforeEach(function () {
 /**
  * @return TestResponse<Response>
  */
-function joinChannel(User $user, string $channel): TestResponse
+function joinChannel(User $user, string $channel, string $type = 'private'): TestResponse
 {
     return test()->actingAs($user)->post('/broadcasting/auth', [
-        'channel_name' => "private-{$channel}",
+        'channel_name' => "{$type}-{$channel}",
         'socket_id' => '1234.5678',
     ]);
 }
@@ -60,6 +60,23 @@ test('a user from workspace B cannot join workspace A channels', function () {
 
     joinChannel($outsider, "tickets.{$this->ticket->id}")->assertForbidden();
     joinChannel($outsider, "desks.{$this->ticket->desk_id}")->assertForbidden();
+});
+
+test('the presence channel returns the member as user data and keeps others out', function () {
+    $presence = "tickets.{$this->ticket->id}.presence";
+
+    $response = joinChannel($this->member, $presence, 'presence')->assertOk();
+    expect(json_decode($response->json('channel_data'), true)['user_info'])
+        ->toMatchArray(['id' => $this->member->id, 'name' => $this->member->name]);
+
+    joinChannel(deskMember($this->workspace, Desk::factory()->create()), $presence, 'presence')->assertForbidden();
+
+    $workspaceB = Workspace::factory()->create()->makeCurrent();
+    $outsider = User::factory()->create();
+    $workspaceB->users()->attach($outsider, ['role' => WorkspaceRole::ADMIN]);
+    $this->workspace->makeCurrent();
+
+    joinChannel($outsider, $presence, 'presence')->assertForbidden();
 });
 
 test('a ticket from another workspace does not resolve', function () {

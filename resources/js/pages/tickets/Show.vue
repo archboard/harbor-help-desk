@@ -11,6 +11,7 @@ import AppLabel from '@/components/forms/AppLabel.vue';
 import AppSelect from '@/components/forms/AppSelect.vue';
 import FieldError from '@/components/forms/FieldError.vue';
 import ConfirmationModal from '@/components/modals/ConfirmationModal.vue';
+import Avatar from '@/components/Avatar.vue';
 import Pill from '@/components/Pill.vue';
 import TicketAttachments from '@/components/tickets/TicketAttachments.vue';
 import TicketProperties from '@/components/tickets/TicketProperties.vue';
@@ -22,6 +23,7 @@ import {
   timeAgo,
   toLocalDateTime,
 } from '@/lib/dates';
+import { useTicketPresence } from '@/composables/useTicketPresence';
 import { useLiveReload } from '@/composables/useLiveReload';
 import { destroy, index, restore, update } from '@/routes/tickets';
 
@@ -46,6 +48,9 @@ useLiveReload({
   channels: [`tickets.${ticket.id}`],
   only: ['ticket', 'comments', 'events', 'tags', 'attachments'],
 });
+
+const typing = ref(false);
+const { viewers, typingUserIds } = useTicketPresence(ticket.id, typing);
 
 const isDeleted = computed(() => ticket.deleted_at !== null);
 const canEdit = computed(() => !isDeleted.value);
@@ -160,6 +165,19 @@ function restoreTicket(): void {
         </AppButton>
       </div>
 
+      <ul v-if="viewers.length" class="flex flex-wrap gap-x-4 gap-y-1">
+        <li
+          v-for="viewer in viewers"
+          :key="viewer.id"
+          class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400"
+        >
+          <Avatar :name="viewer.name" />
+          <span v-if="typingUserIds.includes(viewer.id)">
+            {{ viewer.name }} is typing a reply…
+          </span>
+        </li>
+      </ul>
+
       <SimpleAlert v-if="isDeleted" level="warning">
         This ticket was deleted {{ timeAgo(ticket.deleted_at) }}.
         <AppButton
@@ -228,6 +246,7 @@ function restoreTicket(): void {
     <div class="grid gap-6 lg:grid-cols-3">
       <section class="lg:col-span-2" aria-label="Activity">
         <TicketTimeline
+          v-model:typing="typing"
           :ticket-id="ticket.id"
           :desk-members="deskMembers"
           :macros="macros"
