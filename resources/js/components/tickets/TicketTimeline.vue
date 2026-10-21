@@ -5,7 +5,7 @@ import { computed } from 'vue';
 import Avatar from '@/components/Avatar.vue';
 import ReplyComposer from '@/components/tickets/ReplyComposer.vue';
 import TicketCommentCard from '@/components/tickets/TicketCommentCard.vue';
-import { formatDateTime, timeAgo } from '@/lib/dates';
+import RelativeTime from '@/components/RelativeTime.vue';
 
 const typing = defineModel<boolean>('typing', { default: false });
 
@@ -117,13 +117,10 @@ function isResolution(event: App.Data.Tickets.TicketEventData): boolean {
             </span>
             {{ sentence(item.event).rest }}
           </p>
-          <time
+          <RelativeTime
             :datetime="item.event.created_at"
-            :title="formatDateTime(item.event.created_at)"
             class="flex-none py-0.5 text-xs/5 text-gray-500 dark:text-gray-400"
-          >
-            {{ timeAgo(item.event.created_at) }}
-          </time>
+          />
         </template>
       </li>
     </ul>

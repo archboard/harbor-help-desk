@@ -7,7 +7,8 @@ import FieldError from '@/components/forms/FieldError.vue';
 import ConfirmationModal from '@/components/modals/ConfirmationModal.vue';
 import Pill from '@/components/Pill.vue';
 import AttachmentLink from '@/components/tickets/AttachmentLink.vue';
-import { formatDateTime, timeAgo } from '@/lib/dates';
+import RelativeTime from '@/components/RelativeTime.vue';
+import { formatDateTime } from '@/lib/dates';
 import { destroy, update } from '@/routes/comments';
 
 const { comment } = defineProps<{
@@ -74,13 +75,10 @@ function remove(close: () => void): void {
           (edited)
         </span>
       </p>
-      <time
-        :datetime="comment.created_at ?? undefined"
-        :title="formatDateTime(comment.created_at)"
+      <RelativeTime
+        :datetime="comment.created_at"
         class="flex-none py-0.5 text-xs/5 text-gray-500 dark:text-gray-400"
-      >
-        {{ timeAgo(comment.created_at) }}
-      </time>
+      />
       <span v-if="!editing && (canEdit || canDelete)" class="flex gap-1">
         <AppButton
           v-if="canEdit"

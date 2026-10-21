@@ -27,7 +27,7 @@ import Tbody from '@/components/tables/Tbody.vue';
 import Td from '@/components/tables/Td.vue';
 import Th from '@/components/tables/Th.vue';
 import Thead from '@/components/tables/Thead.vue';
-import { formatDateTime, timeAgo } from '@/lib/dates';
+import RelativeTime from '@/components/RelativeTime.vue';
 import { destroy, store, update } from '@/routes/workspace/email';
 import { update as updateSettings } from '@/routes/workspace/settings';
 import { redirect as connect } from '@/routes/mailboxes/oauth';
@@ -245,9 +245,8 @@ function remove(close: () => void): void {
             <div
               v-if="mailbox.polled_at"
               class="mt-1 text-xs text-gray-500 dark:text-gray-400"
-              :title="formatDateTime(mailbox.polled_at)"
             >
-              Checked {{ timeAgo(mailbox.polled_at) }}
+              Checked <RelativeTime :datetime="mailbox.polled_at" />
             </div>
           </Td>
           <Td class="space-x-2 text-end whitespace-nowrap">

@@ -5,7 +5,7 @@ import { useConnectionStatus, useEchoNotification } from '@laravel/echo-vue';
 import { Bell } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import ScaleIn from '@/components/transitions/ScaleIn.vue';
-import { timeAgo } from '@/lib/dates';
+import RelativeTime from '@/components/RelativeTime.vue';
 import { index, read, readOne } from '@/routes/notifications';
 import { show } from '@/routes/tickets';
 
@@ -154,7 +154,7 @@ watch(status, (current) => {
                 </span>
                 <span class="block text-xs text-gray-500 dark:text-gray-400">
                   #{{ notification.data.ticket_number }} ·
-                  {{ timeAgo(notification.created_at) }}
+                  <RelativeTime :datetime="notification.created_at" />
                 </span>
               </span>
             </button>

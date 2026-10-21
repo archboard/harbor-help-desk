@@ -10,7 +10,7 @@ import Th from '@/components/tables/Th.vue';
 import Thead from '@/components/tables/Thead.vue';
 import PriorityPill from '@/components/tickets/PriorityPill.vue';
 import StatusPill from '@/components/tickets/StatusPill.vue';
-import { formatDateTime, timeAgo } from '@/lib/dates';
+import RelativeTime from '@/components/RelativeTime.vue';
 import { show } from '@/routes/tickets';
 
 /**
@@ -89,11 +89,8 @@ const allSelected = computed({
           <Td>
             {{ ticket.assignees?.map((agent) => agent.name).join(', ') || '—' }}
           </Td>
-          <Td
-            class="whitespace-nowrap"
-            :title="formatDateTime(ticket.updated_at)"
-          >
-            {{ timeAgo(ticket.updated_at) }}
+          <Td class="whitespace-nowrap">
+            <RelativeTime :datetime="ticket.updated_at" />
           </Td>
         </tr>
       </Tbody>

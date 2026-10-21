@@ -13,6 +13,7 @@ import FieldError from '@/components/forms/FieldError.vue';
 import ConfirmationModal from '@/components/modals/ConfirmationModal.vue';
 import Avatar from '@/components/Avatar.vue';
 import Pill from '@/components/Pill.vue';
+import RelativeTime from '@/components/RelativeTime.vue';
 import TicketAttachments from '@/components/tickets/TicketAttachments.vue';
 import TicketProperties from '@/components/tickets/TicketProperties.vue';
 import TicketTimeline from '@/components/tickets/TicketTimeline.vue';
@@ -20,7 +21,6 @@ import TicketReminders from '@/components/tickets/TicketReminders.vue';
 import {
   formatDateTime,
   fromLocalDateTime,
-  timeAgo,
   toLocalDateTime,
 } from '@/lib/dates';
 import { useTicketPresence } from '@/composables/useTicketPresence';
@@ -179,7 +179,7 @@ function restoreTicket(): void {
       </ul>
 
       <SimpleAlert v-if="isDeleted" level="warning">
-        This ticket was deleted {{ timeAgo(ticket.deleted_at) }}.
+        This ticket was deleted <RelativeTime :datetime="ticket.deleted_at" />.
         <AppButton
           v-if="can.restore"
           type="button"
