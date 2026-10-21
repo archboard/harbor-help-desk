@@ -14,13 +14,15 @@ class SyncTicketAssignees
 {
     /**
      * Make `user_ids` the ticket's assignees, recording who was assigned and unassigned.
-     * Assignees must be on the ticket's desk.
+     * Assignees must be on the ticket's desk. A null actor is Harbor acting, which skips the policy check.
      *
      * @param  array<string, mixed>  $input
      */
-    public function handle(User $actor, Ticket $ticket, array $input): void
+    public function handle(?User $actor, Ticket $ticket, array $input): void
     {
-        Gate::forUser($actor)->authorize('update', $ticket);
+        if ($actor !== null) {
+            Gate::forUser($actor)->authorize('update', $ticket);
+        }
 
         $userIds = SyncTicketAssigneesData::validateAndCreate($input)->userIds;
 

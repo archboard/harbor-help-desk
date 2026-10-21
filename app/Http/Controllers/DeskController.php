@@ -10,6 +10,7 @@ use App\Data\CustomFields\CustomFieldData;
 use App\Data\Desks\DeskData;
 use App\Data\Desks\DeskMemberData;
 use App\Data\Users\UserData;
+use App\Enums\AssignmentStrategy;
 use App\Enums\DeskRole;
 use App\Models\CustomField;
 use App\Models\Desk;
@@ -58,6 +59,7 @@ class DeskController extends Controller
                 ? Workspace::current()->users()->whereKeyNot($members->modelKeys())->orderBy('name')->get()
                 : []),
             'roles' => DeskRole::options(),
+            'strategies' => AssignmentStrategy::options(),
             'customFields' => CustomFieldData::collect(CustomField::query()->orderBy('position')->orderBy('id')->get()),
             'can' => [
                 'update' => $request->user()->can('update', $desk),

@@ -3,6 +3,7 @@
 namespace App\Data\Desks;
 
 use App\Data\CustomFields\CustomFieldData;
+use App\Enums\AssignmentStrategy;
 use App\Models\Desk;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
@@ -19,6 +20,7 @@ class DeskData extends Data
         public string $id,
         public string $name,
         public string $slug,
+        public AssignmentStrategy $assignmentStrategy,
         public Collection|Lazy $customFields,
         public Collection|Lazy $members,
         public ?CarbonImmutable $archivedAt,
@@ -30,6 +32,7 @@ class DeskData extends Data
             id: $desk->id,
             name: $desk->name,
             slug: $desk->slug,
+            assignmentStrategy: $desk->assignment_strategy,
             customFields: Lazy::whenLoaded('customFields', $desk, fn (): Collection => CustomFieldData::collect($desk->customFields)),
             members: Lazy::whenLoaded('users', $desk, fn (): Collection => DeskMemberData::collect($desk->users)),
             archivedAt: $desk->archived_at,

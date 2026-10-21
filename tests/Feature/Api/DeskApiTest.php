@@ -33,11 +33,12 @@ test('admins list every desk and agents only their own', function () {
             'id' => $this->acmeDesk->id,
             'name' => $this->acmeDesk->name,
             'slug' => $this->acmeDesk->slug,
+            'assignment_strategy' => 'manual',
             'custom_fields' => [],
             'archived_at' => null,
         ])
         ->assertExactJsonStructure([
-            'data' => ['*' => ['id', 'name', 'slug', 'custom_fields', 'archived_at']],
+            'data' => ['*' => ['id', 'name', 'slug', 'assignment_strategy', 'custom_fields', 'archived_at']],
             'links' => ['*' => ['url', 'label', 'page', 'active']],
             'meta' => ['current_page', 'first_page_url', 'from', 'last_page', 'last_page_url', 'next_page_url', 'path', 'per_page', 'prev_page_url', 'to', 'total'],
         ]);
@@ -87,6 +88,11 @@ test('leads update their desk and agents cannot', function () {
         ->assertJsonPath('name', 'Renamed');
     $this->patchJson("http://acme.harbor.test/api/v1/desks/{$this->acmeDesk->id}", ['name' => '', 'slug' => ''])
         ->assertJsonValidationErrors(['name', 'slug']);
+    $this->patchJson("http://acme.harbor.test/api/v1/desks/{$this->acmeDesk->id}", ['assignment_strategy' => 'round_robin'])
+        ->assertOk()
+        ->assertJsonPath('assignment_strategy', 'round_robin');
+    $this->patchJson("http://acme.harbor.test/api/v1/desks/{$this->acmeDesk->id}", ['assignment_strategy' => 'random'])
+        ->assertJsonValidationErrors(['assignment_strategy']);
 });
 
 test('desks are archived and restored, but never the last one', function () {

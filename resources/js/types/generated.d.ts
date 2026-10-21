@@ -73,6 +73,7 @@ declare namespace App {
         id: string;
         name: string;
         slug: string;
+        assignment_strategy: App.Enums.AssignmentStrategy;
         custom_fields?: App.Data.CustomFields.CustomFieldData[];
         members?: App.Data.Desks.DeskMemberData[];
         archived_at: string | null;
@@ -94,6 +95,7 @@ declare namespace App {
       export type UpdateDeskData = {
         name?: string;
         slug?: string;
+        assignment_strategy?: App.Enums.AssignmentStrategy;
       };
     }
     namespace Mailboxes {
@@ -389,6 +391,7 @@ declare namespace App {
     }
   }
   namespace Enums {
+    export type AssignmentStrategy = 'manual' | 'round_robin' | 'load_balanced';
     export type CustomFieldType =
       | 'text'
       | 'textarea'

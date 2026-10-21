@@ -35,6 +35,7 @@ const { desk } = defineProps<{
   members: App.Data.Desks.DeskMemberData[];
   candidates: App.Data.Users.UserData[];
   roles: Record<App.Enums.DeskRole, string>;
+  strategies: Record<App.Enums.AssignmentStrategy, string>;
   customFields: App.Data.CustomFields.CustomFieldData[];
   can: { update: boolean; manageMembers: boolean; archive: boolean };
 }>();
@@ -46,6 +47,7 @@ const page = usePage();
 const form = useForm({
   name: desk.name,
   slug: desk.slug,
+  assignment_strategy: desk.assignment_strategy,
 } satisfies App.Data.Desks.UpdateDeskData);
 
 const fieldsForm = useForm({
@@ -148,6 +150,13 @@ function archive(close: () => void): void {
               label="Slug"
               :error="form.errors.slug"
               required
+            />
+            <SelectField
+              v-model="form.assignment_strategy"
+              label="Automatic assignment"
+              :options="strategies"
+              hide-null
+              :error="form.errors.assignment_strategy"
             />
           </AppFieldset>
         </CardPadding>

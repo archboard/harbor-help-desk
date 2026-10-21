@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AssignmentStrategy;
 use App\Models\Concerns\BelongsToWorkspace;
 use Carbon\CarbonImmutable;
 use Database\Factories\DeskFactory;
@@ -50,6 +51,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *
  * @property-read Collection<int, CustomField> $customFields
  * @property-read int|null $custom_fields_count
+ * @property AssignmentStrategy $assignment_strategy
+ *
+ * @method static Builder<static>|Desk whereAssignmentStrategy($value)
  *
  * @mixin \Eloquent
  */
@@ -61,9 +65,19 @@ class Desk extends Model
 
     public const string DELETED_AT = 'archived_at';
 
+    protected $attributes = ['assignment_strategy' => 'manual'];
+
     public function idPrefix(): string
     {
         return 'dsk_';
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return ['assignment_strategy' => AssignmentStrategy::class];
     }
 
     /**

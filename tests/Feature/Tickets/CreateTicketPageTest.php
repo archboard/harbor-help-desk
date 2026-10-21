@@ -27,6 +27,7 @@ test('the form lists the agent\'s desks with their fields and members', function
                 'id' => $this->desk->id,
                 'name' => $this->desk->name,
                 'slug' => $this->desk->slug,
+                'assignment_strategy' => 'manual',
                 'custom_fields' => [[
                     'id' => $field->id,
                     'name' => $field->name,

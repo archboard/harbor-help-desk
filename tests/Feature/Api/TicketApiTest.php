@@ -34,7 +34,7 @@ test('agents open tickets on their desk', function () {
         'priority' => 'normal',
         'priority_label' => 'Normal',
         'desk_id' => $desk->id,
-        'desk' => ['id' => $desk->id, 'name' => $desk->name, 'slug' => $desk->slug, 'archived_at' => null],
+        'desk' => ['id' => $desk->id, 'name' => $desk->name, 'slug' => $desk->slug, 'assignment_strategy' => 'manual', 'archived_at' => null],
         'due_at' => null,
         'custom_fields' => [],
         'requester' => ['id' => $ticket->requester_id, 'name' => 'Pat Lee', 'email' => 'pat@example.com'],
