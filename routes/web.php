@@ -13,6 +13,7 @@ use App\Http\Controllers\SavedViewController;
 use App\Http\Controllers\SetAwayController;
 use App\Http\Controllers\TicketAssigneeController;
 use App\Http\Controllers\TicketAttachmentController;
+use App\Http\Controllers\TicketClaimController;
 use App\Http\Controllers\TicketCommentController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TicketDeskController;
@@ -54,6 +55,7 @@ Route::middleware('workspace')->group(function () {
         Route::get('tickets', [TicketController::class, 'index'])->name('tickets.index');
         Route::resource('saved-views', SavedViewController::class)->only(['store', 'update', 'destroy']);
         Route::post('tickets/bulk', [TicketController::class, 'bulk'])->name('tickets.bulk');
+        Route::post('tickets/claim', TicketClaimController::class)->name('tickets.claim');
         Route::get('tickets/create', [TicketController::class, 'create'])->name('tickets.create');
         Route::post('desks/{desk}/tickets', [TicketController::class, 'store'])->name('desks.tickets.store');
         Route::get('tickets/{ticket}', [TicketController::class, 'show'])->withTrashed()->name('tickets.show');

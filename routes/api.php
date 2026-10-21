@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\V1\NotificationPreferenceController;
 use App\Http\Controllers\Api\V1\SavedViewController;
 use App\Http\Controllers\Api\V1\SetAwayController;
 use App\Http\Controllers\Api\V1\TicketAssigneeController;
+use App\Http\Controllers\Api\V1\TicketClaimController;
 use App\Http\Controllers\Api\V1\TicketCommentController;
 use App\Http\Controllers\Api\V1\TicketController;
 use App\Http\Controllers\Api\V1\TicketDeskController;
@@ -61,6 +62,7 @@ Route::prefix('v1')->name('api.v1.')
 
         Route::post('desks/{desk}/tickets', [TicketController::class, 'store'])->name('desks.tickets.store');
         Route::post('tickets/bulk', [TicketController::class, 'bulk'])->name('tickets.bulk');
+        Route::post('tickets/claim', TicketClaimController::class)->name('tickets.claim');
         Route::apiResource('tickets', TicketController::class)->except('store');
         Route::post('tickets/{ticket}/restore', [TicketController::class, 'restore'])->withTrashed()->name('tickets.restore');
         Route::put('tickets/{ticket}/desk', [TicketDeskController::class, 'update'])->name('tickets.desk.update');

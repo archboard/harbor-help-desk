@@ -18,7 +18,7 @@ class AutoAssignTicket
      * Assign an open, unassigned ticket to the next eligible member of its desk, acting as Harbor.
      * Eligible members are in the desk's rotation and not Away in the workspace. Returns the new
      * assignee, or null when nothing was assigned. The desk row is locked so concurrent picks
-     * can't choose the same member.
+     * can't choose the same member, and the ticket row so a concurrent claim can't also take it.
      */
     public function handle(Ticket $ticket, ?AssignmentStrategy $strategy = null): ?User
     {
@@ -26,8 +26,11 @@ class AutoAssignTicket
             // Null when the desk is archived, which assigns nobody.
             $desk = Desk::query()->lockForUpdate()->find($ticket->desk_id);
             $strategy ??= $desk?->assignment_strategy;
+            // Re-read under the lock, since a claim may have taken it since it was loaded.
+            $ticket = Ticket::query()->lockForUpdate()->find($ticket->getKey());
 
             if ($desk === null
+                || $ticket === null
                 || $strategy === AssignmentStrategy::MANUAL
                 || $ticket->status !== TicketStatus::OPEN
                 || $ticket->assignees()->exists()) {

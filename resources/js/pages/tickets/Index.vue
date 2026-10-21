@@ -9,7 +9,7 @@ import TicketTable from '@/components/tickets/TicketTable.vue';
 import type { TicketQuery } from '@/components/tickets/TicketFilters.vue';
 import { useLiveReload } from '@/composables/useLiveReload';
 import { cleanQuery, sameQuery } from '@/lib/tickets';
-import { create, index } from '@/routes/tickets';
+import { claim, create, index } from '@/routes/tickets';
 import type { Paginated } from '@/types';
 
 defineOptions({ layout: { title: 'Tickets' } });
@@ -96,6 +96,9 @@ function apply(query: TicketQuery): void {
           :filters="cleanQuery(filters)"
           @apply="apply"
         />
+        <AppButton color="white" @click="router.post(claim.url())">
+          Get next ticket
+        </AppButton>
         <AppButton :component="Link" :href="create()">New ticket</AppButton>
       </div>
     </div>

@@ -165,3 +165,16 @@ test('workspace members off the desk cannot see its tickets', function () {
     $this->getJson("http://acme.harbor.test/api/v1/tickets/{$ticket->id}")->assertForbidden();
     $this->getJson('http://acme.harbor.test/api/v1/tickets')->assertOk()->assertJsonCount(0, 'data');
 });
+
+test('agents claim the next waiting ticket, or get 204', function () {
+    ['workspace' => $workspace, 'desk' => $desk, 'agent' => $agent] = acmeWithAgent();
+    actAs($agent, $workspace);
+
+    $this->postJson('http://acme.harbor.test/api/v1/tickets/claim')->assertNoContent();
+
+    $ticket = Ticket::factory()->for($desk)->create();
+    $this->postJson('http://acme.harbor.test/api/v1/tickets/claim')
+        ->assertOk()
+        ->assertJsonPath('id', $ticket->id)
+        ->assertJsonPath('assignees.0.id', $agent->id);
+});
