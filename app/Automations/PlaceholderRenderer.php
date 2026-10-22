@@ -5,6 +5,7 @@ namespace App\Automations;
 use App\Models\Automation;
 use App\Models\Ticket;
 use App\Models\User;
+use Closure;
 use Illuminate\Support\Str;
 
 /**
@@ -34,8 +35,9 @@ class PlaceholderRenderer
 
     /**
      * @param  array<string, string>  $extra  Placeholder key => value, for what only the caller knows.
+     * @param  (Closure(string): string)|null  $escape  Applied to each value before it is put in, for texts with a syntax (a URL, JSON).
      */
-    public function render(string $text, Ticket $ticket, User|Automation $agent, array $extra = []): string
+    public function render(string $text, Ticket $ticket, User|Automation $agent, array $extra = [], ?Closure $escape = null): string
     {
         $requester = $ticket->requester;
 
@@ -54,7 +56,7 @@ class PlaceholderRenderer
         $replacements = [];
 
         foreach ($values as $key => $value) {
-            $replacements['{{ '.$key.' }}'] = $value;
+            $replacements['{{ '.$key.' }}'] = $escape === null ? $value : $escape($value);
         }
 
         return strtr($text, $replacements);

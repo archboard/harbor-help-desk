@@ -8,6 +8,7 @@ use App\Automations\Actions\Assign;
 use App\Automations\Actions\MoveDesk;
 use App\Automations\Actions\Notify;
 use App\Automations\Actions\SendReply;
+use App\Automations\Actions\SendWebhook;
 use App\Automations\Actions\SetField;
 use App\Automations\Actions\SetReminder;
 use App\Automations\Actions\SetSlaPolicy;
@@ -68,7 +69,7 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->singleton(AutomationRegistry::class, fn () => new AutomationRegistry(
             triggers: [TicketCreated::class, CommentAdded::class, FieldChanged::class, SlaEvent::class, Schedule::class],
-            actions: [SetField::class, Tags::class, Assign::class, MoveDesk::class, SetSlaPolicy::class, SetReminder::class, AddNote::class, SendReply::class, ApplyMacroAction::class, Notify::class],
+            actions: [SetField::class, Tags::class, Assign::class, MoveDesk::class, SetSlaPolicy::class, SetReminder::class, AddNote::class, SendReply::class, ApplyMacroAction::class, Notify::class, SendWebhook::class],
         ));
         $this->app->scoped(RunCausation::class);
         $this->app->scoped(EditorScope::class);

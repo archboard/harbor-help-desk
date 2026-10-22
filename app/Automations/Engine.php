@@ -74,9 +74,9 @@ class Engine
             $run->status = AutomationRunStatus::FAILED;
             $run->error = $this->message($exception);
 
-            $context = ['automation_id' => $automation->getKey(), 'run_id' => $run->getKey(), 'error' => $run->error];
+            $logContext = ['automation_id' => $automation->getKey(), 'run_id' => $run->getKey(), 'error' => $run->error];
             $this->isSafe($exception)
-                ? Log::warning('Automation step failed.', $context)
+                ? Log::warning('Automation step failed.', $logContext)
                 : report($exception);
         }
 
@@ -84,6 +84,14 @@ class Engine
 
         if ($run->status === AutomationRunStatus::FAILED) {
             $this->notifyCreator->handle($automation, $run);
+        }
+
+        try {
+            $context->runDeferred();
+        } catch (AutomationException) {
+            // A deferred job (on the sync queue) has recorded its own failure on the run.
+        } catch (Throwable $exception) {
+            report($exception);
         }
 
         return $run;
@@ -171,6 +179,7 @@ class Engine
     {
         $action = $this->registry->action($step->action) ?? throw new AutomationException(__('The action “:action” does not exist.', ['action' => $step->action]));
 
+        $context->stepId = $step->id;
         $result = $this->causation->during($run->getKey(), fn (): string => $action->execute($context, $step->config));
         $context->refresh();
 

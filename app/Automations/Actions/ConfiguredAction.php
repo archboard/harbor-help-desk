@@ -53,14 +53,14 @@ abstract class ConfiguredAction implements AutomationAction
 
     /**
      * Fill in the placeholders of a text for the run's ticket, with the triggering event's own
-     * (`{{ message.body }}`, ...), as the automation. Cut to `$limit` characters.
+     * (`{{ message.body }}`, ...), as the automation. Cut to `$limit` characters. `$escape` is applied to each value.
      */
-    protected function render(Context $context, string $text, int $limit): string
+    protected function render(Context $context, string $text, int $limit, ?Closure $escape = null): string
     {
         $trigger = app(AutomationRegistry::class)->trigger($context->run->definition->trigger->type);
 
         return Str::limit(
-            app(PlaceholderRenderer::class)->render($text, $context->ticket, $this->actor($context), $trigger?->placeholderValues($context) ?? []),
+            app(PlaceholderRenderer::class)->render($text, $context->ticket, $this->actor($context), $trigger?->placeholderValues($context) ?? [], $escape),
             $limit,
             '',
         );

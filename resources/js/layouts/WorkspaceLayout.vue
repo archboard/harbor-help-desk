@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
+import { edit as automations } from '@/routes/workspace/automations';
 import { edit as attachments } from '@/routes/workspace/attachments';
 import { index as customFields } from '@/routes/workspace/custom-fields';
 import { index as email } from '@/routes/workspace/email';
@@ -8,12 +10,18 @@ import { edit as general } from '@/routes/workspace/general';
 
 const { isCurrentOrParentUrl } = useCurrentUrl();
 
-const sections = [
+const page = usePage();
+
+const sections = computed(() => [
   { label: 'General', href: general().url },
   { label: 'Email', href: email().url },
   { label: 'Attachments', href: attachments().url },
+  // Self-hosted only: the settings in it don't exist in the cloud.
+  ...(page.props.multitenant
+    ? []
+    : [{ label: 'Automations', href: automations().url }]),
   { label: 'Custom fields', href: customFields().url },
-];
+]);
 </script>
 
 <template>

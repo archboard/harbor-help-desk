@@ -25,6 +25,8 @@ class WorkspaceSettings extends Data
         public int $attachmentsMaxSizeKb = 25600,
         /** File extensions that can't be attached, lowercase and without dots; the cloud blocks the platform list as well. */
         public array $attachmentsBlockedExtensions = ['bat', 'cmd', 'com', 'cpl', 'dll', 'exe', 'hta', 'jar', 'js', 'jse', 'lnk', 'msi', 'msp', 'ps1', 'scr', 'sh', 'vbe', 'vbs', 'wsf'],
+        /** Lets automation webhooks reach private, loopback and link-local addresses (LAN targets). Self-hosted only; always off in the cloud. */
+        public bool $automationsAllowPrivateUrls = false,
     ) {}
 
     /**
@@ -38,6 +40,14 @@ class WorkspaceSettings extends Data
             (int) config('harbor.attachments.max_size_kb'),
             (int) floor(UploadedFile::getMaxFilesize() / 1024),
         );
+    }
+
+    /**
+     * Whether automation webhooks may reach private addresses: never in multitenant mode, whatever is stored.
+     */
+    public function effectiveAllowPrivateUrls(): bool
+    {
+        return ! config('harbor.multitenant') && $this->automationsAllowPrivateUrls;
     }
 
     /**

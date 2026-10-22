@@ -19,6 +19,7 @@ declare module '@inertiajs/core' {
   export interface InertiaConfig {
     sharedPageProps: {
       name: string;
+      multitenant: boolean;
       auth: Auth;
       workspace: App.Data.Workspaces.WorkspaceData | null;
       notifications?: { unread_count: number } | null;

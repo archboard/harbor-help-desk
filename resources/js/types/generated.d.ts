@@ -275,6 +275,17 @@ declare namespace App {
         export type SendReplyConfigData = {
           body: string;
         };
+        export type SendWebhookConfigData = {
+          method: string;
+          url: string;
+          headers:
+            | {
+                name: string;
+                value: string;
+              }[]
+            | null;
+          body: string | null;
+        };
         export type SetFieldConfigData = {
           field: string;
           value: any;
@@ -749,6 +760,7 @@ declare namespace App {
         mail_new_tickets_per_sender_per_hour?: number | null;
         attachments_max_size_kb?: number | null;
         attachments_blocked_extensions?: string[] | null;
+        automations_allow_private_urls?: boolean | null;
       };
       export type WorkspaceData = {
         id: string;
@@ -763,6 +775,7 @@ declare namespace App {
         mail_new_tickets_per_sender_per_hour: number;
         attachments_max_size_kb: number;
         attachments_blocked_extensions: string[];
+        automations_allow_private_urls: boolean;
       };
     }
   }

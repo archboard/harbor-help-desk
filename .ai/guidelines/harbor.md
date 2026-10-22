@@ -36,7 +36,7 @@ These apply to every agent, including subagents executing a plan step:
     */
 ```
 
-  The banners are `Properties`, `Booting`, `Casts`, `Accessors`, `Scopes`, `Relationships` and `Methods`. Relations go under `Relationships`, and `idPrefix()` and other helpers under `Methods`. Omit banners for sections the model doesn't have.
+The banners are `Properties`, `Booting`, `Casts`, `Accessors`, `Scopes`, `Relationships` and `Methods`. Relations go under `Relationships`, and `idPrefix()` and other helpers under `Methods`. Omit banners for sections the model doesn't have.
 
 ## Model IDs
 
@@ -51,29 +51,29 @@ These apply to every agent, including subagents executing a plan step:
 - Treat IDs as strings everywhere: `string` type hints and `string` in TypeScript, never `int`.
 - Add each new prefix to this registry:
 
-| Prefix | Model              |
-| ------ | ------------------ |
-| `usr_` | `User`             |
-| `pky_` | `Passkey`          |
-| `wsp_` | `Workspace`        |
-| `dsk_` | `Desk`             |
-| `cfd_` | `CustomField`      |
-| `ctc_` | `Contact`          |
-| `tkt_` | `Ticket`           |
-| `tev_` | `TicketEvent`      |
-| `tag_` | `Tag`              |
-| `cmt_` | `TicketComment`    |
-| `att_` | `Attachment`       |
-| `rmd_` | `TicketReminder`   |
-| `svw_` | `SavedView`        |
-| `mbx_` | `Mailbox`          |
-| `mac_` | `Macro`            |
-| `bsc_` | `BusinessSchedule` |
-| `aut_` | `Automation` |
+| Prefix | Model                   |
+| ------ | ----------------------- |
+| `usr_` | `User`                  |
+| `pky_` | `Passkey`               |
+| `wsp_` | `Workspace`             |
+| `dsk_` | `Desk`                  |
+| `cfd_` | `CustomField`           |
+| `ctc_` | `Contact`               |
+| `tkt_` | `Ticket`                |
+| `tev_` | `TicketEvent`           |
+| `tag_` | `Tag`                   |
+| `cmt_` | `TicketComment`         |
+| `att_` | `Attachment`            |
+| `rmd_` | `TicketReminder`        |
+| `svw_` | `SavedView`             |
+| `mbx_` | `Mailbox`               |
+| `mac_` | `Macro`                 |
+| `bsc_` | `BusinessSchedule`      |
+| `aut_` | `Automation`            |
 | `atm_` | `AutomationTicketMatch` |
-| `arn_` | `AutomationRun` |
-| `slp_` | `SlaPolicy`        |
-| `slt_` | `TicketSlaTarget`  |
+| `arn_` | `AutomationRun`         |
+| `slp_` | `SlaPolicy`             |
+| `slt_` | `TicketSlaTarget`       |
 
 ## Tenancy
 

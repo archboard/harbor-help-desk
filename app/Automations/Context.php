@@ -26,12 +26,41 @@ class Context
     /** @var array<string, mixed> */
     protected array $memo = [];
 
+    /** The id of the action step being executed, set by the engine. */
+    public ?string $stepId = null;
+
+    /** @var list<Closure(): void> */
+    protected array $deferred = [];
+
     /**
      * @param  array<string, mixed>  $payload
      */
     public function __construct(Ticket $ticket, public readonly ?TicketEvent $event = null, public readonly array $payload = [], public readonly ?AutomationRun $run = null)
     {
         $this->ticket = Ticket::query()->withTrashed()->with(['requester', 'desk'])->whereKey($ticket->getKey())->firstOrFail();
+    }
+
+    /**
+     * Run `$callback` once the run is saved, for work that writes to the run itself (see {@see self::runDeferred()}).
+     *
+     * @param  Closure(): void  $callback
+     */
+    public function defer(Closure $callback): void
+    {
+        $this->deferred[] = $callback;
+    }
+
+    /**
+     * Run what was deferred, so a queued job that appends to the run's log can't have its entry overwritten by the run's own save.
+     */
+    public function runDeferred(): void
+    {
+        $callbacks = $this->deferred;
+        $this->deferred = [];
+
+        foreach ($callbacks as $callback) {
+            $callback();
+        }
     }
 
     /**

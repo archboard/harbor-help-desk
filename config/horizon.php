@@ -253,6 +253,21 @@ return [
             'timeout' => 90,
             'nice' => 0,
         ],
+
+        // Outbound automation webhooks (SendAutomationWebhook). Each request takes at most 10 seconds,
+        // so the timeout stays above the job's 30 and below the redis connection's retry_after.
+        'supervisor-automations-http' => [
+            'connection' => 'redis',
+            'queue' => ['automations-http'],
+            'balance' => 'simple',
+            'maxProcesses' => 1,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 128,
+            'tries' => 3,
+            'timeout' => 60,
+            'nice' => 0,
+        ],
     ],
 
     // First match wins, so self-hosters on any APP_ENV other than local get the production plan.
@@ -270,6 +285,9 @@ return [
             'supervisor-automations' => [
                 'maxProcesses' => 1,
             ],
+            'supervisor-automations-http' => [
+                'maxProcesses' => 1,
+            ],
         ],
 
         '*' => [
@@ -285,6 +303,9 @@ return [
                 'maxProcesses' => 3,
             ],
             'supervisor-automations' => [
+                'maxProcesses' => 3,
+            ],
+            'supervisor-automations-http' => [
                 'maxProcesses' => 3,
             ],
         ],

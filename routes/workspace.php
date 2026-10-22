@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Workspace\AttachmentsController;
+use App\Http\Controllers\Workspace\AutomationsController;
 use App\Http\Controllers\Workspace\CustomFieldController;
 use App\Http\Controllers\Workspace\EmailController;
 use App\Http\Controllers\Workspace\GeneralController;
@@ -20,6 +21,8 @@ Route::middleware(['auth', 'verified'])->prefix('workspace')->name('workspace.')
         ->parameters(['email' => 'mailbox']);
 
     Route::get('attachments', [AttachmentsController::class, 'edit'])->name('attachments.edit');
+
+    Route::get('automations', [AutomationsController::class, 'edit'])->name('automations.edit');
 
     Route::resource('custom-fields', CustomFieldController::class)
         ->only(['index', 'store', 'update', 'destroy'])

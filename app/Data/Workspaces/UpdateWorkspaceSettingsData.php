@@ -23,5 +23,6 @@ class UpdateWorkspaceSettingsData extends InputData
         #[Min(1)]
         public int|Optional|null $attachmentsMaxSizeKb,
         public array|Optional|null $attachmentsBlockedExtensions,
+        public bool|Optional|null $automationsAllowPrivateUrls,
     ) {}
 }

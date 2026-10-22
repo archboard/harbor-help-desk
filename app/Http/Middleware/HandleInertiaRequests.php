@@ -42,6 +42,7 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => config('app.name'),
+            'multitenant' => (bool) config('harbor.multitenant'),
             'auth' => [
                 'user' => $request->user() === null ? null : CurrentUserData::from($request->user()),
             ],
