@@ -71,8 +71,7 @@ test('non-members have no channels', function () {
 
 test('the settings page lists every type and channel', function () {
     config(['harbor.multitenant' => false]);
-    $workspace = Workspace::factory()->create()->makeCurrent();
-    $workspace->users()->attach($this->agent, ['role' => WorkspaceRole::AGENT]);
+    $workspace = $this->acme->makeCurrent();
     $this->actingAs($this->agent);
 
     $this->get(route('notification-preferences.edit'))

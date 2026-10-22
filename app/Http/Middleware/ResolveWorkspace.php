@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Workspace;
 use App\TenantFinders\SingleWorkspaceFinder;
 use App\TenantFinders\SubdomainWorkspaceFinder;
 use Closure;
@@ -12,7 +11,8 @@ use Symfony\Component\HttpFoundation\Response;
 class ResolveWorkspace
 {
     /**
-     * Make the request's workspace current, or 404 when there is none.
+     * Make the workspace found from the request current, or 404 when there is none. A workspace
+     * left current by an earlier request in the same process is never reused.
      *
      * @param  Closure(Request): (Response)  $next
      */
@@ -22,7 +22,7 @@ class ResolveWorkspace
             ? app(SubdomainWorkspaceFinder::class)
             : app(SingleWorkspaceFinder::class);
 
-        $workspace = Workspace::current() ?? $finder->findForRequest($request);
+        $workspace = $finder->findForRequest($request);
 
         abort_if($workspace === null, Response::HTTP_NOT_FOUND);
 
