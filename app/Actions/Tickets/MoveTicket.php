@@ -3,6 +3,7 @@
 namespace App\Actions\Tickets;
 
 use App\Enums\TicketEventType;
+use App\Models\Automation;
 use App\Models\Desk;
 use App\Models\Ticket;
 use App\Models\User;
@@ -14,10 +15,12 @@ class MoveTicket
     /**
      * Move the ticket to another desk. The actor needs access to both desks.
      */
-    public function handle(User $actor, Ticket $ticket, Desk $desk): Ticket
+    public function handle(User|Automation $actor, Ticket $ticket, Desk $desk): Ticket
     {
-        Gate::forUser($actor)->authorize('update', $ticket);
-        Gate::forUser($actor)->authorize('create', [Ticket::class, $desk]);
+        if ($actor instanceof User) {
+            Gate::forUser($actor)->authorize('update', $ticket);
+            Gate::forUser($actor)->authorize('create', [Ticket::class, $desk]);
+        }
 
         if ($ticket->desk_id === $desk->getKey()) {
             return $ticket;

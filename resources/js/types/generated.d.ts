@@ -423,7 +423,7 @@ declare namespace App {
         ticket_id: string;
         user_id: string | null;
         for_assignees: boolean;
-        created_by: string;
+        created_by: string | null;
         remind_at: string;
         note: string | null;
         sent_at: string | null;

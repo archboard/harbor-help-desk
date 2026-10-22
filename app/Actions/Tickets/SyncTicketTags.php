@@ -4,6 +4,7 @@ namespace App\Actions\Tickets;
 
 use App\Data\Tickets\SyncTicketTagsData;
 use App\Enums\TicketEventType;
+use App\Models\Automation;
 use App\Models\Tag;
 use App\Models\Ticket;
 use App\Models\User;
@@ -20,9 +21,11 @@ class SyncTicketTags
      *
      * @param  array<string, mixed>  $input
      */
-    public function handle(User $actor, Ticket $ticket, array $input): void
+    public function handle(User|Automation $actor, Ticket $ticket, array $input): void
     {
-        Gate::forUser($actor)->authorize('update', $ticket);
+        if ($actor instanceof User) {
+            Gate::forUser($actor)->authorize('update', $ticket);
+        }
 
         $names = collect(SyncTicketTagsData::validateAndCreate($input)->names)
             ->map(fn (string $name): string => trim($name))

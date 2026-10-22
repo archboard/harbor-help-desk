@@ -5,6 +5,7 @@ namespace App\Actions\Tickets;
 use App\Data\Tickets\CreateTicketData;
 use App\Enums\TicketEventType;
 use App\Enums\TicketSource;
+use App\Models\Automation;
 use App\Models\Contact;
 use App\Models\Desk;
 use App\Models\Ticket;
@@ -24,21 +25,21 @@ class CreateTicket
      * Open a ticket on an active desk. The requester is an existing contact (`requester_id`) or is
      * found or created by email (`requester.email`, `requester.name`). `custom_fields` maps the
      * desk's enabled field ids to values. An optional `body` (with `attachments`) becomes the
-     * ticket's first reply, written by the actor. Contacts (opening a ticket by email) skip the
-     * policy check, can't assign, and alone may set `mailbox_id` and the first reply's `message_id`.
+     * ticket's first reply, written by the actor. An automation may assign. Contacts (opening a ticket by email) skip
+     * the policy check, can't assign, and alone may set `mailbox_id` and the first reply's `message_id`.
      *
      * The `source` is where the caller received the ticket from, never user input.
      *
      * @param  array<string, mixed>  $input
      */
-    public function handle(User|Contact $actor, Desk $desk, array $input, TicketSource $source = TicketSource::WEB): Ticket
+    public function handle(User|Contact|Automation $actor, Desk $desk, array $input, TicketSource $source = TicketSource::WEB): Ticket
     {
         if ($actor instanceof User) {
             Gate::forUser($actor)->authorize('create', [Ticket::class, $desk]);
         }
 
         $validated = CreateTicketData::validateAndCreateWith($input, [
-            'assignee_ids' => [$actor instanceof User ? 'sometimes' : 'prohibited'],
+            'assignee_ids' => [! $actor instanceof Contact ? 'sometimes' : 'prohibited'],
             'mailbox_id' => [$actor instanceof Contact ? 'sometimes' : 'prohibited'],
             'message_id' => [$actor instanceof Contact ? 'sometimes' : 'prohibited'],
             ...CustomFieldRules::for($desk, creating: true),
@@ -55,7 +56,7 @@ class CreateTicket
 
             $ticket->recordEvent(TicketEventType::CREATED, $actor);
 
-            if ($actor instanceof User && isset($validated['assignee_ids'])) {
+            if (! $actor instanceof Contact && isset($validated['assignee_ids'])) {
                 $this->syncTicketAssignees->handle($actor, $ticket, ['user_ids' => $validated['assignee_ids']]);
             }
 

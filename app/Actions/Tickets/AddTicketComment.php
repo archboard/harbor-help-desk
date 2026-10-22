@@ -5,6 +5,7 @@ namespace App\Actions\Tickets;
 use App\Data\Tickets\AddTicketCommentData;
 use App\Enums\TicketEventType;
 use App\Jobs\SendTicketReplyEmail;
+use App\Models\Automation;
 use App\Models\Contact;
 use App\Models\Ticket;
 use App\Models\TicketComment;
@@ -21,22 +22,23 @@ class AddTicketComment
     /**
      * Reply on the ticket, or add an internal note when `is_internal` is true. Files in
      * `attachments` are attached to the comment. An agent's public reply is emailed to the
-     * requester once the transaction commits. A contact (replying by email) skips the policy
-     * check, can't add internal notes, and alone may set `message_id` (the email's Message-ID).
+     * requester once the transaction commits. An automation acts like an agent, without the policy
+     * check or the `last_seen_comment_id` and mention options. A contact (replying by email) skips
+     * the policy check, can't add internal notes, and alone may set `message_id` (the email's Message-ID).
      * A user may send `last_seen_comment_id` (null when none were shown): if anyone else commented
      * after it, the reply is rejected so two people don't answer at once. Omitting it skips the check.
      * An internal note's `mentioned_user_ids` (desk members) are stored on its event.
      *
      * @param  array<string, mixed>  $input
      */
-    public function handle(User|Contact $actor, Ticket $ticket, array $input): TicketComment
+    public function handle(User|Contact|Automation $actor, Ticket $ticket, array $input): TicketComment
     {
         if ($actor instanceof User) {
             Gate::forUser($actor)->authorize('update', $ticket);
         }
 
         $validated = AddTicketCommentData::validateAndCreateWith($input, [
-            'is_internal' => [$actor instanceof User ? 'sometimes' : 'prohibited'],
+            'is_internal' => [! $actor instanceof Contact ? 'sometimes' : 'prohibited'],
             'message_id' => [$actor instanceof Contact ? 'sometimes' : 'prohibited'],
             'last_seen_comment_id' => [$actor instanceof User ? 'sometimes' : 'prohibited'],
             'mentioned_user_ids' => [$actor instanceof User && filter_var($input['is_internal'] ?? false, FILTER_VALIDATE_BOOLEAN) ? 'sometimes' : 'prohibited'],
@@ -70,7 +72,7 @@ class AddTicketComment
                 $this->addTicketAttachment->handle($actor, $ticket, ['file' => $file], $comment);
             }
 
-            if ($actor instanceof User && ! $comment->is_internal) {
+            if (! $actor instanceof Contact && ! $comment->is_internal) {
                 SendTicketReplyEmail::dispatch($comment);
             }
 
@@ -81,7 +83,7 @@ class AddTicketComment
     /**
      * @throws ValidationException
      */
-    protected function ensureNoNewReplies(User|Contact $actor, Ticket $ticket, ?string $lastSeenCommentId): void
+    protected function ensureNoNewReplies(User $actor, Ticket $ticket, ?string $lastSeenCommentId): void
     {
         $newest = $ticket->comments()
             ->when($lastSeenCommentId, fn ($query) => $query->where('id', '>', $lastSeenCommentId))

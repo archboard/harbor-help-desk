@@ -4,6 +4,7 @@ namespace App\Actions\Tickets;
 
 use App\Data\Tickets\SyncTicketAssigneesData;
 use App\Enums\TicketEventType;
+use App\Models\Automation;
 use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -14,13 +15,13 @@ class SyncTicketAssignees
 {
     /**
      * Make `user_ids` the ticket's assignees, recording who was assigned and unassigned.
-     * Assignees must be on the ticket's desk. A null actor is Harbor acting, which skips the policy check.
+     * Assignees must be on the ticket's desk. A null actor is Harbor acting, and an automation acts as itself. Neither is checked against the policy.
      *
      * @param  array<string, mixed>  $input
      */
-    public function handle(?User $actor, Ticket $ticket, array $input): void
+    public function handle(User|Automation|null $actor, Ticket $ticket, array $input): void
     {
-        if ($actor !== null) {
+        if ($actor instanceof User) {
             Gate::forUser($actor)->authorize('update', $ticket);
         }
 

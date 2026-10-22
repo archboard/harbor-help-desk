@@ -22,7 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $workspace_id
  * @property string $ticket_id
  * @property string|null $user_id
- * @property string $created_by
+ * @property string|null $created_by
  * @property CarbonImmutable $remind_at
  * @property string|null $note
  * @property CarbonImmutable|null $sent_at

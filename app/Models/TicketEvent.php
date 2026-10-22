@@ -43,6 +43,10 @@ use LogicException;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TicketEvent whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TicketEvent whereWorkspaceId($value)
  *
+ * @property string|null $automation_run_id
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TicketEvent whereAutomationRunId($value)
+ *
  * @mixin \Eloquent
  */
 #[Unguarded]
@@ -149,6 +153,10 @@ class TicketEvent extends Model
     {
         if ($this->actor_type === null) {
             return __('Harbor');
+        }
+
+        if ($this->actor_type === 'automation') {
+            return $this->actor?->getAttribute('name') ?? __('A deleted automation');
         }
 
         return $this->actor?->getAttribute('name') ?? __('A deleted user');

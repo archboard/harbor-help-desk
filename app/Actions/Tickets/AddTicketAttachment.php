@@ -6,6 +6,7 @@ use App\Data\Tickets\AddTicketAttachmentData;
 use App\Data\Workspaces\WorkspaceSettings;
 use App\Enums\TicketEventType;
 use App\Models\Attachment;
+use App\Models\Automation;
 use App\Models\Contact;
 use App\Models\Ticket;
 use App\Models\TicketComment;
@@ -27,7 +28,7 @@ class AddTicketAttachment
      *
      * @param  array<string, mixed>  $input
      */
-    public function handle(User|Contact $actor, Ticket $ticket, array $input, ?TicketComment $comment = null): Attachment
+    public function handle(User|Contact|Automation $actor, Ticket $ticket, array $input, ?TicketComment $comment = null): Attachment
     {
         if ($actor instanceof User) {
             Gate::forUser($actor)->authorize('update', $ticket);

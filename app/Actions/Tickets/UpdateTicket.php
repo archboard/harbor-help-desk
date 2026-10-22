@@ -4,6 +4,7 @@ namespace App\Actions\Tickets;
 
 use App\Data\Tickets\UpdateTicketData;
 use App\Enums\TicketEventType;
+use App\Models\Automation;
 use App\Models\Ticket;
 use App\Models\User;
 use Closure;
@@ -20,9 +21,11 @@ class UpdateTicket
      *
      * @param  array<string, mixed>  $input
      */
-    public function handle(User $actor, Ticket $ticket, array $input): Ticket
+    public function handle(User|Automation $actor, Ticket $ticket, array $input): Ticket
     {
-        Gate::forUser($actor)->authorize('update', $ticket);
+        if ($actor instanceof User) {
+            Gate::forUser($actor)->authorize('update', $ticket);
+        }
 
         $validated = UpdateTicketData::validateAndCreateWith($input, CustomFieldRules::for($ticket->desk, creating: false))->filled();
 
@@ -48,7 +51,7 @@ class UpdateTicket
      *
      * @param  array<string, mixed>  $incoming
      */
-    protected function updateCustomFields(User $actor, Ticket $ticket, array $incoming): void
+    protected function updateCustomFields(User|Automation $actor, Ticket $ticket, array $incoming): void
     {
         $old = $ticket->custom_fields;
         $new = array_diff_key($old, $incoming) + CustomFieldRules::cast($ticket->desk, $incoming);

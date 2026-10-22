@@ -6,6 +6,7 @@ use App\Http\Controllers\OAuth\ApproveAuthorizationController;
 use App\Http\Controllers\OAuth\AuthorizationController;
 use App\Mail\WorkspaceTransport;
 use App\Models\Attachment;
+use App\Models\Automation;
 use App\Models\Contact;
 use App\Models\CustomField;
 use App\Models\Desk;
@@ -94,6 +95,7 @@ class AppServiceProvider extends ServiceProvider
             'ticket_reminder' => TicketReminder::class,
             'custom_field' => CustomField::class,
             'mailbox' => Mailbox::class,
+            'automation' => Automation::class,
         ]);
 
         Passport::tokensExpireIn(CarbonImmutable::now()->addHour());

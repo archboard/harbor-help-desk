@@ -5,6 +5,7 @@ namespace App\Actions\Macros;
 use App\Actions\Tickets\SyncTicketAssignees;
 use App\Actions\Tickets\SyncTicketTags;
 use App\Actions\Tickets\UpdateTicket;
+use App\Models\Automation;
 use App\Models\Macro;
 use App\Models\Ticket;
 use App\Models\User;
@@ -28,11 +29,13 @@ class ApplyMacro
      *
      * @return array{body: ?string, is_internal: bool}
      */
-    public function handle(User $actor, Ticket $ticket, Macro $macro): array
+    public function handle(User|Automation $actor, Ticket $ticket, Macro $macro): array
     {
-        $gate = Gate::forUser($actor);
-        $gate->authorize('view', $macro);
-        $gate->authorize('update', $ticket);
+        if ($actor instanceof User) {
+            $gate = Gate::forUser($actor);
+            $gate->authorize('view', $macro);
+            $gate->authorize('update', $ticket);
+        }
 
         if ($macro->desk_id !== null && $macro->desk_id !== $ticket->desk_id) {
             throw new AuthorizationException(__('This macro belongs to another desk.'));
@@ -53,7 +56,7 @@ class ApplyMacro
     /**
      * @param  array<string, mixed>  $actions
      */
-    protected function applyFields(User $actor, Ticket $ticket, array $actions): void
+    protected function applyFields(User|Automation $actor, Ticket $ticket, array $actions): void
     {
         $changes = [];
 
@@ -73,7 +76,7 @@ class ApplyMacro
     /**
      * @param  array<string, mixed>  $actions
      */
-    protected function applyTags(User $actor, Ticket $ticket, array $actions): void
+    protected function applyTags(User|Automation $actor, Ticket $ticket, array $actions): void
     {
         $lower = fn (array $names): array => array_map(mb_strtolower(...), $names);
 
@@ -94,11 +97,11 @@ class ApplyMacro
     /**
      * @param  array<string, mixed>  $actions
      */
-    protected function applyAssignee(User $actor, Ticket $ticket, array $actions): void
+    protected function applyAssignee(User|Automation $actor, Ticket $ticket, array $actions): void
     {
         $current = $ticket->assignees()->pluck('users.id')->all();
 
-        if (($actions['assign_to_me'] ?? false) && ! in_array($actor->id, $current, true)) {
+        if ($actor instanceof User && ($actions['assign_to_me'] ?? false) && ! in_array($actor->id, $current, true)) {
             $this->syncTicketAssignees->handle($actor, $ticket, ['user_ids' => [...$current, $actor->id]]);
         }
     }

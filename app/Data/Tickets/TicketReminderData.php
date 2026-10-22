@@ -13,7 +13,7 @@ class TicketReminderData extends Data
         public string $ticketId,
         public ?string $userId,
         public bool $forAssignees,
-        public string $createdBy,
+        public ?string $createdBy,
         public CarbonImmutable $remindAt,
         public ?string $note,
         public ?CarbonImmutable $sentAt,

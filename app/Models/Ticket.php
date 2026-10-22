@@ -88,6 +88,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read int|null $sla_targets_count
  * @property TicketSource $source
  * @property-read SlaPolicy|null $slaPolicy
+ * @property string|null $sla_policy_id
+ *
+ * @method static Builder<static>|Ticket whereSlaPolicyId($value)
+ * @method static Builder<static>|Ticket whereSource($value)
  *
  * @mixin \Eloquent
  */
@@ -244,7 +248,7 @@ class Ticket extends Model
      *
      * @param  array<string, mixed>  $properties
      */
-    public function recordEvent(TicketEventType $type, User|Contact|null $actor, array $properties = []): TicketEvent
+    public function recordEvent(TicketEventType $type, User|Contact|Automation|null $actor, array $properties = []): TicketEvent
     {
         $event = new TicketEvent(['type' => $type, 'properties' => $properties]);
         $event->actor()->associate($actor);
