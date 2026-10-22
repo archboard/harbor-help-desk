@@ -4,6 +4,7 @@ use App\Data\Users\UserData;
 use App\Http\Controllers\Api\V1\ApplyMacroController;
 use App\Http\Controllers\Api\V1\AttachmentController;
 use App\Http\Controllers\Api\V1\AutomationCatalogController;
+use App\Http\Controllers\Api\V1\AutomationController;
 use App\Http\Controllers\Api\V1\BusinessScheduleController;
 use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\CustomFieldController;
@@ -15,7 +16,9 @@ use App\Http\Controllers\Api\V1\MailboxController;
 use App\Http\Controllers\Api\V1\MarkNotificationsReadController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\NotificationPreferenceController;
+use App\Http\Controllers\Api\V1\ReorderAutomationsController;
 use App\Http\Controllers\Api\V1\SavedViewController;
+use App\Http\Controllers\Api\V1\SetAutomationEnabledController;
 use App\Http\Controllers\Api\V1\SetAwayController;
 use App\Http\Controllers\Api\V1\SlaPolicyController;
 use App\Http\Controllers\Api\V1\TicketAssigneeController;
@@ -64,6 +67,9 @@ Route::prefix('v1')->name('api.v1.')
         Route::apiResource('saved-views', SavedViewController::class);
         Route::apiResource('macros', MacroController::class);
         Route::get('automations/catalog', AutomationCatalogController::class)->name('automations.catalog');
+        Route::post('automations/reorder', ReorderAutomationsController::class)->name('automations.reorder');
+        Route::put('automations/{automation}/enabled', SetAutomationEnabledController::class)->name('automations.enabled.update');
+        Route::apiResource('automations', AutomationController::class);
         Route::apiResource('business-schedules', BusinessScheduleController::class);
         Route::apiResource('sla-policies', SlaPolicyController::class)->parameters(['sla-policies' => 'slaPolicy']);
 

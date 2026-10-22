@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Data\Automations\AutomationDefinitionData;
+use App\Enums\DeskRole;
 use App\Models\Concerns\BelongsToWorkspace;
 use Carbon\CarbonImmutable;
 use Database\Factories\AutomationFactory;
@@ -58,6 +59,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder<static>|Automation whereUpdatedBy($value)
  * @method static Builder<static>|Automation whereWebhookTokenHash($value)
  * @method static Builder<static>|Automation whereWorkspaceId($value)
+ * @method static Builder<static>|Automation visibleTo(\App\Models\User $user)
  *
  * @mixin \Eloquent
  */
@@ -72,6 +74,9 @@ class Automation extends Model
 
     /** @use HasFactory<AutomationFactory> */
     use BelongsToWorkspace, HasFactory, HasScru128Ids;
+
+    /** The shape version of the stored `definition`. */
+    public const int SCHEMA_VERSION = 1;
 
     /*
     |--------------------------------------------------------------------------
@@ -107,6 +112,23 @@ class Automation extends Model
     protected function for(Builder $query, Ticket $ticket): void
     {
         $query->where(fn (Builder $query) => $query->whereNull('desk_id')->orWhere('desk_id', $ticket->desk_id));
+    }
+
+    /**
+     * Automations the user may manage: all for admins, else those limited to a desk they lead.
+     *
+     * @param  Builder<self>  $query
+     */
+    #[Scope]
+    protected function visibleTo(Builder $query, User $user): void
+    {
+        $workspace = Workspace::current();
+
+        if ($workspace !== null && $user->workspaceRole($workspace)?->isAdmin() === true) {
+            return;
+        }
+
+        $query->whereIn('desk_id', $user->desks()->wherePivot('role', DeskRole::LEAD)->select('desks.id'));
     }
 
     /*

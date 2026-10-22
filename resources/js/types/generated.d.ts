@@ -80,6 +80,21 @@ declare namespace App {
         actions: App.Data.Automations.CatalogActionData[];
         placeholders: App.Data.Automations.CatalogPlaceholderData[];
       };
+      export type AutomationData = {
+        id: string;
+        desk_id: string | null;
+        name: string;
+        description: string | null;
+        enabled: boolean;
+        position: number;
+        trigger_type: string;
+        definition: App.Data.Automations.AutomationDefinitionData;
+        schema_version: number;
+        created_by: string | null;
+        updated_by: string | null;
+        created_at: string | null;
+        updated_at: string | null;
+      };
       export type AutomationDefinitionData = {
         trigger: App.Data.Automations.TriggerData;
         steps: (
@@ -156,6 +171,13 @@ declare namespace App {
         )[];
         type: 'condition';
       };
+      export type CreateAutomationData = {
+        name: string;
+        description?: string | null;
+        desk_id?: string | null;
+        enabled?: boolean;
+        definition: App.Data.Automations.AutomationDefinitionData;
+      };
       export type DelayForData = {
         amount: number;
         unit: App.Automations.DelayUnit;
@@ -184,11 +206,17 @@ declare namespace App {
         )[];
         type: 'paths';
       };
+      export type ReorderAutomationsData = {
+        ids: string[];
+      };
       export type RuleData = {
         field: string;
         operator: App.Automations.Operator;
         value: any;
         type: 'rule';
+      };
+      export type SetAutomationEnabledData = {
+        enabled: boolean;
       };
       export type StepData = {
         id: string;
@@ -201,6 +229,12 @@ declare namespace App {
       export type TriggerData = {
         type: string;
         config: Record<string, any>;
+      };
+      export type UpdateAutomationData = {
+        name?: string;
+        description?: string | null;
+        desk_id?: string | null;
+        definition: App.Data.Automations.AutomationDefinitionData;
       };
     }
     namespace BusinessSchedules {
