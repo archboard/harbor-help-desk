@@ -4,6 +4,7 @@ namespace App\Actions\Tickets;
 
 use App\Enums\AssignmentStrategy;
 use App\Enums\TicketStatus;
+use App\Models\Automation;
 use App\Models\Desk;
 use App\Models\Ticket;
 use App\Models\User;
@@ -15,14 +16,14 @@ class AutoAssignTicket
     public function __construct(protected SyncTicketAssignees $syncTicketAssignees) {}
 
     /**
-     * Assign an open, unassigned ticket to the next eligible member of its desk, acting as Harbor.
+     * Assign an open, unassigned ticket to the next eligible member of its desk, acting as Harbor, or as the given actor.
      * Eligible members are in the desk's rotation and not Away in the workspace. Returns the new
      * assignee, or null when nothing was assigned. The desk row is locked so concurrent picks
      * can't choose the same member, and the ticket row so a concurrent claim can't also take it.
      */
-    public function handle(Ticket $ticket, ?AssignmentStrategy $strategy = null): ?User
+    public function handle(Ticket $ticket, ?AssignmentStrategy $strategy = null, User|Automation|null $actor = null): ?User
     {
-        return DB::transaction(function () use ($ticket, $strategy): ?User {
+        return DB::transaction(function () use ($ticket, $strategy, $actor): ?User {
             // Null when the desk is archived, which assigns nobody.
             $desk = Desk::query()->lockForUpdate()->find($ticket->desk_id);
             $strategy ??= $desk?->assignment_strategy;
@@ -61,7 +62,7 @@ class AutoAssignTicket
                 return null;
             }
 
-            $this->syncTicketAssignees->handle(null, $ticket, ['user_ids' => [$assignee->getKey()]]);
+            $this->syncTicketAssignees->handle($actor, $ticket, ['user_ids' => [$assignee->getKey()]]);
             $desk->users()->updateExistingPivot($assignee->getKey(), ['last_assigned_at' => now()]);
 
             return $assignee;

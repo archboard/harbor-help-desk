@@ -2,7 +2,14 @@
 
 namespace App\Providers;
 
+use App\Automations\Actions\Assign;
+use App\Automations\Actions\MoveDesk;
+use App\Automations\Actions\SetField;
+use App\Automations\Actions\SetReminder;
+use App\Automations\Actions\SetSlaPolicy;
+use App\Automations\Actions\Tags;
 use App\Automations\AutomationRegistry;
+use App\Automations\EditorScope;
 use App\Automations\RunCausation;
 use App\Automations\Triggers\CommentAdded;
 use App\Automations\Triggers\FieldChanged;
@@ -56,9 +63,10 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->singleton(AutomationRegistry::class, fn () => new AutomationRegistry(
             triggers: [TicketCreated::class, CommentAdded::class, FieldChanged::class, SlaEvent::class],
-            actions: [],
+            actions: [SetField::class, Tags::class, Assign::class, MoveDesk::class, SetSlaPolicy::class, SetReminder::class],
         ));
         $this->app->scoped(RunCausation::class);
+        $this->app->scoped(EditorScope::class);
         $this->app->bind(ScopeRepository::class, WorkspaceScopeRepository::class);
         $this->app->bind(PassportAuthorizationController::class, AuthorizationController::class);
         $this->app->bind(PassportApproveAuthorizationController::class, ApproveAuthorizationController::class);

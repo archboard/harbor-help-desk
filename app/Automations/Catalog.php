@@ -62,7 +62,7 @@ class Catalog
             ), FieldGroup::cases()),
             operators: $this->operators(),
             actions: array_values(array_map(fn ($action): CatalogActionData => new CatalogActionData(
-                $action->key(), $action->label(), $this->rules($action->configRules()),
+                $action->key(), $action->label(), str_replace('\\', '.', $action->configData()), $this->rules($action->configRules()),
             ), $this->registry->actions())),
             placeholders: array_map(
                 fn (string $key, string $label): CatalogPlaceholderData => new CatalogPlaceholderData($key, $label),

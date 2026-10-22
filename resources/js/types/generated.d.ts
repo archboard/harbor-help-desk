@@ -1,5 +1,11 @@
 declare namespace App {
   namespace Automations {
+    export type AssignMode =
+      | 'add'
+      | 'replace'
+      | 'unassign_all'
+      | 'round_robin'
+      | 'load_balanced';
     export type DelayUnit = 'minutes' | 'hours' | 'days';
     export type FieldGroup =
       | 'ticket'
@@ -45,6 +51,7 @@ declare namespace App {
       | 'changed'
       | 'changed_to'
       | 'changed_from';
+    export type TagsMode = 'add' | 'remove' | 'replace';
   }
   namespace Data {
     export type InputData = object;
@@ -119,6 +126,7 @@ declare namespace App {
       export type CatalogActionData = {
         key: string;
         label: string;
+        config_type: string;
         config_rules: Record<string, string[]>;
       };
       export type CatalogFieldData = {
@@ -237,6 +245,32 @@ declare namespace App {
         desk_id?: string | null;
         definition: App.Data.Automations.AutomationDefinitionData;
       };
+      namespace Actions {
+        export type ActionConfigData = object;
+        export type AssignConfigData = {
+          mode: App.Automations.AssignMode;
+          user_ids: string[] | null;
+          desk_id: string | null;
+        };
+        export type MoveDeskConfigData = {
+          desk_id: string;
+        };
+        export type SetFieldConfigData = {
+          field: string;
+          value: any;
+        };
+        export type SetReminderConfigData = {
+          after: App.Data.Automations.DelayForData;
+          note: string | null;
+        };
+        export type SetSlaPolicyConfigData = {
+          sla_policy_id: string | null;
+        };
+        export type TagsConfigData = {
+          mode: App.Automations.TagsMode;
+          names: string[];
+        };
+      }
     }
     namespace BusinessSchedules {
       export type BusinessScheduleData = {

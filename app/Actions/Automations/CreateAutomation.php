@@ -2,6 +2,7 @@
 
 namespace App\Actions\Automations;
 
+use App\Automations\EditorScope;
 use App\Data\Automations\AutomationDefinitionData;
 use App\Data\Automations\CreateAutomationData;
 use App\Models\Automation;
@@ -17,6 +18,8 @@ class CreateAutomation
      */
     public function handle(User $actor, array $input): Automation
     {
+        app(EditorScope::class)->set($actor, $input['desk_id'] ?? null);
+
         $data = CreateAutomationData::validateAndCreate($input);
         $definition = AutomationDefinitionData::from($data->definition);
 

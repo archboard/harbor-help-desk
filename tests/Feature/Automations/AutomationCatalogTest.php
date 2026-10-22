@@ -50,7 +50,8 @@ test('the catalog has the expected shape on the web and the API', function () {
         ->assertJsonStructure(['triggers', 'field_groups' => [['group', 'label', 'fields']], 'operators', 'actions', 'placeholders'])
         ->assertJsonPath('triggers.*.key', ['ticket.created', 'ticket.comment_added', 'ticket.field_changed', 'ticket.sla'])
         ->assertJsonPath('triggers.2.placeholders.*.key', ['event.field', 'event.from', 'event.to'])
-        ->assertJsonPath('actions', [])
+        ->assertJsonPath('actions.*.key', ['set_field', 'tags', 'assign', 'move_desk', 'set_sla_policy', 'set_reminder'])
+        ->assertJsonPath('actions.0.config_type', 'App.Data.Automations.Actions.SetFieldConfigData')
         ->assertJsonCount(count(FieldGroup::cases()), 'field_groups')
         ->assertJsonPath('placeholders.0', ['key' => 'requester.name', 'label' => 'Requester name']);
 

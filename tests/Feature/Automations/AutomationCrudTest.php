@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Support\Facades\DB;
 use Laravel\Passport\Passport;
+use Tests\Fakes\Automations\FakeConfigData;
 
 class FakeMessageTrigger implements Trigger
 {
@@ -94,9 +95,19 @@ class FakeNoteAction implements AutomationAction
         return 'Note';
     }
 
+    public function configData(): string
+    {
+        return FakeConfigData::class;
+    }
+
     public function configRules(): array
     {
         return ['body' => ['required', 'string']];
+    }
+
+    public function contextRules(?User $editor, ?Desk $scope): array
+    {
+        return [];
     }
 
     public function execute(Context $context, array $config): string
@@ -182,7 +193,7 @@ test('admins create, show, update, enable and delete automations', function () {
 
 test('a lead manages automations for their own desk only', function () {
     actAs($this->lead, $this->workspace);
-    $own = Automation::factory()->forDesk($this->desk)->create(['name' => 'Own']);
+    $own = Automation::factory()->forDesk($this->desk)->triggeredBy('fake.message', 'fake.note', ['body' => 'Hi'])->create(['name' => 'Own']);
     $theirs = Automation::factory()->forDesk($this->otherDesk)->create();
     $wide = Automation::factory()->create();
 
@@ -208,7 +219,7 @@ test('a lead manages automations for their own desk only', function () {
 });
 
 test('a lead of another desk and an agent are shut out', function () {
-    $automation = Automation::factory()->forDesk($this->desk)->create();
+    $automation = Automation::factory()->forDesk($this->desk)->triggeredBy('fake.message', 'fake.note', ['body' => 'Hi'])->create();
 
     actAs($this->otherLead, $this->workspace);
     $this->getJson("$this->base/$automation->id")->assertForbidden();
@@ -290,7 +301,7 @@ test('nested paths are keyed by their own id and limited in depth and size', fun
 
 test('updating validates the definition and the desk', function () {
     actAs($this->admin, $this->workspace);
-    $automation = Automation::factory()->create(['trigger_type' => 'fake.message']);
+    $automation = Automation::factory()->triggeredBy('fake.message', 'fake.note', ['body' => 'Hi'])->create();
 
     $this->putJson("$this->base/$automation->id", ['definition' => automationInput([['id' => 'a1', 'type' => 'action', 'action' => 'fake.note']])['definition']])
         ->assertJsonValidationErrors('definition.steps.a1.config.body');
@@ -556,7 +567,7 @@ test('updating changes only what it is given', function () {
 
 test('an admin can widen a desk automation, and archived desks are rejected', function () {
     actAs($this->admin, $this->workspace);
-    $automation = Automation::factory()->forDesk($this->desk)->create();
+    $automation = Automation::factory()->forDesk($this->desk)->triggeredBy('fake.message', 'fake.note', ['body' => 'Hi'])->create();
     $archived = Desk::factory()->create(['archived_at' => now()]);
 
     $this->putJson("$this->base/$automation->id", ['desk_id' => $archived->id])->assertUnprocessable()->assertJsonValidationErrors('desk_id');

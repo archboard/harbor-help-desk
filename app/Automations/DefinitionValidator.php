@@ -4,6 +4,7 @@ namespace App\Automations;
 
 use App\Automations\Fields\Field;
 use App\Models\BusinessSchedule;
+use App\Models\Desk;
 use App\Models\Workspace;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -38,10 +39,12 @@ class DefinitionValidator implements ValidationRule, ValidatorAwareRule
 
     protected int $stepCount = 0;
 
+    protected ?Desk $scopeDesk = null;
+
     /** @var list<FieldGroup> */
     protected array $groups = self::ALWAYS_AVAILABLE;
 
-    public function __construct(protected AutomationRegistry $registry) {}
+    public function __construct(protected AutomationRegistry $registry, protected EditorScope $editorScope) {}
 
     public function setValidator(ValidatorContract $validator): static
     {
@@ -67,6 +70,7 @@ class DefinitionValidator implements ValidationRule, ValidatorAwareRule
         $this->errors = [];
         $this->stepIds = [];
         $this->stepCount = 0;
+        $this->scopeDesk = null;
         $this->groups = self::ALWAYS_AVAILABLE;
 
         if (! is_array($definition)) {
@@ -371,7 +375,10 @@ class DefinitionValidator implements ValidationRule, ValidatorAwareRule
             return;
         }
 
-        $this->config($step['config'] ?? [], $action->configRules(), "$key.config");
+        $this->config($step['config'] ?? [], array_merge_recursive(
+            $action->configRules(),
+            $action->contextRules($this->editorScope->editor(), $this->scopeDesk ??= $this->editorScope->desk()),
+        ), "$key.config");
     }
 
     /**
