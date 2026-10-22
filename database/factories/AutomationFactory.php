@@ -61,7 +61,7 @@ class AutomationFactory extends Factory
     protected function definitionFor(string $trigger, string $action, array $config): array
     {
         return [
-            'trigger' => ['type' => $trigger, 'config' => (object) []],
+            'trigger' => ['type' => $trigger, 'config' => []],
             'steps' => [['id' => (string) Str::uuid(), 'type' => 'action', 'action' => $action, 'config' => $config]],
         ];
     }

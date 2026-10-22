@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Data\Automations\AutomationDefinitionData;
 use App\Models\Concerns\BelongsToWorkspace;
 use Carbon\CarbonImmutable;
 use Database\Factories\AutomationFactory;
@@ -25,7 +26,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $enabled
  * @property int $position
  * @property string $trigger_type
- * @property array<string, mixed> $definition
+ * @property AutomationDefinitionData $definition
  * @property int $schema_version
  * @property string|null $webhook_token_hash
  * @property string|null $created_by
@@ -87,7 +88,7 @@ class Automation extends Model
             'enabled' => 'boolean',
             'position' => 'integer',
             'schema_version' => 'integer',
-            'definition' => 'array',
+            'definition' => AutomationDefinitionData::class,
         ];
     }
 

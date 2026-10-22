@@ -24,7 +24,7 @@ class TypeScriptTransformerServiceProvider extends TypeScriptTransformerApplicat
         $config
             ->extension(new LaravelDataTypeScriptTransformerExtension)
             ->transformer(EnumTransformer::class)
-            ->transformDirectories(app_path('Data'), app_path('Enums'))
+            ->transformDirectories(app_path('Data'), app_path('Enums'), app_path('Automations'))
             ->replaceType(UploadedFile::class, new TypeScriptRaw('File'))
             ->outputDirectory(resource_path('js/types'))
             ->writer(new GlobalNamespaceWriter('generated.d.ts'))

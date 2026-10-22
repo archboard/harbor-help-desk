@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Automations\AutomationRegistry;
 use App\Http\Controllers\OAuth\ApproveAuthorizationController;
 use App\Http\Controllers\OAuth\AuthorizationController;
 use App\Mail\WorkspaceTransport;
@@ -47,6 +48,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Passport::$deviceCodeGrantEnabled = false;
 
+        $this->app->singleton(AutomationRegistry::class, fn () => new AutomationRegistry(triggers: [], actions: []));
         $this->app->bind(ScopeRepository::class, WorkspaceScopeRepository::class);
         $this->app->bind(PassportAuthorizationController::class, AuthorizationController::class);
         $this->app->bind(PassportApproveAuthorizationController::class, ApproveAuthorizationController::class);

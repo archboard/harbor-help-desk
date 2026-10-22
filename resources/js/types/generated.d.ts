@@ -1,4 +1,51 @@
 declare namespace App {
+  namespace Automations {
+    export type DelayUnit = 'minutes' | 'hours' | 'days';
+    export type FieldGroup =
+      | 'ticket'
+      | 'requester'
+      | 'message'
+      | 'event'
+      | 'time'
+      | 'sla'
+      | 'custom_fields'
+      | 'webhook';
+    export type FieldType =
+      | 'string'
+      | 'text'
+      | 'enum'
+      | 'multi_enum'
+      | 'user'
+      | 'users'
+      | 'desk'
+      | 'number'
+      | 'boolean'
+      | 'datetime'
+      | 'duration';
+    export type MatchMode = 'all' | 'any';
+    export type Operator =
+      | 'is'
+      | 'is_not'
+      | 'in'
+      | 'not_in'
+      | 'contains'
+      | 'not_contains'
+      | 'starts_with'
+      | 'ends_with'
+      | 'matches'
+      | 'is_empty'
+      | 'is_not_empty'
+      | 'gt'
+      | 'gte'
+      | 'lt'
+      | 'lte'
+      | 'includes_any'
+      | 'includes_all'
+      | 'excludes'
+      | 'changed'
+      | 'changed_to'
+      | 'changed_from';
+  }
   namespace Data {
     export type InputData = object;
     namespace ApiTokens {
@@ -17,6 +64,101 @@ declare namespace App {
     namespace Auth {
       export type ResetUserPasswordData = {
         password: string;
+      };
+    }
+    namespace Automations {
+      export type ActionStepData = {
+        id: string;
+        action: string;
+        config: Record<string, any>;
+        type: 'action';
+      };
+      export type AutomationDefinitionData = {
+        trigger: App.Data.Automations.TriggerData;
+        steps: (
+          | App.Data.Automations.ConditionStepData
+          | App.Data.Automations.ActionStepData
+          | App.Data.Automations.DelayStepData
+          | App.Data.Automations.PathsStepData
+          | App.Data.Automations.StopStepData
+        )[];
+      };
+      export type BranchData = {
+        name: string;
+        condition: App.Data.Automations.ConditionGroupData;
+        steps: (
+          | App.Data.Automations.ConditionStepData
+          | App.Data.Automations.ActionStepData
+          | App.Data.Automations.DelayStepData
+          | App.Data.Automations.PathsStepData
+          | App.Data.Automations.StopStepData
+        )[];
+      };
+      export type ConditionGroupData = {
+        match: App.Automations.MatchMode;
+        rules: (
+          | App.Data.Automations.RuleData
+          | App.Data.Automations.ConditionGroupData
+        )[];
+        type: 'group';
+      };
+      export type ConditionNodeData = {
+        type: string;
+      };
+      export type ConditionStepData = {
+        id: string;
+        match: App.Automations.MatchMode;
+        rules: (
+          | App.Data.Automations.RuleData
+          | App.Data.Automations.ConditionGroupData
+        )[];
+        type: 'condition';
+      };
+      export type DelayForData = {
+        amount: number;
+        unit: App.Automations.DelayUnit;
+        business_schedule_id: string | null;
+      };
+      export type DelayStepData = {
+        id: string;
+        for: App.Data.Automations.DelayForData | null;
+        until: App.Data.Automations.DelayUntilData | null;
+        cancel_on: string[];
+        type: 'delay';
+      };
+      export type DelayUntilData = {
+        field: string;
+        offset: number;
+      };
+      export type PathsStepData = {
+        id: string;
+        branches: App.Data.Automations.BranchData[];
+        else: (
+          | App.Data.Automations.ConditionStepData
+          | App.Data.Automations.ActionStepData
+          | App.Data.Automations.DelayStepData
+          | App.Data.Automations.PathsStepData
+          | App.Data.Automations.StopStepData
+        )[];
+        type: 'paths';
+      };
+      export type RuleData = {
+        field: string;
+        operator: App.Automations.Operator;
+        value: any;
+        type: 'rule';
+      };
+      export type StepData = {
+        id: string;
+        type: string;
+      };
+      export type StopStepData = {
+        id: string;
+        type: 'stop';
+      };
+      export type TriggerData = {
+        type: string;
+        config: Record<string, any>;
       };
     }
     namespace BusinessSchedules {
