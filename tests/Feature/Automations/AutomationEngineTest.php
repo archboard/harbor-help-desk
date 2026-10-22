@@ -1,17 +1,20 @@
 <?php
 
+use App\Actions\Tickets\CheckSlaTargets;
 use App\Automations\AutomationRegistry;
 use App\Automations\Triggers\CommentAdded;
 use App\Automations\Triggers\FieldChanged;
 use App\Automations\Triggers\SlaEvent;
 use App\Automations\Triggers\TicketCreated;
 use App\Enums\AutomationRunStatus;
+use App\Enums\SlaMetric;
 use App\Enums\TicketEventType;
 use App\Enums\TicketPriority;
 use App\Models\Automation;
 use App\Models\AutomationRun;
 use App\Models\Desk;
 use App\Models\Ticket;
+use App\Models\TicketSlaTarget;
 use Illuminate\Support\Facades\Exceptions;
 use Tests\Concerns\InWorkspace;
 use Tests\Fakes\Automations\CrashAction;
@@ -207,4 +210,23 @@ test('only enabled automations whose trigger and desk match run', function () {
 
     expect(AutomationRun::query()->pluck('automation_id')->all())->toHaveCount(2)
         ->and(AutomationRun::query()->where('automation_id', $own->id)->exists())->toBeFalse();
+});
+
+test('a ticket.sla automation runs when the checker breaches a target', function () {
+    $automation = automation([setPriority('a1', 'urgent')], 'ticket.sla', ['kind' => 'breached', 'metrics' => ['first_response']]);
+    TicketSlaTarget::create([
+        'ticket_id' => $this->ticket->id,
+        'metric' => SlaMetric::FIRST_RESPONSE,
+        'target_minutes' => 60,
+        'started_at' => now()->subHours(2),
+        'warn_at' => now()->subMinutes(75),
+        'due_at' => now()->subHour(),
+    ]);
+
+    app(CheckSlaTargets::class)->handle();
+
+    $run = AutomationRun::sole();
+
+    expect($run)->automation_id->toBe($automation->id)->status->toBe(AutomationRunStatus::COMPLETED)
+        ->and($this->ticket->refresh()->priority)->toBe(TicketPriority::URGENT);
 });

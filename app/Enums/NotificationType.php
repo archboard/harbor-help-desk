@@ -14,6 +14,8 @@ enum NotificationType: string
     case TICKET_UPDATED = 'ticket_updated';
     case MENTIONED = 'mentioned';
     case REMINDER_DUE = 'reminder_due';
+    case SLA_WARNING = 'sla_warning';
+    case SLA_BREACHED = 'sla_breached';
 
     public function label(): string
     {
@@ -24,6 +26,8 @@ enum NotificationType: string
             self::TICKET_UPDATED => __('Ticket updated'),
             self::MENTIONED => __('Mentioned'),
             self::REMINDER_DUE => __('Reminder due'),
+            self::SLA_WARNING => __('SLA at risk'),
+            self::SLA_BREACHED => __('SLA breached'),
         };
     }
 
@@ -36,6 +40,8 @@ enum NotificationType: string
             self::TICKET_UPDATED => __('Someone else changes a ticket assigned to you.'),
             self::MENTIONED => __('Someone mentions you in a comment.'),
             self::REMINDER_DUE => __('A reminder you set is due.'),
+            self::SLA_WARNING => __('An SLA on a ticket assigned to you is at risk.'),
+            self::SLA_BREACHED => __('An SLA on a ticket assigned to you, or on one of your desk, was breached.'),
         };
     }
 
@@ -48,7 +54,7 @@ enum NotificationType: string
     {
         return match ($this) {
             self::NEW_TICKET, self::TICKET_UPDATED => [NotificationChannel::DATABASE],
-            self::ASSIGNED, self::REQUESTER_REPLIED, self::MENTIONED, self::REMINDER_DUE => [NotificationChannel::DATABASE, NotificationChannel::MAIL],
+            self::ASSIGNED, self::REQUESTER_REPLIED, self::MENTIONED, self::REMINDER_DUE, self::SLA_WARNING, self::SLA_BREACHED => [NotificationChannel::DATABASE, NotificationChannel::MAIL],
         };
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Listeners;
 
+use App\Enums\DeskRole;
 use App\Enums\NotificationType;
 use App\Enums\TicketEventType;
 use App\Events\TicketActivityRecorded;
@@ -47,6 +48,14 @@ class SendTicketActivityNotifications implements ShouldQueue
                 $ticket->assignees()->get()->whenEmpty(fn () => $this->deskMembers($ticket)),
             ]],
             $ticketEvent->type === TicketEventType::INTERNAL_NOTE_ADDED => $this->noteSends($ticketEvent, $ticket),
+            $ticketEvent->type === TicketEventType::SLA_WARNING => [[
+                NotificationType::SLA_WARNING,
+                $ticket->assignees()->get()->whenEmpty(fn () => $this->deskMembers($ticket)),
+            ]],
+            $ticketEvent->type === TicketEventType::SLA_BREACHED => [[
+                NotificationType::SLA_BREACHED,
+                $ticket->assignees()->get()->merge($ticket->desk->users->filter(fn (User $user): bool => $user->pivot->role === DeskRole::LEAD))->unique('id'),
+            ]],
             $this->isTicketUpdate($ticketEvent) => [[NotificationType::TICKET_UPDATED, $ticket->assignees()->get()]],
             default => [],
         };

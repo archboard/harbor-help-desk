@@ -740,7 +740,9 @@ declare namespace App {
       | 'requester_replied'
       | 'ticket_updated'
       | 'mentioned'
-      | 'reminder_due';
+      | 'reminder_due'
+      | 'sla_warning'
+      | 'sla_breached';
     export type SlaMetric = 'first_response' | 'resolution';
     export type TicketEventType =
       | 'created'
