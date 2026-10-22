@@ -12,7 +12,7 @@ class AutomationCatalogData extends Data
     /**
      * @param  list<CatalogTriggerData>  $triggers
      * @param  list<CatalogFieldGroupData>  $fieldGroups
-     * @param  array<string, list<CatalogOperatorData>>  $operators  Keyed by field type.
+     * @param  array<string, array<int, CatalogOperatorData>>  $operators  Keyed by field type.
      * @param  list<CatalogActionData>  $actions
      * @param  list<CatalogPlaceholderData>  $placeholders
      */

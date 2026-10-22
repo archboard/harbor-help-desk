@@ -17,6 +17,7 @@ use App\Models\Tag;
 use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
@@ -73,7 +74,7 @@ class Catalog
     }
 
     /**
-     * @return array<string, list<CatalogOperatorData>>
+     * @return array<string, array<int, CatalogOperatorData>>
      */
     protected function operators(): array
     {
@@ -90,9 +91,9 @@ class Catalog
     }
 
     /**
-     * @return Collection<int, Desk>
+     * @return EloquentCollection<int, Desk>
      */
-    protected function desks(User $viewer): Collection
+    protected function desks(User $viewer): EloquentCollection
     {
         return $this->isAdmin($viewer)
             ? Desk::query()->orderBy('name')->get()
@@ -121,7 +122,7 @@ class Catalog
 
     /**
      * @param  Collection<string, string>|array<string, string>  $choices  value => label
-     * @return list<CatalogOptionData>
+     * @return array<int, CatalogOptionData>
      */
     protected function options(Collection|array $choices): array
     {

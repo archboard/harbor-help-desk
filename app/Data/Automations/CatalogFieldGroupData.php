@@ -8,7 +8,7 @@ use Spatie\LaravelData\Data;
 class CatalogFieldGroupData extends Data
 {
     /**
-     * @param  list<CatalogFieldData>  $fields
+     * @param  array<int, CatalogFieldData>  $fields
      */
     public function __construct(
         public FieldGroup $group,

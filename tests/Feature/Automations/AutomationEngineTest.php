@@ -162,16 +162,16 @@ test('a rejected action fails the run with the messages and later automations st
         ->and($this->ticket->refresh()->priority)->toBe(TicketPriority::URGENT);
 });
 
-test('a crashing action and an unsupported delay fail the run instead of the job', function () {
+test('a crashing action and a delay on an empty date fail the run instead of the job', function () {
     automation([failingAction('a1', 'fake.crash')], attributes: ['position' => 1]);
-    automation([['id' => 'd1', 'type' => 'delay', 'for' => ['amount' => 1, 'unit' => 'hours']]], attributes: ['position' => 2]);
+    automation([['id' => 'd1', 'type' => 'delay', 'until' => ['field' => 'ticket.due_at', 'offset' => 0]]], attributes: ['position' => 2]);
     automation([failingAction('a3', 'fake.missing')], attributes: ['position' => 3]);
     automation([setPriority('a4', 'urgent')], attributes: ['position' => 4]);
 
     created($this->ticket);
 
     expect(AutomationRun::query()->orderBy('id')->pluck('error')->all())
-        ->toBe(['The step failed unexpectedly.', 'Delays are not supported yet.', 'The action “fake.missing” does not exist.', null])
+        ->toBe(['The step failed unexpectedly.', 'The delay can not wait until a date that is not set.', 'The action “fake.missing” does not exist.', null])
         ->and($this->ticket->refresh()->priority)->toBe(TicketPriority::URGENT);
 });
 

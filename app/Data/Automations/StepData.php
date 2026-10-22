@@ -17,6 +17,9 @@ abstract class StepData extends Data implements PropertyMorphableData
     #[PropertyForMorph]
     public string $type;
 
+    /**
+     * @param  array<string, mixed>  $properties
+     */
     public static function morph(array $properties): ?string
     {
         return match ($properties['type'] ?? null) {

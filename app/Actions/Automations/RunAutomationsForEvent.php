@@ -38,6 +38,8 @@ class RunAutomationsForEvent
             return;
         }
 
+        $this->cancelWaitingRuns($event, $ticket);
+
         $parentRun = $event->automation_run_id === null ? null : AutomationRun::query()->find($event->automation_run_id);
 
         foreach (Automation::query()->where('enabled', true)->orderBy('position')->orderBy('id')->get() as $automation) {
@@ -62,6 +64,26 @@ class RunAutomationsForEvent
                 break;
             }
         }
+    }
+
+    /**
+     * Cancel the ticket's waiting runs whose delay lists a trigger type that this event is one of.
+     * A `cancel_on` entry is matched as that trigger with its default config (any author, any
+     * visibility, any field), since a delay stores trigger keys only. An event a run caused itself never cancels it.
+     */
+    protected function cancelWaitingRuns(TicketEvent $event, Ticket $ticket): void
+    {
+        AutomationRun::query()->where('ticket_id', $ticket->getKey())->where('status', AutomationRunStatus::WAITING)
+            ->whereKeyNot($event->automation_run_id ?? '')->get()
+            ->each(function (AutomationRun $run) use ($event): void {
+                foreach ($run->state['cancel_on'] ?? [] as $key) {
+                    if ($this->registry->trigger($key)?->matches($event, []) === true) {
+                        $run->cancelWaiting(__('Cancelled by a :trigger event.', ['trigger' => $key]));
+
+                        return;
+                    }
+                }
+            });
     }
 
     /**

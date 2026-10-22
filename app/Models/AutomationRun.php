@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 
 /**
  * One evaluation of an automation for a ticket event. It keeps a snapshot of the definition it
@@ -136,9 +137,25 @@ class AutomationRun extends Model
     }
 
     /**
+     * Cancel the run if it is still waiting, and log why. A run claimed for resuming meanwhile is left alone.
+     */
+    public function cancelWaiting(string $reason): void
+    {
+        DB::transaction(function () use ($reason): void {
+            $run = static::query()->whereKey($this->getKey())->where('status', AutomationRunStatus::WAITING)->lockForUpdate()->first();
+
+            $run?->forceFill([
+                'status' => AutomationRunStatus::CANCELLED,
+                'resume_at' => null,
+                'log' => [...$run->log, ['type' => 'cancelled', 'reason' => $reason]],
+            ])->save();
+        });
+    }
+
+    /**
      * Old runs of every workspace. Landlord code, so the tenant scope is removed on purpose.
      *
-     * @return Builder<static>
+     * @return Builder<self>
      */
     public function prunable(): Builder
     {

@@ -57,6 +57,9 @@ class SetField extends ConfiguredAction
                 /** @var array<string, mixed> */
                 protected array $data = [];
 
+                /**
+                 * @param  array<string, mixed>  $data
+                 */
                 public function setData(array $data): static
                 {
                     $this->data = $data;
@@ -157,7 +160,7 @@ class SetField extends ConfiguredAction
             $field === 'ticket.priority' => __('priority'),
             $field === 'ticket.subject' => __('subject'),
             $field === 'ticket.due_at' => __('due date'),
-            default => $this->customField($field)?->name ?? $field,
+            default => $this->customField($field)->name ?? $field,
         };
     }
 

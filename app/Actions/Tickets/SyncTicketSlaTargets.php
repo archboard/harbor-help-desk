@@ -88,7 +88,7 @@ class SyncTicketSlaTargets
             $target->achieved_at = $at;
         }
 
-        $target->recalculate($schedule, $ticket->effectiveSlaPolicy()?->warning_percent ?? 75);
+        $target->recalculate($schedule, $ticket->effectiveSlaPolicy()->warning_percent ?? 75);
         $target->save();
     }
 

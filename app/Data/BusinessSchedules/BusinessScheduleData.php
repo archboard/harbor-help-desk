@@ -29,7 +29,7 @@ class BusinessScheduleData extends Data
             name: $schedule->name,
             timezone: $schedule->timezone,
             weeklyHours: $schedule->weekly_hours,
-            holidays: $schedule->holidays,
+            holidays: array_values($schedule->holidays),
             createdAt: $schedule->created_at,
             updatedAt: $schedule->updated_at,
         );

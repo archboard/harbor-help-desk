@@ -72,7 +72,7 @@ class CommentAdded implements Trigger
         $comment = $context->comment();
 
         return [
-            'message.body' => $comment?->body ?? '',
+            'message.body' => $comment->body ?? '',
             'message.author_name' => $comment?->author?->getAttribute('name') ?? '',
         ];
     }

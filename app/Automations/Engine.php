@@ -11,6 +11,8 @@ use App\Data\Automations\StopStepData;
 use App\Enums\AutomationRunStatus;
 use App\Models\Automation;
 use App\Models\AutomationRun;
+use App\Models\BusinessSchedule;
+use Carbon\CarbonImmutable;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
@@ -23,6 +25,7 @@ use Throwable;
  * - A condition that fails ends the run as `completed` with `state.matched = false`.
  * - An action runs as the automation, and the events it causes carry the run's id ({@see RunCausation}).
  * - Paths run the first branch whose condition passes, else the `else` steps.
+ * - A delay pauses the run as `waiting` until a time ({@see self::delay()}); {@see self::resume()} continues it.
  * - A stop ends the run and sets `state.stopped`, which makes the caller skip later automations.
  * - Anything thrown by a step fails the run with the error stored, and tells the automation's creator
  *   ({@see NotifyCreatorOfFailure}). It never reaches the caller.
@@ -40,11 +43,33 @@ class Engine
 
     public function run(Automation $automation, Context $context, AutomationRun $run): AutomationRun
     {
+        return $this->execute($automation, $context, $run, []);
+    }
+
+    /**
+     * Continue a waiting run from the snapshot it ran with, at the pointer its delay stored in
+     * `state.resume`. The context is built fresh, so conditions see the ticket as it is now. The
+     * run keeps its depth: resuming is not a new trigger, so it takes no rate-limit attempt.
+     */
+    public function resume(Automation $automation, Context $context, AutomationRun $run): AutomationRun
+    {
+        $pointer = $run->state['resume'] ?? [];
+        $run->state = Arr::except($run->state, ['resume', 'cancel_on']);
+        $run->resume_at = null;
+
+        return $this->execute($automation, $context, $run, $pointer);
+    }
+
+    /**
+     * @param  list<int|string>  $resume
+     */
+    protected function execute(Automation $automation, Context $context, AutomationRun $run, array $resume): AutomationRun
+    {
         $run->status = AutomationRunStatus::RUNNING;
 
         try {
-            $this->steps($run->definition->steps, $context, $run);
-            $run->status = AutomationRunStatus::COMPLETED;
+            $finished = $this->steps($run->definition->steps, $context, $run, [], $resume);
+            $run->status = $run->resume_at !== null && ! $finished ? AutomationRunStatus::WAITING : AutomationRunStatus::COMPLETED;
         } catch (Throwable $exception) {
             $run->status = AutomationRunStatus::FAILED;
             $run->error = $this->message($exception);
@@ -65,14 +90,42 @@ class Engine
     }
 
     /**
+     * `$prefix` locates `$steps` in the definition and `$resume` is the rest of a pointer; see {@see self::delay()}.
+     *
      * @param  array<int, StepData>  $steps
-     * @return bool False when the run has ended: a condition failed or a stop was reached.
+     * @param  list<int|string>  $prefix
+     * @param  list<int|string>  $resume
+     * @return bool False when the run has ended or is waiting: a condition failed, a stop was reached or a delay paused it.
      */
-    protected function steps(array $steps, Context $context, AutomationRun $run): bool
+    protected function steps(array $steps, Context $context, AutomationRun $run, array $prefix = [], array $resume = []): bool
     {
-        foreach ($steps as $step) {
+        $start = (int) ($resume === [] ? 0 : array_shift($resume));
+
+        if ($resume !== []) {
+            // The pointer goes into a paths step: finish its branch, then carry on after it.
+            $branch = array_shift($resume);
+            $paths = $steps[$start];
+
+            if (! $paths instanceof PathsStepData) {
+                throw new AutomationException(__('The run can not be resumed: its definition no longer matches.'));
+            }
+
+            $inner = $branch === 'else' ? $paths->else : $paths->branches[(int) $branch]->steps;
+
+            if (! $this->steps($inner, $context, $run, [...$prefix, $start, $branch], $resume)) {
+                return false;
+            }
+
+            $start++;
+        }
+
+        foreach ($steps as $index => $step) {
+            if ($index < $start) {
+                continue;
+            }
+
             try {
-                $continue = $this->step($step, $context, $run);
+                $continue = $this->step($step, $context, $run, $prefix, $index);
             } catch (Throwable $exception) {
                 $this->log($run, $step, ['error' => $this->message($exception)]);
 
@@ -87,15 +140,17 @@ class Engine
         return true;
     }
 
-    protected function step(StepData $step, Context $context, AutomationRun $run): bool
+    /**
+     * @param  list<int|string>  $prefix
+     */
+    protected function step(StepData $step, Context $context, AutomationRun $run, array $prefix, int $index): bool
     {
         return match (true) {
             $step instanceof ConditionStepData => $this->condition($step, $context, $run),
             $step instanceof ActionStepData => $this->action($step, $context, $run),
-            $step instanceof PathsStepData => $this->paths($step, $context, $run),
+            $step instanceof PathsStepData => $this->paths($step, $context, $run, [...$prefix, $index]),
             $step instanceof StopStepData => $this->stop($step, $run),
-            // Delays and resuming come with the scheduler step (A5).
-            $step instanceof DelayStepData => throw new AutomationException(__('Delays are not supported yet.')),
+            $step instanceof DelayStepData => $this->delay($step, $context, $run, [...$prefix, $index + 1]),
             default => throw new AutomationException(__('Unknown step type.')),
         };
     }
@@ -124,7 +179,10 @@ class Engine
         return true;
     }
 
-    protected function paths(PathsStepData $step, Context $context, AutomationRun $run): bool
+    /**
+     * @param  list<int|string>  $path  Where this step sits in the definition.
+     */
+    protected function paths(PathsStepData $step, Context $context, AutomationRun $run, array $path): bool
     {
         foreach ($step->branches as $index => $branch) {
             $result = $this->conditions->evaluate($branch->condition->match, $branch->condition->rules, $context);
@@ -132,13 +190,59 @@ class Engine
             if ($result['passed']) {
                 $this->log($run, $step, ['branch' => $branch->name, 'branch_index' => $index, 'condition' => $result]);
 
-                return $this->steps($branch->steps, $context, $run);
+                return $this->steps($branch->steps, $context, $run, [...$path, $index]);
             }
         }
 
         $this->log($run, $step, ['branch' => $step->else === [] ? null : 'else']);
 
-        return $this->steps($step->else, $context, $run);
+        return $this->steps($step->else, $context, $run, [...$path, 'else']);
+    }
+
+    /**
+     * Pause the run until the delay is over, unless that moment has passed already.
+     *
+     * The pointer in `state.resume` is the path to the next step to run: a list of step indexes
+     * where each index that is followed by more entries is a paths step, then its branch (an index,
+     * or `'else'`). `[3]` is the fourth top-level step; `[2, 0, 1]` is the second step of the first
+     * branch of the paths step at index 2 (a pointer one past the end means that list is done).
+     * `state.cancel_on` holds the trigger keys that cancel the wait.
+     *
+     * @param  list<int|string>  $pointer
+     */
+    protected function delay(DelayStepData $step, Context $context, AutomationRun $run, array $pointer): bool
+    {
+        $resumeAt = $this->resumeAt($step, $context);
+        $waiting = $resumeAt->isFuture();
+        $this->log($run, $step, ['resume_at' => $resumeAt->toIso8601String(), 'waiting' => $waiting]);
+
+        if (! $waiting) {
+            return true;
+        }
+
+        $run->state = [...$run->state, 'resume' => $pointer, 'cancel_on' => array_values($step->cancelOn)];
+        $run->resume_at = $resumeAt;
+
+        return false;
+    }
+
+    protected function resumeAt(DelayStepData $step, Context $context): CarbonImmutable
+    {
+        if ($step->for !== null) {
+            $schedule = $step->for->businessScheduleId === null ? null
+                : BusinessSchedule::query()->find($step->for->businessScheduleId) ?? throw new AutomationException(__('The business schedule of the delay does not exist.'));
+
+            return BusinessSchedule::addMinutesFor($schedule, CarbonImmutable::now(), $step->for->unit->toMinutes($step->for->amount));
+        }
+
+        $field = $step->until === null ? null : $this->registry->field($step->until->field);
+        $value = $field?->resolve($context);
+
+        if ($value === null) {
+            throw new AutomationException(__('The delay can not wait until a date that is not set.'));
+        }
+
+        return CarbonImmutable::parse($value)->addMinutes($step->until->offset);
     }
 
     protected function stop(StopStepData $step, AutomationRun $run): bool

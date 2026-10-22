@@ -41,7 +41,11 @@ abstract class PostsComments extends ConfiguredAction
             ->when($lastOutbound, fn ($query) => $query->where('created_at', '>=', $lastOutbound->created_at))
             ->exists();
 
-        return $bounced ? __('Skipped: the last reply to the requester bounced.') : null;
+        if ($bounced) {
+            return __('Skipped: the last reply to the requester bounced.');
+        }
+
+        return null;
     }
 
     /**

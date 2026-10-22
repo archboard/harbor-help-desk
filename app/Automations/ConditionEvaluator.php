@@ -22,8 +22,8 @@ class ConditionEvaluator
     public function __construct(protected AutomationRegistry $registry) {}
 
     /**
-     * @param  list<ConditionNodeData>  $rules
-     * @return array{type: string, match: string, passed: bool, rules: list<array<string, mixed>>}
+     * @param  array<int, ConditionNodeData>  $rules
+     * @return array{type: string, match: string, passed: bool, rules: array<int, array<string, mixed>>}
      */
     public function evaluate(MatchMode $match, array $rules, Context $context): array
     {

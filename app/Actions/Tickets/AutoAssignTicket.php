@@ -28,7 +28,7 @@ class AutoAssignTicket
             $desk = Desk::query()->lockForUpdate()->find($ticket->desk_id);
             $strategy ??= $desk?->assignment_strategy;
             // Re-read under the lock, since a claim may have taken it since it was loaded.
-            $ticket = Ticket::query()->lockForUpdate()->find($ticket->getKey());
+            $ticket = Ticket::query()->lockForUpdate()->whereKey($ticket->getKey())->first();
 
             if ($desk === null
                 || $ticket === null

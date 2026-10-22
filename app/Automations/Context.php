@@ -31,7 +31,7 @@ class Context
      */
     public function __construct(Ticket $ticket, public readonly ?TicketEvent $event = null, public readonly array $payload = [], public readonly ?AutomationRun $run = null)
     {
-        $this->ticket = Ticket::query()->withTrashed()->with(['requester', 'desk'])->findOrFail($ticket->getKey());
+        $this->ticket = Ticket::query()->withTrashed()->with(['requester', 'desk'])->whereKey($ticket->getKey())->firstOrFail();
     }
 
     /**
@@ -66,7 +66,7 @@ class Context
         }
 
         return $this->memo('comment', fn (): ?TicketComment => TicketComment::query()
-            ->withTrashed()->with('attachments')->find($this->event->properties['comment_id'] ?? null));
+            ->withTrashed()->with('attachments')->whereKey($this->event->properties['comment_id'] ?? null)->first());
     }
 
     /**
@@ -118,7 +118,7 @@ class Context
     public function statusChangedAt(): CarbonImmutable
     {
         return $this->memo('status_changed_at', fn (): CarbonImmutable => $this->ticket->events()
-            ->where('type', TicketEventType::STATUS_CHANGED)->reorder()->latest()->latest('id')->first()?->created_at ?? $this->ticket->created_at);
+            ->where('type', TicketEventType::STATUS_CHANGED)->reorder()->latest()->latest('id')->first()->created_at ?? $this->ticket->created_at);
     }
 
     /**
