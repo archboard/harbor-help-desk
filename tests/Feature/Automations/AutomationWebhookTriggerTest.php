@@ -230,7 +230,7 @@ test('create opens a ticket from the payload as the automation with source webho
     hookFire($automation, $payload)->assertAccepted();
     hookFire($automation, $payload)->assertAccepted();
 
-    $tickets = Ticket::query()->where('subject', 'Broken order')->get();
+    $tickets = Ticket::query()->where('subject', 'Broken order')->oldest('id')->get();
     $ticket = $tickets->first();
     $run = AutomationRun::query()->oldest('id')->first();
 

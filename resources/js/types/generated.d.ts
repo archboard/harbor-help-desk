@@ -118,6 +118,33 @@ declare namespace App {
           | App.Data.Automations.StopStepData
         )[];
       };
+      export type AutomationRunData = {
+        id: string;
+        automation_id: string;
+        automation_name?: string;
+        ticket_id: string | null;
+        ticket_number?: number | null;
+        ticket_subject?: string | null;
+        ticket_event_id: string | null;
+        parent_run_id: string | null;
+        depth: number;
+        status: App.Enums.AutomationRunStatus;
+        log: Record<string, any>[];
+        error: string | null;
+        resume_at: string | null;
+        definition?: App.Data.Automations.AutomationDefinitionData;
+        payload?: Record<string, any> | null;
+        created_at: string | null;
+        updated_at: string | null;
+      };
+      export type AutomationTestResultData = {
+        trigger_matched: boolean | null;
+        trigger_note: string | null;
+        matched: boolean;
+        stopped: boolean;
+        log: Record<string, any>[];
+        error: string | null;
+      };
       export type AutomationWebhookTokenData = {
         url: string;
         token: string;
@@ -213,6 +240,12 @@ declare namespace App {
         field: string;
         offset: number;
       };
+      export type ListAutomationRunsData = {
+        status?: App.Enums.AutomationRunStatus;
+        ticket_id?: string;
+        from?: string;
+        to?: string;
+      };
       export type PathsStepData = {
         id: string;
         branches: App.Data.Automations.BranchData[];
@@ -247,6 +280,13 @@ declare namespace App {
       export type StopStepData = {
         id: string;
         type: 'stop';
+      };
+      export type TestAutomationData = {
+        definition: App.Data.Automations.AutomationDefinitionData;
+        desk_id?: string | null;
+        ticket_id: string;
+        ticket_event_id?: string | null;
+        sample_payload?: Record<string, any> | null;
       };
       export type TriggerData = {
         type: string;
@@ -710,6 +750,7 @@ declare namespace App {
         actor_name: string;
         actor_type: string | null;
         actor_id: string | null;
+        automation_run_id: string | null;
         properties: Record<string, any>;
         created_at: string;
       };

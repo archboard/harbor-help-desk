@@ -1,0 +1,35 @@
+<?php
+
+namespace App\Http\Controllers\Api\V1;
+
+use App\Actions\Automations\ListAutomationRuns;
+use App\Data\Automations\AutomationRunData;
+use App\Http\Controllers\Controller;
+use App\Models\Automation;
+use App\Models\AutomationRun;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Spatie\LaravelData\PaginatedDataCollection;
+
+class AutomationRunController extends Controller
+{
+    /**
+     * The automation's runs, newest first.
+     *
+     * @return PaginatedDataCollection<int, AutomationRunData>
+     */
+    public function index(Request $request, Automation $automation, ListAutomationRuns $listAutomationRuns): PaginatedDataCollection
+    {
+        return AutomationRunData::collect($listAutomationRuns->handle($request->user(), $automation, $request->query()), PaginatedDataCollection::class);
+    }
+
+    /**
+     * One run with its definition snapshot and webhook payload.
+     */
+    public function show(AutomationRun $run): AutomationRunData
+    {
+        Gate::authorize('view', $run);
+
+        return AutomationRunData::from($run->load(['automation', 'ticket']))->include('definition', 'payload');
+    }
+}

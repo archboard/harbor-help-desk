@@ -19,6 +19,7 @@ class TicketEventData extends Data
         public string $actorName,
         public ?string $actorType,
         public ?string $actorId,
+        public ?string $automationRunId,
         public array $properties,
         public CarbonImmutable $createdAt,
     ) {}
@@ -32,6 +33,7 @@ class TicketEventData extends Data
             actorName: $event->actorName(),
             actorType: $event->actor_type,
             actorId: $event->actor_id,
+            automationRunId: $event->automation_run_id,
             properties: $event->properties,
             createdAt: $event->created_at,
         );

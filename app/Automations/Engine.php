@@ -3,6 +3,7 @@
 namespace App\Automations;
 
 use App\Data\Automations\ActionStepData;
+use App\Data\Automations\AutomationDefinitionData;
 use App\Data\Automations\ConditionStepData;
 use App\Data\Automations\DelayStepData;
 use App\Data\Automations\PathsStepData;
@@ -17,6 +18,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use LogicException;
 use Throwable;
 
 /**
@@ -58,6 +60,36 @@ class Engine
         $run->resume_at = null;
 
         return $this->execute($automation, $context, $run, $pointer);
+    }
+
+    /**
+     * Walk the definition like a real run, but describe what each action would do instead of doing it,
+     * and continue past delays. Nothing is saved, dispatched, rate limited or stamped: the run in the
+     * context is an unsaved stand-in that only collects the log. Step errors are captured like in a real run.
+     *
+     * @return array{matched: bool, stopped: bool, log: array<int, array<string, mixed>>, error: string|null}
+     */
+    public function dryRun(AutomationDefinitionData $definition, Context $context): array
+    {
+        $run = $context->run;
+        $error = null;
+
+        if (! $context->dryRun || $run === null) {
+            throw new LogicException('A dry run needs a context made by Context::forDryRun().');
+        }
+
+        try {
+            $this->steps($definition->steps, $context, $run);
+        } catch (Throwable $exception) {
+            $error = $this->message($exception);
+        }
+
+        return [
+            'matched' => ($run->state['matched'] ?? true) === true,
+            'stopped' => ($run->state['stopped'] ?? false) === true,
+            'log' => $run->log,
+            'error' => $error,
+        ];
     }
 
     /**
@@ -179,6 +211,12 @@ class Engine
     {
         $action = $this->registry->action($step->action) ?? throw new AutomationException(__('The action “:action” does not exist.', ['action' => $step->action]));
 
+        if ($context->dryRun) {
+            $this->log($run, $step, ['action' => $step->action, 'result' => $action->describe($context, $step->config)]);
+
+            return true;
+        }
+
         $context->stepId = $step->id;
         $result = $this->causation->during($run->getKey(), fn (): string => $action->execute($context, $step->config));
         $context->refresh();
@@ -223,9 +261,9 @@ class Engine
     {
         $resumeAt = $this->resumeAt($step, $context);
         $waiting = $resumeAt->isFuture();
-        $this->log($run, $step, ['resume_at' => $resumeAt->toIso8601String(), 'waiting' => $waiting]);
+        $this->log($run, $step, ['resume_at' => $resumeAt->toIso8601String(), 'waiting' => $waiting] + ($context->dryRun ? ['note' => __('Test run: the delay is skipped and the steps after it are evaluated against the ticket as it is now.')] : []));
 
-        if (! $waiting) {
+        if (! $waiting || $context->dryRun) {
             return true;
         }
 

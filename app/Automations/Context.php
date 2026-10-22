@@ -2,8 +2,11 @@
 
 namespace App\Automations;
 
+use App\Data\Automations\AutomationDefinitionData;
+use App\Enums\AutomationRunStatus;
 use App\Enums\SlaMetric;
 use App\Enums\TicketEventType;
+use App\Models\Automation;
 use App\Models\AutomationRun;
 use App\Models\BusinessSchedule;
 use App\Models\Ticket;
@@ -17,7 +20,7 @@ use Illuminate\Support\Collection;
 
 /**
  * Everything one evaluation can read: the ticket as it is in the database now, the event or
- * webhook payload that triggered it, the run (null in a dry run), and a memo so a value several rules need is queried once.
+ * webhook payload that triggered it, the run (an unsaved stand-in in a dry run), and a memo so a value several rules need is queried once.
  */
 class Context
 {
@@ -35,9 +38,23 @@ class Context
     /**
      * @param  array<string, mixed>  $payload
      */
-    public function __construct(Ticket $ticket, public readonly ?TicketEvent $event = null, public readonly array $payload = [], public readonly ?AutomationRun $run = null)
+    public function __construct(Ticket $ticket, public readonly ?TicketEvent $event = null, public readonly array $payload = [], public readonly ?AutomationRun $run = null, public readonly bool $dryRun = false)
     {
         $this->ticket = Ticket::query()->withTrashed()->with(['requester', 'desk'])->whereKey($ticket->getKey())->firstOrFail();
+    }
+
+    /**
+     * A context for a test run: the run is an in-memory stand-in that carries the definition and
+     * the automation's name for placeholders. It is never saved, and the engine's dry run never saves it.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    public static function forDryRun(Ticket $ticket, ?TicketEvent $event, array $payload, AutomationDefinitionData $definition, string $name): self
+    {
+        $run = new AutomationRun(['depth' => 0, 'status' => AutomationRunStatus::RUNNING, 'definition' => $definition, 'log' => [], 'state' => []]);
+        $run->setRelation('automation', new Automation(['name' => $name]));
+
+        return new self($ticket, $event, $payload, $run, dryRun: true);
     }
 
     /**

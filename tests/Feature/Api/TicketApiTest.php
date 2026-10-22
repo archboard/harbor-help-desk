@@ -125,6 +125,7 @@ test('tickets are updated, moved, assigned and tagged, and the history reads bac
             'actor_name' => $created->actorName(),
             'actor_type' => $created->actor_type,
             'actor_id' => $created->actor_id,
+            'automation_run_id' => null,
             'properties' => $created->properties,
             'created_at' => $created->created_at->toIso8601String(),
         ])
