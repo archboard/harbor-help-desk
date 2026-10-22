@@ -11,7 +11,7 @@ use App\Mail\Inbound\InboundEmail;
 use App\Models\Desk;
 use App\Models\Mailbox;
 use App\Models\Ticket;
-use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Notification;
 use Tests\Concerns\InWorkspace;
 
 uses(InWorkspace::class);
@@ -126,7 +126,7 @@ test('moving a ticket into an auto desk assigns it', function () {
 });
 
 test('an inbound email ticket is assigned', function () {
-    Queue::fake();
+    Notification::fake();
     $mailbox = Mailbox::factory()->create(['default_desk_id' => $this->desk->id, 'address' => 'support@acme.com']);
 
     $comment = app(ReceiveInboundEmail::class)->handle($mailbox, new InboundEmail(

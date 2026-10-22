@@ -20,6 +20,10 @@ class AutoAssignTicket
      * Eligible members are in the desk's rotation and not Away in the workspace. Returns the new
      * assignee, or null when nothing was assigned. The desk row is locked so concurrent picks
      * can't choose the same member, and the ticket row so a concurrent claim can't also take it.
+     *
+     * The desk's strategy is the fallback: the automations job calls this without a strategy after the
+     * automations have run, for new tickets and tickets moved onto a desk, so a ticket an automation
+     * assigned is left alone. Automations can also call it with their own strategy.
      */
     public function handle(Ticket $ticket, ?AssignmentStrategy $strategy = null, User|Automation|null $actor = null): ?User
     {

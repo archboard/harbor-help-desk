@@ -2,14 +2,18 @@
 
 namespace App\Actions\Automations;
 
+use App\Actions\Tickets\AutoAssignTicket;
 use App\Automations\AutomationRegistry;
 use App\Automations\Context;
 use App\Automations\Engine;
 use App\Enums\AutomationRunStatus;
+use App\Enums\TicketEventType;
+use App\Events\TicketTriaged;
 use App\Models\Automation;
 use App\Models\AutomationRun;
 use App\Models\Ticket;
 use App\Models\TicketEvent;
+use Throwable;
 
 class RunAutomationsForEvent
 {
@@ -19,7 +23,7 @@ class RunAutomationsForEvent
     /** How many runs one ticket may get per hour. */
     public const int MAX_RUNS_PER_HOUR = 100;
 
-    public function __construct(protected AutomationRegistry $registry, protected Engine $engine, protected StartAutomationRun $startRun) {}
+    public function __construct(protected AutomationRegistry $registry, protected Engine $engine, protected StartAutomationRun $startRun, protected AutoAssignTicket $autoAssignTicket) {}
 
     /**
      * Run the enabled automations whose trigger matches the event, in position order, for the
@@ -28,6 +32,11 @@ class RunAutomationsForEvent
      * Loop protection: an automation ignores events its own runs caused, a chain of runs triggering
      * runs ends at {@see self::MAX_DEPTH}, and one ticket gets at most {@see self::MAX_RUNS_PER_HOUR}
      * runs an hour. The last two log a `skipped` run with the reason.
+     *
+     * Triage: after the automations, whatever they did (stopped, failed, skipped or none), a `created`
+     * or `desk_changed` event gets the desk's assignment strategy as the fallback for a ticket still
+     * unassigned, then {@see TicketTriaged}. So an automation that assigns wins over the desk strategy,
+     * and `new_ticket` notifications see the final assignees.
      */
     public function handle(TicketEvent $event): void
     {
@@ -39,6 +48,29 @@ class RunAutomationsForEvent
 
         $this->cancelWaitingRuns($event, $ticket);
 
+        $this->runAutomations($event, $ticket);
+
+        if (in_array($event->type, [TicketEventType::CREATED, TicketEventType::DESK_CHANGED], true)) {
+            $this->triage($event, $ticket);
+        }
+    }
+
+    /**
+     * A failed pick is reported but never holds back {@see TicketTriaged}; a retry would run the automations again.
+     */
+    protected function triage(TicketEvent $event, Ticket $ticket): void
+    {
+        try {
+            $this->autoAssignTicket->handle($ticket);
+        } catch (Throwable $e) {
+            report($e);
+        }
+
+        TicketTriaged::dispatch($event);
+    }
+
+    protected function runAutomations(TicketEvent $event, Ticket $ticket): void
+    {
         $parentRun = $event->automation_run_id === null ? null : AutomationRun::query()->find($event->automation_run_id);
 
         foreach (Automation::query()->where('enabled', true)->orderBy('position')->orderBy('id')->get() as $automation) {

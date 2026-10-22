@@ -6,6 +6,7 @@ use App\Enums\DeskRole;
 use App\Enums\NotificationType;
 use App\Enums\TicketEventType;
 use App\Events\TicketActivityRecorded;
+use App\Events\TicketTriaged;
 use App\Models\Contact;
 use App\Models\DatabaseNotification;
 use App\Models\Ticket;
@@ -35,10 +36,6 @@ class SendTicketActivityNotifications implements ShouldQueue
         }
 
         $sends = match (true) {
-            $ticketEvent->type === TicketEventType::CREATED => [[
-                NotificationType::NEW_TICKET,
-                $ticket->assignees()->doesntExist() ? $this->deskMembers($ticket) : collect(),
-            ]],
             $ticketEvent->type === TicketEventType::ASSIGNEE_ADDED => [[
                 NotificationType::ASSIGNED,
                 User::query()->whereKey($ticketEvent->properties['user_id'])->get(),
@@ -69,6 +66,26 @@ class SendTicketActivityNotifications implements ShouldQueue
                 Notification::sendNow($recipients, new TicketActivity($ticketEvent, $type));
             }
         }
+    }
+
+    /**
+     * Announce a new ticket to its desk, once the automations and the desk's strategy have had
+     * their say: only when it is still unassigned, since assignees get `assigned` instead.
+     * A ticket moved to another desk isn't new.
+     */
+    public function handleTriaged(TicketTriaged $event): void
+    {
+        $ticketEvent = $event->ticketEvent;
+        $ticket = $ticketEvent->ticket;
+
+        if ($ticket === null || $ticketEvent->type !== TicketEventType::CREATED || $ticket->assignees()->exists()) {
+            return;
+        }
+
+        Notification::sendNow(
+            $this->allowed($this->deskMembers($ticket), $ticketEvent, $ticket),
+            new TicketActivity($ticketEvent, NotificationType::NEW_TICKET),
+        );
     }
 
     /**
