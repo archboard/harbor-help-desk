@@ -49,6 +49,6 @@ class ResumeAutomationRun
 
         $event = $run->ticket_event_id === null ? null : TicketEvent::query()->find($run->ticket_event_id);
 
-        $this->engine->resume($automation, new Context($ticket, $event, run: $run), $run);
+        $this->engine->resume($automation, new Context($ticket, $event, $run->state['payload'] ?? [], $run), $run);
     }
 }

@@ -34,7 +34,7 @@ class StartAutomationRun
             'status' => $skipReason === null ? AutomationRunStatus::RUNNING : AutomationRunStatus::SKIPPED,
             'definition' => $automation->definition,
             'log' => $skipReason === null ? [] : [['type' => 'skipped', 'reason' => $skipReason]],
-            'state' => [],
+            'state' => $context->payload === [] ? [] : ['payload' => $context->payload],
         ]);
     }
 }

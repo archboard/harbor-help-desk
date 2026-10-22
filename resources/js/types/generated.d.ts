@@ -98,6 +98,7 @@ declare namespace App {
         name: string;
         description: string | null;
         enabled: boolean;
+        has_webhook_token: boolean;
         position: number;
         trigger_type: string;
         definition: App.Data.Automations.AutomationDefinitionData;
@@ -116,6 +117,10 @@ declare namespace App {
           | App.Data.Automations.PathsStepData
           | App.Data.Automations.StopStepData
         )[];
+      };
+      export type AutomationWebhookTokenData = {
+        url: string;
+        token: string;
       };
       export type BranchData = {
         name: string;
@@ -220,6 +225,9 @@ declare namespace App {
         )[];
         type: 'paths';
       };
+      export type ReceiveAutomationWebhookData = {
+        payload: Record<string, any>;
+      };
       export type ReorderAutomationsData = {
         ids: string[];
       };
@@ -249,6 +257,9 @@ declare namespace App {
         description?: string | null;
         desk_id?: string | null;
         definition: App.Data.Automations.AutomationDefinitionData;
+      };
+      export type WebhookReceivedData = {
+        run_id: string;
       };
       namespace Actions {
         export type ActionConfigData = object;

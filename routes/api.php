@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\V1\MarkNotificationsReadController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\NotificationPreferenceController;
 use App\Http\Controllers\Api\V1\ReorderAutomationsController;
+use App\Http\Controllers\Api\V1\RotateWebhookTokenController;
 use App\Http\Controllers\Api\V1\SavedViewController;
 use App\Http\Controllers\Api\V1\SetAutomationEnabledController;
 use App\Http\Controllers\Api\V1\SetAwayController;
@@ -69,6 +70,7 @@ Route::prefix('v1')->name('api.v1.')
         Route::get('automations/catalog', AutomationCatalogController::class)->name('automations.catalog');
         Route::post('automations/reorder', ReorderAutomationsController::class)->name('automations.reorder');
         Route::put('automations/{automation}/enabled', SetAutomationEnabledController::class)->name('automations.enabled.update');
+        Route::post('automations/{automation}/webhook-token', RotateWebhookTokenController::class)->name('automations.webhook-token');
         Route::apiResource('automations', AutomationController::class);
         Route::apiResource('business-schedules', BusinessScheduleController::class);
         Route::apiResource('sla-policies', SlaPolicyController::class)->parameters(['sla-policies' => 'slaPolicy']);

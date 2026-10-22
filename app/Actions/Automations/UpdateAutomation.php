@@ -35,6 +35,10 @@ class UpdateAutomation
                 $automation->position = CreateAutomation::nextPosition($definition->trigger->type);
             }
 
+            if ($definition->trigger->type !== 'webhook') {
+                $automation->webhook_token_hash = null;
+            }
+
             $automation->fill([
                 'trigger_type' => $definition->trigger->type,
                 'definition' => $definition,

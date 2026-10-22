@@ -21,6 +21,7 @@ use App\Automations\Triggers\FieldChanged;
 use App\Automations\Triggers\Schedule;
 use App\Automations\Triggers\SlaEvent;
 use App\Automations\Triggers\TicketCreated;
+use App\Automations\Triggers\Webhook;
 use App\Http\Controllers\OAuth\ApproveAuthorizationController;
 use App\Http\Controllers\OAuth\AuthorizationController;
 use App\Mail\WorkspaceTransport;
@@ -68,7 +69,7 @@ class AppServiceProvider extends ServiceProvider
         Passport::$deviceCodeGrantEnabled = false;
 
         $this->app->singleton(AutomationRegistry::class, fn () => new AutomationRegistry(
-            triggers: [TicketCreated::class, CommentAdded::class, FieldChanged::class, SlaEvent::class, Schedule::class],
+            triggers: [TicketCreated::class, CommentAdded::class, FieldChanged::class, SlaEvent::class, Schedule::class, Webhook::class],
             actions: [SetField::class, Tags::class, Assign::class, MoveDesk::class, SetSlaPolicy::class, SetReminder::class, AddNote::class, SendReply::class, ApplyMacroAction::class, Notify::class, SendWebhook::class],
         ));
         $this->app->scoped(RunCausation::class);

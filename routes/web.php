@@ -11,6 +11,7 @@ use App\Http\Controllers\MailboxOAuthController;
 use App\Http\Controllers\MarkAllNotificationsReadController;
 use App\Http\Controllers\MarkNotificationReadController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\RotateWebhookTokenController;
 use App\Http\Controllers\SavedViewController;
 use App\Http\Controllers\SetAwayController;
 use App\Http\Controllers\TicketAssigneeController;
@@ -21,6 +22,7 @@ use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TicketDeskController;
 use App\Http\Controllers\TicketReminderController;
 use App\Http\Controllers\TicketTagController;
+use App\Http\Controllers\Webhooks\AutomationWebhookController;
 use App\Http\Controllers\Webhooks\MailboxPushController;
 use App\Http\Controllers\Webhooks\PostmarkWebhookController;
 use App\Http\Middleware\VerifyPostmarkWebhook;
@@ -38,6 +40,7 @@ Route::middleware(VerifyPostmarkWebhook::class)->prefix('webhooks/postmark')->na
     Route::post('bounce', [PostmarkWebhookController::class, 'bounce'])->name('bounce');
 });
 
+Route::post('webhooks/automations/{automation}/{token}', AutomationWebhookController::class)->name('webhooks.automations');
 Route::post('webhooks/google/gmail', [MailboxPushController::class, 'gmail'])->name('webhooks.google.gmail');
 Route::post('webhooks/microsoft/graph', [MailboxPushController::class, 'graph'])->name('webhooks.microsoft.graph');
 
@@ -70,6 +73,7 @@ Route::middleware('workspace')->group(function () {
         Route::put('tickets/{ticket}/tags', [TicketTagController::class, 'update'])->name('tickets.tags.update');
         Route::post('tickets/{ticket}/macros/{macro}/apply', ApplyMacroController::class)->name('tickets.macros.apply');
         Route::get('automations/catalog', AutomationCatalogController::class)->name('automations.catalog');
+        Route::post('automations/{automation}/webhook-token', RotateWebhookTokenController::class)->name('automations.webhook-token');
         Route::post('tickets/{ticket}/reminders', [TicketReminderController::class, 'store'])->name('tickets.reminders.store');
         Route::delete('reminders/{reminder}', [TicketReminderController::class, 'destroy'])->name('reminders.destroy');
 
