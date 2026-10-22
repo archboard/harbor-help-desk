@@ -73,6 +73,13 @@ declare namespace App {
         config: Record<string, any>;
         type: 'action';
       };
+      export type AutomationCatalogData = {
+        triggers: App.Data.Automations.CatalogTriggerData[];
+        field_groups: App.Data.Automations.CatalogFieldGroupData[];
+        operators: Record<string, App.Data.Automations.CatalogOperatorData[]>;
+        actions: App.Data.Automations.CatalogActionData[];
+        placeholders: App.Data.Automations.CatalogPlaceholderData[];
+      };
       export type AutomationDefinitionData = {
         trigger: App.Data.Automations.TriggerData;
         steps: (
@@ -93,6 +100,41 @@ declare namespace App {
           | App.Data.Automations.PathsStepData
           | App.Data.Automations.StopStepData
         )[];
+      };
+      export type CatalogActionData = {
+        key: string;
+        label: string;
+        config_rules: Record<string, string[]>;
+      };
+      export type CatalogFieldData = {
+        key: string;
+        label: string;
+        type: App.Automations.FieldType;
+        options: App.Data.Automations.CatalogOptionData[];
+      };
+      export type CatalogFieldGroupData = {
+        group: App.Automations.FieldGroup;
+        label: string;
+        fields: App.Data.Automations.CatalogFieldData[];
+      };
+      export type CatalogOperatorData = {
+        value: App.Automations.Operator;
+        label: string;
+        takes_value: boolean;
+      };
+      export type CatalogOptionData = {
+        value: string;
+        label: string;
+      };
+      export type CatalogPlaceholderData = {
+        key: string;
+        label: string;
+      };
+      export type CatalogTriggerData = {
+        key: string;
+        label: string;
+        field_groups: App.Automations.FieldGroup[];
+        config_rules: Record<string, string[]>;
       };
       export type ConditionGroupData = {
         match: App.Automations.MatchMode;

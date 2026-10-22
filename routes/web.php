@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ApplyMacroController;
 use App\Http\Controllers\Auth\MagicLinkController;
+use App\Http\Controllers\AutomationCatalogController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DeskController;
 use App\Http\Controllers\DeskCustomFieldController;
@@ -68,6 +69,7 @@ Route::middleware('workspace')->group(function () {
         Route::put('tickets/{ticket}/assignees', [TicketAssigneeController::class, 'update'])->name('tickets.assignees.update');
         Route::put('tickets/{ticket}/tags', [TicketTagController::class, 'update'])->name('tickets.tags.update');
         Route::post('tickets/{ticket}/macros/{macro}/apply', ApplyMacroController::class)->name('tickets.macros.apply');
+        Route::get('automations/catalog', AutomationCatalogController::class)->name('automations.catalog');
         Route::post('tickets/{ticket}/reminders', [TicketReminderController::class, 'store'])->name('tickets.reminders.store');
         Route::delete('reminders/{reminder}', [TicketReminderController::class, 'destroy'])->name('reminders.destroy');
 

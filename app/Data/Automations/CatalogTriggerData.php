@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Data\Automations;
+
+use App\Automations\FieldGroup;
+use Spatie\LaravelData\Data;
+
+class CatalogTriggerData extends Data
+{
+    /**
+     * @param  list<FieldGroup>  $fieldGroups  The field groups rules of an automation with this trigger can use.
+     * @param  array<string, list<string>>  $configRules  The string validation rules of each config key.
+     */
+    public function __construct(
+        public string $key,
+        public string $label,
+        public array $fieldGroups,
+        public array $configRules,
+    ) {}
+}

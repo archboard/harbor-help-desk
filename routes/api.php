@@ -3,6 +3,7 @@
 use App\Data\Users\UserData;
 use App\Http\Controllers\Api\V1\ApplyMacroController;
 use App\Http\Controllers\Api\V1\AttachmentController;
+use App\Http\Controllers\Api\V1\AutomationCatalogController;
 use App\Http\Controllers\Api\V1\BusinessScheduleController;
 use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\CustomFieldController;
@@ -62,6 +63,7 @@ Route::prefix('v1')->name('api.v1.')
 
         Route::apiResource('saved-views', SavedViewController::class);
         Route::apiResource('macros', MacroController::class);
+        Route::get('automations/catalog', AutomationCatalogController::class)->name('automations.catalog');
         Route::apiResource('business-schedules', BusinessScheduleController::class);
         Route::apiResource('sla-policies', SlaPolicyController::class)->parameters(['sla-policies' => 'slaPolicy']);
 
