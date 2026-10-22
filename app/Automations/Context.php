@@ -4,6 +4,7 @@ namespace App\Automations;
 
 use App\Enums\SlaMetric;
 use App\Enums\TicketEventType;
+use App\Models\AutomationRun;
 use App\Models\BusinessSchedule;
 use App\Models\Ticket;
 use App\Models\TicketComment;
@@ -16,7 +17,7 @@ use Illuminate\Support\Collection;
 
 /**
  * Everything one evaluation can read: the ticket as it is in the database now, the event or
- * webhook payload that triggered it, and a memo so a value several rules need is queried once.
+ * webhook payload that triggered it, the run (null in a dry run), and a memo so a value several rules need is queried once.
  */
 class Context
 {
@@ -28,9 +29,18 @@ class Context
     /**
      * @param  array<string, mixed>  $payload
      */
-    public function __construct(Ticket $ticket, public readonly ?TicketEvent $event = null, public readonly array $payload = [])
+    public function __construct(Ticket $ticket, public readonly ?TicketEvent $event = null, public readonly array $payload = [], public readonly ?AutomationRun $run = null)
     {
         $this->ticket = Ticket::query()->withTrashed()->with(['requester', 'desk'])->findOrFail($ticket->getKey());
+    }
+
+    /**
+     * Re-read the ticket and forget what was memoized, after actions changed it.
+     */
+    public function refresh(): void
+    {
+        $this->ticket->refresh()->load(['requester', 'desk']);
+        $this->memo = [];
     }
 
     /**
@@ -67,14 +77,20 @@ class Context
      */
     public function change(): ?array
     {
-        if ($this->event === null) {
-            return null;
-        }
+        return $this->event === null ? null : self::changeFor($this->event);
+    }
 
-        $properties = $this->event->properties;
+    /**
+     * {@see self::change()} for an event alone, without loading a ticket.
+     *
+     * @return array{field: string, from: mixed, to: mixed}|null
+     */
+    public static function changeFor(TicketEvent $event): ?array
+    {
+        $properties = $event->properties;
         $change = fn (string $field, mixed $from, mixed $to): array => ['field' => $field, 'from' => $from, 'to' => $to];
 
-        return match ($this->event->type) {
+        return match ($event->type) {
             TicketEventType::SUBJECT_CHANGED => $change('ticket.subject', $properties['from'], $properties['to']),
             TicketEventType::STATUS_CHANGED => $change('ticket.status', $properties['from'], $properties['to']),
             TicketEventType::PRIORITY_CHANGED => $change('ticket.priority', $properties['from'], $properties['to']),

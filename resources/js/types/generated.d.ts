@@ -150,6 +150,7 @@ declare namespace App {
         label: string;
         field_groups: App.Automations.FieldGroup[];
         config_rules: Record<string, string[]>;
+        placeholders: App.Data.Automations.CatalogPlaceholderData[];
       };
       export type ConditionGroupData = {
         match: App.Automations.MatchMode;
@@ -713,6 +714,13 @@ declare namespace App {
   }
   namespace Enums {
     export type AssignmentStrategy = 'manual' | 'round_robin' | 'load_balanced';
+    export type AutomationRunStatus =
+      | 'running'
+      | 'waiting'
+      | 'completed'
+      | 'skipped'
+      | 'failed'
+      | 'cancelled';
     export type CustomFieldType =
       | 'text'
       | 'textarea'
@@ -754,6 +762,8 @@ declare namespace App {
       | 'attachment_added'
       | 'attachment_removed'
       | 'reminder_set'
+      | 'sla_warning'
+      | 'sla_breached'
       | 'email_bounced'
       | 'deleted'
       | 'restored';

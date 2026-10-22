@@ -51,6 +51,11 @@ class Catalog
         return new AutomationCatalogData(
             triggers: array_values(array_map(fn ($trigger): CatalogTriggerData => new CatalogTriggerData(
                 $trigger->key(), $trigger->label(), $trigger->fieldGroups(), $this->rules($trigger->configRules()),
+                array_map(
+                    fn (string $key, string $label): CatalogPlaceholderData => new CatalogPlaceholderData($key, $label),
+                    array_keys($trigger->placeholders()),
+                    $trigger->placeholders(),
+                ),
             ), $this->registry->triggers())),
             fieldGroups: array_map(fn (FieldGroup $group): CatalogFieldGroupData => new CatalogFieldGroupData(
                 $group, $group->label(), $fields->get($group->value, []),

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Automations\RunCausation;
 use App\Enums\TicketEventType;
 use App\Enums\TicketPriority;
 use App\Enums\TicketSource;
@@ -320,7 +321,7 @@ class Ticket extends Model
      */
     public function recordEvent(TicketEventType $type, User|Contact|Automation|null $actor, array $properties = []): TicketEvent
     {
-        $event = new TicketEvent(['type' => $type, 'properties' => $properties]);
+        $event = new TicketEvent(['type' => $type, 'properties' => $properties, 'automation_run_id' => app(RunCausation::class)->runId]);
         $event->actor()->associate($actor);
         $event->ticket()->associate($this)->saveOrFail();
 

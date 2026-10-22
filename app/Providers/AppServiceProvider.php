@@ -3,11 +3,17 @@
 namespace App\Providers;
 
 use App\Automations\AutomationRegistry;
+use App\Automations\RunCausation;
+use App\Automations\Triggers\CommentAdded;
+use App\Automations\Triggers\FieldChanged;
+use App\Automations\Triggers\SlaEvent;
+use App\Automations\Triggers\TicketCreated;
 use App\Http\Controllers\OAuth\ApproveAuthorizationController;
 use App\Http\Controllers\OAuth\AuthorizationController;
 use App\Mail\WorkspaceTransport;
 use App\Models\Attachment;
 use App\Models\Automation;
+use App\Models\AutomationRun;
 use App\Models\Contact;
 use App\Models\CustomField;
 use App\Models\Desk;
@@ -48,7 +54,11 @@ class AppServiceProvider extends ServiceProvider
     {
         Passport::$deviceCodeGrantEnabled = false;
 
-        $this->app->singleton(AutomationRegistry::class, fn () => new AutomationRegistry(triggers: [], actions: []));
+        $this->app->singleton(AutomationRegistry::class, fn () => new AutomationRegistry(
+            triggers: [TicketCreated::class, CommentAdded::class, FieldChanged::class, SlaEvent::class],
+            actions: [],
+        ));
+        $this->app->scoped(RunCausation::class);
         $this->app->bind(ScopeRepository::class, WorkspaceScopeRepository::class);
         $this->app->bind(PassportAuthorizationController::class, AuthorizationController::class);
         $this->app->bind(PassportApproveAuthorizationController::class, ApproveAuthorizationController::class);
@@ -98,6 +108,7 @@ class AppServiceProvider extends ServiceProvider
             'custom_field' => CustomField::class,
             'mailbox' => Mailbox::class,
             'automation' => Automation::class,
+            'automation_run' => AutomationRun::class,
         ]);
 
         Passport::tokensExpireIn(CarbonImmutable::now()->addHour());

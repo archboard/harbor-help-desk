@@ -36,6 +36,8 @@ test('events describe what happened in a sentence', function (TicketEventType $t
     'attached' => [TicketEventType::ATTACHMENT_ADDED, ['attachment_id' => 'att_x', 'filename' => 'invoice.pdf'], 'Jane Doe attached invoice.pdf.'],
     'detached' => [TicketEventType::ATTACHMENT_REMOVED, ['attachment_id' => 'att_x', 'filename' => 'invoice.pdf'], 'Jane Doe removed the attachment invoice.pdf.'],
     'reminder' => [TicketEventType::REMINDER_SET, ['remind_at' => '2026-11-02T15:00:00+00:00'], 'Jane Doe set a reminder for Mon, Nov 2, 2026 3:00 PM.'],
+    'sla warning' => [TicketEventType::SLA_WARNING, ['metric' => 'first_response', 'due_at' => '2026-11-02T15:00:00+00:00'], 'First response SLA is at risk: due Mon, Nov 2, 2026 3:00 PM.'],
+    'sla breached' => [TicketEventType::SLA_BREACHED, ['metric' => 'resolution', 'due_at' => '2026-11-02T15:00:00+00:00'], 'Resolution SLA was breached.'],
     'deleted' => [TicketEventType::DELETED, [], 'Jane Doe deleted the ticket.'],
     'restored' => [TicketEventType::RESTORED, [], 'Jane Doe restored the ticket.'],
 ]);

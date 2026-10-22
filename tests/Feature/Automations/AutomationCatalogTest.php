@@ -48,7 +48,8 @@ test('the catalog has the expected shape on the web and the API', function () {
     $this->actingAs($this->admin)->getJson($this->webUrl)
         ->assertOk()
         ->assertJsonStructure(['triggers', 'field_groups' => [['group', 'label', 'fields']], 'operators', 'actions', 'placeholders'])
-        ->assertJsonPath('triggers', [])
+        ->assertJsonPath('triggers.*.key', ['ticket.created', 'ticket.comment_added', 'ticket.field_changed', 'ticket.sla'])
+        ->assertJsonPath('triggers.2.placeholders.*.key', ['event.field', 'event.from', 'event.to'])
         ->assertJsonPath('actions', [])
         ->assertJsonCount(count(FieldGroup::cases()), 'field_groups')
         ->assertJsonPath('placeholders.0', ['key' => 'requester.name', 'label' => 'Requester name']);

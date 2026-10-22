@@ -238,6 +238,21 @@ return [
             'timeout' => 30,
             'nice' => 0,
         ],
+
+        // Automation runs wait for each other per ticket, so a few processes are enough. The timeout
+        // stays above RunAutomations' 60 seconds and below the redis connection's retry_after.
+        'supervisor-automations' => [
+            'connection' => 'redis',
+            'queue' => ['automations'],
+            'balance' => 'simple',
+            'maxProcesses' => 1,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 128,
+            'tries' => 1,
+            'timeout' => 90,
+            'nice' => 0,
+        ],
     ],
 
     // First match wins, so self-hosters on any APP_ENV other than local get the production plan.
@@ -252,6 +267,9 @@ return [
             'supervisor-broadcasts' => [
                 'maxProcesses' => 1,
             ],
+            'supervisor-automations' => [
+                'maxProcesses' => 1,
+            ],
         ],
 
         '*' => [
@@ -264,6 +282,9 @@ return [
                 'maxProcesses' => 3,
             ],
             'supervisor-broadcasts' => [
+                'maxProcesses' => 3,
+            ],
+            'supervisor-automations' => [
                 'maxProcesses' => 3,
             ],
         ],

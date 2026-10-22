@@ -44,6 +44,16 @@ class FakeMessageTrigger implements Trigger
     {
         return true;
     }
+
+    public function placeholders(): array
+    {
+        return [];
+    }
+
+    public function placeholderValues(Context $context): array
+    {
+        return [];
+    }
 }
 
 class FakePlainTrigger extends FakeMessageTrigger

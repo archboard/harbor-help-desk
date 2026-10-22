@@ -2,6 +2,7 @@
 
 namespace App\Automations\Triggers;
 
+use App\Automations\Context;
 use App\Automations\FieldGroup;
 use App\Models\TicketEvent;
 
@@ -34,4 +35,18 @@ interface Trigger
      * @param  array<string, mixed>  $config
      */
     public function matches(TicketEvent $event, array $config): bool;
+
+    /**
+     * Placeholders only this trigger can fill in texts, as key => label.
+     *
+     * @return array<string, string>
+     */
+    public function placeholders(): array;
+
+    /**
+     * The values of {@see self::placeholders()} for this run, as key => value.
+     *
+     * @return array<string, string>
+     */
+    public function placeholderValues(Context $context): array;
 }

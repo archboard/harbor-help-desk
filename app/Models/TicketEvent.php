@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\SlaMetric;
 use App\Enums\TicketEventType;
 use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
@@ -161,6 +162,8 @@ class TicketEvent extends Model
             TicketEventType::ATTACHMENT_ADDED => __(':actor attached :filename.', $replace + ['filename' => $properties['filename']]),
             TicketEventType::ATTACHMENT_REMOVED => __(':actor removed the attachment :filename.', $replace + ['filename' => $properties['filename']]),
             TicketEventType::REMINDER_SET => __(':actor set a reminder for :at.', $replace + ['at' => $this->localTime($properties['remind_at'], $timezone)]),
+            TicketEventType::SLA_WARNING => __(':metric SLA is at risk: due :due.', ['metric' => SlaMetric::from($properties['metric'])->label(), 'due' => $this->localTime($properties['due_at'], $timezone)]),
+            TicketEventType::SLA_BREACHED => __(':metric SLA was breached.', ['metric' => SlaMetric::from($properties['metric'])->label()]),
             TicketEventType::EMAIL_BOUNCED => __('An emailed reply bounced: :reason', ['reason' => $properties['reason']]),
             TicketEventType::DELETED => __(':actor deleted the ticket.', $replace),
             TicketEventType::RESTORED => __(':actor restored the ticket.', $replace),
