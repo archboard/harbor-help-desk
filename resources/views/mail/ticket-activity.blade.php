@@ -18,7 +18,7 @@
   </div>
 
   <p style="margin: 16px 0 0; font-size: 12px; color: #9ca3af;">
-    {{ $workspaceName }} · {{ __('Ticket #:number', ['number' => $ticket->number]) }}
+    {{ $workspaceName }}@if ($ticket) · {{ __('Ticket #:number', ['number' => $ticket->number]) }}@endif
   </p>
 </body>
 </html>

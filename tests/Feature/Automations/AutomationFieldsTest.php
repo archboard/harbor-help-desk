@@ -22,6 +22,7 @@ use App\Models\TicketComment;
 use App\Models\TicketSlaTarget;
 use App\Models\User;
 use App\Models\Workspace;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Event;
 use Tests\Concerns\InWorkspace;
 
@@ -203,4 +204,32 @@ it('exposes enum options for the catalog', function () {
     expect($registry->field('ticket.status')->options())->toHaveKey('on_hold', 'On hold')
         ->and($registry->field('ticket.desk')->options())->toContain('Billing')
         ->and($registry->field('sla.resolution')->options())->toHaveKeys(['active', 'paused', 'met', 'breached', 'none']);
+});
+
+test('reply and status times resolve from the newest row, not the oldest', function () {
+    Event::fake([TicketActivityRecorded::class]);
+    $this->travelTo('2026-10-21 08:00');
+    $ticket = Ticket::factory()->create();
+    $agent = User::factory()->create();
+    $reply = function (Model $author, string $body) use ($ticket): void {
+        $comment = new TicketComment(['body' => $body, 'is_internal' => false]);
+        $comment->author()->associate($author);
+        $ticket->comments()->save($comment);
+    };
+
+    $reply($ticket->requester, 'first');
+    $reply($agent, 'first');
+    $ticket->recordEvent(TicketEventType::STATUS_CHANGED, null, ['from' => 'open', 'to' => 'pending']);
+    $this->travelTo('2026-10-21 10:00');
+    $reply($ticket->requester, 'second');
+    $reply($agent, 'second');
+    $ticket->recordEvent(TicketEventType::STATUS_CHANGED, null, ['from' => 'pending', 'to' => 'open']);
+    $this->travelTo('2026-10-21 10:30');
+
+    $context = new Context($ticket);
+    $registry = app(AutomationRegistry::class);
+
+    expect($registry->field('time.since_requester_reply')->resolve($context))->toBe(30)
+        ->and($registry->field('time.since_agent_reply')->resolve($context))->toBe(30)
+        ->and($registry->field('time.since_status_changed')->resolve($context))->toBe(30);
 });

@@ -6,4 +6,4 @@
 
 {!! __('Open ticket') !!}: {!! $url !!}
 
-{!! $workspaceName !!} · {!! __('Ticket #:number', ['number' => $ticket->number]) !!}
+{!! $workspaceName !!}@if ($ticket) · {!! __('Ticket #:number', ['number' => $ticket->number]) !!}@endif

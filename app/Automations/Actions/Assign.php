@@ -39,15 +39,7 @@ class Assign extends ConfiguredAction
     public function contextRules(?User $editor, ?Desk $scope): array
     {
         return [
-            'user_ids.*' => [function (string $attribute, mixed $value, Closure $fail) use ($scope): void {
-                $user = is_string($value) ? Workspace::current()?->users()->whereKey($value)->first() : null;
-
-                if ($user === null) {
-                    $fail(__('This user is not a member of the workspace.'));
-                } elseif ($scope !== null && ! $scope->users()->whereKey($user->getKey())->exists()) {
-                    $fail(__('This user is not a member of the automation’s desk.'));
-                }
-            }],
+            'user_ids.*' => [$this->memberRule($scope)],
             'desk_id' => [function (string $attribute, mixed $value, Closure $fail) use ($scope): void {
                 if (! is_string($value) || Desk::query()->find($value) === null) {
                     $fail(__('This desk does not exist.'));

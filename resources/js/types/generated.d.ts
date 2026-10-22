@@ -29,6 +29,11 @@ declare namespace App {
       | 'datetime'
       | 'duration';
     export type MatchMode = 'all' | 'any';
+    export type NotifyRecipients =
+      | 'assignees'
+      | 'desk_members'
+      | 'desk_leads'
+      | 'users';
     export type Operator =
       | 'is'
       | 'is_not'
@@ -247,6 +252,12 @@ declare namespace App {
       };
       namespace Actions {
         export type ActionConfigData = object;
+        export type AddNoteConfigData = {
+          body: string;
+        };
+        export type ApplyMacroConfigData = {
+          macro_id: string;
+        };
         export type AssignConfigData = {
           mode: App.Automations.AssignMode;
           user_ids: string[] | null;
@@ -254,6 +265,15 @@ declare namespace App {
         };
         export type MoveDeskConfigData = {
           desk_id: string;
+        };
+        export type NotifyConfigData = {
+          recipients: App.Automations.NotifyRecipients;
+          subject: string;
+          body: string;
+          user_ids: string[] | null;
+        };
+        export type SendReplyConfigData = {
+          body: string;
         };
         export type SetFieldConfigData = {
           field: string;
@@ -776,7 +796,8 @@ declare namespace App {
       | 'mentioned'
       | 'reminder_due'
       | 'sla_warning'
-      | 'sla_breached';
+      | 'sla_breached'
+      | 'automation';
     export type SlaMetric = 'first_response' | 'resolution';
     export type TicketEventType =
       | 'created'

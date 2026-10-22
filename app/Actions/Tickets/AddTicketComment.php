@@ -89,6 +89,7 @@ class AddTicketComment
             ->when($lastSeenCommentId, fn ($query) => $query->where('id', '>', $lastSeenCommentId))
             ->whereNot(fn ($query) => $query->whereMorphedTo('author', $actor))
             ->with('author')
+            ->reorder()
             ->latest('id')
             ->first();
 

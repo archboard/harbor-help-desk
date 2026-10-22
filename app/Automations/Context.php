@@ -112,13 +112,13 @@ class Context
     public function lastReplyAt(string $authorType): ?CarbonImmutable
     {
         return $this->memo("last_reply.$authorType", fn (): ?CarbonImmutable => $this->ticket->comments()
-            ->where('author_type', $authorType)->where('is_internal', false)->latest()->first()?->created_at);
+            ->where('author_type', $authorType)->where('is_internal', false)->reorder()->latest()->latest('id')->first()?->created_at);
     }
 
     public function statusChangedAt(): CarbonImmutable
     {
         return $this->memo('status_changed_at', fn (): CarbonImmutable => $this->ticket->events()
-            ->where('type', TicketEventType::STATUS_CHANGED)->latest()->first()?->created_at ?? $this->ticket->created_at);
+            ->where('type', TicketEventType::STATUS_CHANGED)->reorder()->latest()->latest('id')->first()?->created_at ?? $this->ticket->created_at);
     }
 
     /**

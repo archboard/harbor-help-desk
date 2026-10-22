@@ -4,17 +4,30 @@ use App\Automations\AutomationRegistry;
 use App\Automations\Context;
 use App\Enums\AutomationRunStatus;
 use App\Enums\CustomFieldType;
+use App\Enums\DeskRole;
+use App\Enums\NotificationType;
 use App\Enums\TicketEventType;
 use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
+use App\Enums\WorkspaceRole;
+use App\Mail\TicketReplyMail;
 use App\Models\Automation;
 use App\Models\AutomationRun;
 use App\Models\CustomField;
 use App\Models\Desk;
+use App\Models\Macro;
+use App\Models\Mailbox;
 use App\Models\SlaPolicy;
 use App\Models\Tag;
 use App\Models\Ticket;
+use App\Models\TicketComment;
+use App\Models\User;
 use App\Models\Workspace;
+use App\Notifications\AutomationNotice;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
 use Tests\Concerns\InWorkspace;
 
 uses(InWorkspace::class);
@@ -222,4 +235,198 @@ test('actions fail the run instead of touching another workspace\'s data', funct
             ->and($policyB->fresh())->not->toBeNull();
     });
     expect($this->ticket->refresh()->desk_id)->toBe($this->desk->id)->and($this->ticket->sla_policy_id)->toBeNull();
+});
+
+function commentBy(Ticket $ticket, Model $author, string $body): TicketComment
+{
+    $comment = new TicketComment(['body' => $body, 'is_internal' => false]);
+    $comment->author()->associate($author);
+    $ticket->comments()->save($comment);
+
+    return $comment;
+}
+
+test('add_note adds an internal note as the automation with the placeholders filled in', function () {
+    Mail::fake();
+
+    $run = runActions([['add_note', ['body' => 'Check {{ ticket.subject }} for {{ requester.first_name }} - {{ agent.name }}']]]);
+    $comment = $this->ticket->comments()->sole();
+
+    expect($run->status)->toBe(AutomationRunStatus::COMPLETED)
+        ->and($comment->is_internal)->toBeTrue()
+        ->and($comment->author)->toBeInstanceOf(Automation::class)
+        ->and($comment->body)->toBe("Check {$this->ticket->subject} for ".Str::before($this->ticket->requester->name, ' ').' - Bot')
+        ->and($comment->body)->not->toContain('{{');
+    Mail::assertNothingSent();
+});
+
+test('send_reply emails a public reply, filling in the triggering message', function () {
+    Mail::fake();
+    $mailbox = Mailbox::factory()->create(['default_desk_id' => $this->desk->id]);
+    $this->ticket->update(['mailbox_id' => $mailbox->id]);
+    commentBy($this->ticket, $this->ticket->requester, 'Where is my parcel?');
+
+    Automation::factory()->enabled()->triggeredBy('ticket.comment_added', 'send_reply', ['body' => 'You wrote: {{ message.body }}'])->create(['name' => 'Bot']);
+    $this->ticket->recordEvent(TicketEventType::COMMENT_ADDED, $this->ticket->requester, ['comment_id' => $this->ticket->comments()->sole()->id]);
+
+    $reply = $this->ticket->comments()->reorder()->latest('id')->first();
+
+    expect($reply->is_internal)->toBeFalse()
+        ->and($reply->author)->toBeInstanceOf(Automation::class)
+        ->and($reply->body)->toBe('You wrote: Where is my parcel?');
+    Mail::assertSent(TicketReplyMail::class);
+});
+
+test('send_reply is skipped when the last reply bounced, until a newer reply goes out', function () {
+    Mail::fake();
+    $bot = Automation::factory()->create();
+    $post = fn (string $body) => commentBy($this->ticket, $bot, $body);
+    $reply = [['send_reply', ['body' => 'Hello']]];
+
+    $post('Earlier');
+    $this->travel(1)->seconds();
+    $this->ticket->recordEvent(TicketEventType::EMAIL_BOUNCED, null, ['reason' => 'mailbox full']);
+
+    $run = runActions($reply);
+    expect($run->status)->toBe(AutomationRunStatus::COMPLETED)
+        ->and($run->log[0]['result'])->toBe('Skipped: the last reply to the requester bounced.')
+        ->and($this->ticket->comments()->count())->toBe(1);
+
+    $this->travel(1)->seconds();
+    $post('Newer');
+    expect(runActions($reply)->log[0]['result'])->toBe('Sent a reply.');
+});
+
+test('send_reply is skipped when it is triggered by a bounce or by an automation message', function () {
+    Mail::fake();
+    $bot = Automation::factory()->create();
+    $note = commentBy($this->ticket, $bot, 'From a bot');
+
+    Automation::factory()->enabled()->triggeredBy('ticket.comment_added', 'send_reply', ['body' => 'Hello'])->create();
+    $this->ticket->recordEvent(TicketEventType::COMMENT_ADDED, $bot, ['comment_id' => $note->id]);
+
+    expect(AutomationRun::query()->latest('id')->firstOrFail()->log[0]['result'])->toBe('Skipped: the triggering message was written by an automation.');
+
+    // No trigger fires on a bounce yet, so the guard is exercised on the action itself.
+    $context = new Context($this->ticket, $this->ticket->recordEvent(TicketEventType::EMAIL_BOUNCED, null, ['reason' => 'x']));
+    expect(app(AutomationRegistry::class)->action('send_reply')->describe($context, ['body' => 'Hi']))->toBe('Skipped: the triggering event is a bounce.');
+
+    expect($this->ticket->comments()->count())->toBe(1);
+    Mail::assertNothingSent();
+});
+
+test('apply_macro runs the macro actions and posts its body as the macro says', function () {
+    Mail::fake();
+    $mailbox = Mailbox::factory()->create(['default_desk_id' => $this->desk->id]);
+    $this->ticket->update(['mailbox_id' => $mailbox->id]);
+    $note = Macro::factory()->create(['body' => 'Hi {{ requester.first_name }}', 'body_is_internal' => true, 'actions' => ['priority' => 'high']]);
+    $reply = Macro::factory()->create(['body' => 'We are on it', 'body_is_internal' => false, 'actions' => ['add_tags' => ['macro']]]);
+
+    $run = runActions([['apply_macro', ['macro_id' => $note->id]], ['apply_macro', ['macro_id' => $reply->id]]]);
+
+    $comments = $this->ticket->comments()->orderBy('id')->get();
+    expect($run->status)->toBe(AutomationRunStatus::COMPLETED)
+        ->and($this->ticket->refresh()->priority)->toBe(TicketPriority::HIGH)
+        ->and($this->ticket->tags()->pluck('name')->all())->toBe(['macro'])
+        ->and($comments->pluck('is_internal')->all())->toBe([true, false])
+        ->and($comments[0]->body)->toBe('Hi '.Str::before($this->ticket->requester->name, ' '))
+        ->and($comments[1]->author)->toBeInstanceOf(Automation::class);
+    Mail::assertSent(TicketReplyMail::class, 1);
+});
+
+test('apply_macro fails the run for a personal macro, a missing one or one of another desk', function () {
+    $personal = Macro::factory()->personal(deskMember($this->workspace, $this->desk))->create();
+    $elsewhere = Macro::factory()->forDesk(Desk::factory()->create())->create();
+
+    foreach ([$personal->id, $elsewhere->id, 'mac_missing'] as $id) {
+        $run = runActions([['apply_macro', ['macro_id' => $id]]]);
+        expect($run->status)->toBe(AutomationRunStatus::FAILED, $id);
+    }
+});
+
+test('notify sends the rendered template to the chosen recipients who can view the ticket', function () {
+    Notification::fake();
+    $assignee = deskMember($this->workspace, $this->desk);
+    $lead = deskMember($this->workspace, $this->desk, DeskRole::LEAD);
+    $member = deskMember($this->workspace, $this->desk);
+    $this->ticket->assignees()->attach($assignee, ['workspace_id' => $this->workspace->id]);
+    $config = fn (string $recipients, array $extra = []) => ['recipients' => $recipients, 'subject' => 'Look at #{{ ticket.number }}', 'body' => 'By {{ agent.name }}', ...$extra];
+
+    runActions([['notify', $config('assignees')]]);
+    Notification::assertSentTo($assignee, AutomationNotice::class, fn (AutomationNotice $n) => $n->title === "Look at #{$this->ticket->number}"
+        && $n->body === 'By Bot' && $n->toArray($assignee)['ticket_id'] === $this->ticket->id && $n->databaseType($assignee) === 'automation');
+    Notification::assertCount(1);
+
+    runActions([['notify', $config('desk_leads')]]);
+    Notification::assertSentTo($lead, AutomationNotice::class);
+    Notification::assertNotSentTo($member, AutomationNotice::class);
+
+    runActions([['notify', $config('desk_members')]]);
+    Notification::assertSentToTimes($member, AutomationNotice::class, 1);
+
+    runActions([['notify', $config('users', ['user_ids' => [$member->id]])]]);
+    Notification::assertSentToTimes($member, AutomationNotice::class, 2);
+
+    // Someone who can't view the ticket is skipped.
+    $this->workspace->users()->updateExistingPivot($member->id, ['role' => WorkspaceRole::AGENT]);
+    $this->desk->users()->detach($member);
+    $run = runActions([['notify', $config('users', ['user_ids' => [$member->id]])]]);
+    expect($run->status)->toBe(AutomationRunStatus::COMPLETED)->and($run->log[0]['result'])->toBe('Nobody to notify.');
+});
+
+test('notify follows the recipient preferences: in-app on and email off by default', function () {
+    $user = deskMember($this->workspace, $this->desk);
+
+    expect($user->notificationChannels($this->workspace, NotificationType::AUTOMATION))->toBe(['database']);
+});
+
+test('a failed run tells the creator once an hour, only while they can still manage the automation', function () {
+    Notification::fake();
+    $this->freezeTime();
+    $creator = User::factory()->create();
+    $this->workspace->users()->attach($creator, ['role' => WorkspaceRole::ADMIN]);
+    $automation = Automation::factory()->enabled()->triggeredBy('ticket.created', 'move_desk', ['desk_id' => 'dsk_missing'])->create(['name' => 'Router', 'created_by' => $creator->id]);
+    $fire = fn () => $this->ticket->recordEvent(TicketEventType::CREATED, null);
+
+    $fire();
+    Notification::assertSentToTimes($creator, AutomationNotice::class, 1);
+    Notification::assertSentTo($creator, AutomationNotice::class, fn (AutomationNotice $n) => $n->title === 'Automation failed: Router'
+        && str_contains($n->body, 'The desk no longer exists'));
+
+    $fire();
+    Notification::assertSentToTimes($creator, AutomationNotice::class, 1);
+
+    $this->travel(61)->minutes();
+    $fire();
+    Notification::assertSentToTimes($creator, AutomationNotice::class, 2);
+
+    // Not for skipped or completed runs, and not once the creator is an agent who can't manage it.
+    $this->workspace->users()->updateExistingPivot($creator->id, ['role' => WorkspaceRole::AGENT]);
+    $this->travel(61)->minutes();
+    $fire();
+    Notification::assertSentToTimes($creator, AutomationNotice::class, 2);
+
+    $this->workspace->users()->updateExistingPivot($creator->id, ['role' => WorkspaceRole::ADMIN]);
+    $automation->update(['definition' => ['trigger' => ['type' => 'ticket.created', 'config' => []], 'steps' => [['id' => 's', 'type' => 'action', 'action' => 'add_note', 'config' => ['body' => 'ok']]]]]);
+    $this->travel(61)->minutes();
+    $fire();
+    Notification::assertSentToTimes($creator, AutomationNotice::class, 2);
+});
+
+test('the automation notice email shows the subject, body and ticket link, and no ticket footer without a ticket', function () {
+    $user = deskMember($this->workspace, $this->desk);
+    $automation = Automation::factory()->create(['name' => 'Router']);
+
+    $withTicket = new AutomationNotice($automation, $this->ticket, 'Heads up', 'Please look at this.');
+    $mail = $withTicket->toMail($user);
+    $html = (string) $mail->render();
+
+    expect($mail->subject)->toBe('Heads up')
+        ->and($html)->toContain('Please look at this.')
+        ->and($html)->toContain($this->workspace->url("/tickets/{$this->ticket->id}"))
+        ->and($html)->toContain("Ticket #{$this->ticket->number}");
+
+    $html = (string) (new AutomationNotice($automation, null, 'Automation failed: Router', 'It broke.'))->toMail($user)->render();
+
+    expect($html)->toContain('It broke.')->and($html)->not->toContain('Ticket #');
 });

@@ -24,7 +24,8 @@ use Throwable;
  * - An action runs as the automation, and the events it causes carry the run's id ({@see RunCausation}).
  * - Paths run the first branch whose condition passes, else the `else` steps.
  * - A stop ends the run and sets `state.stopped`, which makes the caller skip later automations.
- * - Anything thrown by a step fails the run with the error stored. It never reaches the caller.
+ * - Anything thrown by a step fails the run with the error stored, and tells the automation's creator
+ *   ({@see NotifyCreatorOfFailure}). It never reaches the caller.
  *
  * Holds no state between runs: everything lives in the run and the context.
  */
@@ -34,6 +35,7 @@ class Engine
         protected AutomationRegistry $registry,
         protected ConditionEvaluator $conditions,
         protected RunCausation $causation,
+        protected NotifyCreatorOfFailure $notifyCreator,
     ) {}
 
     public function run(Automation $automation, Context $context, AutomationRun $run): AutomationRun
@@ -54,6 +56,10 @@ class Engine
         }
 
         $run->save();
+
+        if ($run->status === AutomationRunStatus::FAILED) {
+            $this->notifyCreator->handle($automation, $run);
+        }
 
         return $run;
     }
