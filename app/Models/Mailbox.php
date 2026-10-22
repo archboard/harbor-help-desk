@@ -80,6 +80,12 @@ use Symfony\Component\Mailer\Transport\TransportInterface;
 #[Unguarded]
 class Mailbox extends Model
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Properties
+    |--------------------------------------------------------------------------
+    */
+
     /** @use HasFactory<MailboxFactory> */
     use BelongsToWorkspace, HasFactory, HasScru128Ids;
 
@@ -90,10 +96,71 @@ class Mailbox extends Model
         'routing' => '[]',
     ];
 
-    public function idPrefix(): string
+    /*
+    |--------------------------------------------------------------------------
+    | Casts
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
     {
-        return 'mbx_';
+        return [
+            'driver' => MailboxDriver::class,
+            'routing' => 'array',
+            'settings' => 'encrypted:array',
+            'imap_uid_validity' => 'integer',
+            'imap_last_uid' => 'integer',
+            'polled_at' => 'datetime',
+            'push_expires_at' => 'datetime',
+            'push_secret' => 'encrypted',
+        ];
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Scopes
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Limit to the mailboxes `mailboxes:poll` should queue a poll for this minute. Hosted
+     * mailboxes receive by webhook, so only the workspace's own mailboxes are polled. While
+     * `mailboxes:watch` runs, or for a mailbox with an unexpired push subscription, only those
+     * not polled for 5 minutes are, as a backstop.
+     *
+     * @param  Builder<self>  $query
+     */
+    #[Scope]
+    protected function needsScheduledPoll(Builder $query): void
+    {
+        $query->where('driver', '!=', MailboxDriver::HOSTED)
+            ->where(fn (Builder $query) => $query
+                ->whereNull('polled_at')
+                ->orWhere('polled_at', '<', now()->subMinutes(5))
+                ->unless(config('harbor.mail.watch'), fn (Builder $query) => $query->orWhere(
+                    fn (Builder $query) => $query->withoutPush(),
+                )));
+    }
+
+    /**
+     * Limit to the mailboxes whose provider isn't pushing new mail to Harbor right now.
+     *
+     * @param  Builder<self>  $query
+     */
+    #[Scope]
+    protected function withoutPush(Builder $query): void
+    {
+        $query->where(fn (Builder $query) => $query->whereNull('push_expires_at')->orWhere('push_expires_at', '<=', now()));
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
 
     /**
      * @return BelongsTo<Desk, $this>
@@ -101,6 +168,17 @@ class Mailbox extends Model
     public function defaultDesk(): BelongsTo
     {
         return $this->belongsTo(Desk::class, 'default_desk_id')->withTrashed();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Methods
+    |--------------------------------------------------------------------------
+    */
+
+    public function idPrefix(): string
+    {
+        return 'mbx_';
     }
 
     /**
@@ -197,37 +275,6 @@ class Mailbox extends Model
     }
 
     /**
-     * Limit to the mailboxes `mailboxes:poll` should queue a poll for this minute. Hosted
-     * mailboxes receive by webhook, so only the workspace's own mailboxes are polled. While
-     * `mailboxes:watch` runs, or for a mailbox with an unexpired push subscription, only those
-     * not polled for 5 minutes are, as a backstop.
-     *
-     * @param  Builder<self>  $query
-     */
-    #[Scope]
-    protected function needsScheduledPoll(Builder $query): void
-    {
-        $query->where('driver', '!=', MailboxDriver::HOSTED)
-            ->where(fn (Builder $query) => $query
-                ->whereNull('polled_at')
-                ->orWhere('polled_at', '<', now()->subMinutes(5))
-                ->unless(config('harbor.mail.watch'), fn (Builder $query) => $query->orWhere(
-                    fn (Builder $query) => $query->withoutPush(),
-                )));
-    }
-
-    /**
-     * Limit to the mailboxes whose provider isn't pushing new mail to Harbor right now.
-     *
-     * @param  Builder<self>  $query
-     */
-    #[Scope]
-    protected function withoutPush(Builder $query): void
-    {
-        $query->where(fn (Builder $query) => $query->whereNull('push_expires_at')->orWhere('push_expires_at', '<=', now()));
-    }
-
-    /**
      * The desk new mail goes to: the first routing rule whose address is among the recipients
      * and whose desk is active, then the default desk, then the workspace's oldest active desk.
      */
@@ -242,22 +289,5 @@ class Mailbox extends Model
         }
 
         return $desks[$this->default_desk_id] ?? Desk::query()->oldest()->firstOrFail();
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'driver' => MailboxDriver::class,
-            'routing' => 'array',
-            'settings' => 'encrypted:array',
-            'imap_uid_validity' => 'integer',
-            'imap_last_uid' => 'integer',
-            'polled_at' => 'datetime',
-            'push_expires_at' => 'datetime',
-            'push_secret' => 'encrypted',
-        ];
     }
 }

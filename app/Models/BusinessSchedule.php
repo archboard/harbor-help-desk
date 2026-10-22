@@ -50,10 +50,39 @@ use RuntimeException;
 #[Unguarded]
 class BusinessSchedule extends Model
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Properties
+    |--------------------------------------------------------------------------
+    */
+
     /** @use HasFactory<BusinessScheduleFactory> */
     use BelongsToWorkspace, HasFactory, HasScru128Ids;
 
     private const int MAX_DAYS = 732;
+
+    /*
+    |--------------------------------------------------------------------------
+    | Casts
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'weekly_hours' => 'array',
+            'holidays' => 'array',
+        ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Methods
+    |--------------------------------------------------------------------------
+    */
 
     public function idPrefix(): string
     {
@@ -144,16 +173,5 @@ class BusinessSchedule extends Model
             ],
             $intervals,
         );
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'weekly_hours' => 'array',
-            'holidays' => 'array',
-        ];
     }
 }

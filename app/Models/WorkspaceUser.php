@@ -38,7 +38,19 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  */
 class WorkspaceUser extends Pivot
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Properties
+    |--------------------------------------------------------------------------
+    */
+
     protected $table = 'workspace_user';
+
+    /*
+    |--------------------------------------------------------------------------
+    | Casts
+    |--------------------------------------------------------------------------
+    */
 
     /**
      * @return array<string, string>
@@ -51,6 +63,12 @@ class WorkspaceUser extends Pivot
             'away_at' => 'datetime',
         ];
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Methods
+    |--------------------------------------------------------------------------
+    */
 
     /**
      * Whether the member wants the notification on the channel; a choice they haven't made falls back to the type's default.

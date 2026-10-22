@@ -55,13 +55,37 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Unguarded]
 class Macro extends Model
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Properties
+    |--------------------------------------------------------------------------
+    */
+
     /** @use HasFactory<MacroFactory> */
     use BelongsToWorkspace, HasFactory, HasScru128Ids;
 
-    public function idPrefix(): string
+    /*
+    |--------------------------------------------------------------------------
+    | Casts
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
     {
-        return 'mac_';
+        return [
+            'body_is_internal' => 'boolean',
+            'actions' => 'array',
+        ];
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Scopes
+    |--------------------------------------------------------------------------
+    */
 
     /**
      * The user's personal macros, and the shared ones for the workspace or a desk they can see.
@@ -91,12 +115,29 @@ class Macro extends Model
         $query->where(fn (Builder $query) => $query->whereNull('desk_id')->orWhere('desk_id', $ticket->desk_id));
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
     /**
      * @return BelongsTo<Desk, $this>
      */
     public function desk(): BelongsTo
     {
         return $this->belongsTo(Desk::class);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Methods
+    |--------------------------------------------------------------------------
+    */
+
+    public function idPrefix(): string
+    {
+        return 'mac_';
     }
 
     public function kind(): MacroScope
@@ -106,16 +147,5 @@ class Macro extends Model
             $this->desk_id !== null => MacroScope::DESK,
             default => MacroScope::WORKSPACE,
         };
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'body_is_internal' => 'boolean',
-            'actions' => 'array',
-        ];
     }
 }

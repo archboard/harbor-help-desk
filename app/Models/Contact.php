@@ -42,8 +42,36 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Unguarded]
 class Contact extends Model
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Properties
+    |--------------------------------------------------------------------------
+    */
+
     /** @use HasFactory<ContactFactory> */
     use BelongsToWorkspace, HasFactory, HasScru128Ids;
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * The tickets this contact requested.
+     *
+     * @return HasMany<Ticket, $this>
+     */
+    public function tickets(): HasMany
+    {
+        return $this->hasMany(Ticket::class, 'requester_id');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Methods
+    |--------------------------------------------------------------------------
+    */
 
     public function idPrefix(): string
     {
@@ -60,15 +88,5 @@ class Contact extends Model
     {
         return self::query()->whereRaw('lower(email) = lower(?)', [$email])->first()
             ?? self::create(['name' => $name, 'email' => $email]);
-    }
-
-    /**
-     * The tickets this contact requested.
-     *
-     * @return HasMany<Ticket, $this>
-     */
-    public function tickets(): HasMany
-    {
-        return $this->hasMany(Ticket::class, 'requester_id');
     }
 }

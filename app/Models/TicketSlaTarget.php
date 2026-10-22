@@ -60,35 +60,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Unguarded]
 class TicketSlaTarget extends Model
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Properties
+    |--------------------------------------------------------------------------
+    */
+
     use BelongsToWorkspace, HasScru128Ids;
 
-    public function idPrefix(): string
-    {
-        return 'slt_';
-    }
-
-    /**
-     * @return BelongsTo<Ticket, $this>
-     */
-    public function ticket(): BelongsTo
-    {
-        return $this->belongsTo(Ticket::class);
-    }
-
-    /**
-     * Derive `warn_at` and `due_at` from the start, the target and the paused time. Doesn't save.
-     */
-    public function recalculate(?BusinessSchedule $schedule, int $warningPercent): void
-    {
-        if ($this->paused_at !== null) {
-            $this->warn_at = $this->due_at = null;
-
-            return;
-        }
-
-        $this->due_at = BusinessSchedule::addMinutesFor($schedule, $this->started_at, $this->target_minutes + $this->paused_business_minutes);
-        $this->warn_at = BusinessSchedule::addMinutesFor($schedule, $this->started_at, intdiv($this->target_minutes * $warningPercent, 100) + $this->paused_business_minutes);
-    }
+    /*
+    |--------------------------------------------------------------------------
+    | Casts
+    |--------------------------------------------------------------------------
+    */
 
     /**
      * @return array<string, string>
@@ -105,5 +89,45 @@ class TicketSlaTarget extends Model
             'breached_at' => 'datetime',
             'achieved_at' => 'datetime',
         ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * @return BelongsTo<Ticket, $this>
+     */
+    public function ticket(): BelongsTo
+    {
+        return $this->belongsTo(Ticket::class);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Methods
+    |--------------------------------------------------------------------------
+    */
+
+    public function idPrefix(): string
+    {
+        return 'slt_';
+    }
+
+    /**
+     * Derive `warn_at` and `due_at` from the start, the target and the paused time. Doesn't save.
+     */
+    public function recalculate(?BusinessSchedule $schedule, int $warningPercent): void
+    {
+        if ($this->paused_at !== null) {
+            $this->warn_at = $this->due_at = null;
+
+            return;
+        }
+
+        $this->due_at = BusinessSchedule::addMinutesFor($schedule, $this->started_at, $this->target_minutes + $this->paused_business_minutes);
+        $this->warn_at = BusinessSchedule::addMinutesFor($schedule, $this->started_at, intdiv($this->target_minutes * $warningPercent, 100) + $this->paused_business_minutes);
     }
 }

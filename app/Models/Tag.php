@@ -39,13 +39,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 #[Unguarded]
 class Tag extends Model
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Properties
+    |--------------------------------------------------------------------------
+    */
+
     /** @use HasFactory<TagFactory> */
     use BelongsToWorkspace, HasFactory, HasScru128Ids;
 
-    public function idPrefix(): string
-    {
-        return 'tag_';
-    }
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
 
     /**
      * @return BelongsToMany<Ticket, $this>
@@ -53,5 +60,16 @@ class Tag extends Model
     public function tickets(): BelongsToMany
     {
         return $this->belongsToMany(Ticket::class)->withTimestamps();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Methods
+    |--------------------------------------------------------------------------
+    */
+
+    public function idPrefix(): string
+    {
+        return 'tag_';
     }
 }

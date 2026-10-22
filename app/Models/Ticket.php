@@ -98,6 +98,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Unguarded]
 class Ticket extends Model
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Properties
+    |--------------------------------------------------------------------------
+    */
+
     /** @use HasFactory<TicketFactory> */
     use BelongsToWorkspace, HasFactory, HasScru128Ids, SoftDeletes;
 
@@ -111,10 +117,11 @@ class Ticket extends Model
         'custom_fields' => '{}',
     ];
 
-    public function idPrefix(): string
-    {
-        return 'tkt_';
-    }
+    /*
+    |--------------------------------------------------------------------------
+    | Booting
+    |--------------------------------------------------------------------------
+    */
 
     /**
      * Number the ticket from its workspace's counter, e.g. #1042.
@@ -126,6 +133,52 @@ class Ticket extends Model
         });
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Casts
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'number' => 'integer',
+            'status' => TicketStatus::class,
+            'priority' => TicketPriority::class,
+            'source' => TicketSource::class,
+            'due_at' => 'datetime',
+        ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Accessors
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Custom field values keyed by field id. Stored as a JSON object even when empty, which
+     * the plain `array` cast would write as `[]`.
+     *
+     * @return Attribute<array<string, mixed>, array<string, mixed>>
+     */
+    protected function customFields(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value): array => json_decode($value ?? '{}', true),
+            set: fn (array $value): string => json_encode((object) $value, JSON_THROW_ON_ERROR),
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Scopes
+    |--------------------------------------------------------------------------
+    */
+
     /**
      * Limit to tickets on desks the user can see.
      *
@@ -136,6 +189,12 @@ class Ticket extends Model
     {
         $query->whereHas('desk', fn (Builder $query) => $query->visibleTo($user));
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
 
     /**
      * @return BelongsTo<Desk, $this>
@@ -163,14 +222,6 @@ class Ticket extends Model
     public function slaPolicy(): BelongsTo
     {
         return $this->belongsTo(SlaPolicy::class);
-    }
-
-    /**
-     * The policy that sets the ticket's SLA targets: its own, else its desk's.
-     */
-    public function effectiveSlaPolicy(): ?SlaPolicy
-    {
-        return $this->slaPolicy ?? $this->desk->slaPolicy;
     }
 
     /**
@@ -243,6 +294,25 @@ class Ticket extends Model
         return $this->hasMany(TicketEvent::class)->oldest()->orderBy('id');
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Methods
+    |--------------------------------------------------------------------------
+    */
+
+    public function idPrefix(): string
+    {
+        return 'tkt_';
+    }
+
+    /**
+     * The policy that sets the ticket's SLA targets: its own, else its desk's.
+     */
+    public function effectiveSlaPolicy(): ?SlaPolicy
+    {
+        return $this->slaPolicy ?? $this->desk->slaPolicy;
+    }
+
     /**
      * Append an entry to the audit trail. A null actor means Harbor did it.
      *
@@ -257,33 +327,5 @@ class Ticket extends Model
         TicketActivityRecorded::dispatch($event);
 
         return $event;
-    }
-
-    /**
-     * Custom field values keyed by field id. Stored as a JSON object even when empty, which
-     * the plain `array` cast would write as `[]`.
-     *
-     * @return Attribute<array<string, mixed>, array<string, mixed>>
-     */
-    protected function customFields(): Attribute
-    {
-        return Attribute::make(
-            get: fn (?string $value): array => json_decode($value ?? '{}', true),
-            set: fn (array $value): string => json_encode((object) $value, JSON_THROW_ON_ERROR),
-        );
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'number' => 'integer',
-            'status' => TicketStatus::class,
-            'priority' => TicketPriority::class,
-            'source' => TicketSource::class,
-            'due_at' => 'datetime',
-        ];
     }
 }

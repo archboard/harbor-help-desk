@@ -61,13 +61,36 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 #[Unguarded]
 class Attachment extends Model
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Properties
+    |--------------------------------------------------------------------------
+    */
+
     /** @use HasFactory<AttachmentFactory> */
     use BelongsToWorkspace, HasFactory, HasScru128Ids;
 
-    public function idPrefix(): string
+    /*
+    |--------------------------------------------------------------------------
+    | Casts
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
     {
-        return 'att_';
+        return [
+            'size' => 'integer',
+        ];
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
 
     /**
      * @return BelongsTo<Ticket, $this>
@@ -95,6 +118,17 @@ class Attachment extends Model
         return $this->morphTo();
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Methods
+    |--------------------------------------------------------------------------
+    */
+
+    public function idPrefix(): string
+    {
+        return 'att_';
+    }
+
     public function isUploadedBy(User|Contact $uploader): bool
     {
         return $this->uploader_type === $uploader->getMorphClass() && $this->uploader_id === $uploader->getKey();
@@ -106,15 +140,5 @@ class Attachment extends Model
     public function download(): StreamedResponse
     {
         return Storage::disk($this->disk)->download($this->path, $this->filename);
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'size' => 'integer',
-        ];
     }
 }

@@ -49,6 +49,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 #[Unguarded]
 class CustomField extends Model
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Properties
+    |--------------------------------------------------------------------------
+    */
+
     /** @use HasFactory<CustomFieldFactory> */
     use BelongsToWorkspace, HasFactory, HasScru128Ids;
 
@@ -60,20 +66,11 @@ class CustomField extends Model
         'position' => 0,
     ];
 
-    public function idPrefix(): string
-    {
-        return 'cfd_';
-    }
-
-    /**
-     * The desks that have this field enabled.
-     *
-     * @return BelongsToMany<Desk, $this>
-     */
-    public function desks(): BelongsToMany
-    {
-        return $this->belongsToMany(Desk::class, 'custom_field_desk');
-    }
+    /*
+    |--------------------------------------------------------------------------
+    | Casts
+    |--------------------------------------------------------------------------
+    */
 
     /**
      * @return array<string, string>
@@ -85,5 +82,32 @@ class CustomField extends Model
             'options' => 'array',
             'is_required' => 'boolean',
         ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * The desks that have this field enabled.
+     *
+     * @return BelongsToMany<Desk, $this>
+     */
+    public function desks(): BelongsToMany
+    {
+        return $this->belongsToMany(Desk::class, 'custom_field_desk');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Methods
+    |--------------------------------------------------------------------------
+    */
+
+    public function idPrefix(): string
+    {
+        return 'cfd_';
     }
 }

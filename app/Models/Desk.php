@@ -66,6 +66,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Unguarded]
 class Desk extends Model
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Properties
+    |--------------------------------------------------------------------------
+    */
+
     /** @use HasFactory<DeskFactory> */
     use BelongsToWorkspace, HasFactory, HasScru128Ids, SoftDeletes;
 
@@ -73,10 +79,11 @@ class Desk extends Model
 
     protected $attributes = ['assignment_strategy' => 'manual'];
 
-    public function idPrefix(): string
-    {
-        return 'dsk_';
-    }
+    /*
+    |--------------------------------------------------------------------------
+    | Casts
+    |--------------------------------------------------------------------------
+    */
 
     /**
      * @return array<string, string>
@@ -85,6 +92,12 @@ class Desk extends Model
     {
         return ['assignment_strategy' => AssignmentStrategy::class];
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Scopes
+    |--------------------------------------------------------------------------
+    */
 
     /**
      * Limit to the desks the user can see in the current workspace: all of them for
@@ -103,6 +116,12 @@ class Desk extends Model
 
         $query->whereHas('users', fn (Builder $query) => $query->whereKey($user->getKey()));
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
 
     /**
      * @return BelongsTo<SlaPolicy, $this>
@@ -135,5 +154,16 @@ class Desk extends Model
         return $this->belongsToMany(CustomField::class, 'custom_field_desk')
             ->orderBy('position')
             ->orderBy('custom_fields.id');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Methods
+    |--------------------------------------------------------------------------
+    */
+
+    public function idPrefix(): string
+    {
+        return 'dsk_';
     }
 }

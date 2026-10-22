@@ -50,8 +50,51 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Unguarded]
 class SlaPolicy extends Model
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Properties
+    |--------------------------------------------------------------------------
+    */
+
     /** @use HasFactory<SlaPolicyFactory> */
     use BelongsToWorkspace, HasFactory, HasScru128Ids;
+
+    /*
+    |--------------------------------------------------------------------------
+    | Casts
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'targets' => 'array',
+            'warning_percent' => 'integer',
+        ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * @return BelongsTo<BusinessSchedule, $this>
+     */
+    public function businessSchedule(): BelongsTo
+    {
+        return $this->belongsTo(BusinessSchedule::class);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Methods
+    |--------------------------------------------------------------------------
+    */
 
     public function idPrefix(): string
     {
@@ -64,24 +107,5 @@ class SlaPolicy extends Model
     public function targetFor(TicketPriority $priority, SlaMetric $metric): ?int
     {
         return $this->targets[$priority->value][$metric->value] ?? null;
-    }
-
-    /**
-     * @return BelongsTo<BusinessSchedule, $this>
-     */
-    public function businessSchedule(): BelongsTo
-    {
-        return $this->belongsTo(BusinessSchedule::class);
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'targets' => 'array',
-            'warning_percent' => 'integer',
-        ];
     }
 }

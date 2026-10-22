@@ -54,13 +54,37 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Unguarded]
 class TicketReminder extends Model
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Properties
+    |--------------------------------------------------------------------------
+    */
+
     /** @use HasFactory<TicketReminderFactory> */
     use BelongsToWorkspace, HasFactory, HasScru128Ids;
 
-    public function idPrefix(): string
+    /*
+    |--------------------------------------------------------------------------
+    | Casts
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
     {
-        return 'rmd_';
+        return [
+            'remind_at' => 'datetime',
+            'sent_at' => 'datetime',
+        ];
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Scopes
+    |--------------------------------------------------------------------------
+    */
 
     /**
      * Personal reminders are visible only to their user; ticket-level ones to everyone on the ticket.
@@ -72,6 +96,12 @@ class TicketReminder extends Model
     {
         $query->where(fn (Builder $query) => $query->whereNull('user_id')->orWhere('user_id', $user->getKey()));
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
 
     /**
      * @return BelongsTo<Ticket, $this>
@@ -99,6 +129,17 @@ class TicketReminder extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Methods
+    |--------------------------------------------------------------------------
+    */
+
+    public function idPrefix(): string
+    {
+        return 'rmd_';
+    }
+
     public function isTicketLevel(): bool
     {
         return $this->user_id === null;
@@ -116,16 +157,5 @@ class TicketReminder extends Model
         }
 
         return Collection::wrap($this->user);
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'remind_at' => 'datetime',
-            'sent_at' => 'datetime',
-        ];
     }
 }

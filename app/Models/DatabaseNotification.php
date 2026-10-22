@@ -44,5 +44,11 @@ use Illuminate\Notifications\DatabaseNotification as BaseDatabaseNotification;
  */
 class DatabaseNotification extends BaseDatabaseNotification
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Properties
+    |--------------------------------------------------------------------------
+    */
+
     use BelongsToWorkspace;
 }

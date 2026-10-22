@@ -46,13 +46,37 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Unguarded]
 class SavedView extends Model
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Properties
+    |--------------------------------------------------------------------------
+    */
+
     /** @use HasFactory<SavedViewFactory> */
     use BelongsToWorkspace, HasFactory, HasScru128Ids;
 
-    public function idPrefix(): string
+    /*
+    |--------------------------------------------------------------------------
+    | Casts
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
     {
-        return 'svw_';
+        return [
+            'filters' => 'array',
+            'is_shared' => 'boolean',
+        ];
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Scopes
+    |--------------------------------------------------------------------------
+    */
 
     /**
      * The user's own views and every shared one.
@@ -65,6 +89,12 @@ class SavedView extends Model
         $query->where(fn (Builder $query) => $query->where('user_id', $user->getKey())->orWhere('is_shared', true));
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
     /**
      * @return BelongsTo<User, $this>
      */
@@ -73,19 +103,19 @@ class SavedView extends Model
         return $this->belongsTo(User::class);
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Methods
+    |--------------------------------------------------------------------------
+    */
+
+    public function idPrefix(): string
+    {
+        return 'svw_';
+    }
+
     public function isOwnedBy(User $user): bool
     {
         return $this->user_id === $user->getKey();
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'filters' => 'array',
-            'is_shared' => 'boolean',
-        ];
     }
 }

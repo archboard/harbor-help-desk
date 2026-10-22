@@ -63,13 +63,39 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Unguarded]
 class Automation extends Model
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Properties
+    |--------------------------------------------------------------------------
+    */
+
     /** @use HasFactory<AutomationFactory> */
     use BelongsToWorkspace, HasFactory, HasScru128Ids;
 
-    public function idPrefix(): string
+    /*
+    |--------------------------------------------------------------------------
+    | Casts
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
     {
-        return 'aut_';
+        return [
+            'enabled' => 'boolean',
+            'position' => 'integer',
+            'schema_version' => 'integer',
+            'definition' => 'array',
+        ];
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Scopes
+    |--------------------------------------------------------------------------
+    */
 
     /**
      * Automations that apply to the ticket: workspace-wide ones and those for its desk.
@@ -81,6 +107,12 @@ class Automation extends Model
     {
         $query->where(fn (Builder $query) => $query->whereNull('desk_id')->orWhere('desk_id', $ticket->desk_id));
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
 
     /**
      * @return BelongsTo<Desk, $this>
@@ -106,16 +138,14 @@ class Automation extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
-    /**
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    /*
+    |--------------------------------------------------------------------------
+    | Methods
+    |--------------------------------------------------------------------------
+    */
+
+    public function idPrefix(): string
     {
-        return [
-            'enabled' => 'boolean',
-            'position' => 'integer',
-            'schema_version' => 'integer',
-            'definition' => 'array',
-        ];
+        return 'aut_';
     }
 }

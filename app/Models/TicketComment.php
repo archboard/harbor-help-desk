@@ -63,13 +63,37 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Unguarded]
 class TicketComment extends Model
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Properties
+    |--------------------------------------------------------------------------
+    */
+
     /** @use HasFactory<TicketCommentFactory> */
     use BelongsToWorkspace, HasFactory, HasScru128Ids, SoftDeletes;
 
-    public function idPrefix(): string
+    /*
+    |--------------------------------------------------------------------------
+    | Casts
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
     {
-        return 'cmt_';
+        return [
+            'is_internal' => 'boolean',
+            'edited_at' => 'datetime',
+        ];
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
 
     /**
      * @return BelongsTo<Ticket, $this>
@@ -97,19 +121,19 @@ class TicketComment extends Model
         return $this->hasMany(Attachment::class)->orderBy('id');
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Methods
+    |--------------------------------------------------------------------------
+    */
+
+    public function idPrefix(): string
+    {
+        return 'cmt_';
+    }
+
     public function isWrittenBy(User|Contact $author): bool
     {
         return $this->author_type === $author->getMorphClass() && $this->author_id === $author->getKey();
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'is_internal' => 'boolean',
-            'edited_at' => 'datetime',
-        ];
     }
 }

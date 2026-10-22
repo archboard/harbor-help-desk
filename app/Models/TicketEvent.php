@@ -52,20 +52,50 @@ use LogicException;
 #[Unguarded]
 class TicketEvent extends Model
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Properties
+    |--------------------------------------------------------------------------
+    */
+
     use BelongsToWorkspace, HasScru128Ids;
 
     public const null UPDATED_AT = null;
 
-    public function idPrefix(): string
-    {
-        return 'tev_';
-    }
+    /*
+    |--------------------------------------------------------------------------
+    | Booting
+    |--------------------------------------------------------------------------
+    */
 
     protected static function booted(): void
     {
         static::updating(fn () => throw new LogicException('Ticket events cannot be changed.'));
         static::deleting(fn () => throw new LogicException('Ticket events cannot be deleted.'));
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Casts
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'type' => TicketEventType::class,
+            'properties' => 'array',
+        ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
 
     /**
      * @return BelongsTo<Ticket, $this>
@@ -83,6 +113,17 @@ class TicketEvent extends Model
     public function actor(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Methods
+    |--------------------------------------------------------------------------
+    */
+
+    public function idPrefix(): string
+    {
+        return 'tev_';
     }
 
     /**
@@ -160,16 +201,5 @@ class TicketEvent extends Model
         }
 
         return $this->actor?->getAttribute('name') ?? __('A deleted user');
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'type' => TicketEventType::class,
-            'properties' => 'array',
-        ];
     }
 }

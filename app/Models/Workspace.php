@@ -57,6 +57,12 @@ use Spatie\Multitenancy\Models\Concerns\ImplementsTenant;
 #[Unguarded]
 class Workspace extends Model implements IsTenant
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Properties
+    |--------------------------------------------------------------------------
+    */
+
     /** @use HasFactory<WorkspaceFactory> */
     use HasFactory, HasScru128Ids, ImplementsTenant, UsesMultitenancyConfig;
 
@@ -64,6 +70,12 @@ class Workspace extends Model implements IsTenant
      * OAuth scopes of this form grant a token access to one workspace.
      */
     public const string TOKEN_SCOPE_PREFIX = 'workspace:';
+
+    /*
+    |--------------------------------------------------------------------------
+    | Booting
+    |--------------------------------------------------------------------------
+    */
 
     /**
      * Every workspace starts with a default desk, so it always has at least one.
@@ -77,6 +89,12 @@ class Workspace extends Model implements IsTenant
         });
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Casts
+    |--------------------------------------------------------------------------
+    */
+
     /**
      * @return array<string, string>
      */
@@ -84,6 +102,47 @@ class Workspace extends Model implements IsTenant
     {
         return ['settings' => WorkspaceSettingsCast::class];
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * The agents who belong to this workspace, with their role on the pivot.
+     *
+     * @return BelongsToMany<User, $this, WorkspaceUser>
+     */
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'workspace_user')
+            ->using(WorkspaceUser::class)
+            ->withPivot('role')
+            ->withTimestamps();
+    }
+
+    /**
+     * @return HasMany<Desk, $this>
+     */
+    public function desks(): HasMany
+    {
+        return $this->hasMany(Desk::class);
+    }
+
+    /**
+     * @return HasMany<Mailbox, $this>
+     */
+    public function mailboxes(): HasMany
+    {
+        return $this->hasMany(Mailbox::class);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Methods
+    |--------------------------------------------------------------------------
+    */
 
     public function idPrefix(): string
     {
@@ -126,27 +185,6 @@ class Workspace extends Model implements IsTenant
     }
 
     /**
-     * The agents who belong to this workspace, with their role on the pivot.
-     *
-     * @return BelongsToMany<User, $this, WorkspaceUser>
-     */
-    public function users(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class, 'workspace_user')
-            ->using(WorkspaceUser::class)
-            ->withPivot('role')
-            ->withTimestamps();
-    }
-
-    /**
-     * @return HasMany<Desk, $this>
-     */
-    public function desks(): HasMany
-    {
-        return $this->hasMany(Desk::class);
-    }
-
-    /**
      * The mailbox app email (notifications, sign-in links) is sent from: the one in the settings,
      * else the oldest. A chosen mailbox that no longer exists counts as unset.
      */
@@ -157,13 +195,5 @@ class Workspace extends Model implements IsTenant
 
             return ($id ? Mailbox::query()->find($id) : null) ?? Mailbox::query()->oldest('id')->first();
         });
-    }
-
-    /**
-     * @return HasMany<Mailbox, $this>
-     */
-    public function mailboxes(): HasMany
-    {
-        return $this->hasMany(Mailbox::class);
     }
 }

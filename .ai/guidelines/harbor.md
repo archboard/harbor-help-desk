@@ -23,6 +23,21 @@ These apply to every agent, including subagents executing a plan step:
 - Frontend types come from `resources/js/types/generated.d.ts` (`composer run helpers`). Never hand-write a type that mirrors a Data class.
 - Every ticket change goes through an Action that calls `Ticket::recordEvent()`, which dispatches `TicketActivityRecorded` after commit. Never change a ticket with a query-builder `update()`, because no event would fire. Code that reacts to tickets is a listener on `TicketActivityRecorded` that filters on the event type. It implements `ShouldQueue`, unless all it does is dispatch another queued event or job.
 
+## Model Layout
+
+- Order a model's body as: properties (traits, constants and properties), `booted()`, `casts()`, accessors and mutators, scopes, then every other method (relations, `idPrefix()` and helpers).
+- Start each section that the model has with a banner comment:
+
+```php
+    /*
+    |--------------------------------------------------------------------------
+    | Casts
+    |--------------------------------------------------------------------------
+    */
+```
+
+  The banners are `Properties`, `Booting`, `Casts`, `Accessors`, `Scopes`, `Relationships` and `Methods`. Relations go under `Relationships`, and `idPrefix()` and other helpers under `Methods`. Omit banners for sections the model doesn't have.
+
 ## Model IDs
 
 - Every model uses `GrantHolle\Scru128Laravel\Concerns\HasScru128Ids` and overrides `idPrefix()` with a unique 3–4 letter prefix ending in `_`.

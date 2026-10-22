@@ -82,13 +82,40 @@ use Spatie\Multitenancy\TenantCollection;
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail, OAuthenticatable, PasskeyUser
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Properties
+    |--------------------------------------------------------------------------
+    */
+
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, HasScru128Ids, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
-    public function idPrefix(): string
+    /*
+    |--------------------------------------------------------------------------
+    | Casts
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
     {
-        return 'usr_';
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'two_factor_confirmed_at' => 'datetime',
+        ];
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
 
     /**
      * The user's notifications in the current workspace, newest first. The database channel
@@ -99,14 +126,6 @@ class User extends Authenticatable implements MustVerifyEmail, OAuthenticatable,
     public function notifications(): MorphMany
     {
         return $this->morphMany(DatabaseNotification::class, 'notifiable')->latest();
-    }
-
-    /**
-     * The private channel this user's broadcast notifications are sent on.
-     */
-    public function receivesBroadcastNotificationsOn(): string
-    {
-        return 'users.'.$this->getKey();
     }
 
     /**
@@ -133,6 +152,25 @@ class User extends Authenticatable implements MustVerifyEmail, OAuthenticatable,
             ->using(DeskUser::class)
             ->withPivot('role', 'in_rotation', 'last_assigned_at')
             ->withTimestamps();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Methods
+    |--------------------------------------------------------------------------
+    */
+
+    public function idPrefix(): string
+    {
+        return 'usr_';
+    }
+
+    /**
+     * The private channel this user's broadcast notifications are sent on.
+     */
+    public function receivesBroadcastNotificationsOn(): string
+    {
+        return 'users.'.$this->getKey();
     }
 
     /**
@@ -177,19 +215,5 @@ class User extends Authenticatable implements MustVerifyEmail, OAuthenticatable,
     public function deskRole(Desk $desk): ?DeskRole
     {
         return $desk->users()->whereKey($this->getKey())->first()?->pivot->role;
-    }
-
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'two_factor_confirmed_at' => 'datetime',
-        ];
     }
 }
