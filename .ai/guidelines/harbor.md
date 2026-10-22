@@ -70,6 +70,7 @@ These apply to every agent, including subagents executing a plan step:
 | `mac_` | `Macro`            |
 | `bsc_` | `BusinessSchedule` |
 | `aut_` | `Automation` |
+| `atm_` | `AutomationTicketMatch` |
 | `arn_` | `AutomationRun` |
 | `slp_` | `SlaPolicy`        |
 | `slt_` | `TicketSlaTarget`  |

@@ -18,7 +18,12 @@ class SetAutomationEnabled
 
         $data = SetAutomationEnabledData::validateAndCreate($input);
 
-        $automation->update(['enabled' => $data->enabled, 'updated_by' => $actor->getKey()]);
+        // An automation switched on starts from now, so it doesn't fire for a moment that passed while it was off.
+        $automation->update([
+            'enabled' => $data->enabled,
+            'updated_by' => $actor->getKey(),
+            ...($data->enabled && ! $automation->enabled ? ['last_swept_at' => now()] : []),
+        ]);
 
         return $automation;
     }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Automations\Triggers\Schedule;
 use App\Data\Automations\AutomationDefinitionData;
 use App\Enums\DeskRole;
 use App\Models\Concerns\BelongsToWorkspace;
@@ -30,6 +31,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property AutomationDefinitionData $definition
  * @property int $schema_version
  * @property string|null $webhook_token_hash
+ * @property CarbonImmutable|null $last_swept_at
  * @property string|null $created_by
  * @property string|null $updated_by
  * @property CarbonImmutable|null $created_at
@@ -60,6 +62,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder<static>|Automation whereWebhookTokenHash($value)
  * @method static Builder<static>|Automation whereWorkspaceId($value)
  * @method static Builder<static>|Automation visibleTo(\App\Models\User $user)
+ * @method static Builder<static>|Automation whereLastSweptAt($value)
  *
  * @mixin \Eloquent
  */
@@ -93,6 +96,7 @@ class Automation extends Model
             'enabled' => 'boolean',
             'position' => 'integer',
             'schema_version' => 'integer',
+            'last_swept_at' => 'immutable_datetime',
             'definition' => AutomationDefinitionData::class,
         ];
     }
@@ -166,6 +170,22 @@ class Automation extends Model
     | Methods
     |--------------------------------------------------------------------------
     */
+
+    /**
+     * The scheduled moment a sweep still owes, or null when this isn't an enabled `schedule`
+     * automation or its latest moment was already swept. Only the latest moment counts, so a missed
+     * tick sweeps once, not once per missed moment.
+     */
+    public function dueSweepMoment(): ?CarbonImmutable
+    {
+        if (! $this->enabled || $this->trigger_type !== 'schedule') {
+            return null;
+        }
+
+        $moment = Schedule::latestMoment($this->definition->trigger->config, CarbonImmutable::now());
+
+        return $this->last_swept_at === null || $this->last_swept_at < $moment ? $moment : null;
+    }
 
     public function idPrefix(): string
     {

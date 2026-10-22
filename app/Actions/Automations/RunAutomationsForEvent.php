@@ -10,7 +10,6 @@ use App\Models\Automation;
 use App\Models\AutomationRun;
 use App\Models\Ticket;
 use App\Models\TicketEvent;
-use Illuminate\Support\Facades\RateLimiter;
 
 class RunAutomationsForEvent
 {
@@ -20,7 +19,7 @@ class RunAutomationsForEvent
     /** How many runs one ticket may get per hour. */
     public const int MAX_RUNS_PER_HOUR = 100;
 
-    public function __construct(protected AutomationRegistry $registry, protected Engine $engine) {}
+    public function __construct(protected AutomationRegistry $registry, protected Engine $engine, protected StartAutomationRun $startRun) {}
 
     /**
      * Run the enabled automations whose trigger matches the event, in position order, for the
@@ -52,7 +51,7 @@ class RunAutomationsForEvent
             }
 
             $context = new Context($ticket, $event);
-            $run = $this->start($automation, $context, $parentRun);
+            $run = $this->startRun->handle($automation, $context, $parentRun);
 
             if ($run->status === AutomationRunStatus::SKIPPED) {
                 continue;
@@ -98,37 +97,5 @@ class RunAutomationsForEvent
 
         return $automation->desk_id === null
             || $automation->desk_id === Ticket::withTrashed()->whereKey($ticket->getKey())->value('desk_id');
-    }
-
-    /**
-     * Record the run, already `skipped` when a loop limit is hit.
-     */
-    protected function start(Automation $automation, Context $context, ?AutomationRun $parentRun): AutomationRun
-    {
-        $depth = $parentRun === null ? 0 : $parentRun->depth + 1;
-
-        $skipReason = match (true) {
-            $depth > self::MAX_DEPTH => __('Automations triggered each other more than :max levels deep.', ['max' => self::MAX_DEPTH]),
-            ! RateLimiter::attempt($this->rateLimitKey($context->ticket), self::MAX_RUNS_PER_HOUR, fn () => true, 3600) => __('This ticket reached :max automation runs in an hour.', ['max' => self::MAX_RUNS_PER_HOUR]),
-            default => null,
-        };
-
-        return AutomationRun::query()->create([
-            'workspace_id' => $context->ticket->workspace_id,
-            'automation_id' => $automation->getKey(),
-            'ticket_id' => $context->ticket->getKey(),
-            'ticket_event_id' => $context->event->getKey(),
-            'parent_run_id' => $parentRun?->getKey(),
-            'depth' => $depth,
-            'status' => $skipReason === null ? AutomationRunStatus::RUNNING : AutomationRunStatus::SKIPPED,
-            'definition' => $automation->definition,
-            'log' => $skipReason === null ? [] : [['type' => 'skipped', 'reason' => $skipReason]],
-            'state' => [],
-        ]);
-    }
-
-    protected function rateLimitKey(Ticket $ticket): string
-    {
-        return "automations:ticket:{$ticket->getKey()}";
     }
 }

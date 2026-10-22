@@ -11,6 +11,7 @@ Artisan::command('inspire', function () {
 Schedule::command('tickets:send-reminders')->everyMinute()->withoutOverlapping();
 Schedule::command('slas:check')->everyMinute()->withoutOverlapping();
 Schedule::command('automations:resume')->everyMinute()->withoutOverlapping();
+Schedule::command('automations:sweep')->everyMinute()->withoutOverlapping();
 Schedule::command('mailboxes:poll')->everyMinute()->withoutOverlapping();
 Schedule::command('mailboxes:renew-push')->daily()->withoutOverlapping();
 Schedule::command('horizon:snapshot')->everyFiveMinutes();

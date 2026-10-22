@@ -33,6 +33,7 @@ class CreateAutomation
             'trigger_type' => $definition->trigger->type,
             'definition' => $definition,
             'schema_version' => Automation::SCHEMA_VERSION,
+            'last_swept_at' => now(),
             'created_by' => $actor->getKey(),
             'updated_by' => $actor->getKey(),
         ]);

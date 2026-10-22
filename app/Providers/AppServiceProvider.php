@@ -17,6 +17,7 @@ use App\Automations\EditorScope;
 use App\Automations\RunCausation;
 use App\Automations\Triggers\CommentAdded;
 use App\Automations\Triggers\FieldChanged;
+use App\Automations\Triggers\Schedule;
 use App\Automations\Triggers\SlaEvent;
 use App\Automations\Triggers\TicketCreated;
 use App\Http\Controllers\OAuth\ApproveAuthorizationController;
@@ -66,7 +67,7 @@ class AppServiceProvider extends ServiceProvider
         Passport::$deviceCodeGrantEnabled = false;
 
         $this->app->singleton(AutomationRegistry::class, fn () => new AutomationRegistry(
-            triggers: [TicketCreated::class, CommentAdded::class, FieldChanged::class, SlaEvent::class],
+            triggers: [TicketCreated::class, CommentAdded::class, FieldChanged::class, SlaEvent::class, Schedule::class],
             actions: [SetField::class, Tags::class, Assign::class, MoveDesk::class, SetSlaPolicy::class, SetReminder::class, AddNote::class, SendReply::class, ApplyMacroAction::class, Notify::class],
         ));
         $this->app->scoped(RunCausation::class);

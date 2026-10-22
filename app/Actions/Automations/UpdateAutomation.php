@@ -39,6 +39,7 @@ class UpdateAutomation
                 'trigger_type' => $definition->trigger->type,
                 'definition' => $definition,
                 'schema_version' => Automation::SCHEMA_VERSION,
+                'last_swept_at' => now(),
             ]);
         }
 
