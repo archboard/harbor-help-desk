@@ -8,6 +8,7 @@ use App\Actions\Automations\UpdateAutomation;
 use App\Automations\Actions\MoveDesk;
 use App\Automations\AutomationRegistry;
 use App\Automations\Catalog;
+use App\Automations\Templates;
 use App\Data\Automations\AutomationData;
 use App\Data\BusinessSchedules\BusinessScheduleData;
 use App\Data\Desks\DeskData;
@@ -57,7 +58,11 @@ class AutomationController extends Controller
     {
         Gate::authorize('viewAny', Automation::class);
 
-        return $this->builder($request, $catalog);
+        $template = $request->query('template');
+
+        abort_if($template !== null && ! Templates::exists($template), 404);
+
+        return $this->builder($request, $catalog, template: $template);
     }
 
     public function store(Request $request, CreateAutomation $createAutomation): RedirectResponse
@@ -98,9 +103,9 @@ class AutomationController extends Controller
 
     /**
      * The builder page. Admins may scope an automation to any active desk or the whole workspace,
-     * a desk lead only to the desks they lead.
+     * a desk lead only to the desks they lead. A template prefills an unsaved automation.
      */
-    protected function builder(Request $request, Catalog $catalog, ?Automation $automation = null): Response
+    protected function builder(Request $request, Catalog $catalog, ?Automation $automation = null, ?string $template = null): Response
     {
         $user = $request->user();
         $isAdmin = $this->isAdmin($user);
@@ -109,9 +114,13 @@ class AutomationController extends Controller
             ? Desk::query()->where(fn (Builder $query) => $query->whereNull('archived_at')->orWhere('id', $automation?->desk_id))
             : $user->desks()->wherePivot('role', DeskRole::LEAD)->whereNull('archived_at');
 
+        $desks = $desks->orderBy('name')->get();
+
         return Inertia::render('automations/Edit', [
             'automation' => $automation === null ? null : AutomationData::from($automation),
-            'desks' => DeskData::collect($desks->orderBy('name')->get()),
+            // Prefilled for the desk the form starts on: the first active desk offered (an admin's form starts on the whole workspace).
+            'template' => $template === null ? null : Templates::find($template, $desks->first()?->getKey()),
+            'desks' => DeskData::collect($desks),
             'canScopeToWorkspace' => $isAdmin,
             'schedules' => BusinessScheduleData::collect(BusinessSchedule::query()->orderBy('name')->get()),
             'moveDesks' => DeskData::collect($this->moveDesks($user, $automation)),

@@ -1,13 +1,4 @@
 <script setup lang="ts">
-import {
-  CalendarClock,
-  CirclePlus,
-  Clock,
-  MessageSquare,
-  Pencil,
-  Webhook,
-  Zap,
-} from '@lucide/vue';
 import { usePage } from '@inertiajs/vue3';
 import { computed, inject } from 'vue';
 import type { OptionsInput } from '@/types';
@@ -17,6 +8,7 @@ import { defaultConfig } from './configRules';
 import StepCard from './StepCard.vue';
 import { configSummary, summarizeTrigger } from './summaries';
 import type { TestResult } from './testResult';
+import { triggerIcon } from './triggerIcons';
 import WebhookUrl from './WebhookUrl.vue';
 
 const {
@@ -48,15 +40,6 @@ const open = defineModel<boolean>('open', { default: false });
 const page = usePage();
 
 const readonly = inject(builderKey)?.readonly ?? false;
-
-const icons = {
-  'ticket.created': CirclePlus,
-  'ticket.comment_added': MessageSquare,
-  'ticket.field_changed': Pencil,
-  'ticket.sla': Clock,
-  schedule: CalendarClock,
-  webhook: Webhook,
-};
 
 const current = computed(() =>
   catalog.triggers.find((item) => item.key === trigger.value.type),
@@ -97,7 +80,7 @@ function pick(key: string): void {
 <template>
   <StepCard
     v-model:open="open"
-    :icon="icons[trigger.type as keyof typeof icons] ?? Zap"
+    :icon="triggerIcon(trigger.type)"
     kind="Trigger"
     :summary="summarizeTrigger(trigger, catalog)"
     :details="
@@ -150,7 +133,7 @@ function pick(key: string): void {
           @click="pick(item.key)"
         >
           <component
-            :is="icons[item.key as keyof typeof icons] ?? Zap"
+            :is="triggerIcon(item.key)"
             class="size-4 shrink-0"
             aria-hidden="true"
           />

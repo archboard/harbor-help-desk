@@ -60,16 +60,11 @@ test('creating from an unknown template returns 422 with a template error', func
     $this->postJson($this->base, ['name' => 'Nope', 'template' => 'nope'])->assertUnprocessable()->assertJsonValidationErrors(['template']);
 });
 
-test('the templates endpoint lists all templates for admins and returns 403 for agents, on web and API', function () {
-    $this->actingAs($this->admin)->getJson('http://acme.harbor.test/automations/templates')
-        ->assertOk()->assertJsonCount(7)->assertJsonPath('0.key', 'auto_close_stale_pending')->assertJsonPath('0.category', 'Housekeeping')->assertJsonPath('0.trigger_type', 'schedule')
-        ->assertJsonPath('0.definition.steps.0.id', 'condition');
-
+test('the templates endpoint lists all templates for admins and returns 403 for agents', function () {
     actAs($this->admin, $this->workspace);
-    $this->getJson("$this->base/templates")->assertOk()->assertJsonCount(7)->assertJsonPath('6.name', 'Forward urgent tickets to a webhook');
+    $this->getJson("$this->base/templates")->assertOk()->assertJsonCount(7)->assertJsonPath('0.key', 'auto_close_stale_pending')->assertJsonPath('0.category', 'Housekeeping')->assertJsonPath('0.trigger_type', 'schedule')->assertJsonPath('0.definition.steps.0.id', 'condition')->assertJsonPath('6.name', 'Forward urgent tickets to a webhook');
 
     $agent = deskMember($this->workspace, $this->desk);
-    $this->actingAs($agent)->getJson('http://acme.harbor.test/automations/templates')->assertForbidden();
     actAs($agent, $this->workspace);
     $this->getJson("$this->base/templates")->assertForbidden();
 });

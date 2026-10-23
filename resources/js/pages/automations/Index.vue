@@ -15,11 +15,11 @@ import Th from '@/components/tables/Th.vue';
 import Thead from '@/components/tables/Thead.vue';
 import { index as allRuns } from '@/routes/automation-runs';
 import {
-  create,
   destroy,
   duplicate,
   edit,
   reorder,
+  templates,
 } from '@/routes/automations';
 import { update as setEnabled } from '@/routes/automations/enabled';
 
@@ -114,7 +114,7 @@ function remove(close: () => void): void {
         <AppButton :component="Link" :href="allRuns().url" color="white">
           Run history
         </AppButton>
-        <AppButton :component="Link" :href="create().url">
+        <AppButton :component="Link" :href="templates().url">
           New automation
         </AppButton>
       </div>
@@ -245,7 +245,7 @@ function remove(close: () => void): void {
         Automations set fields, reply, assign and notify for you when tickets
         arrive, change or sit idle.
       </p>
-      <AppButton :component="Link" :href="create().url" class="mt-6">
+      <AppButton :component="Link" :href="templates().url" class="mt-6">
         New automation
       </AppButton>
     </div>

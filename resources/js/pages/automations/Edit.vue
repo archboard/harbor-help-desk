@@ -42,6 +42,7 @@ type Automation = App.Data.Automations.AutomationData;
 
 const {
   automation,
+  template,
   desks,
   schedules,
   macros,
@@ -51,6 +52,8 @@ const {
   catalog,
 } = defineProps<{
   automation: Automation | null;
+  /** The template an unsaved automation starts from. */
+  template: App.Data.Automations.AutomationTemplateData | null;
   desks: App.Data.Desks.DeskData[];
   schedules: App.Data.BusinessSchedules.BusinessScheduleData[];
   /** The desks a move action may target. */
@@ -70,20 +73,31 @@ watchEffect(() =>
   setLayoutProps({ title: automation ? 'Edit automation' : 'New automation' }),
 );
 
+const source = automation ?? template;
+
 const form = useForm({
-  name: automation?.name ?? '',
-  description: automation?.description ?? '',
+  name: source?.name ?? '',
+  description: source?.description ?? '',
   desk_id:
     automation?.desk_id ?? (canScopeToWorkspace ? '' : (desks[0]?.id ?? '')),
   // Typed loosely: the form helper can't type the recursive steps.
   // The prop is a reactive proxy, which structuredClone can't copy.
   definition: structuredClone(
-    toRaw(automation?.definition) ?? {
+    toRaw(source?.definition) ?? {
       trigger: { type: 'ticket.created', config: {} },
       steps: [],
     },
   ) as never,
 });
+
+// A template is unsaved, so the form starts out dirty (its name differs from the blank default) and leaving warns.
+if (template) {
+  form.defaults({
+    name: '',
+    description: '',
+    desk_id: form.desk_id,
+  });
+}
 
 /** The form's `definition`, typed. It is the same reactive object. */
 const definition = form.definition as unknown as Definition;
