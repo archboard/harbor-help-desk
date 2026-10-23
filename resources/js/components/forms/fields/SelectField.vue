@@ -9,7 +9,8 @@ const {
   required = false,
   helpText,
   options = [],
-} = defineProps<FieldProps & { options?: OptionsInput }>();
+  nullOption,
+} = defineProps<FieldProps & { options?: OptionsInput; nullOption?: string }>();
 
 const model = defineModel<string | number | boolean | null>();
 </script>
@@ -19,6 +20,7 @@ const model = defineModel<string | number | boolean | null>();
     v-model="model"
     component="AppSelect"
     :options="options"
+    :null-option="nullOption"
     :error="error"
     :help="helpText"
     :required="required"

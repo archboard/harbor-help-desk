@@ -90,6 +90,7 @@ const text = (key: string): string | null =>
         :label="field.label"
         :options="choices[field.key] ?? options[field.key] ?? field.options"
         :required="field.required"
+        :null-option="field.required ? undefined : 'Any'"
         :error="errorFor(field.key)"
         @update:model-value="set(field.key, $event)"
       />

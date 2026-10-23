@@ -21,6 +21,7 @@ const {
   disabled = false,
   help,
   options = [],
+  nullOption,
   min,
   max,
 } = defineProps<{
@@ -33,6 +34,8 @@ const {
   disabled?: boolean;
   help?: string;
   options?: OptionsInput;
+  /** The empty option of a select, which can then be chosen again. */
+  nullOption?: string;
   min?: number;
   max?: number;
 }>();
@@ -69,7 +72,12 @@ const components = { AppDatepicker, AppInput, AppSelect, AppTextarea };
             ...(component === 'AppInput'
               ? { type, placeholder, min, max }
               : {}),
-            ...(component === 'AppSelect' ? { options } : {}),
+            ...(component === 'AppSelect'
+              ? {
+                  options,
+                  ...(nullOption ? { nullOption, clearable: true } : {}),
+                }
+              : {}),
           }"
         />
       </slot>

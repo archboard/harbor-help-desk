@@ -44,8 +44,18 @@ enum Operator: string
     case CHANGED_TO = 'changed_to';
     case CHANGED_FROM = 'changed_from';
 
-    public function label(): string
+    public function label(?FieldType $type = null): string
     {
+        if ($type === FieldType::DATETIME) {
+            return match ($this) {
+                self::GT => __('is after'),
+                self::GTE => __('is on or after'),
+                self::LT => __('is before'),
+                self::LTE => __('is on or before'),
+                default => $this->label(),
+            };
+        }
+
         return match ($this) {
             self::IS => __('is'),
             self::IS_NOT => __('is not'),

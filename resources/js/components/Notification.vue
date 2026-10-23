@@ -16,7 +16,7 @@ const style = styles[notification.level];
 
 <template>
   <div
-    class="pointer-events-auto mt-4 w-full overflow-hidden rounded-xl bg-white shadow-lg ring-1 ring-black/5 dark:bg-gray-700"
+    class="pointer-events-auto mt-4 w-full overflow-hidden rounded-xl bg-white shadow-lg ring-1 ring-black/5 dark:bg-gray-800 dark:ring-white/10"
   >
     <div class="p-4">
       <div class="flex items-start">

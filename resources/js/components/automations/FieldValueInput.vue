@@ -150,9 +150,14 @@ const empty = (value: unknown): unknown => (value === '' ? null : value);
       @update:model-value="model = $event"
     />
   </template>
-  <div v-else-if="field.type === 'datetime' && relative" class="space-y-2">
-    <AppLabel v-if="label" :has-error="!!error">{{ label }}</AppLabel>
-    <div class="max-w-48">
+  <div
+    v-else-if="field.type === 'datetime' && relative"
+    class="flex flex-wrap items-start gap-2"
+  >
+    <AppLabel v-if="label" :has-error="!!error" class="w-full">{{
+      label
+    }}</AppLabel>
+    <div class="w-48">
       <AppSelect
         hide-null
         aria-label="Kind of date"
@@ -178,6 +183,7 @@ const empty = (value: unknown): unknown => (value === '' ? null : value);
     </div>
     <FormField
       v-else
+      class="min-w-60 flex-1"
       :type="dateType"
       :model-value="dateText"
       :required="required"

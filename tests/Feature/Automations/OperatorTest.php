@@ -94,3 +94,10 @@ it('leaves the backtrack limit as it found it', function () {
 
     expect(ini_get('pcre.backtrack_limit'))->toBe($before);
 });
+
+it('words the comparison operators of a datetime as before and after', function () {
+    expect(Operator::GT->label(FieldType::DATETIME))->toBe('is after')
+        ->and(Operator::LTE->label(FieldType::DATETIME))->toBe('is on or before')
+        ->and(Operator::IS->label(FieldType::DATETIME))->toBe('is')
+        ->and(Operator::GT->label(FieldType::NUMBER))->toBe('is greater than');
+});

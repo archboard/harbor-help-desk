@@ -75,7 +75,12 @@ function valueText(field: Field | undefined, value: unknown): string {
   return field?.options.find((option) => option.value === text)?.label ?? text;
 }
 
+/** An incomplete rule (no field, operator or needed value yet) has no text, and so is left out. */
 function ruleText(rule: Rule, catalog: Catalog): string {
+  if (!rule.field || !rule.operator) {
+    return '';
+  }
+
   const field = fieldFor(catalog, rule.field);
   const operator = field
     ? catalog.operators[field.type]?.find(
@@ -83,26 +88,30 @@ function ruleText(rule: Rule, catalog: Catalog): string {
       )
     : undefined;
 
-  return [
-    field?.label ?? rule.field,
-    operator?.label ?? rule.operator,
-    valueText(field, rule.value),
-  ]
+  const value = valueText(field, rule.value);
+
+  if (operator?.takes_value && !value) {
+    return '';
+  }
+
+  return [field?.label ?? rule.field, operator?.label ?? rule.operator, value]
     .filter(Boolean)
     .join(' ');
 }
 
-/** "Priority is Urgent and Tag includes vip", nested groups in parentheses. */
+/** "Priority is Urgent and Tag includes vip", nested groups in parentheses. Empty parts are left out. */
 export function conditionText(
   group: Group,
   catalog: Catalog,
   nested = false,
 ): string {
-  const parts = group.rules.map((node) =>
-    node.type === 'group'
-      ? conditionText(node, catalog, true)
-      : ruleText(node, catalog),
-  );
+  const parts = group.rules
+    .map((node) =>
+      node.type === 'group'
+        ? conditionText(node, catalog, true)
+        : ruleText(node, catalog),
+    )
+    .filter(Boolean);
   const text = parts.join(group.match === 'any' ? ' or ' : ' and ');
 
   return nested && parts.length > 1 ? `(${text})` : text;
@@ -188,6 +197,11 @@ function actionText(
       return config.subject
         ? `Notify: ${truncate(text(config.subject))}`
         : null;
+    case 'add_note':
+    case 'send_reply':
+      return config.body
+        ? `${action === 'add_note' ? 'Add a note' : 'Send a reply'}: ${truncate(text(config.body).replace(/\s+/g, ' '))}`
+        : null;
     case 'set_reminder': {
       const after = config.after as
         | { amount?: number; unit?: string }
@@ -209,9 +223,7 @@ export function summarizeStep(
 ): string {
   switch (step.type) {
     case 'condition':
-      return step.rules.length
-        ? `Only continue if ${conditionText(step, catalog)}`
-        : 'Only continue if (no rules yet)';
+      return `Only continue if ${conditionText(step, catalog) || '(no rules yet)'}`;
     case 'action':
       if (step.action === 'set_field' && step.config.field) {
         const field = fieldFor(catalog, String(step.config.field));

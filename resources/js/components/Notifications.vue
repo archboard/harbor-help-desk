@@ -6,7 +6,7 @@ import { notifications } from '@/lib/notifications';
 <template>
   <Teleport to="body">
     <div
-      class="pointer-events-none fixed top-0 right-0 z-50 max-h-screen w-full max-w-sm space-y-4 px-4"
+      class="pointer-events-none fixed top-16 right-0 z-50 max-h-screen w-full max-w-sm space-y-4 px-4"
       aria-live="polite"
     >
       <TransitionGroup

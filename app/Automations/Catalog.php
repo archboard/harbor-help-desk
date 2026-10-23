@@ -88,7 +88,7 @@ class Catalog
         foreach (FieldType::cases() as $type) {
             $operators[$type->value] = collect(Operator::cases())
                 ->filter(fn (Operator $operator): bool => $operator->supports($type))
-                ->map(fn (Operator $operator): CatalogOperatorData => new CatalogOperatorData($operator, $operator->label(), $operator->takesValue()))
+                ->map(fn (Operator $operator): CatalogOperatorData => new CatalogOperatorData($operator, $operator->label($type), $operator->takesValue()))
                 ->values()->all();
         }
 

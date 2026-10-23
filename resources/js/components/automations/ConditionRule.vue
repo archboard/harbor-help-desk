@@ -104,6 +104,7 @@ function setOperator(operator: Rule['operator']): void {
 
     <FieldValueInput
       v-if="field && shape !== 'none'"
+      :class="{ 'md:col-span-3': field.type === 'datetime' }"
       v-model="rule.value"
       :field="field"
       :multiple="shape === 'list'"

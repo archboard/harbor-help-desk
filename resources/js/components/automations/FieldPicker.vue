@@ -7,7 +7,7 @@ import {
   ComboboxOptions,
 } from '@headlessui/vue';
 import { Check, ChevronsUpDown } from '@lucide/vue';
-import { computed, ref } from 'vue';
+import { computed, ref, useTemplateRef } from 'vue';
 import { fieldFor } from './summaries';
 
 /**
@@ -27,6 +27,12 @@ const {
 const model = defineModel<string>({ required: true });
 
 const query = ref('');
+const button = useTemplateRef<{ el: HTMLElement | null }>('button');
+
+/** Headless UI opens a combobox on typing only, so a click on the input presses its button. */
+function openOptions(): void {
+  button.value?.el?.click();
+}
 
 const available = computed(() =>
   catalog.field_groups.filter(
@@ -56,6 +62,7 @@ const display = (key: string): string =>
 
 <template>
   <Combobox
+    v-slot="{ open }"
     v-model="model"
     as="div"
     class="relative"
@@ -71,9 +78,13 @@ const display = (key: string): string =>
           : 'border-gray-300 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600'
       "
       :display-value="(key) => display(key as string)"
+      @click="open || openOptions()"
       @change="query = ($event.target as HTMLInputElement).value"
     />
-    <ComboboxButton class="absolute inset-y-0 right-0 flex items-center pr-2">
+    <ComboboxButton
+      ref="button"
+      class="absolute inset-y-0 right-0 flex items-center pr-2"
+    >
       <ChevronsUpDown class="size-5 text-gray-400" aria-hidden="true" />
     </ComboboxButton>
 

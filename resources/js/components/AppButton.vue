@@ -29,17 +29,17 @@ const sizes: Record<ButtonSize, string> = {
 
 const colors: Record<ButtonColor, string> = {
   primary:
-    'bg-primary-600 text-white hover:bg-primary-500 focus:ring-primary-500 active:bg-primary-700 disabled:bg-gray-500',
-  red: 'bg-red-600 text-white hover:bg-red-500 focus:ring-red-400 active:bg-red-700 disabled:bg-red-400',
+    'bg-primary-600 text-white hover:bg-primary-500 focus:ring-primary-500 active:bg-primary-700',
+  red: 'bg-red-600 text-white hover:bg-red-500 focus:ring-red-400 active:bg-red-700',
   yellow:
-    'bg-yellow-600 text-white hover:bg-yellow-500 focus:ring-yellow-400 active:bg-yellow-700 disabled:bg-yellow-400',
+    'bg-yellow-600 text-white hover:bg-yellow-500 focus:ring-yellow-400 active:bg-yellow-700',
   green:
-    'bg-green-600 text-white hover:bg-green-500 focus:ring-green-400 active:bg-green-700 disabled:bg-green-400',
-  gray: 'bg-gray-500 text-white hover:bg-gray-600 focus:ring-gray-400 active:bg-gray-700 disabled:bg-gray-400',
+    'bg-green-600 text-white hover:bg-green-500 focus:ring-green-400 active:bg-green-700',
+  gray: 'bg-gray-500 text-white hover:bg-gray-600 focus:ring-gray-400 active:bg-gray-700',
   gray_light:
-    'bg-gray-300 text-white hover:bg-gray-500 focus:ring-gray-200 active:bg-gray-500 disabled:bg-gray-200',
+    'bg-gray-300 text-white hover:bg-gray-500 focus:ring-gray-200 active:bg-gray-500',
   white:
-    'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-gray-400 active:bg-gray-100 disabled:bg-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700',
+    'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-gray-400 active:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700',
 };
 
 const root = useTemplateRef<HTMLElement | Component>('root');
@@ -62,7 +62,7 @@ watch(
   <component
     :is="component"
     ref="root"
-    class="relative z-0 cursor-pointer items-center justify-center overflow-hidden border border-transparent text-center font-medium shadow-sm transition duration-150 ease-in-out hover:shadow-none focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:cursor-not-allowed dark:focus:ring-offset-gray-900"
+    class="relative z-0 cursor-pointer items-center justify-center overflow-hidden border border-transparent text-center font-medium shadow-sm transition duration-150 ease-in-out hover:shadow-none focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none disabled:opacity-50 dark:focus:ring-offset-gray-900"
     :class="[sizes[size], colors[color], full ? 'flex w-full' : 'inline-flex']"
     :style="lockedSize"
     :disabled="loading"

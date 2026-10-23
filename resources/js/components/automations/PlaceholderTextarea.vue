@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Float } from '@headlessui-float/vue';
 import { Menu, MenuButton, MenuItem } from '@headlessui/vue';
 import { Braces } from '@lucide/vue';
 import { computed, nextTick, useTemplateRef } from 'vue';
@@ -67,35 +68,48 @@ async function insert(key: string): Promise<void> {
             {{ helpText }}
           </p>
           <Menu as="div" class="relative ms-auto">
-            <MenuButton
-              class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 focus:ring-2 focus:ring-primary-500 focus:outline-hidden dark:text-gray-300 dark:hover:bg-gray-800"
+            <Float
+              placement="bottom-end"
+              :offset="4"
+              flip
+              portal
+              enter="transition duration-100 ease-out"
+              enter-from="scale-95 opacity-0"
+              enter-to="scale-100 opacity-100"
+              leave="transition duration-75 ease-in"
+              leave-from="scale-100 opacity-100"
+              leave-to="scale-95 opacity-0"
             >
-              <Braces class="size-3.5" aria-hidden="true" />
-              Insert placeholder
-            </MenuButton>
-            <AppMenuItems class="absolute right-0 z-10 mt-1">
-              <div v-for="group in groups" :key="group.label" class="py-1">
-                <p
-                  class="px-4 py-1 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400"
-                >
-                  {{ group.label }}
-                </p>
-                <MenuItem
-                  v-for="item in group.items"
-                  :key="item.key"
-                  v-slot="{ active }"
-                >
-                  <button
-                    type="button"
-                    class="block w-full px-4 py-1.5 text-start text-sm text-gray-700 dark:text-gray-200"
-                    :class="{ 'bg-gray-100 dark:bg-gray-700': active }"
-                    @click="insert(item.key)"
+              <MenuButton
+                class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 focus:ring-2 focus:ring-primary-500 focus:outline-hidden dark:text-gray-300 dark:hover:bg-gray-800"
+              >
+                <Braces class="size-3.5" aria-hidden="true" />
+                Insert placeholder
+              </MenuButton>
+              <AppMenuItems>
+                <div v-for="group in groups" :key="group.label" class="py-1">
+                  <p
+                    class="px-4 py-1 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400"
                   >
-                    {{ item.label }}
-                  </button>
-                </MenuItem>
-              </div>
-            </AppMenuItems>
+                    {{ group.label }}
+                  </p>
+                  <MenuItem
+                    v-for="item in group.items"
+                    :key="item.key"
+                    v-slot="{ active }"
+                  >
+                    <button
+                      type="button"
+                      class="block w-full px-4 py-1.5 text-start text-sm text-gray-700 dark:text-gray-200"
+                      :class="{ 'bg-gray-100 dark:bg-gray-700': active }"
+                      @click="insert(item.key)"
+                    >
+                      {{ item.label }}
+                    </button>
+                  </MenuItem>
+                </div>
+              </AppMenuItems>
+            </Float>
           </Menu>
         </div>
       </template>
