@@ -3,6 +3,7 @@
 namespace App\Data\Automations;
 
 use App\Automations\DefinitionValidator;
+use App\Automations\Templates;
 use App\Data\InputData;
 use App\Models\Workspace;
 use Illuminate\Validation\Rule;
@@ -23,6 +24,7 @@ class CreateAutomationData extends InputData
         public string|Optional|null $description,
         public string|Optional|null $deskId,
         public bool|Optional $enabled,
+        public string|Optional|null $template,
         #[LiteralTypeScriptType('App.Data.Automations.AutomationDefinitionData')] public array $definition,
     ) {}
 
@@ -36,6 +38,7 @@ class CreateAutomationData extends InputData
             'description' => ['nullable', 'string'],
             'desk_id' => ['nullable', 'string', self::deskExists()],
             'enabled' => ['sometimes', 'boolean'],
+            'template' => ['nullable', 'string', Rule::in(Templates::KEYS)],
             'definition' => ['bail', 'required', 'array', app(DefinitionValidator::class)],
         ];
     }

@@ -137,6 +137,14 @@ declare namespace App {
         created_at: string | null;
         updated_at: string | null;
       };
+      export type AutomationTemplateData = {
+        key: string;
+        name: string;
+        description: string;
+        category: string;
+        trigger_type: string;
+        definition: App.Data.Automations.AutomationDefinitionData;
+      };
       export type AutomationTestResultData = {
         trigger_matched: boolean | null;
         trigger_note: string | null;
@@ -222,6 +230,7 @@ declare namespace App {
         description?: string | null;
         desk_id?: string | null;
         enabled?: boolean;
+        template?: string | null;
         definition: App.Data.Automations.AutomationDefinitionData;
       };
       export type DelayForData = {

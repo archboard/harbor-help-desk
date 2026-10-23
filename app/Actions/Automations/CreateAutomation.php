@@ -3,6 +3,7 @@
 namespace App\Actions\Automations;
 
 use App\Automations\EditorScope;
+use App\Automations\Templates;
 use App\Data\Automations\AutomationDefinitionData;
 use App\Data\Automations\CreateAutomationData;
 use App\Models\Automation;
@@ -19,6 +20,12 @@ class CreateAutomation
     public function handle(User $actor, array $input): Automation
     {
         app(EditorScope::class)->set($actor, $input['desk_id'] ?? null);
+
+        if (Templates::exists($input['template'] ?? null)) {
+            // Started from a template: its definition unless the caller sends an edited one, always disabled.
+            $input['definition'] ??= Templates::definitionFor($input['template'], is_string($input['desk_id'] ?? null) ? $input['desk_id'] : null);
+            $input['enabled'] = false;
+        }
 
         $data = CreateAutomationData::validateAndCreate($input);
         $definition = AutomationDefinitionData::from($data->definition);

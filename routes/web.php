@@ -4,6 +4,7 @@ use App\Http\Controllers\ApplyMacroController;
 use App\Http\Controllers\Auth\MagicLinkController;
 use App\Http\Controllers\AutomationCatalogController;
 use App\Http\Controllers\AutomationRunController;
+use App\Http\Controllers\AutomationTemplatesController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DeskController;
 use App\Http\Controllers\DeskCustomFieldController;
@@ -75,6 +76,7 @@ Route::middleware('workspace')->group(function () {
         Route::put('tickets/{ticket}/tags', [TicketTagController::class, 'update'])->name('tickets.tags.update');
         Route::post('tickets/{ticket}/macros/{macro}/apply', ApplyMacroController::class)->name('tickets.macros.apply');
         Route::get('automations/catalog', AutomationCatalogController::class)->name('automations.catalog');
+        Route::get('automations/templates', AutomationTemplatesController::class)->name('automations.templates');
         Route::post('automations/test', TestAutomationController::class)->name('automations.test');
         Route::get('automations/{automation}/runs', [AutomationRunController::class, 'index'])->name('automations.runs.index');
         Route::get('automation-runs/{run}', [AutomationRunController::class, 'show'])->name('automation-runs.show');

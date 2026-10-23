@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\AttachmentController;
 use App\Http\Controllers\Api\V1\AutomationCatalogController;
 use App\Http\Controllers\Api\V1\AutomationController;
 use App\Http\Controllers\Api\V1\AutomationRunController;
+use App\Http\Controllers\Api\V1\AutomationTemplatesController;
 use App\Http\Controllers\Api\V1\BusinessScheduleController;
 use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\CustomFieldController;
@@ -70,6 +71,7 @@ Route::prefix('v1')->name('api.v1.')
         Route::apiResource('saved-views', SavedViewController::class);
         Route::apiResource('macros', MacroController::class);
         Route::get('automations/catalog', AutomationCatalogController::class)->name('automations.catalog');
+        Route::get('automations/templates', AutomationTemplatesController::class)->name('automations.templates');
         Route::post('automations/reorder', ReorderAutomationsController::class)->name('automations.reorder');
         Route::put('automations/{automation}/enabled', SetAutomationEnabledController::class)->name('automations.enabled.update');
         Route::post('automations/{automation}/webhook-token', RotateWebhookTokenController::class)->name('automations.webhook-token');
