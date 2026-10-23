@@ -19,6 +19,7 @@ import TimezonePrompt from '@/components/TimezonePrompt.vue';
 import ScaleIn from '@/components/transitions/ScaleIn.vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { setDisplayTimezone } from '@/lib/dates';
+import { initializeRealtime } from '@/lib/realtime';
 import { logout } from '@/routes';
 import { update as updateAvailability } from '@/routes/availability';
 import { edit as editApiTokens } from '@/routes/api-tokens';
@@ -34,6 +35,10 @@ import { edit as workspaceSettings } from '@/routes/workspace/general';
 const { title = '' } = defineProps<{ title?: string }>();
 
 const page = usePage();
+
+// Before the children set up: after logging in, Inertia's `navigate` event fires only once
+// this layout and its Echo listeners (the notification bell) have mounted.
+initializeRealtime(page);
 const { isCurrentOrParentUrl } = useCurrentUrl();
 
 watch(() => page.props.auth.user.timezone, setDisplayTimezone, {
