@@ -1,12 +1,22 @@
 <script setup lang="ts">
 import { Menu, MenuButton, MenuItem } from '@headlessui/vue';
 import { Plus } from '@lucide/vue';
+import { computed } from 'vue';
 import AppMenuItems from '@/components/AppMenuItems.vue';
 import { addableStepTypes } from './steps';
 import type { StepType } from './steps';
 
-/** The connector between two cards, with a "+" that picks the type of a new step. */
+/**
+ * The connector between two cards, with a "+" that picks the type of a new step. A stop
+ * ends the run, so it is only offered at the end of a list that has none.
+ */
+const { allowStop = false } = defineProps<{ allowStop?: boolean }>();
+
 const emit = defineEmits<{ add: [type: StepType] }>();
+
+const types = computed(() =>
+  addableStepTypes.filter(([type]) => allowStop || type !== 'stop'),
+);
 </script>
 
 <template>
@@ -25,11 +35,7 @@ const emit = defineEmits<{ add: [type: StepType] }>();
       <AppMenuItems
         class="absolute top-full left-1/2 z-10 mt-1 -translate-x-1/2"
       >
-        <MenuItem
-          v-for="[type, meta] in addableStepTypes"
-          :key="type"
-          v-slot="{ active }"
-        >
+        <MenuItem v-for="[type, meta] in types" :key="type" v-slot="{ active }">
           <button
             type="button"
             class="flex w-full items-center gap-2 px-4 py-2 text-start text-sm text-gray-700 dark:text-gray-200"

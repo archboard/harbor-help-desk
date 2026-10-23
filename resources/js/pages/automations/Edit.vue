@@ -309,10 +309,12 @@ useEventListener(window, 'beforeunload', (event) => {
             "
             :invalid="invalidCards.has(step.id)"
             :errors="messagesFor(step.id)"
-            movable
+            :movable="step.type !== 'stop'"
             removable
             :can-move-up="i > 0"
-            :can-move-down="i < steps.length - 1"
+            :can-move-down="
+              i < steps.length - 1 && steps[i + 1].type !== 'stop'
+            "
             @update:open="openCard = $event ? step.id : null"
             @move="moveStep(i, $event)"
             @remove="removeStep(i)"
@@ -354,6 +356,12 @@ useEventListener(window, 'beforeunload', (event) => {
                 }"
               />
             </div>
+            <p
+              v-else-if="step.type === 'stop'"
+              class="text-sm text-gray-500 dark:text-gray-400"
+            >
+              Ends this run and skips any later automations for this event.
+            </p>
             <p v-else class="text-sm text-gray-500 dark:text-gray-400">
               This step can't be edited here yet. It is kept as it is when you
               save, and you can move or delete it.
@@ -361,7 +369,11 @@ useEventListener(window, 'beforeunload', (event) => {
           </StepCard>
         </template>
 
-        <AddStepMenu @add="addStep(steps.length, $event)" />
+        <AddStepMenu
+          v-if="steps.at(-1)?.type !== 'stop'"
+          allow-stop
+          @add="addStep(steps.length, $event)"
+        />
       </div>
     </Deferred>
 

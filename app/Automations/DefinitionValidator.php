@@ -145,8 +145,13 @@ class DefinitionValidator implements ValidationRule, ValidatorAwareRule
 
         $this->stepCount += count($steps);
 
-        foreach ($steps as $step) {
+        foreach ($steps as $index => $step) {
             $this->step($step, $depth);
+
+            // A stop ends the run, so a step after it could never run.
+            if (is_array($step) && ($step['type'] ?? null) === 'stop' && $index < count($steps) - 1 && is_string($step['id'] ?? null)) {
+                $this->add("steps.{$step['id']}.type", __('A stop must be the last step.'));
+            }
         }
     }
 

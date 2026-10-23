@@ -277,6 +277,18 @@ test('a definition is checked against the registry and errors are keyed by step 
     ])->assertCreated();
 });
 
+test('a stop must be the last step of its list', function () {
+    actAs($this->admin, $this->workspace);
+    $stop = fn (string $id): array => ['id' => $id, 'type' => 'stop'];
+
+    $this->postJson($this->base, automationInput([$stop('s1'), noteStep('n1')]))
+        ->assertJsonValidationErrors('definition.steps.s1.type');
+    $this->postJson($this->base, automationInput([pathsStep('p1', [$stop('s2'), noteStep('n2')])]))
+        ->assertJsonValidationErrors('definition.steps.s2.type');
+    $this->postJson($this->base, automationInput([noteStep('n3'), pathsStep('p2', [$stop('s3')])]))
+        ->assertCreated();
+});
+
 test('nested paths are keyed by their own id and limited in depth and size', function () {
     actAs($this->admin, $this->workspace);
     $post = fn (array $steps) => $this->postJson($this->base, automationInput($steps));

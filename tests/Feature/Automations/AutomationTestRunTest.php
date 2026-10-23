@@ -146,7 +146,7 @@ test('conditions, paths, delays and stops are evaluated against the ticket as it
         ->and($log->firstWhere('step_id', 'p')['branch'])->toBe('Normal')
         ->and($log->firstWhere('step_id', 'd'))->toMatchArray(['waiting' => true])->toHaveKeys(['resume_at', 'note']);
 
-    $stopped = $run([['id' => 's', 'type' => 'stop'], dryAction('a3', 'add_note', ['body' => 'never'])]);
+    $stopped = $run([['id' => 's', 'type' => 'stop']]);
     expect($stopped->json('stopped'))->toBeTrue()->and(array_column($stopped->json('log'), 'step_id'))->toBe(['s']);
 });
 
