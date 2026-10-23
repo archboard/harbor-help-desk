@@ -7,7 +7,8 @@ use Spatie\TypeScriptTransformer\Attributes\LiteralTypeScriptType;
 
 /**
  * Compares one field with a value. A duration field's value is
- * `{amount, unit, business_schedule_id?}`; a field with a value-less operator has none.
+ * `{amount, unit, business_schedule_id?}` and a datetime field's is an ISO string or
+ * `{relative: {amount, unit, business_schedule_id?}}` (a negative amount is in the past); a field with a value-less operator has none.
  */
 class RuleData extends ConditionNodeData
 {

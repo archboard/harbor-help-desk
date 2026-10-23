@@ -1,10 +1,16 @@
 <script setup lang="ts">
-import { ArrowDown, ArrowUp, ChevronDown, Trash2 } from '@lucide/vue';
+import {
+  ArrowDown,
+  ArrowUp,
+  ChevronDown,
+  GripVertical,
+  Trash2,
+} from '@lucide/vue';
 import type { Component } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 
 /**
- * A flow card: the header is a button that expands the body (Enter or Space), Escape
+ * A flow card, draggable by its grip when `movable`: the header is a button that expands the body (Enter or Space), Escape
  * collapses it and Delete on the header removes the step.
  */
 const {
@@ -48,6 +54,11 @@ const open = defineModel<boolean>('open', { default: false });
     @keydown.esc="open = false"
   >
     <div class="flex items-center gap-2 pe-3">
+      <GripVertical
+        v-if="movable"
+        class="drag-handle ms-2 size-4 shrink-0 cursor-grab text-gray-400"
+        aria-hidden="true"
+      />
       <button
         type="button"
         class="flex min-w-0 flex-1 items-center gap-3 rounded-xl p-4 text-start focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary-500"

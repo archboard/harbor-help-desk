@@ -8,7 +8,7 @@ import Pill from '@/components/Pill.vue';
  * Assignees as removable pills, plus a search box over the desk members not yet assigned.
  */
 const { members, disabled = false } = defineProps<{
-  members: App.Data.Desks.DeskMemberData[];
+  members: Pick<App.Data.Desks.DeskMemberData, 'id' | 'name'>[];
   disabled?: boolean;
 }>();
 
@@ -27,7 +27,9 @@ const searchId = useId();
 /** Bumped after adding someone, to clear the search box. */
 const searchKey = ref(0);
 
-function add(member: App.Data.Desks.DeskMemberData | null): void {
+function add(
+  member: Pick<App.Data.Desks.DeskMemberData, 'id' | 'name'> | null,
+): void {
   if (member) {
     ids.value = [...ids.value, member.id];
     searchKey.value++;

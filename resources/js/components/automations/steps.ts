@@ -16,7 +16,7 @@ export const stepTypes: Record<
   StepType,
   { label: string; icon: Component; addable: boolean }
 > = {
-  condition: { label: 'Condition', icon: Filter, addable: false },
+  condition: { label: 'Condition', icon: Filter, addable: true },
   action: { label: 'Action', icon: Zap, addable: true },
   delay: { label: 'Delay', icon: Hourglass, addable: false },
   paths: { label: 'Paths', icon: GitBranch, addable: false },
@@ -44,6 +44,8 @@ export function newStep(type: StepType): Step {
   switch (type) {
     case 'action':
       return { id, type, action: '', config: {} };
+    case 'condition':
+      return { id, type, match: 'all', rules: [] };
     case 'stop':
       return { id, type };
     default:

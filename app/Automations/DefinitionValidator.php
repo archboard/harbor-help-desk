@@ -300,6 +300,12 @@ class DefinitionValidator implements ValidationRule, ValidatorAwareRule
             return;
         }
 
+        if ($type === FieldType::DATETIME && is_array($value) && array_key_exists('relative', $value)) {
+            $this->relativeDate($value, $key);
+
+            return;
+        }
+
         $values = in_array($operator, [Operator::IN, Operator::NOT_IN, Operator::INCLUDES_ANY, Operator::INCLUDES_ALL, Operator::EXCLUDES], true) ? $value : [$value];
 
         if (! is_array($values) || ! array_is_list($values) || array_any($values, fn (mixed $item): bool => ! is_scalar($item))) {
@@ -345,6 +351,22 @@ class DefinitionValidator implements ValidationRule, ValidatorAwareRule
         }
 
         $this->interval($value, $key, 0);
+    }
+
+    /**
+     * A relative date: `{relative: {amount, unit, business_schedule_id?}}`, a negative amount being in the past.
+     *
+     * @param  array<string, mixed>  $value
+     */
+    protected function relativeDate(array $value, string $key): void
+    {
+        if (array_keys($value) !== ['relative'] || ! is_array($value['relative'])) {
+            $this->add($key, __('A relative date needs an amount and a unit.'));
+
+            return;
+        }
+
+        $this->interval($value['relative'], "$key.relative", PHP_INT_MIN);
     }
 
     /**

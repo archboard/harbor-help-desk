@@ -4,6 +4,7 @@ use App\Enums\AutomationRunStatus;
 use App\Enums\WorkspaceRole;
 use App\Models\Automation;
 use App\Models\AutomationRun;
+use App\Models\BusinessSchedule;
 use App\Models\CustomField;
 use App\Models\Desk;
 use App\Models\Tag;
@@ -98,6 +99,30 @@ test('the builder offers only its own workspace\'s desks and catalog', function 
 
         expect($catalog)->toContain('Plan')->not->toContain('B Desk', 'B secret field', 'b-secret-tag');
     }
+});
+
+test('the builder offers only its own business schedules, and a relative date can not name another workspace\'s', function () {
+    $own = BusinessSchedule::factory()->create(['name' => 'A hours']);
+    $scheduleB = $this->other->execute(fn () => BusinessSchedule::factory()->create(['name' => 'B secret hours']));
+    $this->actingAs($this->admin);
+
+    $this->get("{$this->web}/automations/create")->assertOk()->assertInertia(fn (Assert $page) => $page
+        ->has('schedules', 1)
+        ->where('schedules.0.id', $own->id));
+
+    $rule = fn (string $scheduleId) => ['id' => 'c1', 'type' => 'condition', 'match' => 'all', 'rules' => [
+        ['type' => 'rule', 'field' => 'ticket.due_at', 'operator' => 'lt', 'value' => ['relative' => ['amount' => -1, 'unit' => 'days', 'business_schedule_id' => $scheduleId]]],
+        ['type' => 'rule', 'field' => 'time.since_created', 'operator' => 'gt', 'value' => ['amount' => 1, 'unit' => 'days', 'business_schedule_id' => $scheduleId]],
+    ]];
+    $save = fn (string $scheduleId) => $this->post("{$this->web}/automations", ['name' => 'Leak', 'definition' => ['trigger' => ['type' => 'ticket.created', 'config' => []], 'steps' => [$rule($scheduleId)]]]);
+
+    $save($scheduleB->id)->assertSessionHasErrors([
+        'definition.steps.c1.rules.0.value.relative.business_schedule_id',
+        'definition.steps.c1.rules.1.value.business_schedule_id',
+    ]);
+    expect(Automation::query()->where('name', 'Leak')->exists())->toBeFalse();
+
+    $save($own->id)->assertSessionHasNoErrors();
 });
 
 test('an automation can not be stored on another workspace\'s desk', function () {

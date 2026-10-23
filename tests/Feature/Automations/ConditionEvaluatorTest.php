@@ -12,6 +12,7 @@ use App\Models\BusinessSchedule;
 use App\Models\CustomField;
 use App\Models\Ticket;
 use App\Models\Workspace;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Event;
 use Tests\Concerns\InWorkspace;
 
@@ -118,6 +119,31 @@ it('compares durations in business time when the rule names a schedule', functio
     expect(evaluate('all', [$duration('gte', $schedule->id)], $context)['rules'][0])->toMatchArray(['actual' => 120, 'passed' => true])
         ->and(evaluate('all', [$duration('gt', $schedule->id)], $context)['passed'])->toBeFalse()
         ->and(evaluate('all', [$duration('gt', null)], $context)['rules'][0])->toMatchArray(['actual' => 1080, 'passed' => true]);
+});
+
+it('compares a datetime with a relative date resolved at evaluation time', function () {
+    $this->travelTo('2026-10-21 10:00');
+    $context = new Context($this->ticket);
+    $due = fn (int $hours) => rule('ticket.due_at', 'lt', ['relative' => ['amount' => $hours, 'unit' => 'hours']]);
+
+    // Due tomorrow at 10:00, which is before 48 hours from now and not before 12 hours from now.
+    expect(evaluate('all', [$due(48)], $context)['rules'][0])->toMatchArray(['passed' => true, 'expected' => '2026-10-23T10:00:00+00:00'])
+        ->and(evaluate('all', [$due(12)], $context)['rules'][0]['passed'])->toBeFalse()
+        ->and(evaluate('all', [rule('ticket.due_at', 'gt', ['relative' => ['amount' => -1, 'unit' => 'days']])], $context)['rules'][0])->toMatchArray(['passed' => true, 'expected' => '2026-10-20T10:00:00+00:00']);
+});
+
+it('resolves a relative date in business time, also into the past', function () {
+    $this->travelTo('2026-10-21 10:00'); // Wednesday
+    $schedule = BusinessSchedule::factory()->create();
+    $context = new Context($this->ticket);
+
+    $relative = fn (int $amount) => rule('ticket.due_at', 'gt', ['relative' => ['amount' => $amount, 'unit' => 'hours', 'business_schedule_id' => $schedule->id]]);
+    $future = evaluate('all', [$relative(1)], $context)['rules'][0]['expected'];
+    $past = evaluate('all', [$relative(-1)], $context)['rules'][0]['expected'];
+
+    expect(CarbonImmutable::parse($future)->greaterThan(now()))->toBeTrue()
+        ->and(CarbonImmutable::parse($past)->lessThan(now()))->toBeTrue()
+        ->and($schedule->addBusinessMinutes(CarbonImmutable::parse($past), 60)->equalTo(now()))->toBeTrue();
 });
 
 it('reads the change for the changed operators', function (string $operator, mixed $value, bool $passed) {

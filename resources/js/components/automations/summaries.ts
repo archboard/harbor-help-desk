@@ -28,6 +28,21 @@ export function fieldFor(catalog: Catalog, key: string): Field | undefined {
 const plural = (amount: number, unit: string): string =>
   `${amount} ${amount === 1 ? unit.replace(/s$/, '') : unit}`;
 
+/** "3 days ago", "in 2 hours" for a signed amount, negative being in the past. */
+function relativeText(amount?: number, unit?: string): string {
+  if (amount === undefined || !unit) {
+    return '';
+  }
+
+  if (amount === 0) {
+    return 'now';
+  }
+
+  return amount < 0
+    ? `${plural(-amount, unit)} ago`
+    : `in ${plural(amount, unit)}`;
+}
+
 function valueText(field: Field | undefined, value: unknown): string {
   if (value === null || value === undefined || value === '') {
     return '';
@@ -42,7 +57,15 @@ function valueText(field: Field | undefined, value: unknown): string {
   }
 
   if (typeof value === 'object') {
-    const { amount, unit } = value as { amount?: number; unit?: string };
+    const { amount, unit, relative } = value as {
+      amount?: number;
+      unit?: string;
+      relative?: { amount?: number; unit?: string };
+    };
+
+    if (relative) {
+      return relativeText(relative.amount, relative.unit);
+    }
 
     return amount !== undefined && unit ? plural(amount, unit) : '';
   }

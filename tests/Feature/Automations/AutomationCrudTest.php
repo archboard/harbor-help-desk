@@ -277,6 +277,18 @@ test('a definition is checked against the registry and errors are keyed by step 
     ])->assertCreated();
 });
 
+test('a datetime rule accepts a relative date, past or future, and rejects a bad one', function () {
+    actAs($this->admin, $this->workspace);
+    $schedule = BusinessSchedule::factory()->create();
+    $post = fn (mixed $value) => $this->postJson($this->base, automationInput([ruleStep('c1', ['field' => 'ticket.due_at', 'operator' => 'lt', 'value' => $value])]));
+
+    $post(['relative' => ['amount' => -3, 'unit' => 'days']])->assertCreated();
+    $post(['relative' => ['amount' => 2, 'unit' => 'hours', 'business_schedule_id' => $schedule->id]])->assertCreated();
+    $post(['relative' => ['amount' => -3, 'unit' => 'weeks']])->assertJsonValidationErrors('definition.steps.c1.rules.0.value.relative.unit');
+    $post(['relative' => ['amount' => 'x', 'unit' => 'days']])->assertJsonValidationErrors('definition.steps.c1.rules.0.value.relative.amount');
+    $post(['relative' => ['amount' => 1, 'unit' => 'days'], 'extra' => 1])->assertJsonValidationErrors('definition.steps.c1.rules.0.value');
+});
+
 test('a stop must be the last step of its list', function () {
     actAs($this->admin, $this->workspace);
     $stop = fn (string $id): array => ['id' => $id, 'type' => 'stop'];
@@ -382,6 +394,8 @@ test('another workspace\'s automations can be neither read nor changed', functio
         ->assertJsonValidationErrors('definition.steps.c1.rules.0.value.business_schedule_id');
     $this->postJson($this->base, automationInput([['id' => 'dl', 'type' => 'delay', 'for' => ['amount' => 1, 'unit' => 'days', 'business_schedule_id' => $foreignSchedule->id]]]))
         ->assertJsonValidationErrors('definition.steps.dl.for.business_schedule_id');
+    $this->postJson($this->base, automationInput([$rule('ticket.due_at', 'lt', ['relative' => ['amount' => -1, 'unit' => 'days', 'business_schedule_id' => $foreignSchedule->id]])]))
+        ->assertJsonValidationErrors('definition.steps.c1.rules.0.value.relative.business_schedule_id');
     $this->putJson("$this->base/$mine->id", ['definition' => automationInput([$rule("custom_field.$foreignField->id", 'is', 'x')])['definition']])
         ->assertJsonValidationErrors('definition.steps.c1.rules.0.field');
 

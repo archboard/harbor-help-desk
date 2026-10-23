@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { Switch } from '@headlessui/vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ArrowDown, ArrowUp, Workflow } from '@lucide/vue';
+import { ArrowDown, ArrowUp, GripVertical, Workflow } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
+import AppToggle from '@/components/forms/AppToggle.vue';
+import SortableList from '@/components/SortableList.vue';
 import ConfirmationModal from '@/components/modals/ConfirmationModal.vue';
 import Pill from '@/components/Pill.vue';
 import RelativeTime from '@/components/RelativeTime.vue';
 import Table from '@/components/tables/Table.vue';
-import Tbody from '@/components/tables/Tbody.vue';
 import Td from '@/components/tables/Td.vue';
 import Th from '@/components/tables/Th.vue';
 import Thead from '@/components/tables/Thead.vue';
@@ -88,6 +88,15 @@ function move(group: Automation[], index: number, offset: -1 | 1): void {
   router.post(reorder().url, { ids }, { preserveScroll: true });
 }
 
+/** Move a row to where it was dropped. */
+function drag(group: Automation[], from: number, to: number): void {
+  const ids = group.map((automation) => automation.id);
+
+  ids.splice(to, 0, ...ids.splice(from, 1));
+
+  router.post(reorder().url, { ids }, { preserveScroll: true });
+}
+
 function copy(automation: Automation): void {
   router.post(duplicate(automation.id).url, {}, { preserveScroll: true });
 }
@@ -132,12 +141,20 @@ function remove(close: () => void): void {
             <Th right><span class="sr-only">Actions</span></Th>
           </tr>
         </Thead>
-        <Tbody>
+        <SortableList
+          tag="tbody"
+          class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900"
+          @reorder="(from, to) => drag(group.automations, from, to)"
+        >
           <tr
             v-for="(automation, index) in group.automations"
             :key="automation.id"
           >
             <Td darker>
+              <GripVertical
+                class="drag-handle me-1 inline size-4 cursor-grab text-gray-400"
+                aria-hidden="true"
+              />
               <Link
                 :href="edit(automation.id).url"
                 class="hover:text-primary-600 hover:underline"
@@ -155,24 +172,12 @@ function remove(close: () => void): void {
               </Pill>
             </Td>
             <Td>
-              <Switch
+              <AppToggle
                 :model-value="automation.enabled"
-                :class="[
-                  'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-hidden',
-                  automation.enabled
-                    ? 'bg-primary-600'
-                    : 'bg-gray-200 dark:bg-gray-700',
-                ]"
                 @update:model-value="toggle(automation, $event)"
               >
-                <span class="sr-only">Enabled</span>
-                <span
-                  :class="[
-                    'pointer-events-none inline-block size-5 rounded-full bg-white shadow-sm transition-transform',
-                    automation.enabled ? 'translate-x-5' : 'translate-x-0',
-                  ]"
-                />
-              </Switch>
+                Enabled
+              </AppToggle>
             </Td>
             <Td>
               <template v-if="automation.last_run">
@@ -226,7 +231,7 @@ function remove(close: () => void): void {
               </AppButton>
             </Td>
           </tr>
-        </Tbody>
+        </SortableList>
       </Table>
     </section>
 

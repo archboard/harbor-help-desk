@@ -6,6 +6,8 @@ export type CardError = {
   /** The top-level card the error belongs to, or null for errors about the automation as a whole. */
   cardId: string | null;
   message: string;
+  /** Shown beside the field it is about, so the card's own list leaves it out. */
+  inline: boolean;
 };
 
 function containsStep(steps: Step[], id: string): boolean {
@@ -30,7 +32,7 @@ export function cardErrors(
   return Object.entries(errors)
     .filter(([key]) => key.startsWith('definition'))
     .map(([key, message]) => {
-      const [, scope, id] = key.split('.');
+      const [, scope, id, part] = key.split('.');
       const cardId =
         scope === 'trigger'
           ? TRIGGER_CARD
@@ -38,7 +40,13 @@ export function cardErrors(
             ? (steps.find((step) => containsStep([step], id))?.id ?? null)
             : null;
 
-      return { cardId, message };
+      // A condition step's rules and match mode show their errors on their own rows.
+      const inline =
+        scope === 'steps' &&
+        (part === 'rules' || part === 'match') &&
+        steps.some((step) => step.id === id && step.type === 'condition');
+
+      return { cardId, message, inline };
     });
 }
 

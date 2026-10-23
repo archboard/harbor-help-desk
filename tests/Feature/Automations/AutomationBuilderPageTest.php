@@ -3,6 +3,7 @@
 use App\Enums\DeskRole;
 use App\Enums\WorkspaceRole;
 use App\Models\Automation;
+use App\Models\BusinessSchedule;
 use App\Models\Desk;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -25,6 +26,7 @@ beforeEach(function () {
     $this->admin = User::factory()->create();
     $this->workspace->users()->attach($this->admin, ['role' => WorkspaceRole::ADMIN]);
     $this->desk = Desk::sole();
+    $this->schedule = BusinessSchedule::factory()->create();
     $this->otherDesk = Desk::factory()->create(['name' => 'Billing']);
     $this->archivedDesk = Desk::factory()->create(['name' => 'Old', 'archived_at' => now()]);
     $this->lead = deskMember($this->workspace, $this->desk, DeskRole::LEAD);
@@ -38,6 +40,8 @@ test('an admin opens the builder with every active desk and the workspace scope'
         ->where('canScopeToWorkspace', true)
         ->has('desks', 2)
         ->missing('desks.2')
+        ->has('schedules', 1)
+        ->where('schedules.0.id', $this->schedule->id)
         ->loadDeferredProps(fn (Assert $reloaded) => $reloaded
             ->has('catalog.triggers')
             ->has('catalog.actions')

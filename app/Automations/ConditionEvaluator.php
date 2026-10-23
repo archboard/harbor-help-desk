@@ -6,6 +6,7 @@ use App\Data\Automations\ConditionGroupData;
 use App\Data\Automations\ConditionNodeData;
 use App\Data\Automations\RuleData;
 use App\Models\BusinessSchedule;
+use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Throwable;
 
@@ -64,6 +65,14 @@ class ConditionEvaluator
             if ($field->type() === FieldType::DURATION && is_array($expected)) {
                 $schedule = $this->schedule($expected['business_schedule_id'] ?? null, $context);
                 $expected = DelayUnit::from($expected['unit'] ?? 'minutes')->toMinutes((int) ($expected['amount'] ?? 0));
+            }
+
+            if ($field->type() === FieldType::DATETIME && is_array($expected) && is_array($expected['relative'] ?? null)) {
+                $relative = $expected['relative'];
+                $schedule = $this->schedule($relative['business_schedule_id'] ?? null, $context);
+                $expected = BusinessSchedule::addMinutesFor($schedule, CarbonImmutable::now(), DelayUnit::from($relative['unit'] ?? 'minutes')->toMinutes((int) ($relative['amount'] ?? 0)))->toIso8601String();
+                $log['expected'] = $expected;
+                $schedule = null;
             }
 
             if ($rule->operator->readsChange()) {

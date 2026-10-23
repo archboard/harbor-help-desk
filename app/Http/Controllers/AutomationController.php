@@ -8,11 +8,13 @@ use App\Actions\Automations\UpdateAutomation;
 use App\Automations\AutomationRegistry;
 use App\Automations\Catalog;
 use App\Data\Automations\AutomationData;
+use App\Data\BusinessSchedules\BusinessScheduleData;
 use App\Data\Desks\DeskData;
 use App\Enums\AutomationRunStatus;
 use App\Enums\DeskRole;
 use App\Http\Flash;
 use App\Models\Automation;
+use App\Models\BusinessSchedule;
 use App\Models\Desk;
 use App\Models\User;
 use App\Models\Workspace;
@@ -104,6 +106,7 @@ class AutomationController extends Controller
             'automation' => $automation === null ? null : AutomationData::from($automation),
             'desks' => DeskData::collect($desks->orderBy('name')->get()),
             'canScopeToWorkspace' => $isAdmin,
+            'schedules' => BusinessScheduleData::collect(BusinessSchedule::query()->orderBy('name')->get()),
             'catalog' => Inertia::defer(fn () => $catalog->build($user)),
         ]);
     }

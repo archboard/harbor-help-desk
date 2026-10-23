@@ -28,7 +28,7 @@ const normalizedOptions = computed(() => normalizeOptions(options));
     class="block w-full rounded-md py-2 pr-8 pl-3 text-sm focus:ring-2 focus:outline-hidden dark:bg-gray-900"
     :class="
       hasError
-        ? 'border-red-300 text-red-900 focus:border-red-500 focus:ring-red-500'
+        ? 'border-red-300 text-red-900 focus:border-red-500 focus:ring-red-500 dark:text-red-300'
         : 'border-gray-300 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:focus:border-primary-500'
     "
   >

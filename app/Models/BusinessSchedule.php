@@ -90,12 +90,17 @@ class BusinessSchedule extends Model
     }
 
     /**
-     * The moment after `$minutes` of business time has passed since `$from`. A start outside
+     * The moment after `$minutes` of business time has passed since `$from`, or before it for a negative number. A start outside
      * hours begins counting at the next opening.
      */
     public function addBusinessMinutes(CarbonInterface $from, int $minutes): CarbonImmutable
     {
         $cursor = CarbonImmutable::instance($from)->setTimezone($this->timezone);
+
+        if ($minutes < 0) {
+            return $this->subtractBusinessSeconds($cursor, -$minutes * 60);
+        }
+
         $remaining = $minutes * 60;
 
         for ($day = $cursor->startOfDay(), $i = 0; $i < self::MAX_DAYS; $day = $day->addDay()->startOfDay(), $i++) {
@@ -109,6 +114,31 @@ class BusinessSchedule extends Model
 
                 if ($remaining <= $available) {
                     return $start->addSeconds($remaining);
+                }
+
+                $remaining -= $available;
+            }
+        }
+
+        throw new RuntimeException('The business schedule has no business hours within two years.');
+    }
+
+    /**
+     * The moment `$remaining` seconds of business time before `$cursor`. A start outside hours counts back from the previous closing.
+     */
+    private function subtractBusinessSeconds(CarbonImmutable $cursor, int $remaining): CarbonImmutable
+    {
+        for ($day = $cursor->startOfDay(), $i = 0; $i < self::MAX_DAYS; $day = $day->subDay()->startOfDay(), $i++) {
+            foreach (array_reverse($this->intervalsOn($day)) as [$start, $end]) {
+                if ($start >= $cursor) {
+                    continue;
+                }
+
+                $end = $end->min($cursor);
+                $available = $end->getTimestamp() - $start->getTimestamp();
+
+                if ($remaining <= $available) {
+                    return $end->subSeconds($remaining);
                 }
 
                 $remaining -= $available;
