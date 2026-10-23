@@ -111,6 +111,35 @@ test('a dry run writes nothing and describes every action', function () {
     Notification::assertNothingSent();
 });
 
+test('without a chosen event the ticket\'s latest matching event is used, and its placeholders fill in', function () {
+    $older = TicketComment::factory()->for($this->ticket)->create(['body' => 'First message']);
+    $this->ticket->recordEvent(TicketEventType::COMMENT_ADDED, null, ['comment_id' => $older->id]);
+    $newer = TicketComment::factory()->for($this->ticket)->create(['body' => 'Second message']);
+    $this->ticket->recordEvent(TicketEventType::COMMENT_ADDED, null, ['comment_id' => $newer->id]);
+    $this->ticket->recordEvent(TicketEventType::DELETED, $this->admin);
+    actAs($this->admin, $this->workspace);
+    $definition = dryDefinition([dryAction('a1', 'add_note', ['body' => 'Said: {{ message.body }}'])], 'ticket.comment_added');
+
+    $this->postJson($this->url, ['definition' => $definition, 'ticket_id' => $this->ticket->id])->assertOk()
+        ->assertJsonPath('trigger_matched', true)
+        ->assertJsonPath('trigger_note', fn ($note) => str_contains($note, 'latest matching event'))
+        ->assertJsonPath('log.0.result', fn ($result) => str_contains($result, 'Said: Second message'));
+
+    $this->postJson($this->url, ['definition' => $definition, 'ticket_id' => $this->ticket->id, 'ticket_event_id' => $this->ticket->events()->where('type', TicketEventType::COMMENT_ADDED)->oldest()->first()->id])->assertOk()
+        ->assertJsonPath('trigger_note', null)
+        ->assertJsonPath('log.0.result', fn ($result) => str_contains($result, 'Said: First message'));
+});
+
+test('a ticket with no event the trigger matches reports that and still evaluates the steps', function () {
+    $this->ticket->recordEvent(TicketEventType::CREATED, null);
+    actAs($this->admin, $this->workspace);
+
+    $this->postJson($this->url, ['definition' => dryDefinition([dryAction('a1', 'add_note', ['body' => 'x'])], 'ticket.comment_added'), 'ticket_id' => $this->ticket->id])->assertOk()
+        ->assertJsonPath('trigger_matched', false)
+        ->assertJsonPath('trigger_note', fn ($note) => str_contains($note, 'Nothing on this ticket'))
+        ->assertJsonCount(1, 'log');
+});
+
 test('the trigger is evaluated against the chosen event of the ticket only', function () {
     $created = $this->ticket->recordEvent(TicketEventType::CREATED, null);
     $deleted = $this->ticket->recordEvent(TicketEventType::DELETED, $this->admin);
@@ -120,7 +149,6 @@ test('the trigger is evaluated against the chosen event of the ticket only', fun
 
     $this->postJson($this->url, $body($created))->assertOk()->assertJsonPath('trigger_matched', true);
     $this->postJson($this->url, $body($deleted))->assertOk()->assertJsonPath('trigger_matched', false)->assertJsonPath('trigger_note', null);
-    $this->postJson($this->url, $body(null))->assertOk()->assertJsonPath('trigger_matched', null)->assertJsonPath('trigger_note', fn ($note) => str_contains($note, 'No event'));
     $this->postJson($this->url, $body($foreign))->assertUnprocessable()->assertJsonValidationErrors('ticket_event_id');
 
     $webhook = ['mode' => 'find', 'match_by' => 'number', 'path' => 'ticket'];

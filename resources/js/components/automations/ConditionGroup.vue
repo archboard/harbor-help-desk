@@ -8,6 +8,7 @@ import ConditionRule from './ConditionRule.vue';
 import { MAX_DEPTH, newGroup, newRule, nodeKey } from './conditions';
 import type { Group, Node, Rule } from './conditions';
 import { errorsUnder } from './errors';
+import type { GroupResult, RuleResult } from './testResult';
 
 /**
  * A match mode (all or any) with its rules and nested groups, which can be dragged to reorder.
@@ -20,6 +21,7 @@ const {
   errors = {},
   depth = 1,
   removable = false,
+  result,
 } = defineProps<{
   catalog: App.Data.Automations.AutomationCatalogData;
   groups: App.Automations.FieldGroup[];
@@ -29,6 +31,8 @@ const {
   depth?: number;
   /** Shows a remove button, for a nested group. */
   removable?: boolean;
+  /** What a test run found for this group, in the order of its rules. */
+  result?: GroupResult;
 }>();
 
 const emit = defineEmits<{ remove: [] }>();
@@ -100,6 +104,7 @@ function move(from: number, to: number): void {
           :groups="groups"
           :schedules="schedules"
           :errors="errorsUnder(errors, `rules.${index}.`)"
+          :result="result?.rules[index] as GroupResult | undefined"
           :depth="depth + 1"
           removable
           @remove="group.rules.splice(index, 1)"
@@ -111,6 +116,7 @@ function move(from: number, to: number): void {
             :groups="groups"
             :schedules="schedules"
             :errors="errorsUnder(errors, `rules.${index}.`)"
+            :result="result?.rules[index] as RuleResult | undefined"
           />
           <AppButton
             type="button"

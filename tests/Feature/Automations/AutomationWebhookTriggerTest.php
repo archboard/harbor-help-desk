@@ -352,6 +352,16 @@ describe('tenancy', function () {
         $this->postJson("http://harbor.test/webhooks/automations/{$b->id}/{hookToken($a)}", [])->assertNotFound();
     });
 
+    test('the secret of another workspace\'s automation can not be rotated', function () {
+        $b = $this->other->execute(fn () => hookAutomation());
+        $hash = $b->webhook_token_hash;
+        $this->other->users()->attach($this->admin, ['role' => WorkspaceRole::ADMIN]);
+
+        $this->actingAs($this->admin)->postJson("http://acme.harbor.test/automations/{$b->id}/webhook-token")->assertNotFound();
+
+        expect($this->other->execute(fn () => $b->fresh()->webhook_token_hash))->toBe($hash);
+    });
+
     test('find only ever acts on the automation\'s own workspace, even for colliding numbers and B\'s host', function () {
         $a = hookAutomation(steps: [hookNote('A note')]);
         $ticketA = Ticket::factory()->create();

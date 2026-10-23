@@ -43,7 +43,7 @@ function relativeText(amount?: number, unit?: string): string {
     : `in ${plural(amount, unit)}`;
 }
 
-function valueText(field: Field | undefined, value: unknown): string {
+export function valueText(field: Field | undefined, value: unknown): string {
   if (value === null || value === undefined || value === '') {
     return '';
   }

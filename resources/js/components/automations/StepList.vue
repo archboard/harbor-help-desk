@@ -17,6 +17,7 @@ import StepCard from './StepCard.vue';
 import { newStep, stepTypes, unknownStepIcon } from './steps';
 import type { Step, StepType } from './steps';
 import { cancelSummary, configSummary, summarizeStep } from './summaries';
+import { noteOf, statusOf } from './testResult';
 
 /**
  * A list of step cards joined by connectors with a "+" between them: the steps of an
@@ -45,6 +46,7 @@ const {
   scopeDeskId,
   errors,
   problems,
+  testLog,
   openCard,
 } = inject(builderKey)!;
 
@@ -183,6 +185,8 @@ function setAction(
           :errors="messagesFor(step.id)"
           :movable="step.type !== 'stop'"
           removable
+          :status="testLog ? statusOf(testLog.get(step.id)) : undefined"
+          :note="testLog ? noteOf(testLog.get(step.id)) : undefined"
           :can-move-up="i > 0"
           :can-move-down="i < steps.length - 1 && steps[i + 1].type !== 'stop'"
           @update:open="setOpen(step, $event)"
@@ -233,6 +237,7 @@ function setAction(
           <ConditionGroup
             v-else-if="step.type === 'condition'"
             :model-value="step"
+            :result="testLog?.get(step.id)?.condition"
             :catalog="catalog"
             :groups="groups"
             :schedules="schedules"

@@ -710,6 +710,9 @@ declare namespace App {
         attachments?: File[];
         custom_fields?: Record<string, any>;
       };
+      export type LookupTicketsData = {
+        search?: string | null;
+      };
       export type SearchTicketsData = {
         search?: string | null;
         desk_id?: string | string[];

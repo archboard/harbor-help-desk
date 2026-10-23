@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { Plus, Trash2 } from '@lucide/vue';
+import { computed, inject } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import AppInput from '@/components/forms/AppInput.vue';
 import FieldError from '@/components/forms/FieldError.vue';
 import { notify } from '@/lib/notifications';
 import ConditionGroup from './ConditionGroup.vue';
+import { builderKey } from './builder';
 import { nodeKey } from './conditions';
 import { errorsUnder } from './errors';
 import { newBranch } from './steps';
@@ -33,6 +35,17 @@ const {
 }>();
 
 const step = defineModel<Paths>({ required: true });
+
+const { testLog } = inject(builderKey)!;
+
+/** What the test run did here: the index of the path it took, or 'else'. */
+const taken = computed(() => {
+  const entry = testLog.value?.get(step.value.id);
+
+  return entry?.branch === 'else' ? 'else' : entry?.branch_index;
+});
+
+const TAKEN = 'border-green-500 ring-1 ring-green-500 dark:border-green-500';
 
 function removeBranch(index: number): void {
   const [branch] = step.value.branches.splice(index, 1);
@@ -63,7 +76,10 @@ function removeBranch(index: number): void {
       <section
         v-for="(branch, index) in step.branches"
         :key="nodeKey(branch)"
-        class="min-w-0 space-y-3 rounded-lg border border-gray-200 p-3 dark:border-gray-700"
+        class="min-w-0 space-y-3 rounded-lg border p-3"
+        :class="
+          taken === index ? TAKEN : 'border-gray-200 dark:border-gray-700'
+        "
       >
         <div class="flex items-start gap-2">
           <div class="min-w-0 flex-1 space-y-1">
@@ -98,6 +114,9 @@ function removeBranch(index: number): void {
           :groups="groups"
           :schedules="schedules"
           :errors="errorsUnder(errors, `branches.${index}.condition.`)"
+          :result="
+            taken === index ? testLog?.get(step.id)?.condition : undefined
+          "
         />
 
         <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Then</p>
@@ -105,7 +124,10 @@ function removeBranch(index: number): void {
       </section>
 
       <section
-        class="min-w-0 space-y-3 rounded-lg border border-dashed border-gray-300 p-3 dark:border-gray-600"
+        class="min-w-0 space-y-3 rounded-lg border border-dashed p-3"
+        :class="
+          taken === 'else' ? TAKEN : 'border-gray-300 dark:border-gray-600'
+        "
       >
         <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
           Otherwise

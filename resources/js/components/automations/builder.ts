@@ -1,5 +1,6 @@
 import type { ComputedRef, InjectionKey, Ref } from 'vue';
 import type { CardError } from './errors';
+import type { LogEntry } from './testResult';
 
 /**
  * What every step list of the builder needs, provided by the page so that the lists nested
@@ -23,6 +24,8 @@ export type BuilderContext = {
   /** The server's errors keyed `definition.…`. */
   errors: ComputedRef<Record<string, string>>;
   problems: ComputedRef<CardError[]>;
+  /** The test run's log by step id, or null while there is no result to show. */
+  testLog: ComputedRef<Map<string, LogEntry> | null>;
   /** The card that is expanded: the trigger, a step id, or none. */
   openCard: Ref<string | null>;
 };

@@ -15,6 +15,8 @@ import ConfigForm from './ConfigForm.vue';
 import { defaultConfig } from './configRules';
 import StepCard from './StepCard.vue';
 import { configSummary, summarizeTrigger } from './summaries';
+import type { TestResult } from './testResult';
+import WebhookUrl from './WebhookUrl.vue';
 
 const {
   catalog,
@@ -22,6 +24,8 @@ const {
   errors = {},
   invalid = false,
   messages = [],
+  automation = null,
+  testResult = null,
 } = defineProps<{
   catalog: App.Data.Automations.AutomationCatalogData;
   desks: App.Data.Desks.DeskData[];
@@ -29,6 +33,10 @@ const {
   errors?: Record<string, string>;
   invalid?: boolean;
   messages?: string[];
+  /** The saved automation, for the webhook URL. */
+  automation?: App.Data.Automations.AutomationData | null;
+  /** The latest test run, if it is still current. */
+  testResult?: TestResult | null;
 }>();
 
 const trigger = defineModel<App.Data.Automations.TriggerData>({
@@ -101,6 +109,23 @@ function pick(key: string): void {
     "
     :invalid="invalid"
     :errors="messages"
+    :status="
+      testResult
+        ? testResult.trigger_matched === null
+          ? 'skip'
+          : testResult.trigger_matched
+            ? 'pass'
+            : 'fail'
+        : undefined
+    "
+    :note="
+      testResult
+        ? (testResult.trigger_note ??
+          (testResult.trigger_matched
+            ? 'The trigger matches the chosen event.'
+            : 'The trigger does not match the chosen event.'))
+        : undefined
+    "
   >
     <div class="space-y-4">
       <div
@@ -138,6 +163,8 @@ function pick(key: string): void {
         :errors="errors"
         :choices="choices"
       />
+
+      <WebhookUrl v-if="trigger.type === 'webhook'" :automation="automation" />
     </div>
   </StepCard>
 </template>

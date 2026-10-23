@@ -7,6 +7,8 @@ import {
   Trash2,
 } from '@lucide/vue';
 import type { Component } from 'vue';
+import Pill from '@/components/Pill.vue';
+import type { StepStatus } from './testResult';
 import AppButton from '@/components/AppButton.vue';
 
 /**
@@ -24,6 +26,8 @@ const {
   canMoveUp = true,
   canMoveDown = true,
   removable = false,
+  status,
+  note,
 } = defineProps<{
   icon: Component;
   kind: string;
@@ -36,11 +40,21 @@ const {
   canMoveUp?: boolean;
   canMoveDown?: boolean;
   removable?: boolean;
+  /** The outcome of a test run, shown as a badge. */
+  status?: StepStatus;
+  /** What the test run found, under the header. */
+  note?: string;
 }>();
 
 const emit = defineEmits<{ move: [offset: -1 | 1]; remove: [] }>();
 
 const open = defineModel<boolean>('open', { default: false });
+
+const statuses = {
+  pass: { color: 'green', label: 'Pass' },
+  fail: { color: 'red', label: 'Fail' },
+  skip: { color: 'gray', label: 'Skipped' },
+} as const;
 </script>
 
 <template>
@@ -89,6 +103,9 @@ const open = defineModel<boolean>('open', { default: false });
             {{ details }}
           </span>
         </span>
+        <Pill v-if="status" :color="statuses[status].color">
+          {{ statuses[status].label }}
+        </Pill>
         <ChevronDown
           class="size-4 shrink-0 text-gray-400 transition-transform"
           :class="{ 'rotate-180': open }"
@@ -129,6 +146,18 @@ const open = defineModel<boolean>('open', { default: false });
         <span class="sr-only">Delete step</span>
       </AppButton>
     </div>
+
+    <p
+      v-if="note"
+      class="px-4 pb-3 text-sm"
+      :class="
+        status === 'fail'
+          ? 'text-red-600 dark:text-red-400'
+          : 'text-gray-600 dark:text-gray-300'
+      "
+    >
+      {{ note }}
+    </p>
 
     <ul
       v-if="errors.length"

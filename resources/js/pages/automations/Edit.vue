@@ -13,6 +13,7 @@ import {
   provide,
   ref,
   toRaw,
+  watch,
   watchEffect,
 } from 'vue';
 import { builderKey } from '@/components/automations/builder';
@@ -25,6 +26,8 @@ import { availableGroups } from '@/components/automations/conditions';
 import StepList from '@/components/automations/StepList.vue';
 import type { Definition } from '@/components/automations/steps';
 import { fieldFor } from '@/components/automations/summaries';
+import TestPanel from '@/components/automations/TestPanel.vue';
+import type { TestResult } from '@/components/automations/testResult';
 import TriggerCard from '@/components/automations/TriggerCard.vue';
 import AppButton from '@/components/AppButton.vue';
 import {
@@ -83,6 +86,40 @@ const form = useForm({
 
 /** The form's `definition`, typed. It is the same reactive object. */
 const definition = form.definition as unknown as Definition;
+
+/** The latest test run. Any edit to the flow clears it, since it no longer describes it. */
+const testing = ref(false);
+const testResult = ref<TestResult | null>(null);
+
+watch(definition, () => (testResult.value = null), { deep: true });
+
+const testLog = computed(
+  () => new Map(testResult.value?.log.map((entry) => [entry.step_id, entry])),
+);
+
+const testSummary = computed(() => {
+  const result = testResult.value;
+
+  if (!result) {
+    return '';
+  }
+
+  if (result.error) {
+    return `The test failed on an error: ${result.error}`;
+  }
+
+  if (result.trigger_matched === false) {
+    return 'The trigger does not match the chosen event, so a real run would not start.';
+  }
+
+  if (result.stopped) {
+    return 'The test reached a stop step.';
+  }
+
+  return result.matched
+    ? 'All the steps that apply were run.'
+    : 'A condition did not pass, so the steps after it did not run.';
+});
 
 /** The card that is expanded: the trigger, a step id, or none. */
 const openCard = ref<string | null>(automation ? null : TRIGGER_CARD);
@@ -152,6 +189,7 @@ provide(builderKey, {
   scopeDeskId: computed(() => form.desk_id || null),
   errors: computed(() => form.errors),
   problems,
+  testLog: computed(() => (testResult.value ? testLog.value : null)),
   openCard,
 });
 
@@ -256,6 +294,27 @@ useEventListener(window, 'beforeunload', (event) => {
         </div>
       </template>
 
+      <div
+        v-if="testResult"
+        class="mb-4 flex flex-wrap items-center gap-3 rounded-lg border p-3 text-sm"
+        :class="
+          testResult.error
+            ? 'border-red-300 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200'
+            : 'border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-700 dark:bg-gray-800/40 dark:text-gray-200'
+        "
+        role="status"
+      >
+        <span class="min-w-0 flex-1">{{ testSummary }}</span>
+        <AppButton
+          type="button"
+          size="xs"
+          color="white"
+          @click="testResult = null"
+        >
+          Clear results
+        </AppButton>
+      </div>
+
       <div v-if="catalog" class="flex flex-col">
         <TriggerCard
           v-model="definition.trigger"
@@ -265,6 +324,8 @@ useEventListener(window, 'beforeunload', (event) => {
           :invalid="invalidCards.has(TRIGGER_CARD)"
           :messages="messagesFor(TRIGGER_CARD)"
           :errors="errorsUnder(form.errors, 'definition.trigger.config.')"
+          :automation="automation"
+          :test-result="testResult"
           @update:open="openCard = $event ? TRIGGER_CARD : null"
         />
 
@@ -281,6 +342,9 @@ useEventListener(window, 'beforeunload', (event) => {
       >
         Unsaved changes
       </span>
+      <AppButton type="button" color="white" @click="testing = true">
+        Test
+      </AppButton>
       <AppButton type="button" color="white" @click="router.visit(index().url)">
         {{ form.isDirty ? 'Discard' : 'Back' }}
       </AppButton>
@@ -302,4 +366,12 @@ useEventListener(window, 'beforeunload', (event) => {
       </AppButton>
     </div>
   </form>
+
+  <TestPanel
+    v-model:open="testing"
+    :definition="definition"
+    :desk-id="form.desk_id || null"
+    :webhook="definition.trigger.type === 'webhook'"
+    @result="testResult = $event"
+  />
 </template>

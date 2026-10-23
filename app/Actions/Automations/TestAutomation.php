@@ -23,6 +23,9 @@ class TestAutomation
     /** Triggers that start from something other than a ticket event. */
     protected const array NOT_EVENT_BASED = ['schedule', 'webhook'];
 
+    /** How many of the ticket's newest events are checked against the trigger. */
+    protected const int EVENT_SCAN_LIMIT = 100;
+
     public function __construct(protected Engine $engine, protected AutomationRegistry $registry) {}
 
     /**
@@ -61,10 +64,10 @@ class TestAutomation
         }
 
         $definition = AutomationDefinitionData::from($data->definition);
-        $event = $data->ticketEventId instanceof Optional || $data->ticketEventId === null ? null : TicketEvent::query()->findOrFail($data->ticketEventId);
+        $chosen = $data->ticketEventId instanceof Optional || $data->ticketEventId === null ? null : TicketEvent::query()->findOrFail($data->ticketEventId);
         $payload = $data->samplePayload instanceof Optional ? [] : ($data->samplePayload ?? []);
 
-        [$triggerMatched, $triggerNote] = $this->trigger($definition, $event);
+        [$event, $triggerMatched, $triggerNote] = $this->trigger($definition, $ticket, $chosen);
 
         $result = $this->engine->dryRun($definition, Context::forDryRun($ticket, $event, $payload, $definition, __('Test run')));
 
@@ -72,18 +75,28 @@ class TestAutomation
     }
 
     /**
-     * @return array{0: bool|null, 1: string|null}
+     * The event the trigger is tested against: the one chosen, else the ticket's latest event the
+     * trigger matches (looking back at most {@see self::EVENT_SCAN_LIMIT} events).
+     *
+     * @return array{0: TicketEvent|null, 1: bool|null, 2: string|null}
      */
-    protected function trigger(AutomationDefinitionData $definition, ?TicketEvent $event): array
+    protected function trigger(AutomationDefinitionData $definition, Ticket $ticket, ?TicketEvent $chosen): array
     {
         if (in_array($definition->trigger->type, self::NOT_EVENT_BASED, true)) {
-            return [null, __('This trigger does not start from a ticket event, so it was not evaluated.')];
+            return [$chosen, null, __('This trigger does not start from a ticket event, so it was not evaluated.')];
         }
 
-        if ($event === null) {
-            return [null, __('No event was chosen, so the trigger was not evaluated.')];
+        $trigger = $this->registry->trigger($definition->trigger->type);
+
+        if ($chosen !== null) {
+            return [$chosen, $trigger?->matches($chosen, $definition->trigger->config) === true, null];
         }
 
-        return [$this->registry->trigger($definition->trigger->type)?->matches($event, $definition->trigger->config) === true, null];
+        $found = $trigger === null ? null : $ticket->events()->reorder()->latest()->latest('id')->limit(self::EVENT_SCAN_LIMIT)->get()
+            ->first(fn (TicketEvent $event): bool => $trigger->matches($event, $definition->trigger->config));
+
+        return $found === null
+            ? [null, false, __('Nothing on this ticket matches this trigger yet.')]
+            : [$found, true, __('Matched the ticket’s latest matching event from :time.', ['time' => $found->created_at->isoFormat('lll')])];
     }
 }

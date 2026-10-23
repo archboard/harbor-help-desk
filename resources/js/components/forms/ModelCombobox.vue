@@ -13,6 +13,7 @@ const {
   disabled = false,
   id,
   displayValue,
+  minLength = 3,
 } = defineProps<{
   /** JSON endpoint that takes `?search=` and returns a list of resources with an `id`. */
   url: string;
@@ -21,6 +22,8 @@ const {
   id?: string;
   /** How to show an option; defaults to its `name`, `title` or `label`. */
   displayValue?: (item: T | null) => string;
+  /** How many characters to type before searching. */
+  minLength?: number;
 }>();
 
 const model = defineModel<string | null>();
@@ -72,7 +75,7 @@ async function search(term: string): Promise<void> {
 watchDebounced(
   query,
   (term) => {
-    if (term.length > 2) {
+    if (term.length >= minLength) {
       void search(term);
     }
   },

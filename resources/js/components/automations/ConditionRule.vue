@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, inject } from 'vue';
 import AppSelect from '@/components/forms/AppSelect.vue';
 import FieldError from '@/components/forms/FieldError.vue';
+import { builderKey } from './builder';
 import { defaultValue, operatorsFor, valueShape } from './conditions';
 import type { Rule } from './conditions';
 import { errorsUnder } from './errors';
 import FieldPicker from './FieldPicker.vue';
 import FieldValueInput from './FieldValueInput.vue';
-import { fieldFor } from './summaries';
+import { fieldFor, valueText } from './summaries';
+import type { RuleResult } from './testResult';
 
 /**
  * One rule: a field, an operator that fits the field's type, and a value input that fits both.
@@ -17,6 +19,7 @@ const {
   groups,
   schedules = [],
   errors = {},
+  result,
 } = defineProps<{
   catalog: App.Data.Automations.AutomationCatalogData;
   /** The field groups the trigger makes available. */
@@ -24,9 +27,29 @@ const {
   schedules?: App.Data.BusinessSchedules.BusinessScheduleData[];
   /** Server errors keyed `field`, `operator`, `value` and `value.amount`. */
   errors?: Record<string, string>;
+  /** What a test run compared. */
+  result?: RuleResult;
 }>();
 
 const rule = defineModel<Rule>({ required: true });
+
+const names = inject(builderKey, null)?.names;
+
+/** A compared value as text: option labels and names for ids, "nothing" when empty. */
+function show(value: unknown): string {
+  if (Array.isArray(value)) {
+    return (
+      value
+        .map(show)
+        .filter((item) => item !== 'nothing')
+        .join(', ') || 'nothing'
+    );
+  }
+
+  const text = valueText(field.value, value);
+
+  return names?.value[text] ?? (text || 'nothing');
+}
 
 const field = computed(() => fieldFor(catalog, rule.value.field));
 const operators = computed(() => operatorsFor(catalog, field.value, groups));
@@ -114,5 +137,22 @@ function setOperator(operator: Rule['operator']): void {
       :error="errors.value"
       :errors="valueErrors"
     />
+
+    <p
+      v-if="result"
+      class="text-sm md:col-span-3"
+      :class="
+        result.passed
+          ? 'text-green-700 dark:text-green-400'
+          : 'text-red-600 dark:text-red-400'
+      "
+    >
+      {{ result.passed ? 'Pass' : 'Fail' }}:
+      <template v-if="result.error">{{ result.error }}</template>
+      <template v-else>
+        the ticket has {{ show(result.actual) }}, the rule expects
+        {{ show(result.expected) }}.
+      </template>
+    </p>
   </div>
 </template>

@@ -11,6 +11,7 @@ use App\Http\Controllers\DeskController;
 use App\Http\Controllers\DeskCustomFieldController;
 use App\Http\Controllers\DeskMemberController;
 use App\Http\Controllers\DuplicateAutomationController;
+use App\Http\Controllers\LookupTicketsController;
 use App\Http\Controllers\MailboxOAuthController;
 use App\Http\Controllers\MarkAllNotificationsReadController;
 use App\Http\Controllers\MarkNotificationReadController;
@@ -65,6 +66,7 @@ Route::middleware('workspace')->group(function () {
         Route::resource('contacts', ContactController::class)->only(['index', 'store', 'show', 'update']);
 
         Route::get('tickets', [TicketController::class, 'index'])->name('tickets.index');
+        Route::get('tickets/lookup', LookupTicketsController::class)->name('tickets.lookup');
         Route::resource('saved-views', SavedViewController::class)->only(['store', 'update', 'destroy']);
         Route::post('tickets/bulk', [TicketController::class, 'bulk'])->name('tickets.bulk');
         Route::post('tickets/claim', TicketClaimController::class)->name('tickets.claim');
