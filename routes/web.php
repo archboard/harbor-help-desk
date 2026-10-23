@@ -85,7 +85,7 @@ Route::middleware('workspace')->group(function () {
         Route::post('automations/reorder', ReorderAutomationsController::class)->name('automations.reorder');
         Route::put('automations/{automation}/enabled', SetAutomationEnabledController::class)->name('automations.enabled.update');
         Route::post('automations/{automation}/duplicate', DuplicateAutomationController::class)->name('automations.duplicate');
-        Route::resource('automations', AutomationController::class)->only(['index', 'destroy']);
+        Route::resource('automations', AutomationController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
         Route::get('automations/{automation}/runs', [AutomationRunController::class, 'index'])->name('automations.runs.index');
         Route::get('automation-runs/{run}', [AutomationRunController::class, 'show'])->name('automation-runs.show');
         Route::post('automations/{automation}/webhook-token', RotateWebhookTokenController::class)->name('automations.webhook-token');

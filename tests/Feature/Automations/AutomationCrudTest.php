@@ -636,3 +636,15 @@ test('a user in two workspaces sees only the current workspace\'s automations', 
 
     expect($foreign->fresh()->name)->toBe('Foreign')->and(Automation::withoutGlobalScopes()->count())->toBe(2);
 });
+
+test('an update can switch the automation on or off in the same save', function () {
+    actAs($this->admin, $this->workspace);
+    $id = $this->postJson($this->base, automationInput())->assertCreated()->json('id');
+    Automation::query()->whereKey($id)->update(['last_swept_at' => now()->subDay()]);
+
+    $this->putJson("$this->base/$id", ['name' => 'On', 'enabled' => true])->assertOk()->assertJsonPath('enabled', true)->assertJsonPath('name', 'On');
+    expect(Automation::query()->find($id)->last_swept_at->isToday())->toBeTrue();
+
+    $this->putJson("$this->base/$id", ['enabled' => false])->assertOk()->assertJsonPath('enabled', false);
+    $this->putJson("$this->base/$id", ['enabled' => 'maybe'])->assertUnprocessable()->assertJsonValidationErrors('enabled');
+});

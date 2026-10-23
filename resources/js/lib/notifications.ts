@@ -6,6 +6,8 @@ export type AppNotification = {
   level: AlertLevel;
   text: string;
   title?: string;
+  /** A button on the toast, e.g. "Undo". The toast closes when it is clicked. */
+  action?: { label: string; onClick: () => void };
 };
 
 let nextId = 0;

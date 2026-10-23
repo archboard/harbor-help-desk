@@ -180,12 +180,17 @@ declare namespace App {
         label: string;
         config_type: string;
         config_rules: Record<string, string[]>;
+        config_options: Record<
+          string,
+          App.Data.Automations.CatalogOptionData[]
+        >;
       };
       export type CatalogFieldData = {
         key: string;
         label: string;
         type: App.Automations.FieldType;
         options: App.Data.Automations.CatalogOptionData[];
+        settable: boolean;
       };
       export type CatalogFieldGroupData = {
         group: App.Automations.FieldGroup;
@@ -210,6 +215,10 @@ declare namespace App {
         label: string;
         field_groups: App.Automations.FieldGroup[];
         config_rules: Record<string, string[]>;
+        config_options: Record<
+          string,
+          App.Data.Automations.CatalogOptionData[]
+        >;
         placeholders: App.Data.Automations.CatalogPlaceholderData[];
       };
       export type ConditionGroupData = {
@@ -312,6 +321,7 @@ declare namespace App {
         name?: string;
         description?: string | null;
         desk_id?: string | null;
+        enabled?: boolean;
         definition: App.Data.Automations.AutomationDefinitionData;
       };
       export type WebhookReceivedData = {

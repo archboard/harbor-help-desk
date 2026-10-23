@@ -42,11 +42,20 @@ class SetField extends ConfiguredAction
         return SetFieldConfigData::class;
     }
 
+    /**
+     * Whether the field key names something this action can set: the built-in fields and the custom fields.
+     * Whether a custom field still exists is checked when saving.
+     */
+    public static function canSet(string $key): bool
+    {
+        return in_array($key, self::BUILT_IN, true) || str_starts_with($key, 'custom_field.');
+    }
+
     public function contextRules(?User $editor, ?Desk $scope): array
     {
         return [
             'field' => [function (string $attribute, mixed $value, Closure $fail): void {
-                if (! is_string($value) || (! in_array($value, self::BUILT_IN, true) && $this->customField($value) === null)) {
+                if (! is_string($value) || (! self::canSet($value) || (str_starts_with($value, 'custom_field.') && $this->customField($value) === null))) {
                     $fail(__('This field does not exist.'));
                 }
             }],

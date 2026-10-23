@@ -30,6 +30,17 @@ const style = styles[notification.level];
           <p class="mt-1 text-sm text-gray-500 dark:text-gray-300">
             {{ notification.text }}
           </p>
+          <button
+            v-if="notification.action"
+            type="button"
+            class="mt-2 text-sm font-medium text-primary-600 hover:text-primary-500 focus:outline-hidden focus-visible:underline dark:text-primary-400"
+            @click="
+              notification.action.onClick();
+              removeNotification(notification.id);
+            "
+          >
+            {{ notification.action.label }}
+          </button>
         </div>
         <div class="ml-4 flex shrink-0">
           <button

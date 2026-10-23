@@ -44,6 +44,33 @@ function catalogField(array $json, string $key): array
     return collect($json['field_groups'])->pluck('fields')->flatten(1)->firstWhere('key', $key);
 }
 
+test('enum and in rule objects come out as in: strings', function () {
+    $actions = collect($this->actingAs($this->admin)->getJson($this->webUrl)->assertOk()->json('actions'))->keyBy('key');
+
+    expect($actions['assign']['config_rules']['mode'])->toContain('in:add,replace,unassign_all,round_robin,load_balanced')
+        ->and($actions['send_webhook']['config_rules']['method'])->toContain('in:GET,POST,PUT,PATCH,DELETE');
+});
+
+test('only the fields the set-a-field action can set are settable', function () {
+    $json = $this->actingAs($this->admin)->getJson($this->webUrl)->assertOk()->json();
+    $settable = collect($json['field_groups'])->pluck('fields')->flatten(1)->where('settable', true)->pluck('key')->sort()->values()->all();
+
+    expect($settable)->toBe(collect(['ticket.status', 'ticket.priority', 'ticket.subject', 'ticket.due_at', "custom_field.{$this->field->id}"])->sort()->values()->all())
+        ->and(catalogField($json, 'requester.email')['settable'])->toBeFalse();
+});
+
+test('fixed choices come with labels', function () {
+    $json = $this->actingAs($this->admin)->getJson($this->webUrl)->assertOk()->json();
+    $actions = collect($json['actions'])->keyBy('key');
+    $triggers = collect($json['triggers'])->keyBy('key');
+
+    expect($triggers['ticket.sla']['config_options']['kind'])->toBe([['value' => 'warning', 'label' => 'Warning'], ['value' => 'breached', 'label' => 'Breached']])
+        ->and($actions['assign']['config_options']['mode'][0])->toBe(['value' => 'add', 'label' => 'Add assignees'])
+        ->and($actions['notify']['config_options']['recipients'][2])->toBe(['value' => 'desk_leads', 'label' => 'The desk’s leads'])
+        ->and($actions['send_webhook']['config_options']['method'][1])->toBe(['value' => 'POST', 'label' => 'POST'])
+        ->and($triggers['ticket.created']['config_options'])->toHaveKey('sources');
+});
+
 test('the catalog has the expected shape on the web and the API', function () {
     $this->actingAs($this->admin)->getJson($this->webUrl)
         ->assertOk()

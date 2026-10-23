@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Switch } from '@headlessui/vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { ArrowDown, ArrowUp, Workflow } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
@@ -12,7 +12,13 @@ import Tbody from '@/components/tables/Tbody.vue';
 import Td from '@/components/tables/Td.vue';
 import Th from '@/components/tables/Th.vue';
 import Thead from '@/components/tables/Thead.vue';
-import { destroy, duplicate, reorder } from '@/routes/automations';
+import {
+  create,
+  destroy,
+  duplicate,
+  edit,
+  reorder,
+} from '@/routes/automations';
 import { update as setEnabled } from '@/routes/automations/enabled';
 
 defineOptions({ layout: { title: 'Automations' } });
@@ -100,10 +106,15 @@ function remove(close: () => void): void {
   <Head title="Automations" />
 
   <div class="space-y-8">
-    <p class="text-sm text-gray-500 dark:text-gray-400">
-      Automations run their steps when something happens to a ticket, in the
-      order shown for each trigger.
-    </p>
+    <div class="flex items-start justify-between gap-4">
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Automations run their steps when something happens to a ticket, in the
+        order shown for each trigger.
+      </p>
+      <AppButton :component="Link" :href="create().url" class="shrink-0">
+        New automation
+      </AppButton>
+    </div>
 
     <section v-for="group in groups" :key="group.type" class="space-y-3">
       <h2 class="text-base font-semibold text-gray-900 dark:text-white">
@@ -126,7 +137,14 @@ function remove(close: () => void): void {
             v-for="(automation, index) in group.automations"
             :key="automation.id"
           >
-            <Td darker>{{ automation.name }}</Td>
+            <Td darker>
+              <Link
+                :href="edit(automation.id).url"
+                class="hover:text-primary-600 hover:underline"
+              >
+                {{ automation.name }}
+              </Link>
+            </Td>
             <Td>
               <Pill :color="automation.desk_id ? 'blue' : 'gray'">
                 {{
@@ -227,6 +245,9 @@ function remove(close: () => void): void {
         Automations set fields, reply, assign and notify for you when tickets
         arrive, change or sit idle.
       </p>
+      <AppButton :component="Link" :href="create().url" class="mt-6">
+        New automation
+      </AppButton>
     </div>
   </div>
 

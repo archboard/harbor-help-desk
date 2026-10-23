@@ -28,6 +28,10 @@ class UpdateAutomation
 
         $automation->fill(Arr::only($data->filled(), ['name', 'description', 'desk_id']));
 
+        if (! $data->enabled instanceof Optional) {
+            $automation->fill(SetAutomationEnabled::switchAttributes($automation, $data->enabled));
+        }
+
         if (! $data->definition instanceof Optional) {
             $definition = AutomationDefinitionData::from($data->definition);
 

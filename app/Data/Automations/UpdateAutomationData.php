@@ -8,7 +8,7 @@ use Spatie\LaravelData\Optional;
 use Spatie\TypeScriptTransformer\Attributes\LiteralTypeScriptType;
 
 /**
- * Enabling goes through {@see SetAutomationEnabledData}.
+ * `enabled` switches the automation in the same save; on its own it is {@see SetAutomationEnabledData}.
  */
 class UpdateAutomationData extends InputData
 {
@@ -19,6 +19,7 @@ class UpdateAutomationData extends InputData
         public string|Optional $name,
         public string|Optional|null $description,
         public string|Optional|null $deskId,
+        public bool|Optional $enabled,
         #[LiteralTypeScriptType('App.Data.Automations.AutomationDefinitionData')] public array|Optional $definition,
     ) {}
 
@@ -30,6 +31,7 @@ class UpdateAutomationData extends InputData
         return [
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'description' => ['sometimes', 'nullable', 'string'],
+            'enabled' => ['sometimes', 'boolean'],
             'desk_id' => ['sometimes', 'nullable', 'string', CreateAutomationData::deskExists()],
             'definition' => ['sometimes', 'bail', 'required', 'array', app(DefinitionValidator::class)],
         ];

@@ -19,12 +19,21 @@ class SetAutomationEnabled
         $data = SetAutomationEnabledData::validateAndCreate($input);
 
         // An automation switched on starts from now, so it doesn't fire for a moment that passed while it was off.
-        $automation->update([
-            'enabled' => $data->enabled,
-            'updated_by' => $actor->getKey(),
-            ...($data->enabled && ! $automation->enabled ? ['last_swept_at' => now()] : []),
-        ]);
+        $automation->update([...self::switchAttributes($automation, $data->enabled), 'updated_by' => $actor->getKey()]);
 
         return $automation;
+    }
+
+    /**
+     * What switching the automation on or off changes. Shared with {@see UpdateAutomation} so both paths agree.
+     *
+     * @return array<string, mixed>
+     */
+    public static function switchAttributes(Automation $automation, bool $enabled): array
+    {
+        return [
+            'enabled' => $enabled,
+            ...($enabled && ! $automation->enabled ? ['last_swept_at' => now()] : []),
+        ];
     }
 }

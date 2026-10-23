@@ -4,7 +4,9 @@ use App\Enums\AutomationRunStatus;
 use App\Enums\WorkspaceRole;
 use App\Models\Automation;
 use App\Models\AutomationRun;
+use App\Models\CustomField;
 use App\Models\Desk;
+use App\Models\Tag;
 use App\Models\User;
 use App\Models\Workspace;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -66,4 +68,43 @@ test('a duplicate lands in the current workspace', function () {
     expect(Automation::query()->count())->toBe(2)
         ->and(Automation::query()->where('name', 'A automation (copy)')->sole()->workspace_id)->toBe($this->workspace->id);
     $this->other->execute(fn () => expect(Automation::query()->count())->toBe(1));
+});
+
+test('another workspace\'s automation can not be opened or updated in the builder', function () {
+    $this->actingAs($this->admin);
+
+    $this->get("{$this->web}/automations/{$this->automationB->id}/edit")->assertNotFound();
+    $this->put("{$this->web}/automations/{$this->automationB->id}", ['name' => 'Hijacked'])->assertNotFound();
+
+    $this->other->execute(fn () => expect($this->automationB->fresh()->name)->toBe('B secret automation'));
+});
+
+test('the builder offers only its own workspace\'s desks and catalog', function () {
+    $this->other->execute(function () {
+        CustomField::factory()->create(['name' => 'B secret field']);
+        Tag::factory()->create(['name' => 'b-secret-tag']);
+    });
+    $this->workspace->execute(fn () => CustomField::factory()->create(['name' => 'Plan']));
+    $this->actingAs($this->admin);
+
+    foreach (['create', "{$this->own->id}/edit"] as $path) {
+        $catalog = null;
+
+        $this->get("{$this->web}/automations/$path")->assertOk()->assertInertia(function (Assert $page) use (&$catalog) {
+            $page->has('desks', 1)->loadDeferredProps(function (Assert $reloaded) use (&$catalog) {
+                $catalog = json_encode($reloaded->toArray()['props']['catalog']);
+            });
+        });
+
+        expect($catalog)->toContain('Plan')->not->toContain('B Desk', 'B secret field', 'b-secret-tag');
+    }
+});
+
+test('an automation can not be stored on another workspace\'s desk', function () {
+    $this->actingAs($this->admin)
+        ->post("{$this->web}/automations", ['name' => 'Leak', 'desk_id' => $this->deskB->id, 'definition' => ['trigger' => ['type' => 'ticket.created', 'config' => []], 'steps' => []]])
+        ->assertSessionHasErrors('desk_id');
+
+    expect(Automation::query()->where('name', 'Leak')->exists())->toBeFalse();
+    $this->other->execute(fn () => expect(Automation::query()->where('name', 'Leak')->exists())->toBeFalse());
 });

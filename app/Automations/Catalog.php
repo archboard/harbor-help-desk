@@ -2,6 +2,7 @@
 
 namespace App\Automations;
 
+use App\Automations\Actions\SetField;
 use App\Automations\Fields\Field;
 use App\Data\Automations\AutomationCatalogData;
 use App\Data\Automations\CatalogActionData;
@@ -20,6 +21,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\Rules\Enum as EnumRule;
+use Illuminate\Validation\Rules\In;
+use ReflectionProperty;
 
 /**
  * Builds what the automation builder renders from, for one viewer: the registry plus the current
@@ -47,11 +51,12 @@ class Catalog
                     $field->key() === 'ticket.tags' => $tags,
                     default => $this->options($field->options()),
                 },
+                SetField::canSet($field->key()),
             ))->values()->all());
 
         return new AutomationCatalogData(
             triggers: array_values(array_map(fn ($trigger): CatalogTriggerData => new CatalogTriggerData(
-                $trigger->key(), $trigger->label(), $trigger->fieldGroups(), $this->rules($trigger->configRules()),
+                $trigger->key(), $trigger->label(), $trigger->fieldGroups(), $this->rules($trigger->configRules()), $this->configOptions($trigger->configRules()),
                 array_map(
                     fn (string $key, string $label): CatalogPlaceholderData => new CatalogPlaceholderData($key, $label),
                     array_keys($trigger->placeholders()),
@@ -63,7 +68,7 @@ class Catalog
             ), FieldGroup::cases()),
             operators: $this->operators(),
             actions: array_values(array_map(fn ($action): CatalogActionData => new CatalogActionData(
-                $action->key(), $action->label(), str_replace('\\', '.', $action->configData()), $this->rules($action->configRules()),
+                $action->key(), $action->label(), str_replace('\\', '.', $action->configData()), $this->rules($action->configRules()), $this->configOptions($action->configRules()),
             ), $this->registry->actions())),
             placeholders: array_map(
                 fn (string $key, string $label): CatalogPlaceholderData => new CatalogPlaceholderData($key, $label),
@@ -130,7 +135,53 @@ class Catalog
     }
 
     /**
-     * Only plain string rules can be shown, rule objects are dropped.
+     * The choices of each config key limited by `Rule::enum()`, `Rule::in()` or an `in:` rule, labelled. An
+     * enum's labels come from its `label()`; other values are the value with spaces and a capital.
+     * A list's items (`sources.*`) give the choices of the list's key.
+     *
+     * @param  array<string, mixed>  $rules
+     * @return array<string, list<CatalogOptionData>>
+     */
+    protected function configOptions(array $rules): array
+    {
+        $options = [];
+
+        foreach ($rules as $key => $rule) {
+            foreach (Arr::wrap(is_string($rule) ? explode('|', $rule) : $rule) as $part) {
+                $values = $this->choices($part);
+
+                if ($values === null) {
+                    continue;
+                }
+
+                $enum = $part instanceof EnumRule ? (new ReflectionProperty($part, 'type'))->getValue($part) : null;
+
+                $options[str_replace('.*', '', $key)] = array_map(fn (string $value): CatalogOptionData => new CatalogOptionData(
+                    $value,
+                    is_string($enum) && method_exists($enum, 'label') ? $enum::from($value)->label() : ucfirst(str_replace('_', ' ', $value)),
+                ), $values);
+            }
+        }
+
+        return $options;
+    }
+
+    /**
+     * @return list<string>|null The allowed values of an `in` rule, null for any other rule.
+     */
+    protected function choices(mixed $rule): ?array
+    {
+        if ($rule instanceof In || $rule instanceof EnumRule) {
+            $rule = (string) $rule;
+        }
+
+        return is_string($rule) && str_starts_with($rule, 'in:')
+            ? array_map(strval(...), str_getcsv(substr($rule, 3), escape: ''))
+            : null;
+    }
+
+    /**
+     * Plain string rules are shown, and `Rule::in()` and `Rule::enum()` as `in:a,b,c`. Other rule objects are dropped.
      *
      * @param  array<string, mixed>  $rules
      * @return array<string, list<string>>
@@ -138,7 +189,10 @@ class Catalog
     protected function rules(array $rules): array
     {
         return array_map(fn (mixed $rule): array => array_values(array_filter(
-            Arr::wrap(is_string($rule) ? explode('|', $rule) : $rule),
+            array_map(
+                fn (mixed $part): mixed => ($part instanceof In || $part instanceof EnumRule) ? 'in:'.implode(',', $this->choices($part) ?? []) : $part,
+                Arr::wrap(is_string($rule) ? explode('|', $rule) : $rule),
+            ),
             is_string(...),
         )), $rules);
     }
