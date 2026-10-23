@@ -7,7 +7,7 @@ import {
   useForm,
 } from '@inertiajs/vue3';
 import { useEventListener } from '@vueuse/core';
-import { computed, onBeforeUnmount, ref } from 'vue';
+import { computed, onBeforeUnmount, ref, toRaw, watchEffect } from 'vue';
 import AddStepMenu from '@/components/automations/AddStepMenu.vue';
 import {
   cardErrors,
@@ -32,6 +32,7 @@ import type {
 } from '@/components/automations/steps';
 import {
   configSummary,
+  fieldFor,
   summarizeStep,
 } from '@/components/automations/summaries';
 import TriggerCard from '@/components/automations/TriggerCard.vue';
@@ -47,19 +48,35 @@ import { index, store, update } from '@/routes/automations';
 
 type Automation = App.Data.Automations.AutomationData;
 
-const { automation, desks, schedules, canScopeToWorkspace, catalog } =
-  defineProps<{
-    automation: Automation | null;
-    desks: App.Data.Desks.DeskData[];
-    schedules: App.Data.BusinessSchedules.BusinessScheduleData[];
-    canScopeToWorkspace: boolean;
-    /** Deferred. */
-    catalog?: App.Data.Automations.AutomationCatalogData;
-  }>();
+const {
+  automation,
+  desks,
+  schedules,
+  macros,
+  moveDesks,
+  slaPolicies,
+  canScopeToWorkspace,
+  catalog,
+} = defineProps<{
+  automation: Automation | null;
+  desks: App.Data.Desks.DeskData[];
+  schedules: App.Data.BusinessSchedules.BusinessScheduleData[];
+  /** The desks a move action may target. */
+  moveDesks: App.Data.Desks.DeskData[];
+  /** The shared macros the user may apply. */
+  macros: App.Data.Macros.MacroData[];
+  slaPolicies: App.Data.SlaPolicies.SlaPolicyData[];
+  canScopeToWorkspace: boolean;
+  /** Deferred. */
+  catalog?: App.Data.Automations.AutomationCatalogData;
+}>();
 
 defineOptions({ layout: { title: '' } });
 
-setLayoutProps({ title: automation ? 'Edit automation' : 'New automation' });
+// Again after the first save, which lands on the edit page without remounting this one.
+watchEffect(() =>
+  setLayoutProps({ title: automation ? 'Edit automation' : 'New automation' }),
+);
 
 const form = useForm({
   name: automation?.name ?? '',
@@ -67,8 +84,9 @@ const form = useForm({
   desk_id:
     automation?.desk_id ?? (canScopeToWorkspace ? '' : (desks[0]?.id ?? '')),
   // Typed loosely: the form helper can't type the recursive steps.
+  // The prop is a reactive proxy, which structuredClone can't copy.
   definition: structuredClone(
-    automation?.definition ?? {
+    toRaw(automation?.definition) ?? {
       trigger: { type: 'ticket.created', config: {} },
       steps: [],
     },
@@ -96,6 +114,19 @@ const messagesFor = (cardId: string): string[] =>
 /** The field groups the trigger makes available to rules. */
 const fieldGroups = computed(() =>
   catalog ? availableGroups(catalog, definition.trigger.type) : [],
+);
+
+/** Names by id, for the summaries of what an action points at. */
+const names = computed<Record<string, string>>(() =>
+  Object.fromEntries([
+    ...[...desks, ...moveDesks].map((desk) => [desk.id, desk.name]),
+    ...macros.map((macro) => [macro.id, macro.name]),
+    ...slaPolicies.map((policy) => [policy.id, policy.name]),
+    ...(catalog
+      ? (fieldFor(catalog, 'ticket.assignees')?.options ?? [])
+      : []
+    ).map((user) => [user.value, user.label]),
+  ]),
 );
 
 const scopeOptions = computed(() => [
@@ -162,7 +193,7 @@ function removeStep(index: number): void {
     {
       level: 'neutral',
       title: 'Step deleted',
-      text: summarizeStep(step, catalog!),
+      text: summarizeStep(step, catalog!, names.value),
       action: {
         label: 'Undo',
         onClick: () =>
@@ -315,10 +346,10 @@ useEventListener(window, 'beforeunload', (event) => {
               :open="openCard === step.id"
               :icon="stepTypes[step.type]?.icon ?? unknownStepIcon"
               :kind="stepTypes[step.type]?.label ?? 'Step'"
-              :summary="summarizeStep(step, catalog)"
+              :summary="summarizeStep(step, catalog, names)"
               :details="
                 step.type === 'action' &&
-                step.action !== 'set_field' &&
+                !actionEditors[step.action] &&
                 catalogAction(step.action)
                   ? configSummary(
                       step.config,
@@ -358,6 +389,13 @@ useEventListener(window, 'beforeunload', (event) => {
                   v-if="actionEditors[step.action]"
                   v-model="step.config"
                   :catalog="catalog"
+                  :trigger="definition.trigger.type"
+                  :desks="desks"
+                  :move-desks="moveDesks"
+                  :schedules="schedules"
+                  :macros="macros"
+                  :sla-policies="slaPolicies"
+                  :scope-desk-id="form.desk_id || null"
                   :errors="
                     errorsUnder(errors, `definition.steps.${step.id}.config.`)
                   "

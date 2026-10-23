@@ -122,7 +122,91 @@ function minutesText(minutes: number): string {
   return plural(minutes, 'minutes');
 }
 
-export function summarizeStep(step: Step, catalog: Catalog): string {
+const truncate = (text: string, length = 40): string =>
+  text.length > length ? `${text.slice(0, length)}…` : text;
+
+/**
+ * A one-line summary of an action from its config, or null to use the action's label.
+ * `names` gives the name of a desk, macro, SLA policy or user by id.
+ */
+function actionText(
+  action: string,
+  config: Record<string, unknown>,
+  names: Record<string, string>,
+): string | null {
+  const list = (ids: unknown): string =>
+    Array.isArray(ids)
+      ? ids.map((id) => names[String(id)] ?? String(id)).join(', ')
+      : '';
+  const text = (value: unknown, fallback = ''): string =>
+    typeof value === 'string' ? value : fallback;
+  const name = (id: unknown): string =>
+    typeof id === 'string' ? (names[id] ?? '') : '';
+
+  switch (action) {
+    case 'tags': {
+      const tags = Array.isArray(config.names) ? config.names.join(', ') : '';
+      const verb = { remove: 'Remove', replace: 'Replace' }[
+        String(config.mode)
+      ];
+
+      return tags ? `${verb ?? 'Add'} tags ${truncate(tags)}` : null;
+    }
+    case 'assign': {
+      const people = list(config.user_ids);
+
+      switch (config.mode) {
+        case 'unassign_all':
+          return 'Unassign everyone';
+        case 'add':
+          return people ? `Assign to ${truncate(people)}` : null;
+        case 'replace':
+          return people ? `Set assignees to ${truncate(people)}` : null;
+        case 'round_robin':
+          return 'Assign by round robin';
+        case 'load_balanced':
+          return 'Assign by load balancing';
+        default:
+          return null;
+      }
+    }
+    case 'move_desk':
+      return name(config.desk_id) ? `Move to ${name(config.desk_id)}` : null;
+    case 'apply_macro':
+      return name(config.macro_id)
+        ? `Apply the macro ${name(config.macro_id)}`
+        : null;
+    case 'set_sla_policy':
+      return name(config.sla_policy_id)
+        ? `Set the SLA policy to ${name(config.sla_policy_id)}`
+        : null;
+    case 'send_webhook':
+      return config.url
+        ? truncate(`${text(config.method, 'POST')} ${text(config.url)}`, 60)
+        : null;
+    case 'notify':
+      return config.subject
+        ? `Notify: ${truncate(text(config.subject))}`
+        : null;
+    case 'set_reminder': {
+      const after = config.after as
+        | { amount?: number; unit?: string }
+        | undefined;
+
+      return after?.amount && after.unit
+        ? `Remind in ${plural(after.amount, after.unit)}`
+        : null;
+    }
+    default:
+      return null;
+  }
+}
+
+export function summarizeStep(
+  step: Step,
+  catalog: Catalog,
+  names: Record<string, string> = {},
+): string {
   switch (step.type) {
     case 'condition':
       return step.rules.length
@@ -138,6 +222,7 @@ export function summarizeStep(step: Step, catalog: Catalog): string {
       }
 
       return (
+        actionText(step.action, step.config, names) ??
         catalog.actions.find((action) => action.key === step.action)?.label ??
         (step.action || 'Choose an action')
       );

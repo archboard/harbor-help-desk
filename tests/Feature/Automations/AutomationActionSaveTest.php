@@ -8,6 +8,7 @@ use App\Models\Automation;
 use App\Models\BusinessSchedule;
 use App\Models\CustomField;
 use App\Models\Desk;
+use App\Models\Macro;
 use App\Models\SlaPolicy;
 use App\Models\User;
 use App\Models\Workspace;
@@ -111,8 +112,8 @@ test('action configs are validated by their config rules and reported with every
 
 test('saving an automation whose actions reference another workspace is rejected', function () {
     $other = Workspace::factory()->create(['subdomain' => 'other']);
-    [$deskB, $userB, $fieldB, $policyB, $scheduleB] = $other->execute(fn () => [
-        $default = Desk::sole(), deskMember($other, $default), CustomField::factory()->create(), SlaPolicy::factory()->create(), BusinessSchedule::factory()->create(),
+    [$deskB, $userB, $fieldB, $policyB, $scheduleB, $macroB] = $other->execute(fn () => [
+        $default = Desk::sole(), deskMember($other, $default), CustomField::factory()->create(), SlaPolicy::factory()->create(), BusinessSchedule::factory()->create(), Macro::factory()->create(),
     ]);
 
     actAs($this->admin, $this->workspace);
@@ -120,6 +121,8 @@ test('saving an automation whose actions reference another workspace is rejected
     $rejected = [
         ['move_desk', ['desk_id' => $deskB->id], 'desk_id'],
         ['assign', ['mode' => 'add', 'user_ids' => [$userB->id]], 'user_ids.0'],
+        ['notify', ['recipients' => 'users', 'user_ids' => [$userB->id], 'subject' => 'S', 'body' => 'B'], 'user_ids.0'],
+        ['apply_macro', ['macro_id' => $macroB->id], 'macro_id'],
         ['assign', ['mode' => 'round_robin', 'desk_id' => $deskB->id], 'desk_id'],
         ['set_field', ['field' => "custom_field.$fieldB->id", 'value' => 'x'], 'field'],
         ['set_sla_policy', ['sla_policy_id' => $policyB->id], 'sla_policy_id'],

@@ -5,22 +5,29 @@ namespace App\Http\Controllers;
 use App\Actions\Automations\CreateAutomation;
 use App\Actions\Automations\DeleteAutomation;
 use App\Actions\Automations\UpdateAutomation;
+use App\Automations\Actions\MoveDesk;
 use App\Automations\AutomationRegistry;
 use App\Automations\Catalog;
 use App\Data\Automations\AutomationData;
 use App\Data\BusinessSchedules\BusinessScheduleData;
 use App\Data\Desks\DeskData;
+use App\Data\Macros\MacroData;
+use App\Data\SlaPolicies\SlaPolicyData;
 use App\Enums\AutomationRunStatus;
 use App\Enums\DeskRole;
 use App\Http\Flash;
 use App\Models\Automation;
 use App\Models\BusinessSchedule;
 use App\Models\Desk;
+use App\Models\Macro;
+use App\Models\SlaPolicy;
+use App\Models\Ticket;
 use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -107,8 +114,49 @@ class AutomationController extends Controller
             'desks' => DeskData::collect($desks->orderBy('name')->get()),
             'canScopeToWorkspace' => $isAdmin,
             'schedules' => BusinessScheduleData::collect(BusinessSchedule::query()->orderBy('name')->get()),
+            'moveDesks' => DeskData::collect($this->moveDesks($user, $automation)),
+            'macros' => MacroData::collect(Macro::query()->whereNull('user_id')->visibleTo($user)->orderBy('name')->get()),
+            'slaPolicies' => SlaPolicyData::collect(SlaPolicy::query()->orderBy('name')->get()),
             'catalog' => Inertia::defer(fn () => $catalog->build($user)),
         ]);
+    }
+
+    /**
+     * The desks a move action may target: the active ones the user can open tickets on, the same check
+     * as {@see MoveDesk::contextRules()}, plus any desk the automation already moves tickets to.
+     *
+     * @return Collection<int, Desk>
+     */
+    protected function moveDesks(User $user, ?Automation $automation): Collection
+    {
+        $targets = $automation === null ? [] : $this->moveTargets(json_decode(json_encode($automation->definition) ?: '[]', true));
+
+        return Desk::withTrashed()
+            ->where(fn (Builder $query) => $query->whereNull('archived_at')->visibleTo($user)->orWhereIn('id', $targets))
+            ->orderBy('name')
+            ->get()
+            ->filter(fn (Desk $desk): bool => in_array($desk->getKey(), $targets, true) || Gate::forUser($user)->allows('create', [Ticket::class, $desk]))
+            ->values();
+    }
+
+    /**
+     * The desk ids of the move actions in a definition, nested paths included.
+     *
+     * @return list<string>
+     */
+    protected function moveTargets(mixed $node): array
+    {
+        if (! is_array($node)) {
+            return [];
+        }
+
+        $found = ($node['action'] ?? null) === 'move_desk' && is_string($node['config']['desk_id'] ?? null) ? [$node['config']['desk_id']] : [];
+
+        foreach ($node as $child) {
+            $found = [...$found, ...$this->moveTargets($child)];
+        }
+
+        return $found;
     }
 
     protected function isAdmin(User $user): bool

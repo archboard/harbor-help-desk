@@ -5,6 +5,8 @@ use App\Enums\WorkspaceRole;
 use App\Models\Automation;
 use App\Models\BusinessSchedule;
 use App\Models\Desk;
+use App\Models\Macro;
+use App\Models\SlaPolicy;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Concerns\InWorkspace;
@@ -53,6 +55,40 @@ test('a lead can only scope to the desks they lead', function () {
         ->where('canScopeToWorkspace', false)
         ->has('desks', 1)
         ->where('desks.0.id', $this->desk->id));
+});
+
+test('the builder offers the shared macros the user can see and every SLA policy', function () {
+    $shared = Macro::factory()->create(['name' => 'Shared']);
+    $onDesk = Macro::factory()->forDesk($this->desk)->create(['name' => 'On my desk']);
+    Macro::factory()->forDesk($this->otherDesk)->create(['name' => 'Elsewhere']);
+    Macro::factory()->personal($this->lead)->create(['name' => 'My personal']);
+    Macro::factory()->personal($this->admin)->create(['name' => 'Admin personal']);
+    $policy = SlaPolicy::factory()->create();
+
+    $this->actingAs($this->lead)->get(route('automations.create'))->assertInertia(fn (Assert $page) => $page
+        ->has('macros', 2)
+        ->where('macros', fn ($macros) => collect($macros)->pluck('id')->sort()->values()->all() === collect([$shared->id, $onDesk->id])->sort()->values()->all())
+        ->has('slaPolicies', 1)
+        ->where('slaPolicies.0.id', $policy->id));
+});
+
+test('move targets are the desks the user can open tickets on, not only the ones they lead', function () {
+    $this->otherDesk->users()->attach($this->lead, ['role' => DeskRole::AGENT, 'workspace_id' => $this->workspace->id]);
+    Desk::factory()->create(['name' => 'Hidden']);
+
+    $this->actingAs($this->lead)->get(route('automations.create'))->assertInertia(fn (Assert $page) => $page
+        ->has('desks', 1)
+        ->where('moveDesks', fn ($desks) => collect($desks)->pluck('id')->sort()->values()->all() === collect([$this->desk->id, $this->otherDesk->id])->sort()->values()->all()));
+});
+
+test('a desk the automation already moves to stays offered even when archived', function () {
+    $automation = Automation::factory()->create(['definition' => [
+        'trigger' => ['type' => 'ticket.created', 'config' => []],
+        'steps' => [['id' => 'mv', 'type' => 'action', 'action' => 'move_desk', 'config' => ['desk_id' => $this->archivedDesk->id]]],
+    ]]);
+
+    $this->actingAs($this->admin)->get(route('automations.edit', $automation))->assertInertia(fn (Assert $page) => $page
+        ->where('moveDesks', fn ($desks) => collect($desks)->pluck('id')->contains($this->archivedDesk->id)));
 });
 
 test('the edit page carries the automation', function () {

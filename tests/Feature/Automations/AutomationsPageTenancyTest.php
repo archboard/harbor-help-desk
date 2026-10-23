@@ -7,6 +7,8 @@ use App\Models\AutomationRun;
 use App\Models\BusinessSchedule;
 use App\Models\CustomField;
 use App\Models\Desk;
+use App\Models\Macro;
+use App\Models\SlaPolicy;
 use App\Models\Tag;
 use App\Models\User;
 use App\Models\Workspace;
@@ -132,4 +134,25 @@ test('an automation can not be stored on another workspace\'s desk', function ()
 
     expect(Automation::query()->where('name', 'Leak')->exists())->toBeFalse();
     $this->other->execute(fn () => expect(Automation::query()->where('name', 'Leak')->exists())->toBeFalse());
+});
+
+test('the builder offers only its own workspace\'s macros and SLA policies', function () {
+    $this->other->execute(function () {
+        Macro::factory()->create(['name' => 'B secret macro']);
+        SlaPolicy::factory()->create(['name' => 'B secret policy']);
+    });
+    $macro = Macro::factory()->create(['name' => 'A macro']);
+    $policy = SlaPolicy::factory()->create(['name' => 'A policy']);
+
+    $this->actingAs($this->admin)->get("{$this->web}/automations/create")->assertOk()->assertInertia(fn (Assert $page) => $page
+        ->has('macros', 1)
+        ->where('macros.0.id', $macro->id)
+        ->has('slaPolicies', 1)
+        ->where('slaPolicies.0.id', $policy->id));
+});
+
+test('the move targets never list another workspace\'s desks', function () {
+    $this->actingAs($this->admin)->get("{$this->web}/automations/create")->assertOk()->assertInertia(fn (Assert $page) => $page
+        ->where('moveDesks', fn ($desks) => ! collect($desks)->pluck('id')->contains($this->deskB->id)
+            && collect($desks)->every(fn ($desk) => $desk['name'] !== 'B Desk')));
 });

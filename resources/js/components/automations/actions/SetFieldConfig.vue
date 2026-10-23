@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { SelectField } from '@/components/forms/fields';
+import { errorsUnder } from '../errors';
 import FieldValueInput from '../FieldValueInput.vue';
+import type { ActionEditorProps } from './types';
 
-/** The "Set a field" action: a field the action can set, and a value typed by that field. */
-const { catalog, errors = {} } = defineProps<{
-  catalog: App.Data.Automations.AutomationCatalogData;
-  /** Server errors keyed by config key. */
-  errors?: Record<string, string>;
-}>();
+/**
+ * The "Set a field" action: a field the action can set, and a value typed by that field. A due
+ * date can also be "from now", in calendar or business time.
+ */
+const { catalog, schedules, errors = {} } = defineProps<ActionEditorProps>();
 
 const config = defineModel<Record<string, unknown>>({ required: true });
 
@@ -63,6 +64,10 @@ function setField(key: unknown): void {
       :field="selected"
       label="Value"
       required
+      :relative="selected.key === 'ticket.due_at'"
+      future
+      :schedules="schedules"
+      :errors="errorsUnder(errors, 'value.relative.')"
       :error="errors.value"
     />
   </div>

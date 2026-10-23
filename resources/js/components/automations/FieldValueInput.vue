@@ -33,6 +33,7 @@ const {
   multiple,
   pattern = false,
   relative = false,
+  future = false,
   schedules = [],
   errors = {},
 } = defineProps<{
@@ -45,6 +46,8 @@ const {
   pattern?: boolean;
   /** Offer "3 days ago" next to an absolute date. */
   relative?: boolean;
+  /** With `relative`: only "from now", a positive amount (a due date). */
+  future?: boolean;
   schedules?: App.Data.BusinessSchedules.BusinessScheduleData[];
   /** Server errors of a duration or relative date, keyed `amount`, `unit` and `business_schedule_id`. */
   errors?: Record<string, string>;
@@ -102,7 +105,9 @@ const relativeValue = computed(
 
 function setDateMode(mode: unknown): void {
   model.value =
-    mode === 'relative' ? { relative: { amount: -1, unit: 'days' } } : null;
+    mode === 'relative'
+      ? { relative: { amount: future ? 1 : -1, unit: 'days' } }
+      : null;
 }
 
 const empty = (value: unknown): unknown => (value === '' ? null : value);
@@ -159,14 +164,18 @@ const empty = (value: unknown): unknown => (value === '' ? null : value);
         @update:model-value="setDateMode"
       />
     </div>
-    <DurationInput
-      v-if="relativeValue"
-      relative
-      :model-value="relativeValue"
-      :schedules="schedules"
-      :errors="errors"
-      @update:model-value="model = { relative: $event }"
-    />
+    <div v-if="relativeValue" class="flex flex-wrap items-center gap-2">
+      <DurationInput
+        :relative="!future"
+        :model-value="relativeValue"
+        :schedules="schedules"
+        :errors="errors"
+        @update:model-value="model = { relative: $event }"
+      />
+      <span v-if="future" class="text-sm text-gray-500 dark:text-gray-400"
+        >from now</span
+      >
+    </div>
     <FormField
       v-else
       :type="dateType"
