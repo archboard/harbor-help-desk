@@ -22,6 +22,7 @@ import { setDisplayTimezone } from '@/lib/dates';
 import { logout } from '@/routes';
 import { update as updateAvailability } from '@/routes/availability';
 import { edit as editApiTokens } from '@/routes/api-tokens';
+import { index as automations } from '@/routes/automations';
 import { index as contacts } from '@/routes/contacts';
 import { edit as editAppearance } from '@/routes/appearance';
 import { index as desks } from '@/routes/desks';
@@ -43,6 +44,9 @@ const navigation = computed(() => [
   { label: 'Tickets', href: tickets().url },
   { label: 'Contacts', href: contacts().url },
   { label: 'Desks', href: desks().url },
+  ...(page.props.canViewAutomations
+    ? [{ label: 'Automations', href: automations().url }]
+    : []),
   ...(page.props.workspace?.is_admin
     ? [{ label: 'Workspace', href: workspaceSettings().url }]
     : []),

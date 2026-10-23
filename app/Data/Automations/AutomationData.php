@@ -5,6 +5,7 @@ namespace App\Data\Automations;
 use App\Models\Automation;
 use Carbon\CarbonImmutable;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Lazy;
 
 class AutomationData extends Data
 {
@@ -23,6 +24,8 @@ class AutomationData extends Data
         public ?string $updatedBy,
         public ?CarbonImmutable $createdAt,
         public ?CarbonImmutable $updatedAt,
+        public AutomationRunSummaryData|Lazy|null $lastRun,
+        public int|Lazy $runsLast24h,
     ) {}
 
     public static function fromModel(Automation $automation): self
@@ -42,6 +45,8 @@ class AutomationData extends Data
             updatedBy: $automation->updated_by,
             createdAt: $automation->created_at,
             updatedAt: $automation->updated_at,
+            lastRun: Lazy::whenLoaded('latestRun', $automation, fn (): ?AutomationRunSummaryData => $automation->latestRun === null ? null : AutomationRunSummaryData::from($automation->latestRun)),
+            runsLast24h: Lazy::when(fn (): bool => $automation->getAttribute('runs_last_24h_count') !== null, fn (): int => (int) $automation->getAttribute('runs_last_24h_count')),
         );
     }
 }

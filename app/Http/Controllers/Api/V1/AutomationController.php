@@ -24,7 +24,7 @@ class AutomationController extends Controller
     {
         Gate::authorize('viewAny', Automation::class);
 
-        return AutomationData::collect(Automation::visibleTo($request->user())->orderBy('trigger_type')->orderBy('position')->orderBy('id')->get());
+        return AutomationData::collect(Automation::visibleTo($request->user())->withRunStats()->orderBy('trigger_type')->orderBy('position')->orderBy('id')->get());
     }
 
     public function store(Request $request, CreateAutomation $createAutomation): AutomationData

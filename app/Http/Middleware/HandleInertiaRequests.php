@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Data\Realtime\RealtimeData;
 use App\Data\Users\CurrentUserData;
 use App\Data\Workspaces\WorkspaceData;
+use App\Models\Automation;
 use App\Models\Workspace;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -52,6 +53,8 @@ class HandleInertiaRequests extends Middleware
             ...($request->user() === null ? [] : ['notifications' => fn (): ?array => Workspace::current() === null ? null : [
                 'unread_count' => $request->user()->notifications()->reorder()->whereNull('read_at')->count(),
             ]]),
+            // Lazy like the workspace. Whether to show the Automations link.
+            ...($request->user() === null ? [] : ['canViewAutomations' => fn (): bool => Workspace::current() !== null && $request->user()->can('viewAny', Automation::class)]),
             // Authenticated pages only, so guests never open a socket.
             ...($request->user() === null ? [] : ['realtime' => fn (): RealtimeData => RealtimeData::fromConfig()]),
         ];

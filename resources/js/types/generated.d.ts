@@ -107,6 +107,8 @@ declare namespace App {
         updated_by: string | null;
         created_at: string | null;
         updated_at: string | null;
+        last_run?: App.Data.Automations.AutomationRunSummaryData | null;
+        runs_last24h?: number;
       };
       export type AutomationDefinitionData = {
         trigger: App.Data.Automations.TriggerData;
@@ -136,6 +138,11 @@ declare namespace App {
         payload?: Record<string, any> | null;
         created_at: string | null;
         updated_at: string | null;
+      };
+      export type AutomationRunSummaryData = {
+        id: string;
+        status: App.Enums.AutomationRunStatus;
+        created_at: string | null;
       };
       export type AutomationTemplateData = {
         key: string;

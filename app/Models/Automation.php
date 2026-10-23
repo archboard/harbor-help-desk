@@ -12,9 +12,12 @@ use GrantHolle\Scru128Laravel\Concerns\HasScru128Ids;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * A trigger and a list of steps that run on tickets as the automation itself, which shows
@@ -63,6 +66,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder<static>|Automation whereWorkspaceId($value)
  * @method static Builder<static>|Automation visibleTo(\App\Models\User $user)
  * @method static Builder<static>|Automation whereLastSweptAt($value)
+ *
+ * @property-read AutomationRun|null $latestRun
+ * @property-read Collection<int, AutomationRun> $runs
+ * @property-read int|null $runs_count
+ *
+ * @method static Builder<static>|Automation withRunStats()
  *
  * @mixin \Eloquent
  */
@@ -135,6 +144,19 @@ class Automation extends Model
         $query->whereIn('desk_id', $user->desks()->wherePivot('role', DeskRole::LEAD)->select('desks.id'));
     }
 
+    /**
+     * Load each automation's latest run (id, status and time only) and its run count of the last 24 hours as `runs_last_24h_count`.
+     *
+     * @param  Builder<self>  $query
+     */
+    #[Scope]
+    protected function withRunStats(Builder $query): void
+    {
+        $query
+            ->with(['latestRun' => fn ($query) => $query->select(['automation_runs.id', 'automation_runs.automation_id', 'automation_runs.status', 'automation_runs.created_at'])])
+            ->withCount(['runs as runs_last_24h_count' => fn ($query) => $query->where('created_at', '>=', now()->subDay())]);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Relationships
@@ -147,6 +169,22 @@ class Automation extends Model
     public function desk(): BelongsTo
     {
         return $this->belongsTo(Desk::class);
+    }
+
+    /**
+     * @return HasMany<AutomationRun, $this>
+     */
+    public function runs(): HasMany
+    {
+        return $this->hasMany(AutomationRun::class);
+    }
+
+    /**
+     * @return HasOne<AutomationRun, $this>
+     */
+    public function latestRun(): HasOne
+    {
+        return $this->hasOne(AutomationRun::class)->latestOfMany();
     }
 
     /**

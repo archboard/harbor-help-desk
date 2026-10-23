@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\CustomFieldController;
 use App\Http\Controllers\Api\V1\DeskController;
 use App\Http\Controllers\Api\V1\DeskCustomFieldController;
 use App\Http\Controllers\Api\V1\DeskMemberController;
+use App\Http\Controllers\Api\V1\DuplicateAutomationController;
 use App\Http\Controllers\Api\V1\MacroController;
 use App\Http\Controllers\Api\V1\MailboxController;
 use App\Http\Controllers\Api\V1\MarkNotificationsReadController;
@@ -73,6 +74,7 @@ Route::prefix('v1')->name('api.v1.')
         Route::get('automations/catalog', AutomationCatalogController::class)->name('automations.catalog');
         Route::get('automations/templates', AutomationTemplatesController::class)->name('automations.templates');
         Route::post('automations/reorder', ReorderAutomationsController::class)->name('automations.reorder');
+        Route::post('automations/{automation}/duplicate', DuplicateAutomationController::class)->name('automations.duplicate');
         Route::put('automations/{automation}/enabled', SetAutomationEnabledController::class)->name('automations.enabled.update');
         Route::post('automations/{automation}/webhook-token', RotateWebhookTokenController::class)->name('automations.webhook-token');
         Route::post('automations/test', TestAutomationController::class)->name('automations.test');
