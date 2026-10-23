@@ -58,7 +58,7 @@ test('new messages are imported and the cursor advances', function () {
 
     PollMailbox::dispatchSync($this->mailbox);
 
-    expect(Ticket::pluck('subject')->all())->toBe(['Broken link', 'RE: Printer jam']);
+    expect(Ticket::oldest('id')->pluck('subject')->all())->toBe(['Broken link', 'RE: Printer jam']);
     expect(Ticket::first()->mailbox_id)->toBe($this->mailbox->id);
     expect($this->mailbox->fresh()->imap_last_uid)->toBe(102);
 });
