@@ -2,6 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ArrowDown, ArrowUp, GripVertical, Workflow } from '@lucide/vue';
 import { computed, ref } from 'vue';
+import { statusColors } from '@/components/automations/runStatus';
 import AppButton from '@/components/AppButton.vue';
 import AppToggle from '@/components/forms/AppToggle.vue';
 import SortableList from '@/components/SortableList.vue';
@@ -12,6 +13,7 @@ import Table from '@/components/tables/Table.vue';
 import Td from '@/components/tables/Td.vue';
 import Th from '@/components/tables/Th.vue';
 import Thead from '@/components/tables/Thead.vue';
+import { index as allRuns } from '@/routes/automation-runs';
 import {
   create,
   destroy,
@@ -31,18 +33,6 @@ const { automations, desks, triggers, statuses } = defineProps<{
   triggers: Record<string, string>;
   statuses: Record<App.Enums.AutomationRunStatus, string>;
 }>();
-
-const statusColors: Record<
-  App.Enums.AutomationRunStatus,
-  'blue' | 'yellow' | 'green' | 'gray' | 'red'
-> = {
-  running: 'blue',
-  waiting: 'yellow',
-  completed: 'green',
-  skipped: 'gray',
-  failed: 'red',
-  cancelled: 'gray',
-};
 
 const deleting = ref<Automation | null>(null);
 const deleteLoading = ref(false);
@@ -120,9 +110,14 @@ function remove(close: () => void): void {
         Automations run their steps when something happens to a ticket, in the
         order shown for each trigger.
       </p>
-      <AppButton :component="Link" :href="create().url" class="shrink-0">
-        New automation
-      </AppButton>
+      <div class="flex shrink-0 gap-2">
+        <AppButton :component="Link" :href="allRuns().url" color="white">
+          Run history
+        </AppButton>
+        <AppButton :component="Link" :href="create().url">
+          New automation
+        </AppButton>
+      </div>
     </div>
 
     <section v-for="group in groups" :key="group.type" class="space-y-3">

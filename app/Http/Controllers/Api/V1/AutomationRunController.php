@@ -14,11 +14,11 @@ use Spatie\LaravelData\PaginatedDataCollection;
 class AutomationRunController extends Controller
 {
     /**
-     * The automation's runs, newest first.
+     * The automation's runs, or those of every automation the user may view, newest first.
      *
      * @return PaginatedDataCollection<int, AutomationRunData>
      */
-    public function index(Request $request, Automation $automation, ListAutomationRuns $listAutomationRuns): PaginatedDataCollection
+    public function index(Request $request, ListAutomationRuns $listAutomationRuns, ?Automation $automation = null): PaginatedDataCollection
     {
         return AutomationRunData::collect($listAutomationRuns->handle($request->user(), $automation, $request->query()), PaginatedDataCollection::class);
     }

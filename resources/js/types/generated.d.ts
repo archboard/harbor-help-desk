@@ -268,6 +268,7 @@ declare namespace App {
       export type ListAutomationRunsData = {
         status?: App.Enums.AutomationRunStatus;
         ticket_id?: string;
+        ticket_number?: number;
         from?: string;
         to?: string;
       };

@@ -16,6 +16,7 @@ import {
   watch,
   watchEffect,
 } from 'vue';
+import AutomationTabs from '@/components/automations/AutomationTabs.vue';
 import { builderKey } from '@/components/automations/builder';
 import {
   cardErrors,
@@ -190,6 +191,7 @@ provide(builderKey, {
   errors: computed(() => form.errors),
   problems,
   testLog: computed(() => (testResult.value ? testLog.value : null)),
+  readonly: false,
   openCard,
 });
 
@@ -243,6 +245,12 @@ useEventListener(window, 'beforeunload', (event) => {
   <Head :title="automation ? 'Edit automation' : 'New automation'" />
 
   <form class="mx-auto max-w-3xl space-y-8" @submit.prevent="save()">
+    <AutomationTabs
+      v-if="automation"
+      :automation-id="automation.id"
+      current="builder"
+    />
+
     <div class="space-y-4">
       <InputField
         v-model="form.name"

@@ -15,6 +15,7 @@ class ListAutomationRunsData extends InputData
     public function __construct(
         public AutomationRunStatus|Optional $status,
         public string|Optional $ticketId,
+        public int|Optional $ticketNumber,
         public string|Optional $from,
         public string|Optional $to,
     ) {}
@@ -27,6 +28,7 @@ class ListAutomationRunsData extends InputData
         return [
             'status' => ['sometimes', Rule::enum(AutomationRunStatus::class)],
             'ticket_id' => ['sometimes', 'string'],
+            'ticket_number' => ['sometimes', 'integer', 'min:1'],
             'from' => ['sometimes', 'date'],
             'to' => ['sometimes', 'date', 'after_or_equal:from'],
         ];

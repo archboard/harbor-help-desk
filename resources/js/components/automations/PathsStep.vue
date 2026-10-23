@@ -36,7 +36,7 @@ const {
 
 const step = defineModel<Paths>({ required: true });
 
-const { testLog } = inject(builderKey)!;
+const { testLog, readonly } = inject(builderKey)!;
 
 /** What the test run did here: the index of the path it took, or 'else'. */
 const taken = computed(() => {
@@ -81,43 +81,45 @@ function removeBranch(index: number): void {
           taken === index ? TAKEN : 'border-gray-200 dark:border-gray-700'
         "
       >
-        <div class="flex items-start gap-2">
-          <div class="min-w-0 flex-1 space-y-1">
-            <AppInput
-              v-model="branch.name"
-              aria-label="Path name"
-              :has-error="!!errors[`branches.${index}.name`]"
-            />
-            <FieldError v-if="errors[`branches.${index}.name`]">
-              {{ errors[`branches.${index}.name`] }}
-            </FieldError>
+        <fieldset :disabled="readonly" class="min-w-0 space-y-3">
+          <div class="flex items-start gap-2">
+            <div class="min-w-0 flex-1 space-y-1">
+              <AppInput
+                v-model="branch.name"
+                aria-label="Path name"
+                :has-error="!!errors[`branches.${index}.name`]"
+              />
+              <FieldError v-if="errors[`branches.${index}.name`]">
+                {{ errors[`branches.${index}.name`] }}
+              </FieldError>
+            </div>
+            <AppButton
+              v-if="!readonly && step.branches.length > 1"
+              type="button"
+              size="xs"
+              color="red"
+              class="mt-1"
+              @click="removeBranch(index)"
+            >
+              <Trash2 class="size-3" aria-hidden="true" />
+              <span class="sr-only">Delete path</span>
+            </AppButton>
           </div>
-          <AppButton
-            v-if="step.branches.length > 1"
-            type="button"
-            size="xs"
-            color="red"
-            class="mt-1"
-            @click="removeBranch(index)"
-          >
-            <Trash2 class="size-3" aria-hidden="true" />
-            <span class="sr-only">Delete path</span>
-          </AppButton>
-        </div>
 
-        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
-          If the ticket matches
-        </p>
-        <ConditionGroup
-          v-model="branch.condition"
-          :catalog="catalog"
-          :groups="groups"
-          :schedules="schedules"
-          :errors="errorsUnder(errors, `branches.${index}.condition.`)"
-          :result="
-            taken === index ? testLog?.get(step.id)?.condition : undefined
-          "
-        />
+          <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
+            If the ticket matches
+          </p>
+          <ConditionGroup
+            v-model="branch.condition"
+            :catalog="catalog"
+            :groups="groups"
+            :schedules="schedules"
+            :errors="errorsUnder(errors, `branches.${index}.condition.`)"
+            :result="
+              taken === index ? testLog?.get(step.id)?.condition : undefined
+            "
+          />
+        </fieldset>
 
         <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Then</p>
         <StepList v-model="branch.steps" :depth="depth" :parent-id="step.id" />
@@ -140,6 +142,7 @@ function removeBranch(index: number): void {
     </div>
 
     <AppButton
+      v-if="!readonly"
       type="button"
       size="xs"
       color="white"

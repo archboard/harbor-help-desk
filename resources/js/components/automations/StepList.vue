@@ -47,6 +47,7 @@ const {
   errors,
   problems,
   testLog,
+  readonly,
   openCard,
 } = inject(builderKey)!;
 
@@ -173,7 +174,11 @@ function setAction(
   <div class="flex flex-col">
     <SortableList class="flex flex-col" @reorder="dropStep">
       <div v-for="(step, i) in steps" :key="step.id" class="flex flex-col">
-        <AddStepMenu :allow-paths="allowPaths" @add="addStep(i, $event)" />
+        <AddStepMenu
+          v-if="!readonly"
+          :allow-paths="allowPaths"
+          @add="addStep(i, $event)"
+        />
 
         <StepCard
           :open="isOpen(step)"
@@ -183,8 +188,8 @@ function setAction(
           :details="detailsFor(step)"
           :invalid="invalidCards.includes(step.id)"
           :errors="messagesFor(step.id)"
-          :movable="step.type !== 'stop'"
-          removable
+          :movable="!readonly && step.type !== 'stop'"
+          :removable="!readonly"
           :status="testLog ? statusOf(testLog.get(step.id)) : undefined"
           :note="testLog ? noteOf(testLog.get(step.id)) : undefined"
           :can-move-up="i > 0"
@@ -193,89 +198,94 @@ function setAction(
           @move="moveStep(i, $event)"
           @remove="removeStep(i)"
         >
-          <div v-if="step.type === 'action'" class="space-y-4">
-            <SelectField
-              :model-value="step.action || null"
-              label="Action"
-              required
-              :options="actionOptions"
-              :error="errors[`definition.steps.${step.id}.action`]"
-              @update:model-value="setAction(step, $event)"
-            />
-            <component
-              :is="actionEditors[step.action]"
-              v-if="actionEditors[step.action]"
-              v-model="step.config"
-              :catalog="catalog"
-              :trigger="trigger"
-              :desks="desks"
-              :move-desks="moveDesks"
-              :schedules="schedules"
-              :macros="macros"
-              :sla-policies="slaPolicies"
-              :scope-desk-id="scopeDeskId"
-              :errors="
-                errorsUnder(errors, `definition.steps.${step.id}.config.`)
-              "
-            />
-            <ConfigForm
-              v-else
-              v-model="step.config"
-              :rules="catalogAction(step.action)?.config_rules ?? {}"
-              :options="catalogAction(step.action)?.config_options"
-              :errors="
-                errorsUnder(errors, `definition.steps.${step.id}.config.`)
-              "
-              :choices="{
-                desk_id: desks.map((desk) => ({
-                  value: desk.id,
-                  label: desk.name,
-                })),
-              }"
-            />
-          </div>
-          <ConditionGroup
-            v-else-if="step.type === 'condition'"
-            :model-value="step"
-            :result="testLog?.get(step.id)?.condition"
-            :catalog="catalog"
-            :groups="groups"
-            :schedules="schedules"
-            :errors="errorsUnder(errors, `definition.steps.${step.id}.`)"
-          />
-          <DelayStep
-            v-else-if="step.type === 'delay'"
-            :model-value="step"
-            :catalog="catalog"
-            :groups="groups"
-            :schedules="schedules"
-            :errors="errorsUnder(errors, `definition.steps.${step.id}.`)"
-          />
-          <PathsStep
-            v-else-if="step.type === 'paths'"
-            :model-value="step"
-            :catalog="catalog"
-            :groups="groups"
-            :schedules="schedules"
-            :depth="depth + 1"
-            :errors="errorsUnder(errors, `definition.steps.${step.id}.`)"
-          />
-          <p
-            v-else-if="step.type === 'stop'"
-            class="text-sm text-gray-500 dark:text-gray-400"
+          <fieldset
+            :disabled="readonly && step.type !== 'paths'"
+            class="min-w-0"
           >
-            Ends this run and skips any later automations for this event.
-          </p>
-          <p v-else class="text-sm text-gray-500 dark:text-gray-400">
-            This step can't be edited here yet. It is kept as it is when you
-            save, and you can move or delete it.
-          </p>
+            <div v-if="step.type === 'action'" class="space-y-4">
+              <SelectField
+                :model-value="step.action || null"
+                label="Action"
+                required
+                :options="actionOptions"
+                :error="errors[`definition.steps.${step.id}.action`]"
+                @update:model-value="setAction(step, $event)"
+              />
+              <component
+                :is="actionEditors[step.action]"
+                v-if="actionEditors[step.action]"
+                v-model="step.config"
+                :catalog="catalog"
+                :trigger="trigger"
+                :desks="desks"
+                :move-desks="moveDesks"
+                :schedules="schedules"
+                :macros="macros"
+                :sla-policies="slaPolicies"
+                :scope-desk-id="scopeDeskId"
+                :errors="
+                  errorsUnder(errors, `definition.steps.${step.id}.config.`)
+                "
+              />
+              <ConfigForm
+                v-else
+                v-model="step.config"
+                :rules="catalogAction(step.action)?.config_rules ?? {}"
+                :options="catalogAction(step.action)?.config_options"
+                :errors="
+                  errorsUnder(errors, `definition.steps.${step.id}.config.`)
+                "
+                :choices="{
+                  desk_id: desks.map((desk) => ({
+                    value: desk.id,
+                    label: desk.name,
+                  })),
+                }"
+              />
+            </div>
+            <ConditionGroup
+              v-else-if="step.type === 'condition'"
+              :model-value="step"
+              :result="testLog?.get(step.id)?.condition"
+              :catalog="catalog"
+              :groups="groups"
+              :schedules="schedules"
+              :errors="errorsUnder(errors, `definition.steps.${step.id}.`)"
+            />
+            <DelayStep
+              v-else-if="step.type === 'delay'"
+              :model-value="step"
+              :catalog="catalog"
+              :groups="groups"
+              :schedules="schedules"
+              :errors="errorsUnder(errors, `definition.steps.${step.id}.`)"
+            />
+            <PathsStep
+              v-else-if="step.type === 'paths'"
+              :model-value="step"
+              :catalog="catalog"
+              :groups="groups"
+              :schedules="schedules"
+              :depth="depth + 1"
+              :errors="errorsUnder(errors, `definition.steps.${step.id}.`)"
+            />
+            <p
+              v-else-if="step.type === 'stop'"
+              class="text-sm text-gray-500 dark:text-gray-400"
+            >
+              Ends this run and skips any later automations for this event.
+            </p>
+            <p v-else class="text-sm text-gray-500 dark:text-gray-400">
+              This step can't be edited here yet. It is kept as it is when you
+              save, and you can move or delete it.
+            </p>
+          </fieldset>
         </StepCard>
       </div>
     </SortableList>
 
     <AddStepMenu
-      v-if="steps.at(-1)?.type !== 'stop'"
+      v-if="!readonly && steps.at(-1)?.type !== 'stop'"
       allow-stop
       :allow-paths="allowPaths"
       @add="addStep(steps.length, $event)"

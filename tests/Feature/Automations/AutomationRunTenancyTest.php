@@ -10,6 +10,7 @@ use App\Models\Macro;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Models\Workspace;
+use Inertia\Testing\AssertableInertia;
 
 beforeEach(function () {
     config(['harbor.multitenant' => true, 'harbor.domain' => 'harbor.test']);
@@ -67,12 +68,17 @@ test('another workspace\'s runs can not be listed or fetched', function () {
     $this->getJson("{$this->api}/automation-runs/{$this->runB->id}")->assertNotFound();
 
     $this->actingAs($this->admin);
-    $this->getJson("{$this->web}/automations/{$this->automationB->id}/runs")->assertNotFound();
-    $this->getJson("{$this->web}/automation-runs/{$this->runB->id}")->assertNotFound();
+    $this->get("{$this->web}/automations/{$this->automationB->id}/runs")->assertNotFound();
+    $this->get("{$this->web}/automation-runs/{$this->runB->id}")->assertNotFound();
+    $this->post("{$this->web}/automation-runs/{$this->runB->id}/cancel")->assertNotFound();
+    $this->postJson("{$this->api}/automation-runs/{$this->runB->id}/cancel")->assertNotFound();
 
     $ownRun = AutomationRun::query()->create([
         'workspace_id' => $this->workspace->id, 'automation_id' => ($own = Automation::factory()->create())->id, 'depth' => 0,
         'status' => AutomationRunStatus::COMPLETED, 'definition' => $own->definition, 'log' => [], 'state' => [],
     ]);
-    $this->getJson("{$this->web}/automations/{$own->id}/runs")->assertOk()->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.id', $ownRun->id);
+    $this->get("{$this->web}/automations/runs")->assertInertia(fn (AssertableInertia $page) => $page
+        ->has('runs.data', 1)
+        ->where('runs.data.0.id', $ownRun->id));
+    $this->getJson("{$this->api}/automations/runs")->assertOk()->assertJsonPath('meta.total', 1);
 });

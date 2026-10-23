@@ -4,13 +4,15 @@ import { useDebounceFn } from '@vueuse/core';
 import { watch } from 'vue';
 
 /**
- * Reload the given Inertia props when a `TicketChanged` ping arrives on any of the
+ * Reload the given Inertia props when a ping (`TicketChanged` unless `event` says otherwise) arrives on any of the
  * private channels, and once more when the socket reconnects after a drop. A reload
  * keeps page state and scroll. The window that made the change never gets the ping,
  * because the server excludes its socket id (see `lib/realtime.ts`).
  */
 export function useLiveReload(options: {
   channels: string[];
+  /** The broadcast name of the ping, with its leading dot. */
+  event?: string;
   only: string[];
   reset?: string[];
 }): void {
@@ -22,7 +24,7 @@ export function useLiveReload(options: {
   }, 300);
 
   for (const channel of options.channels) {
-    useEcho(channel, '.TicketChanged', () => void reload());
+    useEcho(channel, options.event ?? '.TicketChanged', () => void reload());
   }
 
   const status = useConnectionStatus();

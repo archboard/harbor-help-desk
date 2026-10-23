@@ -9,8 +9,9 @@ import {
   Zap,
 } from '@lucide/vue';
 import { usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, inject } from 'vue';
 import type { OptionsInput } from '@/types';
+import { builderKey } from './builder';
 import ConfigForm from './ConfigForm.vue';
 import { defaultConfig } from './configRules';
 import StepCard from './StepCard.vue';
@@ -45,6 +46,8 @@ const trigger = defineModel<App.Data.Automations.TriggerData>({
 const open = defineModel<boolean>('open', { default: false });
 
 const page = usePage();
+
+const readonly = inject(builderKey)?.readonly ?? false;
 
 const icons = {
   'ticket.created': CirclePlus,
@@ -127,7 +130,7 @@ function pick(key: string): void {
         : undefined
     "
   >
-    <div class="space-y-4">
+    <fieldset :disabled="readonly" class="min-w-0 space-y-4">
       <div
         class="grid grid-cols-2 gap-2 sm:grid-cols-3"
         role="group"
@@ -164,7 +167,10 @@ function pick(key: string): void {
         :choices="choices"
       />
 
-      <WebhookUrl v-if="trigger.type === 'webhook'" :automation="automation" />
-    </div>
+      <WebhookUrl
+        v-if="!readonly && trigger.type === 'webhook'"
+        :automation="automation"
+      />
+    </fieldset>
   </StepCard>
 </template>

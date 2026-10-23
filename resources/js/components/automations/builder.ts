@@ -26,6 +26,8 @@ export type BuilderContext = {
   problems: ComputedRef<CardError[]>;
   /** The test run's log by step id, or null while there is no result to show. */
   testLog: ComputedRef<Map<string, LogEntry> | null>;
+  /** Draws a finished run's snapshot: nothing can be added, moved, removed or edited. */
+  readonly: boolean;
   /** The card that is expanded: the trigger, a step id, or none. */
   openCard: Ref<string | null>;
 };

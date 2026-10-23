@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Data\Automations\AutomationDefinitionData;
 use App\Enums\AutomationRunStatus;
+use App\Events\AutomationRunChanged;
 use App\Models\Concerns\BelongsToWorkspace;
 use Carbon\CarbonImmutable;
 use GrantHolle\Scru128Laravel\Concerns\HasScru128Ids;
@@ -76,6 +77,26 @@ class AutomationRun extends Model
 
     /*
     |--------------------------------------------------------------------------
+    | Booting
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Ping the automation's channel when a run ends or starts waiting, wherever that happens.
+     */
+    protected static function booted(): void
+    {
+        static::created(fn (AutomationRun $run) => $run->pingIfSettled());
+
+        static::updated(function (AutomationRun $run): void {
+            if ($run->wasChanged('status')) {
+                $run->pingIfSettled();
+            }
+        });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | Casts
     |--------------------------------------------------------------------------
     */
@@ -134,6 +155,16 @@ class AutomationRun extends Model
     public function idPrefix(): string
     {
         return 'arn_';
+    }
+
+    /**
+     * Tell the automation's channel the run ended or started waiting. A run that is still running isn't news.
+     */
+    protected function pingIfSettled(): void
+    {
+        if ($this->status !== AutomationRunStatus::RUNNING) {
+            AutomationRunChanged::dispatch($this->automation_id, $this->getKey(), $this->status);
+        }
     }
 
     /**

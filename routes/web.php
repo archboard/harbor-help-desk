@@ -6,6 +6,7 @@ use App\Http\Controllers\AutomationCatalogController;
 use App\Http\Controllers\AutomationController;
 use App\Http\Controllers\AutomationRunController;
 use App\Http\Controllers\AutomationTemplatesController;
+use App\Http\Controllers\CancelAutomationRunController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DeskController;
 use App\Http\Controllers\DeskCustomFieldController;
@@ -88,8 +89,10 @@ Route::middleware('workspace')->group(function () {
         Route::put('automations/{automation}/enabled', SetAutomationEnabledController::class)->name('automations.enabled.update');
         Route::post('automations/{automation}/duplicate', DuplicateAutomationController::class)->name('automations.duplicate');
         Route::resource('automations', AutomationController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+        Route::get('automations/runs', [AutomationRunController::class, 'index'])->name('automation-runs.index');
         Route::get('automations/{automation}/runs', [AutomationRunController::class, 'index'])->name('automations.runs.index');
         Route::get('automation-runs/{run}', [AutomationRunController::class, 'show'])->name('automation-runs.show');
+        Route::post('automation-runs/{run}/cancel', CancelAutomationRunController::class)->name('automation-runs.cancel');
         Route::post('automations/{automation}/webhook-token', RotateWebhookTokenController::class)->name('automations.webhook-token');
         Route::post('tickets/{ticket}/reminders', [TicketReminderController::class, 'store'])->name('tickets.reminders.store');
         Route::delete('reminders/{reminder}', [TicketReminderController::class, 'destroy'])->name('reminders.destroy');

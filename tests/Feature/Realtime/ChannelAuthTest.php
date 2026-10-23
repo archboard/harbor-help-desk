@@ -1,6 +1,8 @@
 <?php
 
+use App\Enums\DeskRole;
 use App\Enums\WorkspaceRole;
+use App\Models\Automation;
 use App\Models\Desk;
 use App\Models\Ticket;
 use App\Models\User;
@@ -86,6 +88,32 @@ test('a ticket from another workspace does not resolve', function () {
     $this->workspace->makeCurrent();
 
     joinChannel($this->member, "tickets.{$ticketB->id}")->assertStatus(403);
+});
+
+test('the automation channel is for admins and the leads of its desk', function () {
+    $admin = User::factory()->create();
+    $this->workspace->users()->attach($admin, ['role' => WorkspaceRole::ADMIN]);
+    $lead = deskMember($this->workspace, $this->ticket->desk, DeskRole::LEAD);
+    $scoped = Automation::factory()->forDesk($this->ticket->desk)->create();
+    $wide = Automation::factory()->create();
+
+    joinChannel($admin, "automations.{$scoped->id}")->assertOk();
+    joinChannel($admin, "automations.{$wide->id}")->assertOk();
+    joinChannel($lead, "automations.{$scoped->id}")->assertOk();
+    joinChannel($lead, "automations.{$wide->id}")->assertForbidden();
+    joinChannel($this->member, "automations.{$scoped->id}")->assertForbidden();
+});
+
+test('an automation from another workspace does not resolve on its channel', function () {
+    $admin = User::factory()->create();
+    $this->workspace->users()->attach($admin, ['role' => WorkspaceRole::ADMIN]);
+    $workspaceB = Workspace::factory()->create()->makeCurrent();
+    $automationB = Automation::factory()->create();
+    $workspaceB->users()->attach($admin, ['role' => WorkspaceRole::ADMIN]);
+
+    $this->workspace->makeCurrent();
+
+    joinChannel($admin, "automations.{$automationB->id}")->assertForbidden();
 });
 
 test('the user channel is self only', function () {

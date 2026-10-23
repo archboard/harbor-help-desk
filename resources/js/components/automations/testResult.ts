@@ -37,6 +37,11 @@ export type LogEntry = {
   resume_at?: string;
   waiting?: boolean;
   note?: string;
+  /** A run's webhook outcome, and why a run was skipped or cancelled. */
+  status?: number | null;
+  duration_ms?: number;
+  attempt?: number;
+  reason?: string;
 };
 
 export type TestResult = Omit<

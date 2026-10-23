@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\AutomationController;
 use App\Http\Controllers\Api\V1\AutomationRunController;
 use App\Http\Controllers\Api\V1\AutomationTemplatesController;
 use App\Http\Controllers\Api\V1\BusinessScheduleController;
+use App\Http\Controllers\Api\V1\CancelAutomationRunController;
 use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\CustomFieldController;
 use App\Http\Controllers\Api\V1\DeskController;
@@ -78,8 +79,10 @@ Route::prefix('v1')->name('api.v1.')
         Route::put('automations/{automation}/enabled', SetAutomationEnabledController::class)->name('automations.enabled.update');
         Route::post('automations/{automation}/webhook-token', RotateWebhookTokenController::class)->name('automations.webhook-token');
         Route::post('automations/test', TestAutomationController::class)->name('automations.test');
+        Route::get('automations/runs', [AutomationRunController::class, 'index'])->name('automation-runs.index');
         Route::get('automations/{automation}/runs', [AutomationRunController::class, 'index'])->name('automations.runs.index');
         Route::get('automation-runs/{run}', [AutomationRunController::class, 'show'])->name('automation-runs.show');
+        Route::post('automation-runs/{run}/cancel', CancelAutomationRunController::class)->name('automation-runs.cancel');
         Route::apiResource('automations', AutomationController::class);
         Route::apiResource('business-schedules', BusinessScheduleController::class);
         Route::apiResource('sla-policies', SlaPolicyController::class)->parameters(['sla-policies' => 'slaPolicy']);

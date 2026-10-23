@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { usePage } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { CircleCheck } from '@lucide/vue';
 import { computed } from 'vue';
 import Avatar from '@/components/Avatar.vue';
 import ReplyComposer from '@/components/tickets/ReplyComposer.vue';
 import TicketCommentCard from '@/components/tickets/TicketCommentCard.vue';
 import RelativeTime from '@/components/RelativeTime.vue';
+import { show as showRun } from '@/routes/automation-runs';
 
 const typing = defineModel<boolean>('typing', { default: false });
 
@@ -112,7 +113,18 @@ function isResolution(event: App.Data.Tickets.TicketEventData): boolean {
           <p
             class="flex-auto py-0.5 text-xs/5 text-gray-500 dark:text-gray-400"
           >
-            <span class="font-medium text-gray-900 dark:text-gray-100">
+            <Link
+              v-if="
+                item.event.actor_type === 'automation' &&
+                item.event.automation_run_id &&
+                page.props.canViewAutomations
+              "
+              :href="showRun(item.event.automation_run_id).url"
+              class="font-medium text-gray-900 hover:underline dark:text-gray-100"
+            >
+              {{ sentence(item.event).actor }}
+            </Link>
+            <span v-else class="font-medium text-gray-900 dark:text-gray-100">
               {{ sentence(item.event).actor }}
             </span>
             {{ sentence(item.event).rest }}
