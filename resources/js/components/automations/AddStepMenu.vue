@@ -9,14 +9,21 @@ import type { StepType } from './steps';
 
 /**
  * The connector between two cards, with a "+" that picks the type of a new step. A stop
- * ends the run, so it is only offered at the end of a list that has none.
+ * ends the run, so it is only offered at the end of a list that has none. Paths are left
+ * out where nesting them would pass the server's depth limit.
  */
-const { allowStop = false } = defineProps<{ allowStop?: boolean }>();
+const { allowStop = false, allowPaths = true } = defineProps<{
+  allowStop?: boolean;
+  allowPaths?: boolean;
+}>();
 
 const emit = defineEmits<{ add: [type: StepType] }>();
 
 const types = computed(() =>
-  addableStepTypes.filter(([type]) => allowStop || type !== 'stop'),
+  addableStepTypes.filter(
+    ([type]) =>
+      (allowStop || type !== 'stop') && (allowPaths || type !== 'paths'),
+  ),
 );
 </script>
 

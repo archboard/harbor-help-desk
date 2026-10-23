@@ -12,15 +12,19 @@ export type Interval = {
 
 /**
  * An amount, a unit and an optional business schedule. With `relative` the amount is signed
- * (negative is in the past) and a "ago / from now" choice sets its sign.
+ * (negative is in the past) and a direction choice sets its sign: "ago / from now", or
+ * `directions` ("before / after").
  */
 const {
   schedules = [],
   relative = false,
+  directions = ['ago', 'from now'],
   errors = {},
 } = defineProps<{
   schedules?: App.Data.BusinessSchedules.BusinessScheduleData[];
   relative?: boolean;
+  /** The labels of the past and future choices. */
+  directions?: [past: string, future: string];
   /** Server errors keyed `amount`, `unit` and `business_schedule_id`. */
   errors?: Record<string, string>;
 }>();
@@ -88,8 +92,8 @@ const message = computed(
           hide-null
           aria-label="Direction"
           :options="[
-            { value: 'ago', label: 'ago' },
-            { value: 'from_now', label: 'from now' },
+            { value: 'ago', label: directions[0] },
+            { value: 'from_now', label: directions[1] },
           ]"
           :model-value="past ? 'ago' : 'from_now'"
           @update:model-value="setDirection"

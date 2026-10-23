@@ -3,27 +3,43 @@ import type { Step } from './steps';
 export const TRIGGER_CARD = 'trigger';
 
 export type CardError = {
-  /** The top-level card the error belongs to, or null for errors about the automation as a whole. */
+  /** The card the error belongs to: a step (nested ones too), the trigger, or null for errors about the automation as a whole. */
   cardId: string | null;
+  /** The top-level card that holds `cardId`, which is the one the error summary names. */
+  rootId: string | null;
   message: string;
   /** Shown beside the field it is about, so the card's own list leaves it out. */
   inline: boolean;
 };
 
-function containsStep(steps: Step[], id: string): boolean {
-  return steps.some(
-    (step) =>
-      step.id === id ||
-      (step.type === 'paths' &&
-        (step.branches.some((branch) => containsStep(branch.steps, id)) ||
-          containsStep(step.else, id))),
-  );
+function findStep(steps: Step[], id: string): Step | undefined {
+  for (const step of steps) {
+    if (step.id === id) {
+      return step;
+    }
+
+    const found =
+      step.type === 'paths'
+        ? findStep(
+            [...step.branches.flatMap((branch) => branch.steps), ...step.else],
+            id,
+          )
+        : undefined;
+
+    if (found) {
+      return found;
+    }
+  }
 }
+
+/** Whether `id` is one of `steps` or nested anywhere inside them. */
+export const containsStep = (steps: Step[], id: string): boolean =>
+  findStep(steps, id) !== undefined;
 
 /**
  * Maps the server's `definition.*` errors to cards. The server keys them by step id
  * (`definition.steps.<id>.config.value`), also for steps nested in paths, so a nested
- * step's error lands on the top-level card that holds it.
+ * step's error lands on its own card.
  */
 export function cardErrors(
   errors: Record<string, string>,
@@ -32,21 +48,29 @@ export function cardErrors(
   return Object.entries(errors)
     .filter(([key]) => key.startsWith('definition'))
     .map(([key, message]) => {
-      const [, scope, id, part] = key.split('.');
-      const cardId =
-        scope === 'trigger'
-          ? TRIGGER_CARD
-          : scope === 'steps' && id
-            ? (steps.find((step) => containsStep([step], id))?.id ?? null)
-            : null;
+      const [, scope, id, part, , sub] = key.split('.');
+      const step = scope === 'steps' && id ? findStep(steps, id) : undefined;
+      const root = step
+        ? steps.find((item) => containsStep([item], step.id))
+        : undefined;
 
-      // A condition step's rules and match mode show their errors on their own rows.
+      // These show their errors beside the inputs they are about.
       const inline =
-        scope === 'steps' &&
-        (part === 'rules' || part === 'match') &&
-        steps.some((step) => step.id === id && step.type === 'condition');
+        (step?.type === 'condition' &&
+          (part === 'rules' || part === 'match')) ||
+        (step?.type === 'action' && part === 'action') ||
+        (step?.type === 'delay' &&
+          (part === 'for' || part === 'until' || part === 'cancel_on')) ||
+        (step?.type === 'paths' &&
+          part === 'branches' &&
+          (sub === 'name' || sub === 'condition'));
 
-      return { cardId, message, inline };
+      return {
+        cardId: scope === 'trigger' ? TRIGGER_CARD : (step?.id ?? null),
+        rootId: scope === 'trigger' ? TRIGGER_CARD : (root?.id ?? null),
+        message,
+        inline,
+      };
     });
 }
 

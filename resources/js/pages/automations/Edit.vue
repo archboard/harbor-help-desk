@@ -7,43 +7,31 @@ import {
   useForm,
 } from '@inertiajs/vue3';
 import { useEventListener } from '@vueuse/core';
-import { computed, onBeforeUnmount, ref, toRaw, watchEffect } from 'vue';
-import AddStepMenu from '@/components/automations/AddStepMenu.vue';
+import {
+  computed,
+  onBeforeUnmount,
+  provide,
+  ref,
+  toRaw,
+  watchEffect,
+} from 'vue';
+import { builderKey } from '@/components/automations/builder';
 import {
   cardErrors,
   errorsUnder,
   TRIGGER_CARD,
 } from '@/components/automations/errors';
-import ConditionGroup from '@/components/automations/ConditionGroup.vue';
 import { availableGroups } from '@/components/automations/conditions';
-import { defaultConfig } from '@/components/automations/configRules';
-import { actionEditors } from '@/components/automations/actions';
-import ConfigForm from '@/components/automations/ConfigForm.vue';
-import StepCard from '@/components/automations/StepCard.vue';
-import {
-  newStep,
-  stepTypes,
-  unknownStepIcon,
-} from '@/components/automations/steps';
-import type {
-  Definition,
-  Step,
-  StepType,
-} from '@/components/automations/steps';
-import {
-  configSummary,
-  fieldFor,
-  summarizeStep,
-} from '@/components/automations/summaries';
+import StepList from '@/components/automations/StepList.vue';
+import type { Definition } from '@/components/automations/steps';
+import { fieldFor } from '@/components/automations/summaries';
 import TriggerCard from '@/components/automations/TriggerCard.vue';
 import AppButton from '@/components/AppButton.vue';
-import SortableList from '@/components/SortableList.vue';
 import {
   InputField,
   SelectField,
   TextareaField,
 } from '@/components/forms/fields';
-import { notify } from '@/lib/notifications';
 import { index, store, update } from '@/routes/automations';
 
 type Automation = App.Data.Automations.AutomationData;
@@ -95,15 +83,14 @@ const form = useForm({
 
 /** The form's `definition`, typed. It is the same reactive object. */
 const definition = form.definition as unknown as Definition;
-const errors: Record<string, string> = form.errors;
 
 /** The card that is expanded: the trigger, a step id, or none. */
 const openCard = ref<string | null>(automation ? null : TRIGGER_CARD);
 
 const steps = computed(() => definition.steps);
-const problems = computed(() => cardErrors(errors, steps.value));
+const problems = computed(() => cardErrors(form.errors, steps.value));
 const invalidCards = computed(
-  () => new Set(problems.value.map((problem) => problem.cardId)),
+  () => new Set(problems.value.map((problem) => problem.rootId)),
 );
 
 const messagesFor = (cardId: string): string[] =>
@@ -134,17 +121,10 @@ const scopeOptions = computed(() => [
   ...desks.map((desk) => ({ value: desk.id, label: desk.name })),
 ]);
 
-const actionOptions = computed(() =>
-  (catalog?.actions ?? []).map((action) => ({
-    value: action.key,
-    label: action.label,
-  })),
-);
-
 /** The problems that fit no card (a step limit, say), then one line per invalid card. */
 const summaryLines = computed(() =>
   problems.value.map((problem) => {
-    const index = steps.value.findIndex((step) => step.id === problem.cardId);
+    const index = steps.value.findIndex((step) => step.id === problem.rootId);
 
     return {
       cardId: problem.cardId,
@@ -159,71 +139,21 @@ const summaryLines = computed(() =>
   }),
 );
 
-function addStep(index: number, type: StepType): void {
-  const step = newStep(type);
-
-  steps.value.splice(index, 0, step);
-  openCard.value = step.id;
-}
-
-function moveStep(index: number, offset: -1 | 1): void {
-  const [step] = steps.value.splice(index, 1);
-
-  steps.value.splice(index + offset, 0, step);
-}
-
-/** A step was dragged. A stop stays last, so nothing is dropped after one. */
-function dropStep(from: number, to: number): void {
-  const last = steps.value.length - 1;
-
-  if (
-    steps.value[from]?.type === 'stop' ||
-    (steps.value[last]?.type === 'stop' && to >= last)
-  ) {
-    return;
-  }
-
-  steps.value.splice(to, 0, ...steps.value.splice(from, 1));
-}
-
-function removeStep(index: number): void {
-  const [step] = steps.value.splice(index, 1);
-
-  notify(
-    {
-      level: 'neutral',
-      title: 'Step deleted',
-      text: summarizeStep(step, catalog!, names.value),
-      action: {
-        label: 'Undo',
-        onClick: () =>
-          steps.value.splice(Math.min(index, steps.value.length), 0, step),
-      },
-    },
-    8000,
-  );
-}
-
-function setAction(
-  step: Step,
-  key: string | number | boolean | null | undefined,
-): void {
-  if (step.type !== 'action' || step.action === key) {
-    return;
-  }
-
-  step.action = String(key ?? '');
-
-  const action = catalogAction(step.action);
-
-  step.config = defaultConfig(
-    action?.config_rules ?? {},
-    action?.config_options,
-  );
-}
-
-const catalogAction = (key: string) =>
-  catalog?.actions.find((action) => action.key === key);
+provide(builderKey, {
+  catalog: computed(() => catalog!),
+  trigger: computed(() => definition.trigger.type),
+  groups: fieldGroups,
+  names,
+  desks: computed(() => desks),
+  moveDesks: computed(() => moveDesks),
+  schedules: computed(() => schedules),
+  macros: computed(() => macros),
+  slaPolicies: computed(() => slaPolicies),
+  scopeDeskId: computed(() => form.desk_id || null),
+  errors: computed(() => form.errors),
+  problems,
+  openCard,
+});
 
 /** Whether the form is being submitted, which is not "leaving" even though it visits. */
 let saving = false;
@@ -334,118 +264,11 @@ useEventListener(window, 'beforeunload', (event) => {
           :desks="desks"
           :invalid="invalidCards.has(TRIGGER_CARD)"
           :messages="messagesFor(TRIGGER_CARD)"
-          :errors="errorsUnder(errors, 'definition.trigger.config.')"
+          :errors="errorsUnder(form.errors, 'definition.trigger.config.')"
           @update:open="openCard = $event ? TRIGGER_CARD : null"
         />
 
-        <SortableList class="flex flex-col" @reorder="dropStep">
-          <div v-for="(step, i) in steps" :key="step.id" class="flex flex-col">
-            <AddStepMenu @add="addStep(i, $event)" />
-
-            <StepCard
-              :open="openCard === step.id"
-              :icon="stepTypes[step.type]?.icon ?? unknownStepIcon"
-              :kind="stepTypes[step.type]?.label ?? 'Step'"
-              :summary="summarizeStep(step, catalog, names)"
-              :details="
-                step.type === 'action' &&
-                !actionEditors[step.action] &&
-                catalogAction(step.action)
-                  ? configSummary(
-                      step.config,
-                      catalogAction(step.action)!.config_rules,
-                      catalogAction(step.action)!.config_options,
-                      {
-                        desk_id: Object.fromEntries(
-                          desks.map((desk) => [desk.id, desk.name]),
-                        ),
-                      },
-                    )
-                  : undefined
-              "
-              :invalid="invalidCards.has(step.id)"
-              :errors="messagesFor(step.id)"
-              :movable="step.type !== 'stop'"
-              removable
-              :can-move-up="i > 0"
-              :can-move-down="
-                i < steps.length - 1 && steps[i + 1].type !== 'stop'
-              "
-              @update:open="openCard = $event ? step.id : null"
-              @move="moveStep(i, $event)"
-              @remove="removeStep(i)"
-            >
-              <div v-if="step.type === 'action'" class="space-y-4">
-                <SelectField
-                  :model-value="step.action || null"
-                  label="Action"
-                  required
-                  :options="actionOptions"
-                  :error="errors[`definition.steps.${step.id}.action`]"
-                  @update:model-value="setAction(step, $event)"
-                />
-                <component
-                  :is="actionEditors[step.action]"
-                  v-if="actionEditors[step.action]"
-                  v-model="step.config"
-                  :catalog="catalog"
-                  :trigger="definition.trigger.type"
-                  :desks="desks"
-                  :move-desks="moveDesks"
-                  :schedules="schedules"
-                  :macros="macros"
-                  :sla-policies="slaPolicies"
-                  :scope-desk-id="form.desk_id || null"
-                  :errors="
-                    errorsUnder(errors, `definition.steps.${step.id}.config.`)
-                  "
-                />
-                <ConfigForm
-                  v-else
-                  v-model="step.config"
-                  :rules="catalogAction(step.action)?.config_rules ?? {}"
-                  :options="catalogAction(step.action)?.config_options"
-                  :errors="
-                    errorsUnder(
-                      form.errors,
-                      `definition.steps.${step.id}.config.`,
-                    )
-                  "
-                  :choices="{
-                    desk_id: desks.map((desk) => ({
-                      value: desk.id,
-                      label: desk.name,
-                    })),
-                  }"
-                />
-              </div>
-              <ConditionGroup
-                v-else-if="step.type === 'condition'"
-                :model-value="step"
-                :catalog="catalog"
-                :groups="fieldGroups"
-                :schedules="schedules"
-                :errors="errorsUnder(errors, `definition.steps.${step.id}.`)"
-              />
-              <p
-                v-else-if="step.type === 'stop'"
-                class="text-sm text-gray-500 dark:text-gray-400"
-              >
-                Ends this run and skips any later automations for this event.
-              </p>
-              <p v-else class="text-sm text-gray-500 dark:text-gray-400">
-                This step can't be edited here yet. It is kept as it is when you
-                save, and you can move or delete it.
-              </p>
-            </StepCard>
-          </div>
-        </SortableList>
-
-        <AddStepMenu
-          v-if="steps.at(-1)?.type !== 'stop'"
-          allow-stop
-          @add="addStep(steps.length, $event)"
-        />
+        <StepList v-model="definition.steps" />
       </div>
     </Deferred>
 

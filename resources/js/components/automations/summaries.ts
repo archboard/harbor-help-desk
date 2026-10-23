@@ -240,7 +240,11 @@ export function summarizeStep(
       );
     case 'delay': {
       if (step.for) {
-        return `Wait ${plural(step.for.amount, step.for.unit)}`;
+        const { amount, unit, business_schedule_id: schedule } = step.for;
+
+        return schedule
+          ? `Wait ${amount} business ${amount === 1 ? unit.replace(/s$/, '') : unit}`
+          : `Wait ${plural(amount, unit)}`;
       }
 
       if (step.until) {
@@ -249,19 +253,42 @@ export function summarizeStep(
         const offset = step.until.offset;
 
         return offset
-          ? `Wait until ${label} ${offset < 0 ? '−' : '+'} ${minutesText(Math.abs(offset))}`
+          ? `Wait until ${minutesText(Math.abs(offset))} ${offset < 0 ? 'before' : 'after'} ${label}`
           : `Wait until ${label}`;
       }
 
       return 'Wait';
     }
-    case 'paths':
-      return `Split into ${plural(step.branches.length + (step.else.length ? 1 : 0), 'paths')}`;
+    case 'paths': {
+      const names = step.branches.map((branch) => branch.name || 'Unnamed');
+
+      return `${plural(names.length, 'paths')}: ${[
+        ...names,
+        ...(step.else.length ? ['otherwise'] : []),
+      ].join(', ')}`;
+    }
     case 'stop':
       return 'Stop';
     default:
       return 'Unknown step';
   }
+}
+
+/** "Cancelled if: A message is added" for a delay that lists triggers, or undefined. */
+export function cancelSummary(
+  step: Step,
+  catalog: Catalog,
+): string | undefined {
+  if (step.type !== 'delay' || !step.cancel_on.length) {
+    return undefined;
+  }
+
+  return `Cancelled if: ${step.cancel_on
+    .map(
+      (type) =>
+        catalog.triggers.find((trigger) => trigger.key === type)?.label ?? type,
+    )
+    .join(', ')}`;
 }
 
 export function summarizeTrigger(

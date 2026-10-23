@@ -12,15 +12,17 @@ import { fieldFor } from './summaries';
 
 /**
  * A searchable picker of the fields a rule can test, grouped Ticket, Requester, Message and
- * so on. `groups` limits it to what the trigger makes available.
+ * so on. `groups` limits it to what the trigger makes available, and `type` to one field type.
  */
 const {
   catalog,
   groups,
+  type,
   hasError = false,
 } = defineProps<{
   catalog: App.Data.Automations.AutomationCatalogData;
   groups: App.Automations.FieldGroup[];
+  type?: App.Automations.FieldType;
   hasError?: boolean;
 }>();
 
@@ -35,9 +37,13 @@ function openOptions(): void {
 }
 
 const available = computed(() =>
-  catalog.field_groups.filter(
-    (group) => groups.includes(group.group) && group.fields.length,
-  ),
+  catalog.field_groups
+    .filter((group) => groups.includes(group.group))
+    .map((group) => ({
+      ...group,
+      fields: group.fields.filter((field) => !type || field.type === type),
+    }))
+    .filter((group) => group.fields.length),
 );
 
 const filtered = computed(() => {

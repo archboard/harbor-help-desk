@@ -51,7 +51,7 @@ const open = defineModel<boolean>('open', { default: false });
         ? 'border-red-400 ring-1 ring-red-400 dark:border-red-500 dark:ring-red-500'
         : 'border-gray-200 dark:border-gray-700'
     "
-    @keydown.esc="open = false"
+    @keydown.esc.stop="open = false"
   >
     <div class="flex items-center gap-2 pe-3">
       <GripVertical

@@ -18,8 +18,8 @@ export const stepTypes: Record<
 > = {
   condition: { label: 'Condition', icon: Filter, addable: true },
   action: { label: 'Action', icon: Zap, addable: true },
-  delay: { label: 'Delay', icon: Hourglass, addable: false },
-  paths: { label: 'Paths', icon: GitBranch, addable: false },
+  delay: { label: 'Delay', icon: Hourglass, addable: true },
+  paths: { label: 'Paths', icon: GitBranch, addable: true },
   stop: { label: 'Stop', icon: OctagonX, addable: true },
 };
 
@@ -38,6 +38,15 @@ export function newStepId(): string {
   );
 }
 
+export type Branch = App.Data.Automations.BranchData;
+
+/** A branch named after its position ("Path A"), that matches every ticket until its condition has rules. */
+export const newBranch = (index: number): Branch => ({
+  name: `Path ${String.fromCharCode(65 + (index % 26))}`,
+  condition: { type: 'group', match: 'all', rules: [] },
+  steps: [],
+});
+
 export function newStep(type: StepType): Step {
   const id = newStepId();
 
@@ -46,9 +55,17 @@ export function newStep(type: StepType): Step {
       return { id, type, action: '', config: {} };
     case 'condition':
       return { id, type, match: 'all', rules: [] };
+    case 'delay':
+      return {
+        id,
+        type,
+        for: { amount: 1, unit: 'hours', business_schedule_id: null },
+        until: null,
+        cancel_on: [],
+      };
+    case 'paths':
+      return { id, type, branches: [newBranch(0)], else: [] };
     case 'stop':
       return { id, type };
-    default:
-      throw new Error(`The ${type} step can't be added yet.`);
   }
 }
