@@ -34,8 +34,12 @@ class AttachmentData extends Data
             checksum: $attachment->checksum,
             uploaderType: $attachment->uploader_type,
             uploaderId: $attachment->uploader_id,
-            // API clients download with their token; the web app with its session.
-            downloadUrl: route(request()->is('api/*') ? 'api.v1.attachments.download' : 'attachments.download', $attachment),
+            // API clients download with their token; the web app with its session; the portal as a contact.
+            downloadUrl: route(match (true) {
+                request()->is('api/*') => 'api.v1.attachments.download',
+                request()->routeIs('portal.*') => 'portal.attachments.download',
+                default => 'attachments.download',
+            }, $attachment),
             createdAt: $attachment->created_at,
         );
     }

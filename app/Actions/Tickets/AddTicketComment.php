@@ -4,6 +4,7 @@ namespace App\Actions\Tickets;
 
 use App\Data\Tickets\AddTicketCommentData;
 use App\Enums\TicketEventType;
+use App\Enums\TicketStatus;
 use App\Jobs\SendTicketReplyEmail;
 use App\Models\Automation;
 use App\Models\Contact;
@@ -25,6 +26,7 @@ class AddTicketComment
      * requester once the transaction commits. An automation acts like an agent, without the policy
      * check or the `last_seen_comment_id` and mention options. A contact (replying by email) skips
      * the policy check, can't add internal notes, and alone may set `message_id` (the email's Message-ID).
+     * A contact's comment reopens a pending, solved or closed ticket.
      * A user may send `last_seen_comment_id` (null when none were shown): if anyone else commented
      * after it, the reply is rejected so two people don't answer at once. Omitting it skips the check.
      * An internal note's `mentioned_user_ids` (desk members) are stored on its event.
@@ -70,6 +72,12 @@ class AddTicketComment
             // the comment; files already written then stay on disk. Add an orphan sweep if that bites.
             foreach ($validated['attachments'] ?? [] as $file) {
                 $this->addTicketAttachment->handle($actor, $ticket, ['file' => $file], $comment);
+            }
+
+            if ($actor instanceof Contact && in_array($ticket->status, [TicketStatus::PENDING, TicketStatus::SOLVED, TicketStatus::CLOSED], true)) {
+                $from = $ticket->status;
+                $ticket->update(['status' => TicketStatus::OPEN]);
+                $ticket->recordEvent(TicketEventType::STATUS_CHANGED, $actor, ['from' => $from->value, 'to' => TicketStatus::OPEN->value]);
             }
 
             if (! $actor instanceof Contact && ! $comment->is_internal) {

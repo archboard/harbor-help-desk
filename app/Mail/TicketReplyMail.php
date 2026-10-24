@@ -59,13 +59,16 @@ class TicketReplyMail extends Mailable
 
     public function content(): Content
     {
+        $workspace = $this->comment->workspace;
+
         return new Content(
             view: 'mail.ticket-reply',
             text: 'mail.ticket-reply-text',
             with: [
                 'marker' => InboundEmail::REPLY_MARKER,
                 'ticket' => $this->comment->ticket,
-                'workspaceName' => $this->comment->workspace->name,
+                'workspaceName' => $workspace->name,
+                'portalUrl' => $workspace->settings->portalEnabled ? $workspace->url("/portal/tickets/{$this->comment->ticket_id}") : null,
             ],
         );
     }

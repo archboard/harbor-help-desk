@@ -17,6 +17,9 @@
 
   <p style="margin: 16px 0 0; font-size: 12px; color: #9ca3af;">
     {{ $workspaceName }} · {{ __('Ticket #:number', ['number' => $ticket->number]) }}
+    @if ($portalUrl)
+      <br><a href="{{ $portalUrl }}" style="color: #6b7280;">{{ __('View this ticket online') }}</a>
+    @endif
   </p>
 </body>
 </html>

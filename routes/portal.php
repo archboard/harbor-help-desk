@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\Portal\AttachmentDownloadController;
 use App\Http\Controllers\Portal\PortalLoginController;
+use App\Http\Controllers\Portal\TicketCommentController;
+use App\Http\Controllers\Portal\TicketController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::middleware('portal.enabled')->prefix('portal')->name('portal.')->group(function () {
     Route::get('login', [PortalLoginController::class, 'create'])->name('login');
@@ -11,7 +13,10 @@ Route::middleware('portal.enabled')->prefix('portal')->name('portal.')->group(fu
     Route::post('logout', [PortalLoginController::class, 'destroy'])->name('logout');
 
     Route::middleware('auth:contact')->group(function () {
-        // ponytail: placeholder landing page until the ticket list replaces it.
-        Route::get('/', fn () => Inertia::render('portal/Home'))->name('home');
+        Route::get('/', fn () => to_route('portal.tickets.index'))->name('home');
+        Route::get('tickets', [TicketController::class, 'index'])->name('tickets.index');
+        Route::get('tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
+        Route::post('tickets/{ticket}/comments', [TicketCommentController::class, 'store'])->name('tickets.comments.store');
+        Route::get('attachments/{attachment}/download', AttachmentDownloadController::class)->name('attachments.download');
     });
 });

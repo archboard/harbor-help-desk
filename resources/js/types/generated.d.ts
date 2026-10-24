@@ -601,6 +601,16 @@ declare namespace App {
       };
     }
     namespace Portal {
+      export type PortalTicketData = {
+        id: string;
+        number: number;
+        subject: string;
+        status: App.Enums.TicketStatus;
+        status_label: string;
+        desk_name: string;
+        created_at: string | null;
+        updated_at: string | null;
+      };
       export type SendPortalMagicLinkData = {
         email: string;
       };

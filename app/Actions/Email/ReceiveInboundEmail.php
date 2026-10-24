@@ -5,9 +5,7 @@ namespace App\Actions\Email;
 use App\Actions\Tickets\AddTicketAttachment;
 use App\Actions\Tickets\AddTicketComment;
 use App\Actions\Tickets\CreateTicket;
-use App\Enums\TicketEventType;
 use App\Enums\TicketSource;
-use App\Enums\TicketStatus;
 use App\Mail\Inbound\InboundEmail;
 use App\Models\Contact;
 use App\Models\Mailbox;
@@ -193,15 +191,7 @@ class ReceiveInboundEmail
                 return $comment;
             }
 
-            $comment = $this->addTicketComment->handle($author, $ticket, $input);
-
-            if (in_array($ticket->status, [TicketStatus::PENDING, TicketStatus::SOLVED, TicketStatus::CLOSED], true)) {
-                $from = $ticket->status;
-                $ticket->update(['status' => TicketStatus::OPEN]);
-                $ticket->recordEvent(TicketEventType::STATUS_CHANGED, $author, ['from' => $from->value, 'to' => TicketStatus::OPEN->value]);
-            }
-
-            return $comment;
+            return $this->addTicketComment->handle($author, $ticket, $input);
         });
     }
 

@@ -46,7 +46,8 @@ test('a known contact is sent a link that signs them in', function () {
     $this->get(sentPortalLink($contact->email))->assertRedirect(route('portal.home'));
 
     $this->assertAuthenticatedAs($contact, 'contact');
-    $this->get(route('portal.home'))->assertOk();
+    $this->get(route('portal.home'))->assertRedirect(route('portal.tickets.index'));
+    $this->get(route('portal.tickets.index'))->assertOk();
 });
 
 test('a link cannot be used twice', function () {
