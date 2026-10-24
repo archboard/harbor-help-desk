@@ -15,6 +15,8 @@ Route::middleware('portal.enabled')->prefix('portal')->name('portal.')->group(fu
     Route::middleware('auth:contact')->group(function () {
         Route::get('/', fn () => to_route('portal.tickets.index'))->name('home');
         Route::get('tickets', [TicketController::class, 'index'])->name('tickets.index');
+        Route::get('tickets/create', [TicketController::class, 'create'])->name('tickets.create');
+        Route::post('desks/{desk}/tickets', [TicketController::class, 'store'])->name('desks.tickets.store');
         Route::get('tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
         Route::post('tickets/{ticket}/comments', [TicketCommentController::class, 'store'])->name('tickets.comments.store');
         Route::get('attachments/{attachment}/download', AttachmentDownloadController::class)->name('attachments.download');

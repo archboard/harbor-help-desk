@@ -601,6 +601,15 @@ declare namespace App {
       };
     }
     namespace Portal {
+      export type OpenPortalTicketData = {
+        subject: string;
+        body: string;
+        attachments?: File[];
+      };
+      export type PortalDeskData = {
+        id: string;
+        name: string;
+      };
       export type PortalTicketData = {
         id: string;
         number: number;
@@ -947,7 +956,8 @@ declare namespace App {
       | 'web'
       | 'api'
       | 'webhook'
-      | 'automation';
+      | 'automation'
+      | 'portal';
     export type TicketStatus =
       | 'open'
       | 'pending'

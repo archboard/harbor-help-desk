@@ -25,8 +25,8 @@ class CreateTicket
      * Open a ticket on an active desk. The requester is an existing contact (`requester_id`) or is
      * found or created by email (`requester.email`, `requester.name`). `custom_fields` maps the
      * desk's enabled field ids to values. An optional `body` (with `attachments`) becomes the
-     * ticket's first reply, written by the actor. An automation may assign. Contacts (opening a ticket by email) skip
-     * the policy check, can't assign, and alone may set `mailbox_id` and the first reply's `message_id`.
+     * ticket's first reply, written by the actor. An automation may assign. Contacts (opening a ticket by email or the portal) skip
+     * the policy check, can't assign or set status, priority, due date or custom fields (so required fields don't apply), and alone may set `mailbox_id` and the first reply's `message_id`.
      *
      * The `source` is where the caller received the ticket from, never user input.
      *
@@ -38,11 +38,14 @@ class CreateTicket
             Gate::forUser($actor)->authorize('create', [Ticket::class, $desk]);
         }
 
+        $isContact = $actor instanceof Contact;
+
         $validated = CreateTicketData::validateAndCreateWith($input, [
+            ...($isContact ? ['status' => ['prohibited'], 'priority' => ['prohibited'], 'due_at' => ['prohibited']] : []),
             'assignee_ids' => [! $actor instanceof Contact ? 'sometimes' : 'prohibited'],
             'mailbox_id' => [$actor instanceof Contact ? 'sometimes' : 'prohibited'],
             'message_id' => [$actor instanceof Contact ? 'sometimes' : 'prohibited'],
-            ...CustomFieldRules::for($desk, creating: true),
+            ...($isContact ? ['custom_fields' => ['prohibited']] : CustomFieldRules::for($desk, creating: true)),
         ])->filled();
 
         return DB::transaction(function () use ($actor, $desk, $validated, $source): Ticket {

@@ -2,10 +2,15 @@
 
 namespace App\Http\Controllers\Portal;
 
+use App\Actions\Portal\OpenPortalTicket;
+use App\Data\Portal\PortalDeskData;
 use App\Data\Portal\PortalTicketData;
 use App\Data\Tickets\TicketCommentData;
 use App\Enums\TicketStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Flash;
+use App\Models\Desk;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -50,5 +55,27 @@ class TicketController extends Controller
                 ->with(['author', 'attachments'])
                 ->get()),
         ]);
+    }
+
+    /**
+     * The new ticket form, with the active desks to pick from. Archived desks are left out.
+     */
+    public function create(): Response
+    {
+        return Inertia::render('portal/tickets/Create', [
+            'desks' => PortalDeskData::collect(Desk::query()->orderBy('name')->get()),
+        ]);
+    }
+
+    /**
+     * Open a ticket on the desk as the signed-in contact.
+     */
+    public function store(Request $request, Desk $desk, OpenPortalTicket $openPortalTicket): RedirectResponse
+    {
+        $ticket = $openPortalTicket->handle(Auth::guard('contact')->user(), $desk, $request->only(['subject', 'body', 'attachments']));
+
+        Flash::success(__('Ticket opened.'));
+
+        return to_route('portal.tickets.show', $ticket);
     }
 }

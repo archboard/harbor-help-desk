@@ -5,6 +5,7 @@ namespace App\Actions\Email;
 use App\Actions\Tickets\AddTicketAttachment;
 use App\Actions\Tickets\AddTicketComment;
 use App\Actions\Tickets\CreateTicket;
+use App\Actions\Tickets\NewTicketRateLimit;
 use App\Enums\TicketSource;
 use App\Mail\Inbound\InboundEmail;
 use App\Models\Contact;
@@ -19,7 +20,6 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -32,6 +32,7 @@ class ReceiveInboundEmail
         protected CreateTicket $createTicket,
         protected AddTicketComment $addTicketComment,
         protected RecordEmailBounce $recordEmailBounce,
+        protected NewTicketRateLimit $rateLimit,
     ) {}
 
     /**
@@ -61,7 +62,7 @@ class ReceiveInboundEmail
 
         $ticket = $this->threadedComment($email)->ticket ?? $this->ticketBySubject($email);
 
-        if ($ticket === null && $this->isOverRateLimit($mailbox, $email)) {
+        if ($ticket === null && $this->rateLimit->isExceeded($mailbox->workspace, $email->fromEmail)) {
             Log::info('Inbound email dropped: rate limit', $context);
 
             return null;
@@ -161,19 +162,6 @@ class ReceiveInboundEmail
         $user = Workspace::current()?->users()->whereRaw('lower(email) = lower(?)', [$email->fromEmail])->first();
 
         return $user !== null && Gate::forUser($user)->allows('update', $ticket) ? $user : null;
-    }
-
-    protected function isOverRateLimit(Mailbox $mailbox, InboundEmail $email): bool
-    {
-        $key = "inbound-email:{$mailbox->workspace_id}:{$email->fromEmail}";
-
-        if (RateLimiter::tooManyAttempts($key, $mailbox->workspace->settings->mailNewTicketsPerSenderPerHour)) {
-            return true;
-        }
-
-        RateLimiter::hit($key, 3600);
-
-        return false;
     }
 
     /**

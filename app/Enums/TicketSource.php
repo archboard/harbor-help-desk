@@ -13,6 +13,7 @@ enum TicketSource: string
     case API = 'api';
     case WEBHOOK = 'webhook';
     case AUTOMATION = 'automation';
+    case PORTAL = 'portal';
 
     public function label(): string
     {
@@ -22,6 +23,7 @@ enum TicketSource: string
             self::API => __('API'),
             self::WEBHOOK => __('Webhook'),
             self::AUTOMATION => __('Automation'),
+            self::PORTAL => __('Portal'),
         };
     }
 }

@@ -2,7 +2,8 @@
 import { Head, InfiniteScroll, Link } from '@inertiajs/vue3';
 import RelativeTime from '@/components/RelativeTime.vue';
 import StatusPill from '@/components/tickets/StatusPill.vue';
-import { index, show } from '@/routes/portal/tickets';
+import AppButton from '@/components/AppButton.vue';
+import { create, index, show } from '@/routes/portal/tickets';
 import type { Paginated } from '@/types';
 
 defineOptions({ layout: { title: 'Your tickets' } });
@@ -22,20 +23,23 @@ const tabs = [
 <template>
   <Head title="Your tickets" />
 
-  <nav class="mb-6 flex gap-4 text-sm" aria-label="Filter tickets">
-    <Link
-      v-for="tab in tabs"
-      :key="tab.label"
-      :href="index({ query: tab.value ? { status: tab.value } : {} })"
-      :class="
-        filter === tab.value
-          ? 'font-semibold text-primary-600 dark:text-primary-400'
-          : 'text-gray-600 hover:underline dark:text-gray-400'
-      "
-    >
-      {{ tab.label }}
-    </Link>
-  </nav>
+  <div class="mb-6 flex items-center justify-between gap-4">
+    <nav class="flex gap-4 text-sm" aria-label="Filter tickets">
+      <Link
+        v-for="tab in tabs"
+        :key="tab.label"
+        :href="index({ query: tab.value ? { status: tab.value } : {} })"
+        :class="
+          filter === tab.value
+            ? 'font-semibold text-primary-600 dark:text-primary-400'
+            : 'text-gray-600 hover:underline dark:text-gray-400'
+        "
+      >
+        {{ tab.label }}
+      </Link>
+    </nav>
+    <AppButton :component="Link" :href="create()">New ticket</AppButton>
+  </div>
 
   <InfiniteScroll v-if="tickets.data.length" data="tickets">
     <ul

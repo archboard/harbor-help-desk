@@ -9,6 +9,7 @@ use App\Events\TicketChanged;
 use App\Jobs\SendTicketReplyEmail;
 use App\Mail\Inbound\InboundEmail;
 use App\Models\Contact;
+use App\Models\CustomField;
 use App\Models\Desk;
 use App\Models\Mailbox;
 use App\Models\Ticket;
@@ -243,4 +244,12 @@ test('a mailbox in workspace b never threads into a workspace a ticket', functio
 
     expect($commentB->ticket->workspace_id)->not->toBe($ticketA->workspace_id);
     expect($ticketA->comments()->withoutGlobalScope('workspace')->count())->toBe(1);
+});
+
+test('a desk with a required custom field still accepts mail', function () {
+    $field = CustomField::factory()->required()->create();
+    $this->desk->customFields()->attach($field->id, ['workspace_id' => $this->desk->workspace_id]);
+
+    expect(receive(inboundEmail()))->not->toBeNull();
+    expect(Ticket::count())->toBe(1);
 });
