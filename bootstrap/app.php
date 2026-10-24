@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsurePortalEnabled;
 use App\Http\Middleware\EnsureTokenCanAccessWorkspace;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -34,7 +35,12 @@ return Application::configure(basePath: dirname(__DIR__))
         // Resolve the workspace before auth and route model binding, so bound tenant models are
         // scoped to it, and check the token's workspace access before anything is looked up.
         $middleware->prependToPriorityList(AuthenticatesRequests::class, ResolveWorkspace::class);
+        // The portal is a 404 while off, even for guests who would otherwise be redirected to sign in.
+        $middleware->prependToPriorityList(AuthenticatesRequests::class, EnsurePortalEnabled::class);
         $middleware->prependToPriorityList(SubstituteBindings::class, EnsureTokenCanAccessWorkspace::class);
+
+        $middleware->alias(['portal.enabled' => EnsurePortalEnabled::class]);
+        $middleware->redirectGuestsTo(fn (Request $request): string => route($request->routeIs('portal.*') ? 'portal.login' : 'login'));
 
         $middleware->group('workspace', [
             ResolveWorkspace::class,

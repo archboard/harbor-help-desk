@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Actions\Auth\SendMagicLink;
+use App\Models\Contact;
 use App\Models\User;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -14,12 +15,12 @@ class MagicLinkNotification extends Notification
     /**
      * @return array<int, string>
      */
-    public function via(User $notifiable): array
+    public function via(User|Contact $notifiable): array
     {
         return ['mail'];
     }
 
-    public function toMail(User $notifiable): MailMessage
+    public function toMail(User|Contact $notifiable): MailMessage
     {
         return (new MailMessage)
             ->subject(__('Your sign-in link'))

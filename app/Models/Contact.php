@@ -6,14 +6,19 @@ use App\Models\Concerns\BelongsToWorkspace;
 use Carbon\CarbonImmutable;
 use Database\Factories\ContactFactory;
 use GrantHolle\Scru128Laravel\Concerns\HasScru128Ids;
+use Illuminate\Auth\Authenticatable as AuthenticatableTrait;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Notifications\DatabaseNotificationCollection;
+use Illuminate\Notifications\Notifiable;
 
 /**
- * An end customer of a workspace who requests help. Contacts are not users and can't sign in.
+ * An end customer of a workspace who requests help. Contacts are not users: they sign in to the customer portal by emailed link, on the `contact` guard, and have no password.
  *
  * @property string $id
  * @property string $workspace_id
@@ -36,11 +41,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @property-read Collection<int, Ticket> $tickets
  * @property-read int|null $tickets_count
+ * @property-read DatabaseNotificationCollection<int, DatabaseNotification> $notifications
+ * @property-read int|null $notifications_count
  *
  * @mixin \Eloquent
  */
 #[Unguarded]
-class Contact extends Model
+class Contact extends Model implements Authenticatable
 {
     /*
     |--------------------------------------------------------------------------
@@ -49,7 +56,7 @@ class Contact extends Model
     */
 
     /** @use HasFactory<ContactFactory> */
-    use BelongsToWorkspace, HasFactory, HasScru128Ids;
+    use AuthenticatableTrait, BelongsToWorkspace, HasFactory, HasScru128Ids, Notifiable;
 
     /*
     |--------------------------------------------------------------------------
@@ -72,6 +79,14 @@ class Contact extends Model
     | Methods
     |--------------------------------------------------------------------------
     */
+
+    /**
+     * Contacts have no remember-me token.
+     */
+    public function getRememberTokenName(): string
+    {
+        return '';
+    }
 
     public function idPrefix(): string
     {

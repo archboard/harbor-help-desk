@@ -2,12 +2,14 @@
 
 namespace App\Http\Middleware;
 
+use App\Data\Contacts\ContactData;
 use App\Data\Realtime\RealtimeData;
 use App\Data\Users\CurrentUserData;
 use App\Data\Workspaces\WorkspaceData;
 use App\Models\Automation;
 use App\Models\Workspace;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -40,23 +42,30 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        // The portal's default guard is the contact guard: no agent is shared there.
+        $user = $request->routeIs('portal.*') ? null : $request->user();
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'multitenant' => (bool) config('harbor.multitenant'),
             'auth' => [
-                'user' => $request->user() === null ? null : CurrentUserData::from($request->user()),
+                'user' => $user === null ? null : CurrentUserData::from($user),
+                // Portal pages only.
+                ...($request->routeIs('portal.*') ? ['contact' => Auth::guard('contact')->user() === null ? null : ContactData::from(Auth::guard('contact')->user())] : []),
             ],
+            // Lazy like the workspace. Guest pages only: whether to link to the customer portal.
+            ...($user === null ? ['portalEnabled' => fn (): bool => Workspace::current()?->settings->portalEnabled ?? false] : []),
             // Lazy, because the workspace is resolved by route middleware that runs after this one.
             'workspace' => fn (): ?WorkspaceData => Workspace::current() === null ? null : WorkspaceData::from(Workspace::current()),
             // Lazy for the same reason. Authenticated pages with a workspace only.
-            ...($request->user() === null ? [] : ['notifications' => fn (): ?array => Workspace::current() === null ? null : [
-                'unread_count' => $request->user()->notifications()->reorder()->whereNull('read_at')->count(),
+            ...($user === null ? [] : ['notifications' => fn (): ?array => Workspace::current() === null ? null : [
+                'unread_count' => $user->notifications()->reorder()->whereNull('read_at')->count(),
             ]]),
             // Lazy like the workspace. Whether to show the Automations link.
-            ...($request->user() === null ? [] : ['canViewAutomations' => fn (): bool => Workspace::current() !== null && $request->user()->can('viewAny', Automation::class)]),
+            ...($user === null ? [] : ['canViewAutomations' => fn (): bool => Workspace::current() !== null && $user->can('viewAny', Automation::class)]),
             // Authenticated pages only, so guests never open a socket.
-            ...($request->user() === null ? [] : ['realtime' => fn (): RealtimeData => RealtimeData::fromConfig()]),
+            ...($user === null ? [] : ['realtime' => fn (): RealtimeData => RealtimeData::fromConfig()]),
         ];
     }
 }

@@ -4,6 +4,7 @@ import { computed } from 'vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { edit as automations } from '@/routes/workspace/automations';
 import { edit as attachments } from '@/routes/workspace/attachments';
+import { edit as portal } from '@/routes/workspace/portal';
 import { index as customFields } from '@/routes/workspace/custom-fields';
 import { index as email } from '@/routes/workspace/email';
 import { edit as general } from '@/routes/workspace/general';
@@ -16,6 +17,7 @@ const sections = computed(() => [
   { label: 'General', href: general().url },
   { label: 'Email', href: email().url },
   { label: 'Attachments', href: attachments().url },
+  { label: 'Customer portal', href: portal().url },
   // Self-hosted only: the settings in it don't exist in the cloud.
   ...(page.props.multitenant
     ? []

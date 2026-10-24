@@ -3,6 +3,7 @@
 namespace App\Data\Workspaces;
 
 use App\Casts\WorkspaceSettingsCast;
+use App\Enums\PortalAccess;
 use Illuminate\Http\UploadedFile;
 use Spatie\LaravelData\Data;
 
@@ -27,6 +28,12 @@ class WorkspaceSettings extends Data
         public array $attachmentsBlockedExtensions = ['bat', 'cmd', 'com', 'cpl', 'dll', 'exe', 'hta', 'jar', 'js', 'jse', 'lnk', 'msi', 'msp', 'ps1', 'scr', 'sh', 'vbe', 'vbs', 'wsf'],
         /** Lets automation webhooks reach private, loopback and link-local addresses (LAN targets). Self-hosted only; always off in the cloud. */
         public bool $automationsAllowPrivateUrls = false,
+        /** Whether contacts can sign in to the customer portal. */
+        public bool $portalEnabled = true,
+        /** Who can sign in to the portal: anyone (a contact is created on first sign-in) or only existing contacts. */
+        public PortalAccess $portalAccess = PortalAccess::ANYONE,
+        /** Whether a satisfaction survey is emailed when a ticket is first solved. */
+        public bool $surveysEnabled = false,
     ) {}
 
     /**

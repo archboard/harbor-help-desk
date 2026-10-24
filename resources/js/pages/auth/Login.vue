@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import AppButton from '@/components/AppButton.vue';
 import AppLink from '@/components/AppLink.vue';
 import BorderSeparator from '@/components/BorderSeparator.vue';
@@ -12,6 +12,7 @@ import { guessTimezone } from '@/lib/dates';
 import { store } from '@/routes/login';
 import { store as sendMagicLink } from '@/routes/magic-link';
 import { request } from '@/routes/password';
+import { login as portalLogin } from '@/routes/portal';
 
 defineOptions({
   layout: {
@@ -24,6 +25,8 @@ defineProps<{
   status?: string;
   canResetPassword: boolean;
 }>();
+
+const page = usePage();
 
 const form = useForm({
   email: '',
@@ -113,4 +116,10 @@ function submit(): void {
       </p>
     </AppFieldset>
   </form>
+
+  <p v-if="page.props.portalEnabled" class="mt-6 text-sm">
+    <AppLink :href="portalLogin()" class="font-normal">
+      Looking for tickets you've submitted?
+    </AppLink>
+  </p>
 </template>

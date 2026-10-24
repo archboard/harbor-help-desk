@@ -3,6 +3,7 @@
 use App\Actions\Mailboxes\DeleteMailbox;
 use App\Data\Workspaces\WorkspaceSettings;
 use App\Enums\MailboxDriver;
+use App\Enums\PortalAccess;
 use App\Enums\WorkspaceRole;
 use App\Models\Mailbox;
 use App\Models\User;
@@ -98,6 +99,28 @@ test('the new ticket limit must be between 1 and 1000', function () {
         ->assertSessionHasNoErrors();
 
     expect($this->workspace->fresh()->settings->mailNewTicketsPerSenderPerHour)->toBe(50);
+});
+
+test('the portal and survey settings update, and the access must be a known value', function () {
+    $this->actingAs($this->admin)
+        ->patch(route('workspace.settings.update'), ['portal_enabled' => false, 'portal_access' => 'contacts', 'surveys_enabled' => true])
+        ->assertSessionHasNoErrors();
+
+    $settings = $this->workspace->fresh()->settings;
+    expect($settings->portalEnabled)->toBeFalse()
+        ->and($settings->portalAccess)->toBe(PortalAccess::CONTACTS)
+        ->and($settings->surveysEnabled)->toBeTrue();
+
+    $this->actingAs($this->admin)
+        ->patch(route('workspace.settings.update'), ['portal_access' => 'everyone'])
+        ->assertSessionHasErrors('portal_access');
+});
+
+test('the portal settings page is for admins only', function () {
+    $this->actingAs($this->admin)->get(route('workspace.portal.edit'))
+        ->assertInertia(fn (Assert $page) => $page->component('workspace/Portal')->where('accessOptions.anyone', 'Anyone with an email address'));
+
+    $this->actingAs($this->agent)->get(route('workspace.portal.edit'))->assertForbidden();
 });
 
 test('agents neither see nor update settings', function () {

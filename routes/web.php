@@ -116,4 +116,5 @@ Route::middleware('workspace')->group(function () {
 
     require __DIR__.'/settings.php';
     require __DIR__.'/workspace.php';
+    require __DIR__.'/portal.php';
 });

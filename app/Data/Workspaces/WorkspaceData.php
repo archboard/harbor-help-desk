@@ -2,6 +2,7 @@
 
 namespace App\Data\Workspaces;
 
+use App\Models\User;
 use App\Models\Workspace;
 use Carbon\CarbonImmutable;
 use Spatie\LaravelData\Data;
@@ -20,7 +21,8 @@ class WorkspaceData extends Data
 
     public static function fromModel(Workspace $workspace): self
     {
-        $user = request()->user();
+        // The portal's default guard is the contact guard, and contacts aren't agents.
+        $user = request()->user() instanceof User ? request()->user() : null;
 
         return new self(
             id: $workspace->id,

@@ -2,6 +2,7 @@ import { createInertiaApp } from '@inertiajs/vue3';
 import { initializeTheme } from '@/composables/useAppearance';
 import AppLayout from '@/layouts/AppLayout.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
+import PortalLayout from '@/layouts/PortalLayout.vue';
 import WorkspaceLayout from '@/layouts/WorkspaceLayout.vue';
 import { initializeFlashToast } from '@/lib/flashToast';
 import { initializeRealtime } from '@/lib/realtime';
@@ -13,6 +14,10 @@ void createInertiaApp({
   layout: (name) => {
     if (name.startsWith('auth/')) {
       return AuthLayout;
+    }
+
+    if (name.startsWith('portal/')) {
+      return PortalLayout;
     }
 
     return name.startsWith('workspace/')

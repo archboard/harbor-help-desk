@@ -600,6 +600,11 @@ declare namespace App {
         preferences: Record<string, Record<string, boolean>>;
       };
     }
+    namespace Portal {
+      export type SendPortalMagicLinkData = {
+        email: string;
+      };
+    }
     namespace Realtime {
       export type RealtimeData = {
         key: string;
@@ -843,6 +848,9 @@ declare namespace App {
         attachments_max_size_kb?: number | null;
         attachments_blocked_extensions?: string[] | null;
         automations_allow_private_urls?: boolean | null;
+        portal_enabled?: boolean | null;
+        portal_access?: App.Enums.PortalAccess | null;
+        surveys_enabled?: boolean | null;
       };
       export type WorkspaceData = {
         id: string;
@@ -858,6 +866,9 @@ declare namespace App {
         attachments_max_size_kb: number;
         attachments_blocked_extensions: string[];
         automations_allow_private_urls: boolean;
+        portal_enabled: boolean;
+        portal_access: App.Enums.PortalAccess;
+        surveys_enabled: boolean;
       };
     }
   }
@@ -893,6 +904,7 @@ declare namespace App {
       | 'sla_warning'
       | 'sla_breached'
       | 'automation';
+    export type PortalAccess = 'anyone' | 'contacts';
     export type SlaMetric = 'first_response' | 'resolution';
     export type TicketEventType =
       | 'created'

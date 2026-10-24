@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Contact;
 use App\Models\User;
 
 return [
@@ -43,6 +44,11 @@ return [
             'provider' => 'users',
         ],
 
+        'contact' => [
+            'driver' => 'session',
+            'provider' => 'contacts',
+        ],
+
         'api' => [
             'driver' => 'passport',
             'provider' => 'users',
@@ -70,6 +76,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+
+        'contacts' => [
+            'driver' => 'eloquent',
+            'model' => Contact::class,
         ],
 
         // 'users' => [

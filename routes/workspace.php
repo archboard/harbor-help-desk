@@ -5,6 +5,7 @@ use App\Http\Controllers\Workspace\AutomationsController;
 use App\Http\Controllers\Workspace\CustomFieldController;
 use App\Http\Controllers\Workspace\EmailController;
 use App\Http\Controllers\Workspace\GeneralController;
+use App\Http\Controllers\Workspace\PortalController;
 use App\Http\Controllers\Workspace\SettingsController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,6 +22,8 @@ Route::middleware(['auth', 'verified'])->prefix('workspace')->name('workspace.')
         ->parameters(['email' => 'mailbox']);
 
     Route::get('attachments', [AttachmentsController::class, 'edit'])->name('attachments.edit');
+
+    Route::get('portal', [PortalController::class, 'edit'])->name('portal.edit');
 
     Route::get('automations', [AutomationsController::class, 'edit'])->name('automations.edit');
 

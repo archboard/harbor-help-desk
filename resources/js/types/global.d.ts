@@ -23,6 +23,7 @@ declare module '@inertiajs/core' {
       auth: Auth;
       workspace: App.Data.Workspaces.WorkspaceData | null;
       canViewAutomations?: boolean;
+      portalEnabled?: boolean;
       notifications?: { unread_count: number } | null;
       realtime?: App.Data.Realtime.RealtimeData;
       [key: string]: unknown;

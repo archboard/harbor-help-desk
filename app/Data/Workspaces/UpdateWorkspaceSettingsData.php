@@ -3,6 +3,7 @@
 namespace App\Data\Workspaces;
 
 use App\Data\InputData;
+use App\Enums\PortalAccess;
 use Spatie\LaravelData\Attributes\Validation\Between;
 use Spatie\LaravelData\Attributes\Validation\Min;
 use Spatie\LaravelData\Optional;
@@ -24,5 +25,8 @@ class UpdateWorkspaceSettingsData extends InputData
         public int|Optional|null $attachmentsMaxSizeKb,
         public array|Optional|null $attachmentsBlockedExtensions,
         public bool|Optional|null $automationsAllowPrivateUrls,
+        public bool|Optional|null $portalEnabled,
+        public PortalAccess|Optional|null $portalAccess,
+        public bool|Optional|null $surveysEnabled,
     ) {}
 }
