@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsurePortalEnabled;
+use App\Http\Middleware\EnsureSurveysEnabled;
 use App\Http\Middleware\EnsureTokenCanAccessWorkspace;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -39,7 +40,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prependToPriorityList(AuthenticatesRequests::class, EnsurePortalEnabled::class);
         $middleware->prependToPriorityList(SubstituteBindings::class, EnsureTokenCanAccessWorkspace::class);
 
-        $middleware->alias(['portal.enabled' => EnsurePortalEnabled::class]);
+        $middleware->alias([
+            'portal.enabled' => EnsurePortalEnabled::class,
+            'surveys.enabled' => EnsureSurveysEnabled::class,
+        ]);
         $middleware->redirectGuestsTo(fn (Request $request): string => route($request->routeIs('portal.*') ? 'portal.login' : 'login'));
 
         $middleware->group('workspace', [

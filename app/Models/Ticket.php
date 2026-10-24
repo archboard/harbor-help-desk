@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -94,6 +95,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @method static Builder<static>|Ticket whereSlaPolicyId($value)
  * @method static Builder<static>|Ticket whereSource($value)
  *
+ * @property CarbonImmutable|null $survey_sent_at
+ * @property-read SatisfactionRating|null $satisfactionRating
+ *
+ * @method static Builder<static>|Ticket whereSurveySentAt($value)
+ *
  * @mixin \Eloquent
  */
 #[Unguarded]
@@ -151,6 +157,7 @@ class Ticket extends Model
             'priority' => TicketPriority::class,
             'source' => TicketSource::class,
             'due_at' => 'datetime',
+            'survey_sent_at' => 'datetime',
         ];
     }
 
@@ -283,6 +290,16 @@ class Ticket extends Model
     public function slaTargets(): HasMany
     {
         return $this->hasMany(TicketSlaTarget::class);
+    }
+
+    /**
+     * The requester's rating of how the ticket was handled.
+     *
+     * @return HasOne<SatisfactionRating, $this>
+     */
+    public function satisfactionRating(): HasOne
+    {
+        return $this->hasOne(SatisfactionRating::class);
     }
 
     /**

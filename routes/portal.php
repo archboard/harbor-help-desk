@@ -1,7 +1,9 @@
 <?php
 
+use App\Enums\SatisfactionScore;
 use App\Http\Controllers\Portal\AttachmentDownloadController;
 use App\Http\Controllers\Portal\PortalLoginController;
+use App\Http\Controllers\Portal\RatingController;
 use App\Http\Controllers\Portal\TicketCommentController;
 use App\Http\Controllers\Portal\TicketController;
 use Illuminate\Support\Facades\Route;
@@ -21,4 +23,10 @@ Route::middleware('portal.enabled')->prefix('portal')->name('portal.')->group(fu
         Route::post('tickets/{ticket}/comments', [TicketCommentController::class, 'store'])->name('tickets.comments.store');
         Route::get('attachments/{attachment}/download', AttachmentDownloadController::class)->name('attachments.download');
     });
+});
+
+// Survey links from the satisfaction email: signed instead of signed-in, and live even with the portal off.
+Route::middleware(['surveys.enabled', 'signed:relative'])->prefix('portal')->name('portal.')->group(function () {
+    Route::get('tickets/{ticket}/rate/{rating}', [RatingController::class, 'show'])->whereIn('rating', array_column(SatisfactionScore::cases(), 'value'))->name('ratings.show');
+    Route::post('tickets/{ticket}/rate/{rating}', [RatingController::class, 'store'])->whereIn('rating', array_column(SatisfactionScore::cases(), 'value'))->middleware('throttle:6,1')->name('ratings.store');
 });

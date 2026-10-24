@@ -26,6 +26,7 @@ enum TicketEventType: string
     case SLA_WARNING = 'sla_warning';
     case SLA_BREACHED = 'sla_breached';
     case EMAIL_BOUNCED = 'email_bounced';
+    case SATISFACTION_RATED = 'satisfaction_rated';
     case DELETED = 'deleted';
     case RESTORED = 'restored';
 }

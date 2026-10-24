@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\SatisfactionScore;
 use App\Enums\SlaMetric;
 use App\Enums\TicketEventType;
 use App\Enums\TicketPriority;
@@ -165,6 +166,7 @@ class TicketEvent extends Model
             TicketEventType::SLA_WARNING => __(':metric SLA is at risk: due :due.', ['metric' => SlaMetric::from($properties['metric'])->label(), 'due' => $this->localTime($properties['due_at'], $timezone)]),
             TicketEventType::SLA_BREACHED => __(':metric SLA was breached.', ['metric' => SlaMetric::from($properties['metric'])->label()]),
             TicketEventType::EMAIL_BOUNCED => __('An emailed reply bounced: :reason', ['reason' => $properties['reason']]),
+            TicketEventType::SATISFACTION_RATED => __(':actor rated the support :rating.', $replace + ['rating' => mb_strtolower(SatisfactionScore::from($properties['rating'])->label())]),
             TicketEventType::DELETED => __(':actor deleted the ticket.', $replace),
             TicketEventType::RESTORED => __(':actor restored the ticket.', $replace),
         };

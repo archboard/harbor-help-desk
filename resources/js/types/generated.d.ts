@@ -617,6 +617,7 @@ declare namespace App {
         status: App.Enums.TicketStatus;
         status_label: string;
         desk_name: string;
+        satisfaction_rating?: App.Data.Tickets.SatisfactionRatingData | null;
         created_at: string | null;
         updated_at: string | null;
       };
@@ -738,6 +739,20 @@ declare namespace App {
       export type LookupTicketsData = {
         search?: string | null;
       };
+      export type RateTicketData = {
+        rating: App.Enums.SatisfactionScore;
+        comment?: string | null;
+      };
+      export type SatisfactionRatingData = {
+        id: string;
+        ticket_id: string;
+        contact_id: string;
+        rating: App.Enums.SatisfactionScore;
+        rating_label: string;
+        comment: string | null;
+        created_at: string | null;
+        updated_at: string | null;
+      };
       export type SearchTicketsData = {
         search?: string | null;
         desk_id?: string | string[];
@@ -793,6 +808,7 @@ declare namespace App {
         assignees?: App.Data.Users.UserData[];
         tags?: App.Data.Tags.TagData[];
         sla_targets?: App.Data.Tickets.TicketSlaTargetData[];
+        satisfaction_rating?: App.Data.Tickets.SatisfactionRatingData | null;
         created_at: string | null;
         updated_at: string | null;
         deleted_at: string | null;
@@ -924,6 +940,7 @@ declare namespace App {
       | 'sla_breached'
       | 'automation';
     export type PortalAccess = 'anyone' | 'contacts';
+    export type SatisfactionScore = 'good' | 'bad';
     export type SlaMetric = 'first_response' | 'resolution';
     export type TicketEventType =
       | 'created'
@@ -948,6 +965,7 @@ declare namespace App {
       | 'sla_warning'
       | 'sla_breached'
       | 'email_bounced'
+      | 'satisfaction_rated'
       | 'deleted'
       | 'restored';
     export type TicketPriority = 'low' | 'normal' | 'high' | 'urgent';
