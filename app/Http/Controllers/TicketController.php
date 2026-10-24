@@ -111,7 +111,7 @@ class TicketController extends Controller
     {
         Gate::authorize('view', $ticket);
 
-        $ticket->load(['desk.customFields', 'requester', 'assignees', 'tags', 'slaTargets']);
+        $ticket->load(['desk.customFields', 'requester', 'assignees', 'tags', 'slaTargets', 'satisfactionRating']);
 
         return Inertia::render('tickets/Show', [
             'ticket' => TicketData::from($ticket),

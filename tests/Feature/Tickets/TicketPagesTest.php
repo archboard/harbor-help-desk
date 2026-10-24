@@ -4,6 +4,7 @@ use App\Enums\DeskRole;
 use App\Enums\TicketEventType;
 use App\Enums\TicketStatus;
 use App\Models\Desk;
+use App\Models\SatisfactionRating;
 use App\Models\Tag;
 use App\Models\Ticket;
 use App\Models\TicketComment;
@@ -94,6 +95,15 @@ test('the ticket page shows the thread, sidebar and abilities', function () {
             ->has('reminders', 1)
             ->where('deskMembers.0.id', $this->agent->id)
             ->where('can', ['update' => true, 'delete' => false, 'restore' => false]));
+});
+
+test('the ticket page includes the satisfaction rating', function () {
+    $ticket = Ticket::factory()->for($this->desk)->create();
+    SatisfactionRating::factory()->create(['ticket_id' => $ticket->id, 'rating' => 'bad', 'comment' => 'Slow']);
+
+    $this->actingAs($this->agent)
+        ->get(route('tickets.show', $ticket))
+        ->assertInertia(fn (Assert $page) => $page->where('ticket.satisfaction_rating.rating', 'bad')->where('ticket.satisfaction_rating.comment', 'Slow'));
 });
 
 test('core fields are updated and recorded in the history', function () {

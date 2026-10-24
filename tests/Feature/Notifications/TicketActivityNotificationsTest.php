@@ -126,7 +126,8 @@ test('the queued listener runs inside the workspace of the event', function () {
     expect(DB::table('jobs')->where('payload', 'like', '%SendTicketActivityNotifications%')->count())->toBe(1);
     Notification::assertNothingSent();
 
-    Artisan::call('queue:work', ['--stop-when-empty' => true, '--queue' => 'default']);
+    // The whole suite runs past the worker's 128 MB default, which would stop it after the first job.
+    Artisan::call('queue:work', ['--stop-when-empty' => true, '--queue' => 'default', '--memory' => 4096]);
 
     Notification::assertSentTo([$this->actor, $this->colleague], TicketActivity::class);
 });

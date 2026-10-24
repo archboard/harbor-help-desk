@@ -163,3 +163,56 @@ test('a link signed for workspace A\'s ticket is a 404 on workspace B', function
     expect(SatisfactionRating::count())->toBe(0)
         ->and($other->execute(fn () => SatisfactionRating::count()))->toBe(0);
 });
+
+test('a contact rates and changes the rating from the portal ticket', function () {
+    solve($this->ticket);
+    $this->actingAs($this->contact, 'contact');
+
+    $this->get(route('portal.tickets.show', $this->ticket))
+        ->assertInertia(fn (Assert $page) => $page->where('canRate', true)->where('ticket.satisfaction_rating', null));
+
+    $this->post(route('portal.tickets.rating.store', $this->ticket), ['rating' => 'bad', 'comment' => 'Slow'])->assertRedirect();
+    $this->post(route('portal.tickets.rating.store', $this->ticket), ['rating' => 'good'])->assertRedirect();
+
+    expect(SatisfactionRating::sole())->rating->toBe(SatisfactionScore::GOOD)->comment->toBeNull();
+    $this->get(route('portal.tickets.show', $this->ticket))
+        ->assertInertia(fn (Assert $page) => $page->where('ticket.satisfaction_rating.rating', 'good'));
+});
+
+test('the portal rating needs a solved ticket of your own', function () {
+    $this->actingAs($this->contact, 'contact');
+
+    $this->post(route('portal.tickets.rating.store', $this->ticket), ['rating' => 'good'])->assertSessionHasErrors('rating');
+
+    solve($this->ticket);
+    $this->post(route('portal.tickets.rating.store', Ticket::factory()->create()), ['rating' => 'good'])->assertNotFound();
+
+    expect(SatisfactionRating::count())->toBe(0);
+});
+
+test('the portal rating is a 404 while surveys are off', function () {
+    solve($this->ticket);
+    $this->workspace->update(['settings' => ['surveys_enabled' => false]]);
+    $this->actingAs($this->contact, 'contact');
+    Workspace::forgetCurrent();
+    $this->post(route('portal.tickets.rating.store', $this->ticket), ['rating' => 'good'])->assertNotFound();
+    $this->get(route('portal.tickets.show', $this->ticket))->assertInertia(fn (Assert $page) => $page->where('canRate', false));
+    expect(SatisfactionRating::count())->toBe(0);
+});
+
+test('a contact cannot rate another workspace\'s ticket from the portal', function () {
+    config(['harbor.multitenant' => true, 'harbor.domain' => 'harbor.test']);
+    URL::forceRootUrl(null);
+    $this->workspace->update(['subdomain' => 'acme']);
+    $other = Workspace::factory()->create(['subdomain' => 'other', 'settings' => ['surveys_enabled' => true]]);
+    $foreign = $other->execute(function () {
+        $ticket = Ticket::factory()->create(['status' => TicketStatus::SOLVED]);
+
+        return $ticket;
+    });
+    $this->workspace->makeCurrent();
+    $this->actingAs($this->contact, 'contact');
+
+    $this->post("http://acme.harbor.test/portal/tickets/{$foreign->id}/rating", ['rating' => 'good'])->assertNotFound();
+    expect($other->execute(fn () => SatisfactionRating::count()))->toBe(0);
+});

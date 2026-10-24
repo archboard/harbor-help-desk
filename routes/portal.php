@@ -3,6 +3,7 @@
 use App\Enums\SatisfactionScore;
 use App\Http\Controllers\Portal\AttachmentDownloadController;
 use App\Http\Controllers\Portal\PortalLoginController;
+use App\Http\Controllers\Portal\RateTicketController;
 use App\Http\Controllers\Portal\RatingController;
 use App\Http\Controllers\Portal\TicketCommentController;
 use App\Http\Controllers\Portal\TicketController;
@@ -21,6 +22,7 @@ Route::middleware('portal.enabled')->prefix('portal')->name('portal.')->group(fu
         Route::post('desks/{desk}/tickets', [TicketController::class, 'store'])->name('desks.tickets.store');
         Route::get('tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
         Route::post('tickets/{ticket}/comments', [TicketCommentController::class, 'store'])->name('tickets.comments.store');
+        Route::post('tickets/{ticket}/rating', RateTicketController::class)->middleware('surveys.enabled')->name('tickets.rating.store');
         Route::get('attachments/{attachment}/download', AttachmentDownloadController::class)->name('attachments.download');
     });
 });

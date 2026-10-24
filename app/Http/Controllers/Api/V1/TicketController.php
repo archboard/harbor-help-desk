@@ -55,7 +55,7 @@ class TicketController extends Controller
     {
         Gate::authorize('view', $ticket);
 
-        return TicketData::from($ticket->load(self::RELATIONS));
+        return TicketData::from($ticket->load([...self::RELATIONS, 'satisfactionRating']));
     }
 
     public function update(Request $request, Ticket $ticket, UpdateTicket $updateTicket): TicketData

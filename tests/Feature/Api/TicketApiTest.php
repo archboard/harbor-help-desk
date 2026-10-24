@@ -4,6 +4,7 @@ use App\Enums\DeskRole;
 use App\Enums\TicketPriority;
 use App\Enums\WorkspaceRole;
 use App\Models\Desk;
+use App\Models\SatisfactionRating;
 use App\Models\Tag;
 use App\Models\Ticket;
 use App\Models\User;
@@ -96,6 +97,18 @@ test('the list shows visible tickets and filters them', function () {
     $this->getJson('http://acme.harbor.test/api/v1/tickets?priority[]=urgent&priority[]=low')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $urgent->id);
     $this->getJson('http://acme.harbor.test/api/v1/tickets?assignee_id=me')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $assigned->id);
     $this->getJson('http://acme.harbor.test/api/v1/tickets?status=nope')->assertJsonValidationErrors('status');
+});
+
+test('showing a ticket includes its satisfaction rating', function () {
+    ['workspace' => $workspace, 'desk' => $desk, 'agent' => $agent] = acmeWithAgent();
+    $ticket = Ticket::factory()->for($desk)->create();
+    SatisfactionRating::factory()->create(['ticket_id' => $ticket->id, 'rating' => 'good', 'comment' => 'Fast']);
+    actAs($agent, $workspace);
+
+    $this->getJson("http://acme.harbor.test/api/v1/tickets/{$ticket->id}")
+        ->assertOk()
+        ->assertJsonPath('satisfaction_rating.rating', 'good')
+        ->assertJsonPath('satisfaction_rating.comment', 'Fast');
 });
 
 test('tickets are updated, moved, assigned and tagged, and the history reads back', function () {

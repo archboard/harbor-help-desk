@@ -171,6 +171,25 @@ function slaColor(target: App.Data.Tickets.TicketSlaTargetData): string {
         <FieldError v-if="errors.desk_id">{{ errors.desk_id }}</FieldError>
       </div>
 
+      <div v-if="ticket.satisfaction_rating" class="space-y-1">
+        <h2 class="font-medium text-gray-500 dark:text-gray-400">
+          Satisfaction
+        </h2>
+        <Pill
+          :color="
+            ticket.satisfaction_rating.rating === 'good' ? 'green' : 'red'
+          "
+        >
+          {{ ticket.satisfaction_rating.rating_label }}
+        </Pill>
+        <p
+          v-if="ticket.satisfaction_rating.comment"
+          class="whitespace-pre-wrap"
+        >
+          {{ ticket.satisfaction_rating.comment }}
+        </p>
+      </div>
+
       <div v-if="ticket.sla_targets?.length" class="space-y-1">
         <h2 class="font-medium text-gray-500 dark:text-gray-400">SLA</h2>
         <p
