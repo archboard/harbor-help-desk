@@ -875,6 +875,11 @@ declare namespace App {
         name: string;
         subdomain: string;
       };
+      export type CreateWorkspaceOwnerData = {
+        name: string;
+        email: string;
+        password: string;
+      };
       export type SetAwayData = {
         away: boolean;
       };

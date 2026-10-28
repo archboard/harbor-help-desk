@@ -12,6 +12,7 @@ use App\Http\Controllers\DeskController;
 use App\Http\Controllers\DeskCustomFieldController;
 use App\Http\Controllers\DeskMemberController;
 use App\Http\Controllers\DuplicateAutomationController;
+use App\Http\Controllers\InstallController;
 use App\Http\Controllers\LookupTicketsController;
 use App\Http\Controllers\MailboxOAuthController;
 use App\Http\Controllers\MarkAllNotificationsReadController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\RotateWebhookTokenController;
 use App\Http\Controllers\SavedViewController;
 use App\Http\Controllers\SetAutomationEnabledController;
 use App\Http\Controllers\SetAwayController;
+use App\Http\Controllers\StartSetupController;
 use App\Http\Controllers\TestAutomationController;
 use App\Http\Controllers\TicketAssigneeController;
 use App\Http\Controllers\TicketAttachmentController;
@@ -34,6 +36,7 @@ use App\Http\Controllers\TicketTagController;
 use App\Http\Controllers\Webhooks\AutomationWebhookController;
 use App\Http\Controllers\Webhooks\MailboxPushController;
 use App\Http\Controllers\Webhooks\PostmarkWebhookController;
+use App\Http\Middleware\EnsureInstallOpen;
 use App\Http\Middleware\VerifyPostmarkWebhook;
 use Illuminate\Support\Facades\Route;
 
@@ -56,7 +59,15 @@ Route::post('webhooks/microsoft/graph', [MailboxPushController::class, 'graph'])
 // On the central domain: OAuth redirect URIs can't be wildcards. The `state` names the workspace.
 Route::get('mailboxes/oauth/callback', [MailboxOAuthController::class, 'callback'])->name('mailboxes.oauth.callback');
 
+// Outside the workspace group: a fresh self-hosted install has no workspace yet.
+Route::middleware(['guest', EnsureInstallOpen::class])->group(function () {
+    Route::get('install', [InstallController::class, 'create'])->name('install');
+    Route::post('install', [InstallController::class, 'store'])->middleware('throttle:6,1')->name('install.store');
+});
+
 Route::middleware('workspace')->group(function () {
+    Route::get('setup', StartSetupController::class)->middleware(['guest', 'signed:relative'])->name('setup.start');
+
     Route::middleware(['auth', 'verified'])->group(function () {
         Route::redirect('dashboard', '/tickets')->name('dashboard');
         Route::put('availability', SetAwayController::class)->name('availability.update');

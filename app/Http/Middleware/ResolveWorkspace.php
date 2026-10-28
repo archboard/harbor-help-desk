@@ -11,8 +11,9 @@ use Symfony\Component\HttpFoundation\Response;
 class ResolveWorkspace
 {
     /**
-     * Make the workspace found from the request current, or 404 when there is none. A workspace
-     * left current by an earlier request in the same process is never reused.
+     * Make the workspace found from the request current, or 404 when there is none. A fresh
+     * self-hosted install has none yet and goes to the install page. A workspace left current by
+     * an earlier request in the same process is never reused.
      *
      * @param  Closure(Request): (Response)  $next
      */
@@ -23,6 +24,10 @@ class ResolveWorkspace
             : app(SingleWorkspaceFinder::class);
 
         $workspace = $finder->findForRequest($request);
+
+        if ($workspace === null && ! config('harbor.multitenant')) {
+            return redirect()->route('install');
+        }
 
         abort_if($workspace === null, Response::HTTP_NOT_FOUND);
 

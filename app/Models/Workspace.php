@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 use Spatie\Multitenancy\Concerns\UsesMultitenancyConfig;
 use Spatie\Multitenancy\Contracts\IsTenant;
 use Spatie\Multitenancy\Models\Concerns\ImplementsTenant;
@@ -178,6 +179,15 @@ class Workspace extends Model implements IsTenant
         }
 
         return $root.'/'.ltrim($path, '/');
+    }
+
+    /**
+     * A signed link, valid for 14 days, that lets the first person claim the workspace as its
+     * owner. Relative, so it works on the workspace's own host.
+     */
+    public function setupUrl(): string
+    {
+        return $this->url(URL::temporarySignedRoute('setup.start', now()->addDays(14), ['workspace' => $this->getKey()], absolute: false));
     }
 
     /**
