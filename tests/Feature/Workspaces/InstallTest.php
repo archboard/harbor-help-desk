@@ -1,5 +1,7 @@
 <?php
 
+use App\Actions\Install\CheckServices;
+use App\Data\Install\ServiceCheckData;
 use App\Enums\WorkspaceRole;
 use App\Models\User;
 use App\Models\Workspace;
@@ -27,6 +29,17 @@ describe('self-hosted', function () {
         $this->get('/tickets')->assertRedirect(route('install'));
 
         $this->get(route('install'))->assertOk()->assertInertia(fn (Assert $page) => $page->component('install/Install'));
+    });
+
+    test('the install page checks the services', function () {
+        config(['reverb.servers.reverb.host' => '127.0.0.1', 'reverb.servers.reverb.port' => 1]);
+
+        $this->get(route('install'))->assertInertia(fn (Assert $page) => $page->has('checks', 4));
+
+        $checks = collect(app(CheckServices::class)->handle())->keyBy('name');
+        expect($checks['Redis'])->toBeInstanceOf(ServiceCheckData::class)->ok->toBeTrue()
+            ->and($checks['Postgres']->ok)->toBeTrue()
+            ->and($checks['Reverb'])->ok->toBeFalse()->detail->toContain('127.0.0.1:1');
     });
 
     test('installing creates the workspace and a verified owner, signed in', function () {
@@ -76,7 +89,7 @@ describe('cloud', function () {
 
     test('the setup link opens the install page, which claims the workspace', function () {
         $this->get($this->acme->setupUrl())->assertRedirect($this->acme->url('install'));
-        $this->get($this->acme->url('install'))->assertOk();
+        $this->get($this->acme->url('install'))->assertOk()->assertInertia(fn (Assert $page) => $page->missing('checks'));
 
         $this->post($this->acme->url('install'), ownerInput())->assertRedirect($this->acme->url('tickets'));
 

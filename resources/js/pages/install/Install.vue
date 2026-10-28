@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
+import Pill from '@/components/Pill.vue';
 import AppFieldset from '@/components/forms/AppFieldset.vue';
 import {
   EmailField,
@@ -16,7 +18,20 @@ defineOptions({
   },
 });
 
+defineProps<{
+  checks?: App.Data.Install.ServiceCheckData[];
+}>();
+
 const page = usePage();
+const checking = ref(false);
+
+function checkAgain(): void {
+  router.reload({
+    only: ['checks'],
+    onStart: () => (checking.value = true),
+    onFinish: () => (checking.value = false),
+  });
+}
 const needsWorkspace = !page.props.multitenant;
 
 const form = useForm({
@@ -39,6 +54,31 @@ function submit(): void {
 
   <form @submit.prevent="submit">
     <AppFieldset>
+      <div v-if="checks" class="space-y-2">
+        <ul class="space-y-2 text-sm">
+          <li v-for="check in checks" :key="check.name" class="flex gap-3">
+            <Pill
+              :color="check.ok ? 'green' : 'red'"
+              class="shrink-0 self-start"
+            >
+              {{ check.name }}
+            </Pill>
+            <span class="text-gray-600 dark:text-gray-300">{{
+              check.detail
+            }}</span>
+          </li>
+        </ul>
+        <AppButton
+          type="button"
+          size="xs"
+          color="gray"
+          :loading="checking"
+          @click="checkAgain"
+        >
+          Check again
+        </AppButton>
+      </div>
+
       <InputField
         v-if="needsWorkspace"
         v-model="form.workspace_name"

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Install\CheckServices;
 use App\Actions\Workspaces\CreateWorkspace;
 use App\Actions\Workspaces\CreateWorkspaceOwner;
 use App\Models\Workspace;
@@ -17,7 +18,10 @@ class InstallController extends Controller
 {
     public function create(): Response
     {
-        return Inertia::render('install/Install');
+        // Infrastructure is the operator's job in the cloud, so only self-hosted installs see the checks.
+        return Inertia::render('install/Install', config('harbor.multitenant') ? [] : [
+            'checks' => fn (): array => app(CheckServices::class)->handle(),
+        ]);
     }
 
     /**

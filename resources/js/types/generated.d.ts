@@ -485,6 +485,13 @@ declare namespace App {
         sla_policy_id?: string | null;
       };
     }
+    namespace Install {
+      export type ServiceCheckData = {
+        name: string;
+        ok: boolean;
+        detail: string;
+      };
+    }
     namespace Macros {
       export type AppliedMacroData = {
         body: string | null;
