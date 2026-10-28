@@ -871,8 +871,16 @@ declare namespace App {
       };
     }
     namespace Workspaces {
+      export type CreateWorkspaceData = {
+        name: string;
+        subdomain: string;
+      };
       export type SetAwayData = {
         away: boolean;
+      };
+      export type UpdateProvisionedWorkspaceData = {
+        name?: string;
+        subdomain?: string;
       };
       export type UpdateWorkspaceData = {
         name: string;

@@ -158,6 +158,14 @@ class Workspace extends Model implements IsTenant
     }
 
     /**
+     * Whether any agent belongs to the workspace yet. Until then it can still be claimed.
+     */
+    public function hasMembers(): bool
+    {
+        return $this->users()->exists();
+    }
+
+    /**
      * An absolute URL on the workspace's own host: its subdomain in the cloud, else `APP_URL`.
      */
     public function url(string $path = ''): string
