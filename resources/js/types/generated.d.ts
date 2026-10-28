@@ -640,6 +640,73 @@ declare namespace App {
         scheme: string;
       };
     }
+    namespace Reports {
+      export type BreakdownData = {
+        key: string;
+        label: string;
+        count: number;
+      };
+      export type HeatmapCellData = {
+        weekday: number;
+        hour: number;
+        count: number;
+      };
+      export type KpiData = {
+        value: number | null;
+        previous: number | null;
+      };
+      export type OverviewReportData = {
+        period: App.Data.Reports.ReportPeriodData;
+        created: App.Data.Reports.KpiData;
+        resolved: App.Data.Reports.KpiData;
+        reopened: App.Data.Reports.KpiData;
+        backlog: App.Data.Reports.BreakdownData[];
+        volume: App.Data.Reports.SeriesPointData[];
+        heatmap: App.Data.Reports.HeatmapCellData[];
+        by_source: App.Data.Reports.BreakdownData[];
+        by_desk: App.Data.Reports.BreakdownData[];
+      };
+      export type ReportFiltersData = {
+        from?: string;
+        to?: string;
+        desk_ids?: string[];
+        basis?: App.Enums.ReportBasis;
+      };
+      export type ReportPeriodData = {
+        from: string;
+        to: string;
+        previous_from: string;
+        previous_to: string;
+        timezone: string;
+        bucket: string;
+        basis: App.Enums.ReportBasis;
+        desk_ids: string[];
+      };
+      export type ResolutionReportData = {
+        period: App.Data.Reports.ReportPeriodData;
+        median_resolution: App.Data.Reports.KpiData;
+        average_resolution: App.Data.Reports.KpiData;
+        reopen_rate: App.Data.Reports.KpiData;
+        distribution: App.Data.Reports.BreakdownData[];
+        trend: App.Data.Reports.SeriesPointData[];
+      };
+      export type ResponsesReportData = {
+        period: App.Data.Reports.ReportPeriodData;
+        median_first_response: App.Data.Reports.KpiData;
+        average_first_response: App.Data.Reports.KpiData;
+        median_reply: App.Data.Reports.KpiData;
+        average_reply: App.Data.Reports.KpiData;
+        first_response_within_hour: App.Data.Reports.KpiData;
+        first_response_within_four_hours: App.Data.Reports.KpiData;
+        first_response_within_day: App.Data.Reports.KpiData;
+        first_response_distribution: App.Data.Reports.BreakdownData[];
+        trend: App.Data.Reports.SeriesPointData[];
+      };
+      export type SeriesPointData = {
+        date: string;
+        values: Record<string, number | null>;
+      };
+    }
     namespace SavedViews {
       export type CreateSavedViewData = {
         name: string;
@@ -968,6 +1035,8 @@ declare namespace App {
       | 'sla_breached'
       | 'automation';
     export type PortalAccess = 'anyone' | 'contacts';
+    export type Report = 'overview' | 'responses' | 'resolution';
+    export type ReportBasis = 'calendar' | 'business';
     export type SatisfactionScore = 'good' | 'bad';
     export type SlaMetric = 'first_response' | 'resolution';
     export type TicketEventType =

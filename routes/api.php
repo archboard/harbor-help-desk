@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\V1\MarkNotificationsReadController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\NotificationPreferenceController;
 use App\Http\Controllers\Api\V1\ReorderAutomationsController;
+use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\RotateWebhookTokenController;
 use App\Http\Controllers\Api\V1\SavedViewController;
 use App\Http\Controllers\Api\V1\SetAutomationEnabledController;
@@ -95,6 +96,8 @@ Route::prefix('v1')->name('api.v1.')
         Route::apiResource('sla-policies', SlaPolicyController::class)->parameters(['sla-policies' => 'slaPolicy']);
 
         Route::apiResource('mailboxes', MailboxController::class);
+
+        Route::get('reports/{report}', [ReportController::class, 'show'])->name('reports.show');
 
         Route::post('desks/{desk}/tickets', [TicketController::class, 'store'])->name('desks.tickets.store');
         Route::post('tickets/bulk', [TicketController::class, 'bulk'])->name('tickets.bulk');

@@ -19,6 +19,7 @@ use App\Http\Controllers\MarkAllNotificationsReadController;
 use App\Http\Controllers\MarkNotificationReadController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReorderAutomationsController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RotateWebhookTokenController;
 use App\Http\Controllers\SavedViewController;
 use App\Http\Controllers\SetAutomationEnabledController;
@@ -121,6 +122,8 @@ Route::middleware('workspace')->group(function () {
         Route::put('desks/{desk}/members/{user}', [DeskMemberController::class, 'update'])->name('desks.members.update');
         Route::delete('desks/{desk}/members/{user}', [DeskMemberController::class, 'destroy'])->name('desks.members.destroy');
         Route::put('desks/{desk}/custom-fields', [DeskCustomFieldController::class, 'update'])->name('desks.custom-fields.update');
+
+        Route::get('reports/{report}', [ReportController::class, 'show'])->name('reports.show');
 
         Route::get('mailboxes/oauth/{provider}', [MailboxOAuthController::class, 'redirect'])->whereIn('provider', ['google', 'microsoft'])->name('mailboxes.oauth.redirect');
     });
