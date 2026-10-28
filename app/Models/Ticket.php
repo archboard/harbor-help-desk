@@ -100,6 +100,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *
  * @method static Builder<static>|Ticket whereSurveySentAt($value)
  *
+ * @property-read TicketMetric|null $metric
+ *
  * @mixin \Eloquent
  */
 #[Unguarded]
@@ -300,6 +302,14 @@ class Ticket extends Model
     public function satisfactionRating(): HasOne
     {
         return $this->hasOne(SatisfactionRating::class);
+    }
+
+    /**
+     * @return HasOne<TicketMetric, $this>
+     */
+    public function metric(): HasOne
+    {
+        return $this->hasOne(TicketMetric::class);
     }
 
     /**

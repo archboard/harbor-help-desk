@@ -58,6 +58,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TicketComment whereMessageId($value)
  *
+ * @property int|null $response_minutes
+ * @property int|null $response_business_minutes
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TicketComment whereResponseBusinessMinutes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TicketComment whereResponseMinutes($value)
+ *
  * @mixin \Eloquent
  */
 #[Unguarded]

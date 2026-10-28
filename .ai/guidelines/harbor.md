@@ -75,6 +75,7 @@ The banners are `Properties`, `Booting`, `Casts`, `Accessors`, `Scopes`, `Relati
 | `arn_` | `AutomationRun`         |
 | `slp_` | `SlaPolicy`             |
 | `slt_` | `TicketSlaTarget`       |
+| `tmt_` | `TicketMetric`          |
 
 ## Tenancy
 
