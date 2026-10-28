@@ -641,6 +641,19 @@ declare namespace App {
       };
     }
     namespace Reports {
+      export type AgentRowData = {
+        agent: App.Data.Users.UserData;
+        public_replies: number;
+        internal_notes: number;
+        tickets_solved: number;
+        open_assigned: number;
+        median_reply: number | null;
+        median_first_response: number | null;
+      };
+      export type AgentsReportData = {
+        period: App.Data.Reports.ReportPeriodData;
+        agents: App.Data.Reports.AgentRowData[];
+      };
       export type BreakdownData = {
         key: string;
         label: string;
@@ -702,9 +715,52 @@ declare namespace App {
         first_response_distribution: App.Data.Reports.BreakdownData[];
         trend: App.Data.Reports.SeriesPointData[];
       };
+      export type SatisfactionCommentData = {
+        ticket_id: string;
+        ticket_number: number;
+        rating: App.Enums.SatisfactionScore;
+        comment: string;
+        created_at: string | null;
+      };
+      export type SatisfactionDeskData = {
+        desk_id: string;
+        name: string;
+        good: number;
+        bad: number;
+        score: number;
+      };
+      export type SatisfactionReportData = {
+        period: App.Data.Reports.ReportPeriodData;
+        good: App.Data.Reports.KpiData;
+        bad: App.Data.Reports.KpiData;
+        score: App.Data.Reports.KpiData;
+        response_rate: App.Data.Reports.KpiData;
+        trend: App.Data.Reports.SeriesPointData[];
+        by_desk: App.Data.Reports.SatisfactionDeskData[];
+        comments: App.Data.Reports.SatisfactionCommentData[];
+      };
       export type SeriesPointData = {
         date: string;
         values: Record<string, number | null>;
+      };
+      export type SlaMetricReportData = {
+        metric: App.Enums.SlaMetric;
+        met: number;
+        breached: number;
+        in_progress: number;
+        percent_met: App.Data.Reports.KpiData;
+        by_priority: App.Data.Reports.SlaPriorityData[];
+      };
+      export type SlaPriorityData = {
+        priority: App.Enums.TicketPriority;
+        met: number;
+        breached: number;
+        percent_met: number | null;
+      };
+      export type SlaReportData = {
+        period: App.Data.Reports.ReportPeriodData;
+        metrics: App.Data.Reports.SlaMetricReportData[];
+        breaches: App.Data.Reports.SeriesPointData[];
       };
     }
     namespace SavedViews {
@@ -1035,7 +1091,13 @@ declare namespace App {
       | 'sla_breached'
       | 'automation';
     export type PortalAccess = 'anyone' | 'contacts';
-    export type Report = 'overview' | 'responses' | 'resolution';
+    export type Report =
+      | 'overview'
+      | 'responses'
+      | 'resolution'
+      | 'agents'
+      | 'sla'
+      | 'satisfaction';
     export type ReportBasis = 'calendar' | 'business';
     export type SatisfactionScore = 'good' | 'bad';
     export type SlaMetric = 'first_response' | 'resolution';

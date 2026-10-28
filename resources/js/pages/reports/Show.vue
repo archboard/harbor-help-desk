@@ -10,7 +10,10 @@ defineProps<{
   data:
     | App.Data.Reports.OverviewReportData
     | App.Data.Reports.ResponsesReportData
-    | App.Data.Reports.ResolutionReportData;
+    | App.Data.Reports.ResolutionReportData
+    | App.Data.Reports.AgentsReportData
+    | App.Data.Reports.SlaReportData
+    | App.Data.Reports.SatisfactionReportData;
 }>();
 </script>
 

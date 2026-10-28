@@ -54,7 +54,7 @@ class BuildOverviewReport
      */
     protected function reopens(ReportScope $scope): Builder
     {
-        $resolved = collect(TicketStatus::cases())->filter->isResolved()->map->value->values()->all();
+        $resolved = TicketStatus::resolvedValues();
 
         return $scope->events()
             ->where('ticket_events.type', TicketEventType::STATUS_CHANGED)

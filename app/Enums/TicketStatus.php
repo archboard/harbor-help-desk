@@ -46,4 +46,14 @@ enum TicketStatus: string
             self::OPEN, self::PENDING, self::ON_HOLD => false,
         };
     }
+
+    /**
+     * The values of every resolved status, for queries.
+     *
+     * @return list<string>
+     */
+    public static function resolvedValues(): array
+    {
+        return array_values(array_map(fn (self $status): string => $status->value, array_filter(self::cases(), fn (self $status): bool => $status->isResolved())));
+    }
 }

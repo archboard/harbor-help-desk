@@ -9,11 +9,14 @@ use App\Data\Reports\ReportPeriodData;
 use App\Data\Reports\SeriesPointData;
 use App\Enums\ReportBasis;
 use App\Models\Desk;
+use App\Models\SatisfactionRating;
 use App\Models\Ticket;
 use App\Models\TicketComment;
 use App\Models\TicketEvent;
 use App\Models\TicketMetric;
+use App\Models\TicketSlaTarget;
 use App\Models\User;
+use App\Models\Workspace;
 use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
@@ -39,6 +42,7 @@ final readonly class ReportScope
     /**
      * @param  array<int, string>  $deskIds  The desks counted: the filter's, else every desk the viewer can see.
      * @param  list<string>  $filteredDeskIds  The filter as given, empty for all.
+     * @param  bool  $seesEveryAgent  Whether the agents report lists every workspace member, not only the desks' own.
      */
     public function __construct(
         public CarbonImmutable $start,
@@ -48,6 +52,7 @@ final readonly class ReportScope
         public ReportBasis $basis,
         public array $deskIds,
         public array $filteredDeskIds,
+        public bool $seesEveryAgent,
     ) {}
 
     /**
@@ -84,6 +89,7 @@ final readonly class ReportScope
             basis: $filters->basis instanceof Optional ? ReportBasis::CALENDAR : $filters->basis,
             deskIds: $filteredDeskIds === [] ? $visibleDeskIds : $filteredDeskIds,
             filteredDeskIds: $filteredDeskIds,
+            seesEveryAgent: $filteredDeskIds === [] && $viewer->workspaceRole(Workspace::current())?->isAdmin() === true,
         );
     }
 
@@ -127,13 +133,52 @@ final readonly class ReportScope
     }
 
     /**
+     * @return Builder<TicketComment>
+     */
+    public function comments(): Builder
+    {
+        return $this->joinTickets(TicketComment::class, 'ticket_comments');
+    }
+
+    /**
      * Public agent replies that answered a customer, with their response times.
      *
      * @return Builder<TicketComment>
      */
     public function replies(): Builder
     {
-        return $this->joinTickets(TicketComment::class, 'ticket_comments')->whereNotNull('ticket_comments.response_minutes');
+        return $this->comments()->whereNotNull('ticket_comments.response_minutes');
+    }
+
+    /**
+     * @return Builder<TicketSlaTarget>
+     */
+    public function slaTargets(): Builder
+    {
+        return $this->joinTickets(TicketSlaTarget::class, 'ticket_sla_targets');
+    }
+
+    /**
+     * @return Builder<SatisfactionRating>
+     */
+    public function ratings(): Builder
+    {
+        return $this->joinTickets(SatisfactionRating::class, 'satisfaction_ratings');
+    }
+
+    /**
+     * The agents a report lists: every workspace member for an admin looking at every desk,
+     * otherwise the members of the desks in scope.
+     *
+     * @return Builder<User>
+     */
+    public function agents(): Builder
+    {
+        return User::query()->when(
+            $this->seesEveryAgent,
+            fn (Builder $query) => $query->whereHas('workspaces', fn (Builder $query) => $query->whereKey(Workspace::current()?->getKey())),
+            fn (Builder $query) => $query->whereHas('desks', fn (Builder $query) => $query->withTrashed()->whereIn('desks.id', $this->deskIds)),
+        );
     }
 
     /**
