@@ -6,13 +6,14 @@ use App\Actions\Automations\CancelAutomationRun;
 use App\Data\Automations\AutomationRunData;
 use App\Http\Controllers\Controller;
 use App\Models\AutomationRun;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class CancelAutomationRunController extends Controller
 {
-    public function __invoke(Request $request, AutomationRun $run, CancelAutomationRun $cancelAutomationRun): JsonResponse
+    public function __invoke(#[CurrentUser] User $user, AutomationRun $run, CancelAutomationRun $cancelAutomationRun): JsonResponse
     {
-        return response()->json(AutomationRunData::from($cancelAutomationRun->handle($request->user(), $run)->load(['automation', 'ticket'])));
+        return response()->json(AutomationRunData::from($cancelAutomationRun->handle($user, $run)->load(['automation', 'ticket'])));
     }
 }

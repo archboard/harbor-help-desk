@@ -6,6 +6,8 @@ use App\Actions\Desks\SyncDeskCustomFields;
 use App\Data\CustomFields\CustomFieldData;
 use App\Http\Controllers\Controller;
 use App\Models\Desk;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
@@ -16,9 +18,9 @@ class DeskCustomFieldController extends Controller
      *
      * @return Collection<int, CustomFieldData>
      */
-    public function update(Request $request, Desk $desk, SyncDeskCustomFields $syncDeskCustomFields): Collection
+    public function update(Request $request, #[CurrentUser] User $user, Desk $desk, SyncDeskCustomFields $syncDeskCustomFields): Collection
     {
-        $syncDeskCustomFields->handle($request->user(), $desk, $request->all());
+        $syncDeskCustomFields->handle($user, $desk, $request->all());
 
         return CustomFieldData::collect($desk->customFields);
     }

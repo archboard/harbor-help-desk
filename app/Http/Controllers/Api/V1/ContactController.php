@@ -8,6 +8,8 @@ use App\Actions\Contacts\UpdateContact;
 use App\Data\Contacts\ContactData;
 use App\Http\Controllers\Controller;
 use App\Models\Contact;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Spatie\LaravelData\PaginatedDataCollection;
@@ -19,14 +21,14 @@ class ContactController extends Controller
      *
      * @return PaginatedDataCollection<int, ContactData>
      */
-    public function index(Request $request, SearchContacts $searchContacts): PaginatedDataCollection
+    public function index(Request $request, #[CurrentUser] User $user, SearchContacts $searchContacts): PaginatedDataCollection
     {
-        return ContactData::collect($searchContacts->handle($request->user(), $request->query())->paginate(), PaginatedDataCollection::class);
+        return ContactData::collect($searchContacts->handle($user, $request->query())->paginate(), PaginatedDataCollection::class);
     }
 
-    public function store(Request $request, CreateContact $createContact): ContactData
+    public function store(Request $request, #[CurrentUser] User $user, CreateContact $createContact): ContactData
     {
-        return ContactData::from($createContact->handle($request->user(), $request->all()));
+        return ContactData::from($createContact->handle($user, $request->all()));
     }
 
     public function show(Contact $contact): ContactData
@@ -36,8 +38,8 @@ class ContactController extends Controller
         return ContactData::from($contact);
     }
 
-    public function update(Request $request, Contact $contact, UpdateContact $updateContact): ContactData
+    public function update(Request $request, #[CurrentUser] User $user, Contact $contact, UpdateContact $updateContact): ContactData
     {
-        return ContactData::from($updateContact->handle($request->user(), $contact, $request->all()));
+        return ContactData::from($updateContact->handle($user, $contact, $request->all()));
     }
 }

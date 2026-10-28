@@ -13,6 +13,8 @@ use App\Enums\TicketSource;
 use App\Http\Controllers\Controller;
 use App\Models\Desk;
 use App\Models\Ticket;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -28,17 +30,17 @@ class TicketController extends Controller
      *
      * @return PaginatedDataCollection<int, TicketData>
      */
-    public function index(Request $request, SearchTickets $searchTickets): PaginatedDataCollection
+    public function index(Request $request, #[CurrentUser] User $user, SearchTickets $searchTickets): PaginatedDataCollection
     {
         return TicketData::collect(
-            $searchTickets->handle($request->user(), $request->query())->with(self::RELATIONS)->paginate(),
+            $searchTickets->handle($user, $request->query())->with(self::RELATIONS)->paginate(),
             PaginatedDataCollection::class,
         );
     }
 
-    public function store(Request $request, Desk $desk, CreateTicket $createTicket): TicketData
+    public function store(Request $request, #[CurrentUser] User $user, Desk $desk, CreateTicket $createTicket): TicketData
     {
-        return TicketData::from($createTicket->handle($request->user(), $desk, $request->all(), TicketSource::API)->load(self::RELATIONS));
+        return TicketData::from($createTicket->handle($user, $desk, $request->all(), TicketSource::API)->load(self::RELATIONS));
     }
 
     /**
@@ -46,9 +48,9 @@ class TicketController extends Controller
      *
      * @return array{updated: int}
      */
-    public function bulk(Request $request, BulkUpdateTickets $bulkUpdateTickets): array
+    public function bulk(Request $request, #[CurrentUser] User $user, BulkUpdateTickets $bulkUpdateTickets): array
     {
-        return ['updated' => $bulkUpdateTickets->handle($request->user(), $request->all())];
+        return ['updated' => $bulkUpdateTickets->handle($user, $request->all())];
     }
 
     public function show(Ticket $ticket): TicketData
@@ -58,20 +60,20 @@ class TicketController extends Controller
         return TicketData::from($ticket->load([...self::RELATIONS, 'satisfactionRating']));
     }
 
-    public function update(Request $request, Ticket $ticket, UpdateTicket $updateTicket): TicketData
+    public function update(Request $request, #[CurrentUser] User $user, Ticket $ticket, UpdateTicket $updateTicket): TicketData
     {
-        return TicketData::from($updateTicket->handle($request->user(), $ticket, $request->all())->load(self::RELATIONS));
+        return TicketData::from($updateTicket->handle($user, $ticket, $request->all())->load(self::RELATIONS));
     }
 
-    public function destroy(Request $request, Ticket $ticket, DeleteTicket $deleteTicket): Response
+    public function destroy(#[CurrentUser] User $user, Ticket $ticket, DeleteTicket $deleteTicket): Response
     {
-        $deleteTicket->handle($request->user(), $ticket);
+        $deleteTicket->handle($user, $ticket);
 
         return response()->noContent();
     }
 
-    public function restore(Request $request, Ticket $ticket, RestoreTicket $restoreTicket): JsonResponse
+    public function restore(#[CurrentUser] User $user, Ticket $ticket, RestoreTicket $restoreTicket): JsonResponse
     {
-        return response()->json(TicketData::from($restoreTicket->handle($request->user(), $ticket)->load(self::RELATIONS)));
+        return response()->json(TicketData::from($restoreTicket->handle($user, $ticket)->load(self::RELATIONS)));
     }
 }

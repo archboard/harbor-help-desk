@@ -29,7 +29,9 @@ use App\Models\Macro;
 use App\Models\SavedView;
 use App\Models\Tag;
 use App\Models\Ticket;
+use App\Models\User;
 use App\Models\Workspace;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -42,20 +44,20 @@ class TicketController extends Controller
      * The tickets the user can see, filtered by the query string and loaded a page at a time
      * as the list scrolls.
      */
-    public function index(Request $request, SearchTickets $searchTickets): Response
+    public function index(Request $request, #[CurrentUser] User $user, SearchTickets $searchTickets): Response
     {
         $filters = $request->except('page');
-        $desks = Desk::visibleTo($request->user())->orderBy('name')->get();
-        $tickets = $searchTickets->handle($request->user(), $filters)
+        $desks = Desk::visibleTo($user)->orderBy('name')->get();
+        $tickets = $searchTickets->handle($user, $filters)
             ->with(['desk', 'requester', 'assignees', 'tags'])
             ->paginate(50);
 
         return Inertia::render('tickets/Index', [
             'tickets' => Inertia::scroll(TicketData::collect($tickets)),
             'filters' => (object) $filters,
-            'savedViews' => SavedViewData::collect(SavedView::visibleTo($request->user())->with('user')->orderBy('name')->get()),
+            'savedViews' => SavedViewData::collect(SavedView::visibleTo($user)->with('user')->orderBy('name')->get()),
             'desks' => DeskData::collect($desks),
-            'leadDeskIds' => $desks->filter(fn (Desk $desk): bool => $request->user()->can('update', $desk))->values()->modelKeys(),
+            'leadDeskIds' => $desks->filter(fn (Desk $desk): bool => $user->can('update', $desk))->values()->modelKeys(),
             'agents' => UserData::collect(Workspace::current()->users()->orderBy('name')->get()),
             'tags' => TagData::collect(Tag::query()->orderBy('name')->get()),
             'statuses' => TicketStatus::options(),
@@ -66,10 +68,10 @@ class TicketController extends Controller
     /**
      * The new ticket form: each desk the user can open tickets on, with its fields and members.
      */
-    public function create(Request $request): Response
+    public function create(#[CurrentUser] User $user): Response
     {
         return Inertia::render('tickets/Create', [
-            'desks' => DeskData::collect(Desk::visibleTo($request->user())
+            'desks' => DeskData::collect(Desk::visibleTo($user)
                 ->with(['customFields', 'users' => fn ($query) => $query->orderBy('name')])
                 ->orderBy('name')
                 ->get()),
@@ -78,9 +80,9 @@ class TicketController extends Controller
         ]);
     }
 
-    public function store(Request $request, Desk $desk, CreateTicket $createTicket): RedirectResponse
+    public function store(Request $request, #[CurrentUser] User $user, Desk $desk, CreateTicket $createTicket): RedirectResponse
     {
-        $ticket = $createTicket->handle($request->user(), $desk, $request->all(), TicketSource::WEB);
+        $ticket = $createTicket->handle($user, $desk, $request->all(), TicketSource::WEB);
 
         Flash::success(__('Ticket #:number created.', ['number' => $ticket->number]));
 
@@ -90,9 +92,9 @@ class TicketController extends Controller
     /**
      * Apply one change to many tickets from the list.
      */
-    public function bulk(Request $request, BulkUpdateTickets $bulkUpdateTickets): RedirectResponse
+    public function bulk(Request $request, #[CurrentUser] User $user, BulkUpdateTickets $bulkUpdateTickets): RedirectResponse
     {
-        $count = $bulkUpdateTickets->handle($request->user(), $request->all());
+        $count = $bulkUpdateTickets->handle($user, $request->all());
 
         Flash::success(trans_choice(':count ticket updated.|:count tickets updated.', $count));
 
@@ -107,7 +109,7 @@ class TicketController extends Controller
         TicketEventType::INTERNAL_NOTE_ADDED,
     ];
 
-    public function show(Request $request, Ticket $ticket): Response
+    public function show(#[CurrentUser] User $user, Ticket $ticket): Response
     {
         Gate::authorize('view', $ticket);
 
@@ -122,45 +124,45 @@ class TicketController extends Controller
                 ->get()),
             'attachments' => AttachmentData::collect($ticket->attachments()->whereNull('ticket_comment_id')->oldest()->get()),
             'reminders' => TicketReminderData::collect($ticket->reminders()
-                ->visibleTo($request->user())
+                ->visibleTo($user)
                 ->whereNull('sent_at')
                 ->orderBy('remind_at')
                 ->get()),
             'deskMembers' => DeskMemberData::collect($ticket->desk->users()->orderBy('name')->get()),
-            'desks' => DeskData::collect(Desk::visibleTo($request->user())->orderBy('name')->get()),
+            'desks' => DeskData::collect(Desk::visibleTo($user)->orderBy('name')->get()),
             'tags' => TagData::collect(Tag::query()->orderBy('name')->get()),
-            'macros' => Inertia::defer(fn () => MacroData::collect(Macro::visibleTo($request->user())->usableOn($ticket)->orderBy('name')->get())),
+            'macros' => Inertia::defer(fn () => MacroData::collect(Macro::visibleTo($user)->usableOn($ticket)->orderBy('name')->get())),
             'statuses' => TicketStatus::options(),
             'priorities' => TicketPriority::options(),
             'can' => [
-                'update' => $request->user()->can('update', $ticket),
-                'delete' => $request->user()->can('delete', $ticket),
-                'restore' => $request->user()->can('restore', $ticket),
+                'update' => $user->can('update', $ticket),
+                'delete' => $user->can('delete', $ticket),
+                'restore' => $user->can('restore', $ticket),
             ],
         ]);
     }
 
-    public function update(Request $request, Ticket $ticket, UpdateTicket $updateTicket): RedirectResponse
+    public function update(Request $request, #[CurrentUser] User $user, Ticket $ticket, UpdateTicket $updateTicket): RedirectResponse
     {
-        $updateTicket->handle($request->user(), $ticket, $request->all());
+        $updateTicket->handle($user, $ticket, $request->all());
 
         Flash::success(__('Ticket updated.'));
 
         return back();
     }
 
-    public function destroy(Request $request, Ticket $ticket, DeleteTicket $deleteTicket): RedirectResponse
+    public function destroy(#[CurrentUser] User $user, Ticket $ticket, DeleteTicket $deleteTicket): RedirectResponse
     {
-        $deleteTicket->handle($request->user(), $ticket);
+        $deleteTicket->handle($user, $ticket);
 
         Flash::success(__('Ticket deleted.'));
 
         return to_route('tickets.index');
     }
 
-    public function restore(Request $request, Ticket $ticket, RestoreTicket $restoreTicket): RedirectResponse
+    public function restore(#[CurrentUser] User $user, Ticket $ticket, RestoreTicket $restoreTicket): RedirectResponse
     {
-        $restoreTicket->handle($request->user(), $ticket);
+        $restoreTicket->handle($user, $ticket);
 
         Flash::success(__('Ticket restored.'));
 

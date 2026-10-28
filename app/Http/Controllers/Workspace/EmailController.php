@@ -13,6 +13,8 @@ use App\Http\Controllers\MailboxOAuthController;
 use App\Http\Flash;
 use App\Models\Desk;
 use App\Models\Mailbox;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -39,27 +41,27 @@ class EmailController extends Controller
         ]);
     }
 
-    public function store(Request $request, CreateMailbox $createMailbox): RedirectResponse
+    public function store(Request $request, #[CurrentUser] User $user, CreateMailbox $createMailbox): RedirectResponse
     {
-        $createMailbox->handle($request->user(), [...$request->all(), 'driver' => MailboxDriver::IMAP->value]);
+        $createMailbox->handle($user, [...$request->all(), 'driver' => MailboxDriver::IMAP->value]);
 
         Flash::success(__('Mailbox added.'));
 
         return back();
     }
 
-    public function update(Request $request, Mailbox $mailbox, UpdateMailbox $updateMailbox): RedirectResponse
+    public function update(Request $request, #[CurrentUser] User $user, Mailbox $mailbox, UpdateMailbox $updateMailbox): RedirectResponse
     {
-        $updateMailbox->handle($request->user(), $mailbox, $request->all());
+        $updateMailbox->handle($user, $mailbox, $request->all());
 
         Flash::success(__('Mailbox updated.'));
 
         return back();
     }
 
-    public function destroy(Request $request, Mailbox $mailbox, DeleteMailbox $deleteMailbox): RedirectResponse
+    public function destroy(#[CurrentUser] User $user, Mailbox $mailbox, DeleteMailbox $deleteMailbox): RedirectResponse
     {
-        $deleteMailbox->handle($request->user(), $mailbox);
+        $deleteMailbox->handle($user, $mailbox);
 
         Flash::success(__('Mailbox deleted.'));
 

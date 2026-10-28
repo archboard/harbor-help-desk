@@ -8,6 +8,8 @@ use App\Actions\Automations\UpdateAutomation;
 use App\Data\Automations\AutomationData;
 use App\Http\Controllers\Controller;
 use App\Models\Automation;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
@@ -20,16 +22,16 @@ class AutomationController extends Controller
      *
      * @return Collection<int, AutomationData>
      */
-    public function index(Request $request): Collection
+    public function index(#[CurrentUser] User $user): Collection
     {
         Gate::authorize('viewAny', Automation::class);
 
-        return AutomationData::collect(Automation::visibleTo($request->user())->withRunStats()->orderBy('trigger_type')->orderBy('position')->orderBy('id')->get());
+        return AutomationData::collect(Automation::visibleTo($user)->withRunStats()->orderBy('trigger_type')->orderBy('position')->orderBy('id')->get());
     }
 
-    public function store(Request $request, CreateAutomation $createAutomation): AutomationData
+    public function store(Request $request, #[CurrentUser] User $user, CreateAutomation $createAutomation): AutomationData
     {
-        return AutomationData::from($createAutomation->handle($request->user(), $request->all()));
+        return AutomationData::from($createAutomation->handle($user, $request->all()));
     }
 
     public function show(Automation $automation): AutomationData
@@ -39,14 +41,14 @@ class AutomationController extends Controller
         return AutomationData::from($automation);
     }
 
-    public function update(Request $request, Automation $automation, UpdateAutomation $updateAutomation): AutomationData
+    public function update(Request $request, #[CurrentUser] User $user, Automation $automation, UpdateAutomation $updateAutomation): AutomationData
     {
-        return AutomationData::from($updateAutomation->handle($request->user(), $automation, $request->all()));
+        return AutomationData::from($updateAutomation->handle($user, $automation, $request->all()));
     }
 
-    public function destroy(Request $request, Automation $automation, DeleteAutomation $deleteAutomation): Response
+    public function destroy(#[CurrentUser] User $user, Automation $automation, DeleteAutomation $deleteAutomation): Response
     {
-        $deleteAutomation->handle($request->user(), $automation);
+        $deleteAutomation->handle($user, $automation);
 
         return response()->noContent();
     }

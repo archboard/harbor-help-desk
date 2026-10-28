@@ -19,7 +19,7 @@ class ApproveAuthorizationController extends PassportApproveAuthorizationControl
     {
         $validated = $request->validate([
             'workspaces' => ['required', 'array', 'min:1'],
-            'workspaces.*' => ['string', Rule::in($request->user()->workspaces()->pluck('workspaces.id'))],
+            'workspaces.*' => ['string', Rule::in($request->user('web')->workspaces()->pluck('workspaces.id'))],
         ]);
 
         $authRequest = $this->getAuthRequestFromSession($request);

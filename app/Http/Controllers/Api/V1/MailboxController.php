@@ -9,6 +9,8 @@ use App\Data\Mailboxes\MailboxData;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\MailboxOAuthController;
 use App\Models\Mailbox;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
@@ -30,9 +32,9 @@ class MailboxController extends Controller
         return MailboxData::collect(Mailbox::query()->oldest('id')->get());
     }
 
-    public function store(Request $request, CreateMailbox $createMailbox): MailboxData
+    public function store(Request $request, #[CurrentUser] User $user, CreateMailbox $createMailbox): MailboxData
     {
-        return MailboxData::from($createMailbox->handle($request->user(), $request->all()));
+        return MailboxData::from($createMailbox->handle($user, $request->all()));
     }
 
     public function show(Mailbox $mailbox): MailboxData
@@ -42,14 +44,14 @@ class MailboxController extends Controller
         return MailboxData::from($mailbox);
     }
 
-    public function update(Request $request, Mailbox $mailbox, UpdateMailbox $updateMailbox): MailboxData
+    public function update(Request $request, #[CurrentUser] User $user, Mailbox $mailbox, UpdateMailbox $updateMailbox): MailboxData
     {
-        return MailboxData::from($updateMailbox->handle($request->user(), $mailbox, $request->all()));
+        return MailboxData::from($updateMailbox->handle($user, $mailbox, $request->all()));
     }
 
-    public function destroy(Request $request, Mailbox $mailbox, DeleteMailbox $deleteMailbox): Response
+    public function destroy(#[CurrentUser] User $user, Mailbox $mailbox, DeleteMailbox $deleteMailbox): Response
     {
-        $deleteMailbox->handle($request->user(), $mailbox);
+        $deleteMailbox->handle($user, $mailbox);
 
         return response()->noContent();
     }

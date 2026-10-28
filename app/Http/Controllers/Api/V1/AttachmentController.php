@@ -8,6 +8,8 @@ use App\Data\Tickets\AttachmentData;
 use App\Http\Controllers\Controller;
 use App\Models\Attachment;
 use App\Models\Ticket;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
@@ -29,9 +31,9 @@ class AttachmentController extends Controller
     /**
      * Attach the multipart `file` to the ticket.
      */
-    public function store(Request $request, Ticket $ticket, AddTicketAttachment $addTicketAttachment): AttachmentData
+    public function store(Request $request, #[CurrentUser] User $user, Ticket $ticket, AddTicketAttachment $addTicketAttachment): AttachmentData
     {
-        return AttachmentData::from($addTicketAttachment->handle($request->user(), $ticket, $request->all()));
+        return AttachmentData::from($addTicketAttachment->handle($user, $ticket, $request->all()));
     }
 
     public function download(Attachment $attachment): StreamedResponse
@@ -41,9 +43,9 @@ class AttachmentController extends Controller
         return $attachment->download();
     }
 
-    public function destroy(Request $request, Attachment $attachment, DeleteTicketAttachment $deleteTicketAttachment): Response
+    public function destroy(#[CurrentUser] User $user, Attachment $attachment, DeleteTicketAttachment $deleteTicketAttachment): Response
     {
-        $deleteTicketAttachment->handle($request->user(), $attachment);
+        $deleteTicketAttachment->handle($user, $attachment);
 
         return response()->noContent();
     }

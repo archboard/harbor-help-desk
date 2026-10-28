@@ -8,6 +8,8 @@ use App\Actions\CustomFields\UpdateCustomField;
 use App\Data\CustomFields\CustomFieldData;
 use App\Http\Controllers\Controller;
 use App\Models\CustomField;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
@@ -27,19 +29,19 @@ class CustomFieldController extends Controller
         return CustomFieldData::collect(CustomField::query()->orderBy('position')->orderBy('id')->get());
     }
 
-    public function store(Request $request, CreateCustomField $createCustomField): CustomFieldData
+    public function store(Request $request, #[CurrentUser] User $user, CreateCustomField $createCustomField): CustomFieldData
     {
-        return CustomFieldData::from($createCustomField->handle($request->user(), $request->all()));
+        return CustomFieldData::from($createCustomField->handle($user, $request->all()));
     }
 
-    public function update(Request $request, CustomField $customField, UpdateCustomField $updateCustomField): CustomFieldData
+    public function update(Request $request, #[CurrentUser] User $user, CustomField $customField, UpdateCustomField $updateCustomField): CustomFieldData
     {
-        return CustomFieldData::from($updateCustomField->handle($request->user(), $customField, $request->all()));
+        return CustomFieldData::from($updateCustomField->handle($user, $customField, $request->all()));
     }
 
-    public function destroy(Request $request, CustomField $customField, DeleteCustomField $deleteCustomField): Response
+    public function destroy(#[CurrentUser] User $user, CustomField $customField, DeleteCustomField $deleteCustomField): Response
     {
-        $deleteCustomField->handle($request->user(), $customField);
+        $deleteCustomField->handle($user, $customField);
 
         return response()->noContent();
     }

@@ -19,6 +19,8 @@ use App\Models\Desk;
 use App\Models\Macro;
 use App\Models\SlaPolicy;
 use App\Models\TicketEvent;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -29,9 +31,9 @@ class AutomationRunController extends Controller
     /**
      * The runs of one automation, or of every automation the user may view, newest first.
      */
-    public function index(Request $request, ListAutomationRuns $listAutomationRuns, ?Automation $automation = null): Response
+    public function index(Request $request, #[CurrentUser] User $user, ListAutomationRuns $listAutomationRuns, ?Automation $automation = null): Response
     {
-        $runs = $listAutomationRuns->handle($request->user(), $automation, $request->query());
+        $runs = $listAutomationRuns->handle($user, $automation, $request->query());
 
         return Inertia::render('automations/Runs', [
             'automation' => $automation === null ? null : AutomationData::from($automation),
@@ -45,11 +47,10 @@ class AutomationRunController extends Controller
      * One run: its definition snapshot drawn read-only with the log over it. The lookups
      * only name what the snapshot points at.
      */
-    public function show(Request $request, AutomationRun $run, Catalog $catalog): Response
+    public function show(#[CurrentUser] User $user, AutomationRun $run, Catalog $catalog): Response
     {
         Gate::authorize('view', $run);
 
-        $user = $request->user();
         $event = $run->ticket_event_id === null ? null : TicketEvent::query()->with('ticket')->find($run->ticket_event_id);
         $desks = DeskData::collect(Desk::withTrashed()->orderBy('name')->get());
 

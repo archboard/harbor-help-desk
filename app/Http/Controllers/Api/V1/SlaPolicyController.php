@@ -8,6 +8,8 @@ use App\Actions\SlaPolicies\UpdateSlaPolicy;
 use App\Data\SlaPolicies\SlaPolicyData;
 use App\Http\Controllers\Controller;
 use App\Models\SlaPolicy;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
@@ -27,9 +29,9 @@ class SlaPolicyController extends Controller
         return SlaPolicyData::collect(SlaPolicy::query()->with('businessSchedule')->orderBy('name')->orderBy('id')->get());
     }
 
-    public function store(Request $request, CreateSlaPolicy $createSlaPolicy): SlaPolicyData
+    public function store(Request $request, #[CurrentUser] User $user, CreateSlaPolicy $createSlaPolicy): SlaPolicyData
     {
-        return SlaPolicyData::from($createSlaPolicy->handle($request->user(), $request->all()));
+        return SlaPolicyData::from($createSlaPolicy->handle($user, $request->all()));
     }
 
     public function show(SlaPolicy $slaPolicy): SlaPolicyData
@@ -39,14 +41,14 @@ class SlaPolicyController extends Controller
         return SlaPolicyData::from($slaPolicy);
     }
 
-    public function update(Request $request, SlaPolicy $slaPolicy, UpdateSlaPolicy $updateSlaPolicy): SlaPolicyData
+    public function update(Request $request, #[CurrentUser] User $user, SlaPolicy $slaPolicy, UpdateSlaPolicy $updateSlaPolicy): SlaPolicyData
     {
-        return SlaPolicyData::from($updateSlaPolicy->handle($request->user(), $slaPolicy, $request->all()));
+        return SlaPolicyData::from($updateSlaPolicy->handle($user, $slaPolicy, $request->all()));
     }
 
-    public function destroy(Request $request, SlaPolicy $slaPolicy, DeleteSlaPolicy $deleteSlaPolicy): Response
+    public function destroy(#[CurrentUser] User $user, SlaPolicy $slaPolicy, DeleteSlaPolicy $deleteSlaPolicy): Response
     {
-        $deleteSlaPolicy->handle($request->user(), $slaPolicy);
+        $deleteSlaPolicy->handle($user, $slaPolicy);
 
         return response()->noContent();
     }

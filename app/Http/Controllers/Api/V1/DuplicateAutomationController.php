@@ -6,12 +6,13 @@ use App\Actions\Automations\DuplicateAutomation;
 use App\Data\Automations\AutomationData;
 use App\Http\Controllers\Controller;
 use App\Models\Automation;
-use Illuminate\Http\Request;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 
 class DuplicateAutomationController extends Controller
 {
-    public function __invoke(Request $request, Automation $automation, DuplicateAutomation $duplicateAutomation): AutomationData
+    public function __invoke(#[CurrentUser] User $user, Automation $automation, DuplicateAutomation $duplicateAutomation): AutomationData
     {
-        return AutomationData::from($duplicateAutomation->handle($request->user(), $automation));
+        return AutomationData::from($duplicateAutomation->handle($user, $automation));
     }
 }

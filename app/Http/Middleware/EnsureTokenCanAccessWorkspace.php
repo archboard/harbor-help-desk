@@ -18,7 +18,7 @@ class EnsureTokenCanAccessWorkspace
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request->user();
+        $user = $request->user('api');
         $workspace = Workspace::current();
 
         // ponytail: tokenCan() also passes `*`, which we never issue (Passport strips it from auth code tokens).

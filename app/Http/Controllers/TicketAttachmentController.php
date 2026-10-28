@@ -7,6 +7,8 @@ use App\Actions\Tickets\DeleteTicketAttachment;
 use App\Http\Flash;
 use App\Models\Attachment;
 use App\Models\Ticket;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -17,18 +19,18 @@ class TicketAttachmentController extends Controller
     /**
      * Attach a file to the ticket itself rather than to a comment.
      */
-    public function store(Request $request, Ticket $ticket, AddTicketAttachment $addTicketAttachment): RedirectResponse
+    public function store(Request $request, #[CurrentUser] User $user, Ticket $ticket, AddTicketAttachment $addTicketAttachment): RedirectResponse
     {
-        $addTicketAttachment->handle($request->user(), $ticket, $request->all());
+        $addTicketAttachment->handle($user, $ticket, $request->all());
 
         Flash::success(__('File attached.'));
 
         return back();
     }
 
-    public function destroy(Request $request, Attachment $attachment, DeleteTicketAttachment $deleteTicketAttachment): RedirectResponse
+    public function destroy(#[CurrentUser] User $user, Attachment $attachment, DeleteTicketAttachment $deleteTicketAttachment): RedirectResponse
     {
-        $deleteTicketAttachment->handle($request->user(), $attachment);
+        $deleteTicketAttachment->handle($user, $attachment);
 
         Flash::success(__('File removed.'));
 

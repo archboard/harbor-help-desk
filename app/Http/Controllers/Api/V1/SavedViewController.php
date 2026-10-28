@@ -8,6 +8,8 @@ use App\Actions\SavedViews\UpdateSavedView;
 use App\Data\SavedViews\SavedViewData;
 use App\Http\Controllers\Controller;
 use App\Models\SavedView;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
@@ -20,16 +22,16 @@ class SavedViewController extends Controller
      *
      * @return Collection<int, SavedViewData>
      */
-    public function index(Request $request): Collection
+    public function index(#[CurrentUser] User $user): Collection
     {
         Gate::authorize('viewAny', SavedView::class);
 
-        return SavedViewData::collect(SavedView::visibleTo($request->user())->with('user')->orderBy('name')->get());
+        return SavedViewData::collect(SavedView::visibleTo($user)->with('user')->orderBy('name')->get());
     }
 
-    public function store(Request $request, CreateSavedView $createSavedView): SavedViewData
+    public function store(Request $request, #[CurrentUser] User $user, CreateSavedView $createSavedView): SavedViewData
     {
-        return SavedViewData::from($createSavedView->handle($request->user(), $request->all()));
+        return SavedViewData::from($createSavedView->handle($user, $request->all()));
     }
 
     public function show(SavedView $savedView): SavedViewData
@@ -39,14 +41,14 @@ class SavedViewController extends Controller
         return SavedViewData::from($savedView->load('user'));
     }
 
-    public function update(Request $request, SavedView $savedView, UpdateSavedView $updateSavedView): SavedViewData
+    public function update(Request $request, #[CurrentUser] User $user, SavedView $savedView, UpdateSavedView $updateSavedView): SavedViewData
     {
-        return SavedViewData::from($updateSavedView->handle($request->user(), $savedView, $request->all()));
+        return SavedViewData::from($updateSavedView->handle($user, $savedView, $request->all()));
     }
 
-    public function destroy(Request $request, SavedView $savedView, DeleteSavedView $deleteSavedView): Response
+    public function destroy(#[CurrentUser] User $user, SavedView $savedView, DeleteSavedView $deleteSavedView): Response
     {
-        $deleteSavedView->handle($request->user(), $savedView);
+        $deleteSavedView->handle($user, $savedView);
 
         return response()->noContent();
     }

@@ -9,6 +9,8 @@ use App\Actions\Desks\UpdateDesk;
 use App\Data\Desks\DeskData;
 use App\Http\Controllers\Controller;
 use App\Models\Desk;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -22,19 +24,19 @@ class DeskController extends Controller
      *
      * @return PaginatedDataCollection<int, DeskData>
      */
-    public function index(Request $request): PaginatedDataCollection
+    public function index(#[CurrentUser] User $user): PaginatedDataCollection
     {
         Gate::authorize('viewAny', Desk::class);
 
         return DeskData::collect(
-            Desk::visibleTo($request->user())->with('customFields')->orderBy('name')->paginate(),
+            Desk::visibleTo($user)->with('customFields')->orderBy('name')->paginate(),
             PaginatedDataCollection::class,
         );
     }
 
-    public function store(Request $request, CreateDesk $createDesk): DeskData
+    public function store(Request $request, #[CurrentUser] User $user, CreateDesk $createDesk): DeskData
     {
-        return DeskData::from($createDesk->handle($request->user(), $request->all()));
+        return DeskData::from($createDesk->handle($user, $request->all()));
     }
 
     public function show(Desk $desk): DeskData
@@ -44,23 +46,23 @@ class DeskController extends Controller
         return DeskData::from($desk->load('customFields'));
     }
 
-    public function update(Request $request, Desk $desk, UpdateDesk $updateDesk): DeskData
+    public function update(Request $request, #[CurrentUser] User $user, Desk $desk, UpdateDesk $updateDesk): DeskData
     {
-        return DeskData::from($updateDesk->handle($request->user(), $desk, $request->all()));
+        return DeskData::from($updateDesk->handle($user, $desk, $request->all()));
     }
 
     /**
      * Archive the desk.
      */
-    public function destroy(Request $request, Desk $desk, ArchiveDesk $archiveDesk): Response
+    public function destroy(#[CurrentUser] User $user, Desk $desk, ArchiveDesk $archiveDesk): Response
     {
-        $archiveDesk->handle($request->user(), $desk);
+        $archiveDesk->handle($user, $desk);
 
         return response()->noContent();
     }
 
-    public function restore(Request $request, Desk $desk, RestoreDesk $restoreDesk): JsonResponse
+    public function restore(#[CurrentUser] User $user, Desk $desk, RestoreDesk $restoreDesk): JsonResponse
     {
-        return response()->json(DeskData::from($restoreDesk->handle($request->user(), $desk)));
+        return response()->json(DeskData::from($restoreDesk->handle($user, $desk)));
     }
 }

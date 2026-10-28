@@ -10,6 +10,8 @@ use App\Enums\CustomFieldType;
 use App\Http\Controllers\Controller;
 use App\Http\Flash;
 use App\Models\CustomField;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -31,27 +33,27 @@ class CustomFieldController extends Controller
         ]);
     }
 
-    public function store(Request $request, CreateCustomField $createCustomField): RedirectResponse
+    public function store(Request $request, #[CurrentUser] User $user, CreateCustomField $createCustomField): RedirectResponse
     {
-        $createCustomField->handle($request->user(), $request->all());
+        $createCustomField->handle($user, $request->all());
 
         Flash::success(__('Custom field created.'));
 
         return back();
     }
 
-    public function update(Request $request, CustomField $customField, UpdateCustomField $updateCustomField): RedirectResponse
+    public function update(Request $request, #[CurrentUser] User $user, CustomField $customField, UpdateCustomField $updateCustomField): RedirectResponse
     {
-        $updateCustomField->handle($request->user(), $customField, $request->all());
+        $updateCustomField->handle($user, $customField, $request->all());
 
         Flash::success(__('Custom field updated.'));
 
         return back();
     }
 
-    public function destroy(Request $request, CustomField $customField, DeleteCustomField $deleteCustomField): RedirectResponse
+    public function destroy(#[CurrentUser] User $user, CustomField $customField, DeleteCustomField $deleteCustomField): RedirectResponse
     {
-        $deleteCustomField->handle($request->user(), $customField);
+        $deleteCustomField->handle($user, $customField);
 
         Flash::success(__('Custom field deleted.'));
 

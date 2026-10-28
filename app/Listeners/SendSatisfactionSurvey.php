@@ -27,8 +27,7 @@ class SendSatisfactionSurvey implements ShouldQueue
             || $ticket === null
             || ! Workspace::current()->settings->surveysEnabled
             || $ticket->survey_sent_at !== null
-            || $ticket->satisfactionRating()->exists()
-            || $ticket->requester === null) {
+            || $ticket->satisfactionRating()->exists()) {
             return;
         }
 

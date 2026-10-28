@@ -8,6 +8,7 @@ use App\Enums\MailboxDriver;
 use App\Models\Mailbox;
 use App\Models\User;
 use App\Models\Workspace;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -26,7 +27,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class MailboxOAuthController extends Controller
 {
-    public function redirect(Request $request, string $provider): Response
+    public function redirect(Request $request, #[CurrentUser] User $user, string $provider): Response
     {
         Gate::authorize('create', Mailbox::class);
 
@@ -42,7 +43,7 @@ class MailboxOAuthController extends Controller
         $state = Crypt::encrypt([
             'workspace_id' => Workspace::current()?->getKey(),
             'default_desk_id' => $validated['default_desk_id'] ?? Workspace::current()?->desks()->oldest('id')->value('id'),
-            'user_id' => $request->user()->getKey(),
+            'user_id' => $user->getKey(),
             'provider' => $driver->value,
             'expires_at' => now()->addMinutes(10)->getTimestamp(),
         ]);

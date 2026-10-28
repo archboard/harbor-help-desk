@@ -13,6 +13,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Flash;
 use App\Models\Desk;
 use App\Models\Macro;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -24,11 +26,11 @@ class MacroController extends Controller
     /**
      * The user's personal macros and the shared ones they can see, with what they may manage.
      */
-    public function index(Request $request): Response
+    public function index(#[CurrentUser] User $actor): Response
     {
         Gate::authorize('viewAny', Macro::class);
 
-        $user = $request->user();
+        $user = $actor;
         $macros = Macro::visibleTo($user)->orderBy('name')->get();
         $desks = Desk::visibleTo($user)->orderBy('name')->get();
 
@@ -43,27 +45,27 @@ class MacroController extends Controller
         ]);
     }
 
-    public function store(Request $request, CreateMacro $createMacro): RedirectResponse
+    public function store(Request $request, #[CurrentUser] User $user, CreateMacro $createMacro): RedirectResponse
     {
-        $createMacro->handle($request->user(), $request->all());
+        $createMacro->handle($user, $request->all());
 
         Flash::success(__('Macro created.'));
 
         return back();
     }
 
-    public function update(Request $request, Macro $macro, UpdateMacro $updateMacro): RedirectResponse
+    public function update(Request $request, #[CurrentUser] User $user, Macro $macro, UpdateMacro $updateMacro): RedirectResponse
     {
-        $updateMacro->handle($request->user(), $macro, $request->all());
+        $updateMacro->handle($user, $macro, $request->all());
 
         Flash::success(__('Macro updated.'));
 
         return back();
     }
 
-    public function destroy(Request $request, Macro $macro, DeleteMacro $deleteMacro): RedirectResponse
+    public function destroy(#[CurrentUser] User $user, Macro $macro, DeleteMacro $deleteMacro): RedirectResponse
     {
-        $deleteMacro->handle($request->user(), $macro);
+        $deleteMacro->handle($user, $macro);
 
         Flash::success(__('Macro deleted.'));
 

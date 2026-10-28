@@ -9,6 +9,8 @@ use App\Data\Tickets\TicketCommentData;
 use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use App\Models\TicketComment;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
@@ -31,19 +33,19 @@ class TicketCommentController extends Controller
     /**
      * Reply or add an internal note. Send as multipart to include `attachments[]`.
      */
-    public function store(Request $request, Ticket $ticket, AddTicketComment $addTicketComment): TicketCommentData
+    public function store(Request $request, #[CurrentUser] User $user, Ticket $ticket, AddTicketComment $addTicketComment): TicketCommentData
     {
-        return TicketCommentData::from($addTicketComment->handle($request->user(), $ticket, $request->all())->load(['author', 'attachments']));
+        return TicketCommentData::from($addTicketComment->handle($user, $ticket, $request->all())->load(['author', 'attachments']));
     }
 
-    public function update(Request $request, TicketComment $comment, UpdateTicketComment $updateTicketComment): TicketCommentData
+    public function update(Request $request, #[CurrentUser] User $user, TicketComment $comment, UpdateTicketComment $updateTicketComment): TicketCommentData
     {
-        return TicketCommentData::from($updateTicketComment->handle($request->user(), $comment, $request->all())->load(['author', 'attachments']));
+        return TicketCommentData::from($updateTicketComment->handle($user, $comment, $request->all())->load(['author', 'attachments']));
     }
 
-    public function destroy(Request $request, TicketComment $comment, DeleteTicketComment $deleteTicketComment): Response
+    public function destroy(#[CurrentUser] User $user, TicketComment $comment, DeleteTicketComment $deleteTicketComment): Response
     {
-        $deleteTicketComment->handle($request->user(), $comment);
+        $deleteTicketComment->handle($user, $comment);
 
         return response()->noContent();
     }

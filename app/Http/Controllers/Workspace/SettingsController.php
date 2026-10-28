@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Workspace;
 use App\Actions\Workspaces\UpdateWorkspaceSettings;
 use App\Http\Controllers\Controller;
 use App\Http\Flash;
+use App\Models\User;
 use App\Models\Workspace;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -14,9 +16,9 @@ use Illuminate\Http\Request;
  */
 class SettingsController extends Controller
 {
-    public function update(Request $request, UpdateWorkspaceSettings $updateWorkspaceSettings): RedirectResponse
+    public function update(Request $request, #[CurrentUser] User $user, UpdateWorkspaceSettings $updateWorkspaceSettings): RedirectResponse
     {
-        $updateWorkspaceSettings->handle($request->user(), Workspace::current(), $request->all());
+        $updateWorkspaceSettings->handle($user, Workspace::current(), $request->all());
 
         Flash::success(__('Settings saved.'));
 

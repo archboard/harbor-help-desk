@@ -43,7 +43,7 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         // The portal's default guard is the contact guard: no agent is shared there.
-        $user = $request->routeIs('portal.*') ? null : $request->user();
+        $user = $request->routeIs('portal.*') ? null : $request->user('web');
 
         return [
             ...parent::share($request),

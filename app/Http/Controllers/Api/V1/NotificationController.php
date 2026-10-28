@@ -5,7 +5,8 @@ namespace App\Http\Controllers\Api\V1;
 use App\Actions\Notifications\ListNotifications;
 use App\Data\Notifications\NotificationData;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Spatie\LaravelData\PaginatedDataCollection;
 
 class NotificationController extends Controller
@@ -15,8 +16,8 @@ class NotificationController extends Controller
      *
      * @return PaginatedDataCollection<int, NotificationData>
      */
-    public function index(Request $request, ListNotifications $listNotifications): PaginatedDataCollection
+    public function index(#[CurrentUser] User $user, ListNotifications $listNotifications): PaginatedDataCollection
     {
-        return NotificationData::collect($listNotifications->handle($request->user()), PaginatedDataCollection::class);
+        return NotificationData::collect($listNotifications->handle($user), PaginatedDataCollection::class);
     }
 }

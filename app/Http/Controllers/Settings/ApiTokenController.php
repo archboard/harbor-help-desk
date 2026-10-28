@@ -8,6 +8,8 @@ use App\Data\ApiTokens\ApiTokenData;
 use App\Data\Workspaces\WorkspaceData;
 use App\Http\Controllers\Controller;
 use App\Http\Flash;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -19,11 +21,11 @@ class ApiTokenController extends Controller
     /**
      * Show the user's personal access tokens.
      */
-    public function edit(Request $request): Response
+    public function edit(#[CurrentUser] User $user): Response
     {
         return Inertia::render('settings/ApiTokens', [
-            'workspaces' => WorkspaceData::collect($request->user()->workspaces),
-            'tokens' => ApiTokenData::collect($request->user()
+            'workspaces' => WorkspaceData::collect($user->workspaces),
+            'tokens' => ApiTokenData::collect($user
                 ->tokens()
                 ->with('client')
                 ->where('revoked', false)
@@ -37,9 +39,9 @@ class ApiTokenController extends Controller
     /**
      * Create a personal access token and flash its plain-text value once.
      */
-    public function store(Request $request, CreatePersonalAccessToken $createToken): RedirectResponse
+    public function store(Request $request, #[CurrentUser] User $user, CreatePersonalAccessToken $createToken): RedirectResponse
     {
-        $result = $createToken->handle($request->user(), $request->all());
+        $result = $createToken->handle($user, $request->all());
 
         Inertia::flash('apiToken', $result->accessToken);
 
@@ -49,9 +51,9 @@ class ApiTokenController extends Controller
     /**
      * Revoke one of the user's personal access tokens.
      */
-    public function destroy(Request $request, string $tokenId, RevokePersonalAccessToken $revokeToken): RedirectResponse
+    public function destroy(#[CurrentUser] User $user, string $tokenId, RevokePersonalAccessToken $revokeToken): RedirectResponse
     {
-        $revokeToken->handle($request->user(), $tokenId);
+        $revokeToken->handle($user, $tokenId);
 
         Flash::success(__('Token revoked.'));
 

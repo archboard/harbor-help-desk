@@ -6,15 +6,16 @@ use App\Actions\Automations\RotateWebhookToken;
 use App\Data\Automations\AutomationWebhookTokenData;
 use App\Http\Controllers\Controller;
 use App\Models\Automation;
-use Illuminate\Http\Request;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 
 class RotateWebhookTokenController extends Controller
 {
     /**
      * The new secret URL, shown once.
      */
-    public function __invoke(Request $request, Automation $automation, RotateWebhookToken $rotateWebhookToken): AutomationWebhookTokenData
+    public function __invoke(#[CurrentUser] User $user, Automation $automation, RotateWebhookToken $rotateWebhookToken): AutomationWebhookTokenData
     {
-        return $rotateWebhookToken->handle($request->user(), $automation);
+        return $rotateWebhookToken->handle($user, $automation);
     }
 }

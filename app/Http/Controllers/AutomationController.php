@@ -25,6 +25,7 @@ use App\Models\SlaPolicy;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Models\Workspace;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -35,11 +36,9 @@ use Inertia\Response;
 
 class AutomationController extends Controller
 {
-    public function index(Request $request, AutomationRegistry $registry): Response
+    public function index(#[CurrentUser] User $user, AutomationRegistry $registry): Response
     {
         Gate::authorize('viewAny', Automation::class);
-
-        $user = $request->user();
 
         $automations = Automation::visibleTo($user)
             ->withRunStats()
@@ -54,7 +53,7 @@ class AutomationController extends Controller
         ]);
     }
 
-    public function create(Request $request, Catalog $catalog): Response
+    public function create(Request $request, #[CurrentUser] User $user, Catalog $catalog): Response
     {
         Gate::authorize('viewAny', Automation::class);
 
@@ -62,39 +61,39 @@ class AutomationController extends Controller
 
         abort_if($template !== null && ! Templates::exists($template), 404);
 
-        return $this->builder($request, $catalog, template: $template);
+        return $this->builder($user, $catalog, template: $template);
     }
 
-    public function store(Request $request, CreateAutomation $createAutomation): RedirectResponse
+    public function store(Request $request, #[CurrentUser] User $user, CreateAutomation $createAutomation): RedirectResponse
     {
         Gate::authorize('viewAny', Automation::class);
 
-        $automation = $createAutomation->handle($request->user(), $request->all());
+        $automation = $createAutomation->handle($user, $request->all());
 
         Flash::success(__('Automation created.'));
 
         return to_route('automations.edit', $automation);
     }
 
-    public function edit(Request $request, Automation $automation, Catalog $catalog): Response
+    public function edit(#[CurrentUser] User $user, Automation $automation, Catalog $catalog): Response
     {
         Gate::authorize('update', $automation);
 
-        return $this->builder($request, $catalog, $automation);
+        return $this->builder($user, $catalog, $automation);
     }
 
-    public function update(Request $request, Automation $automation, UpdateAutomation $updateAutomation): RedirectResponse
+    public function update(Request $request, #[CurrentUser] User $user, Automation $automation, UpdateAutomation $updateAutomation): RedirectResponse
     {
-        $updateAutomation->handle($request->user(), $automation, $request->all());
+        $updateAutomation->handle($user, $automation, $request->all());
 
         Flash::success(__('Automation saved.'));
 
         return back();
     }
 
-    public function destroy(Request $request, Automation $automation, DeleteAutomation $deleteAutomation): RedirectResponse
+    public function destroy(#[CurrentUser] User $user, Automation $automation, DeleteAutomation $deleteAutomation): RedirectResponse
     {
-        $deleteAutomation->handle($request->user(), $automation);
+        $deleteAutomation->handle($user, $automation);
 
         Flash::success(__('Automation deleted.'));
 
@@ -105,9 +104,8 @@ class AutomationController extends Controller
      * The builder page. Admins may scope an automation to any active desk or the whole workspace,
      * a desk lead only to the desks they lead. A template prefills an unsaved automation.
      */
-    protected function builder(Request $request, Catalog $catalog, ?Automation $automation = null, ?string $template = null): Response
+    protected function builder(User $user, Catalog $catalog, ?Automation $automation = null, ?string $template = null): Response
     {
-        $user = $request->user();
         $isAdmin = $this->isAdmin($user);
 
         $desks = $isAdmin

@@ -8,6 +8,8 @@ use App\Data\Tickets\TicketReminderData;
 use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use App\Models\TicketReminder;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
@@ -20,23 +22,23 @@ class TicketReminderController extends Controller
      *
      * @return Collection<int, TicketReminderData>
      */
-    public function index(Request $request, Ticket $ticket): Collection
+    public function index(#[CurrentUser] User $user, Ticket $ticket): Collection
     {
         Gate::authorize('view', $ticket);
 
         return TicketReminderData::collect(
-            $ticket->reminders()->visibleTo($request->user())->whereNull('sent_at')->orderBy('remind_at')->get(),
+            $ticket->reminders()->visibleTo($user)->whereNull('sent_at')->orderBy('remind_at')->get(),
         );
     }
 
-    public function store(Request $request, Ticket $ticket, SetTicketReminder $setTicketReminder): TicketReminderData
+    public function store(Request $request, #[CurrentUser] User $user, Ticket $ticket, SetTicketReminder $setTicketReminder): TicketReminderData
     {
-        return TicketReminderData::from($setTicketReminder->handle($request->user(), $ticket, $request->all()));
+        return TicketReminderData::from($setTicketReminder->handle($user, $ticket, $request->all()));
     }
 
-    public function destroy(Request $request, TicketReminder $reminder, CancelTicketReminder $cancelTicketReminder): Response
+    public function destroy(#[CurrentUser] User $user, TicketReminder $reminder, CancelTicketReminder $cancelTicketReminder): Response
     {
-        $cancelTicketReminder->handle($request->user(), $reminder);
+        $cancelTicketReminder->handle($user, $reminder);
 
         return response()->noContent();
     }

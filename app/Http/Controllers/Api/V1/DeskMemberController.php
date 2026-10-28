@@ -8,6 +8,7 @@ use App\Data\Desks\DeskMemberData;
 use App\Http\Controllers\Controller;
 use App\Models\Desk;
 use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
@@ -28,16 +29,16 @@ class DeskMemberController extends Controller
     /**
      * Add the user to the desk, or change their role.
      */
-    public function update(Request $request, Desk $desk, User $user, SetDeskMember $setDeskMember): Response
+    public function update(Request $request, #[CurrentUser] User $actor, Desk $desk, User $user, SetDeskMember $setDeskMember): Response
     {
-        $setDeskMember->handle($request->user(), $desk, $user, $request->all());
+        $setDeskMember->handle($actor, $desk, $user, $request->all());
 
         return response()->noContent();
     }
 
-    public function destroy(Request $request, Desk $desk, User $user, RemoveDeskMember $removeDeskMember): Response
+    public function destroy(#[CurrentUser] User $actor, Desk $desk, User $user, RemoveDeskMember $removeDeskMember): Response
     {
-        $removeDeskMember->handle($request->user(), $desk, $user);
+        $removeDeskMember->handle($actor, $desk, $user);
 
         return response()->noContent();
     }

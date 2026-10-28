@@ -10,6 +10,8 @@ use App\Data\Contacts\ContactData;
 use App\Data\Tickets\TicketData;
 use App\Http\Flash;
 use App\Models\Contact;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -19,12 +21,12 @@ use Inertia\Response;
 
 class ContactController extends Controller
 {
-    public function index(Request $request, SearchContacts $searchContacts): Response
+    public function index(Request $request, #[CurrentUser] User $user, SearchContacts $searchContacts): Response
     {
         $filters = $request->only('search');
 
         return Inertia::render('contacts/Index', [
-            'contacts' => Inertia::scroll(ContactData::collect($searchContacts->handle($request->user(), $filters)->paginate(50))),
+            'contacts' => Inertia::scroll(ContactData::collect($searchContacts->handle($user, $filters)->paginate(50))),
             'filters' => (object) $filters,
         ]);
     }
@@ -34,14 +36,14 @@ class ContactController extends Controller
      *
      * @return Collection<int, ContactData>
      */
-    public function search(Request $request, SearchContacts $searchContacts): Collection
+    public function search(Request $request, #[CurrentUser] User $user, SearchContacts $searchContacts): Collection
     {
-        return ContactData::collect($searchContacts->handle($request->user(), $request->only('search'))->limit(10)->get());
+        return ContactData::collect($searchContacts->handle($user, $request->only('search'))->limit(10)->get());
     }
 
-    public function store(Request $request, CreateContact $createContact): RedirectResponse
+    public function store(Request $request, #[CurrentUser] User $user, CreateContact $createContact): RedirectResponse
     {
-        $contact = $createContact->handle($request->user(), $request->all());
+        $contact = $createContact->handle($user, $request->all());
 
         Flash::success(__('Contact created.'));
 
@@ -51,11 +53,11 @@ class ContactController extends Controller
     /**
      * The contact and the tickets they requested that the user can see.
      */
-    public function show(Request $request, Contact $contact, SearchTickets $searchTickets): Response
+    public function show(#[CurrentUser] User $user, Contact $contact, SearchTickets $searchTickets): Response
     {
         Gate::authorize('view', $contact);
 
-        $tickets = $searchTickets->handle($request->user(), ['requester_id' => $contact->id])
+        $tickets = $searchTickets->handle($user, ['requester_id' => $contact->id])
             ->with(['desk', 'assignees'])
             ->paginate(50);
 
@@ -65,9 +67,9 @@ class ContactController extends Controller
         ]);
     }
 
-    public function update(Request $request, Contact $contact, UpdateContact $updateContact): RedirectResponse
+    public function update(Request $request, #[CurrentUser] User $user, Contact $contact, UpdateContact $updateContact): RedirectResponse
     {
-        $updateContact->handle($request->user(), $contact, $request->all());
+        $updateContact->handle($user, $contact, $request->all());
 
         Flash::success(__('Contact updated.'));
 

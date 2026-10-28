@@ -8,6 +8,8 @@ use App\Actions\Macros\UpdateMacro;
 use App\Data\Macros\MacroData;
 use App\Http\Controllers\Controller;
 use App\Models\Macro;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
@@ -20,16 +22,16 @@ class MacroController extends Controller
      *
      * @return Collection<int, MacroData>
      */
-    public function index(Request $request): Collection
+    public function index(#[CurrentUser] User $user): Collection
     {
         Gate::authorize('viewAny', Macro::class);
 
-        return MacroData::collect(Macro::visibleTo($request->user())->orderBy('name')->get());
+        return MacroData::collect(Macro::visibleTo($user)->orderBy('name')->get());
     }
 
-    public function store(Request $request, CreateMacro $createMacro): MacroData
+    public function store(Request $request, #[CurrentUser] User $user, CreateMacro $createMacro): MacroData
     {
-        return MacroData::from($createMacro->handle($request->user(), $request->all()));
+        return MacroData::from($createMacro->handle($user, $request->all()));
     }
 
     public function show(Macro $macro): MacroData
@@ -39,14 +41,14 @@ class MacroController extends Controller
         return MacroData::from($macro);
     }
 
-    public function update(Request $request, Macro $macro, UpdateMacro $updateMacro): MacroData
+    public function update(Request $request, #[CurrentUser] User $user, Macro $macro, UpdateMacro $updateMacro): MacroData
     {
-        return MacroData::from($updateMacro->handle($request->user(), $macro, $request->all()));
+        return MacroData::from($updateMacro->handle($user, $macro, $request->all()));
     }
 
-    public function destroy(Request $request, Macro $macro, DeleteMacro $deleteMacro): Response
+    public function destroy(#[CurrentUser] User $user, Macro $macro, DeleteMacro $deleteMacro): Response
     {
-        $deleteMacro->handle($request->user(), $macro);
+        $deleteMacro->handle($user, $macro);
 
         return response()->noContent();
     }

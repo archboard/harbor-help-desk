@@ -7,6 +7,8 @@ use App\Data\Automations\AutomationRunData;
 use App\Http\Controllers\Controller;
 use App\Models\Automation;
 use App\Models\AutomationRun;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Spatie\LaravelData\PaginatedDataCollection;
@@ -18,9 +20,9 @@ class AutomationRunController extends Controller
      *
      * @return PaginatedDataCollection<int, AutomationRunData>
      */
-    public function index(Request $request, ListAutomationRuns $listAutomationRuns, ?Automation $automation = null): PaginatedDataCollection
+    public function index(Request $request, #[CurrentUser] User $user, ListAutomationRuns $listAutomationRuns, ?Automation $automation = null): PaginatedDataCollection
     {
-        return AutomationRunData::collect($listAutomationRuns->handle($request->user(), $automation, $request->query()), PaginatedDataCollection::class);
+        return AutomationRunData::collect($listAutomationRuns->handle($user, $automation, $request->query()), PaginatedDataCollection::class);
     }
 
     /**

@@ -8,6 +8,8 @@ use App\Actions\BusinessSchedules\UpdateBusinessSchedule;
 use App\Data\BusinessSchedules\BusinessScheduleData;
 use App\Http\Controllers\Controller;
 use App\Models\BusinessSchedule;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
@@ -27,9 +29,9 @@ class BusinessScheduleController extends Controller
         return BusinessScheduleData::collect(BusinessSchedule::query()->orderBy('name')->orderBy('id')->get());
     }
 
-    public function store(Request $request, CreateBusinessSchedule $createBusinessSchedule): BusinessScheduleData
+    public function store(Request $request, #[CurrentUser] User $user, CreateBusinessSchedule $createBusinessSchedule): BusinessScheduleData
     {
-        return BusinessScheduleData::from($createBusinessSchedule->handle($request->user(), $request->all()));
+        return BusinessScheduleData::from($createBusinessSchedule->handle($user, $request->all()));
     }
 
     public function show(BusinessSchedule $businessSchedule): BusinessScheduleData
@@ -39,14 +41,14 @@ class BusinessScheduleController extends Controller
         return BusinessScheduleData::from($businessSchedule);
     }
 
-    public function update(Request $request, BusinessSchedule $businessSchedule, UpdateBusinessSchedule $updateBusinessSchedule): BusinessScheduleData
+    public function update(Request $request, #[CurrentUser] User $user, BusinessSchedule $businessSchedule, UpdateBusinessSchedule $updateBusinessSchedule): BusinessScheduleData
     {
-        return BusinessScheduleData::from($updateBusinessSchedule->handle($request->user(), $businessSchedule, $request->all()));
+        return BusinessScheduleData::from($updateBusinessSchedule->handle($user, $businessSchedule, $request->all()));
     }
 
-    public function destroy(Request $request, BusinessSchedule $businessSchedule, DeleteBusinessSchedule $deleteBusinessSchedule): Response
+    public function destroy(#[CurrentUser] User $user, BusinessSchedule $businessSchedule, DeleteBusinessSchedule $deleteBusinessSchedule): Response
     {
-        $deleteBusinessSchedule->handle($request->user(), $businessSchedule);
+        $deleteBusinessSchedule->handle($user, $businessSchedule);
 
         return response()->noContent();
     }

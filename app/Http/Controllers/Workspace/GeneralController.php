@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Workspace;
 use App\Actions\Workspaces\UpdateWorkspace;
 use App\Http\Controllers\Controller;
 use App\Http\Flash;
+use App\Models\User;
 use App\Models\Workspace;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -25,9 +27,9 @@ class GeneralController extends Controller
         return Inertia::render('workspace/General');
     }
 
-    public function update(Request $request, UpdateWorkspace $updateWorkspace): RedirectResponse
+    public function update(Request $request, #[CurrentUser] User $user, UpdateWorkspace $updateWorkspace): RedirectResponse
     {
-        $updateWorkspace->handle($request->user(), Workspace::current(), $request->all());
+        $updateWorkspace->handle($user, Workspace::current(), $request->all());
 
         Flash::success(__('Workspace updated.'));
 

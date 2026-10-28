@@ -6,8 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Flash;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
+use App\Models\User;
 use DateTimeZone;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,7 +23,7 @@ class ProfileController extends Controller
     public function edit(Request $request): Response
     {
         return Inertia::render('settings/Profile', [
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+            'mustVerifyEmail' => true,
             'status' => $request->session()->get('status'),
             'timezones' => DateTimeZone::listIdentifiers(),
         ]);
@@ -31,15 +32,15 @@ class ProfileController extends Controller
     /**
      * Update the user's profile information.
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(ProfileUpdateRequest $request, #[CurrentUser] User $user): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user->fill($request->validated());
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
+        $user->save();
 
         Flash::success(__('Profile updated.'));
 
@@ -50,11 +51,11 @@ class ProfileController extends Controller
      * Change only the user's timezone, e.g. from the prompt shown when their browser's
      * timezone differs, and stay on the page they were on.
      */
-    public function updateTimezone(Request $request): RedirectResponse
+    public function updateTimezone(Request $request, #[CurrentUser] User $user): RedirectResponse
     {
         $validated = $request->validate(['timezone' => ['required', 'timezone:all']]);
 
-        $request->user()->update($validated);
+        $user->update($validated);
 
         Flash::success(__('Timezone updated.'));
 
@@ -64,10 +65,8 @@ class ProfileController extends Controller
     /**
      * Delete the user's profile.
      */
-    public function destroy(ProfileDeleteRequest $request): RedirectResponse
+    public function destroy(ProfileDeleteRequest $request, #[CurrentUser] User $user): RedirectResponse
     {
-        $user = $request->user();
-
         Auth::logout();
 
         $user->delete();

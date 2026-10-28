@@ -13,6 +13,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Flash;
 use App\Models\BusinessSchedule;
 use App\Models\SlaPolicy;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -21,7 +23,7 @@ use Inertia\Response;
 
 class SlaPolicyController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(#[CurrentUser] User $user): Response
     {
         Gate::authorize('viewAny', SlaPolicy::class);
 
@@ -30,31 +32,31 @@ class SlaPolicyController extends Controller
             'schedules' => BusinessScheduleData::collect(BusinessSchedule::query()->orderBy('name')->get()),
             'priorities' => TicketPriority::options(),
             'metrics' => SlaMetric::options(),
-            'canManage' => Gate::forUser($request->user())->allows('create', SlaPolicy::class),
+            'canManage' => Gate::forUser($user)->allows('create', SlaPolicy::class),
         ]);
     }
 
-    public function store(Request $request, CreateSlaPolicy $createSlaPolicy): RedirectResponse
+    public function store(Request $request, #[CurrentUser] User $user, CreateSlaPolicy $createSlaPolicy): RedirectResponse
     {
-        $createSlaPolicy->handle($request->user(), $request->all());
+        $createSlaPolicy->handle($user, $request->all());
 
         Flash::success(__('SLA policy created.'));
 
         return back();
     }
 
-    public function update(Request $request, SlaPolicy $slaPolicy, UpdateSlaPolicy $updateSlaPolicy): RedirectResponse
+    public function update(Request $request, #[CurrentUser] User $user, SlaPolicy $slaPolicy, UpdateSlaPolicy $updateSlaPolicy): RedirectResponse
     {
-        $updateSlaPolicy->handle($request->user(), $slaPolicy, $request->all());
+        $updateSlaPolicy->handle($user, $slaPolicy, $request->all());
 
         Flash::success(__('SLA policy updated.'));
 
         return back();
     }
 
-    public function destroy(Request $request, SlaPolicy $slaPolicy, DeleteSlaPolicy $deleteSlaPolicy): RedirectResponse
+    public function destroy(#[CurrentUser] User $user, SlaPolicy $slaPolicy, DeleteSlaPolicy $deleteSlaPolicy): RedirectResponse
     {
-        $deleteSlaPolicy->handle($request->user(), $slaPolicy);
+        $deleteSlaPolicy->handle($user, $slaPolicy);
 
         Flash::success(__('SLA policy deleted.'));
 

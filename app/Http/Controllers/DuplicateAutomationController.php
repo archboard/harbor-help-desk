@@ -5,14 +5,15 @@ namespace App\Http\Controllers;
 use App\Actions\Automations\DuplicateAutomation;
 use App\Http\Flash;
 use App\Models\Automation;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 
 class DuplicateAutomationController extends Controller
 {
-    public function __invoke(Request $request, Automation $automation, DuplicateAutomation $duplicateAutomation): RedirectResponse
+    public function __invoke(#[CurrentUser] User $user, Automation $automation, DuplicateAutomation $duplicateAutomation): RedirectResponse
     {
-        $duplicateAutomation->handle($request->user(), $automation);
+        $duplicateAutomation->handle($user, $automation);
 
         Flash::success(__('Automation duplicated. The copy is disabled.'));
 

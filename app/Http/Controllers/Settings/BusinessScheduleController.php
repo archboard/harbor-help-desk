@@ -9,7 +9,9 @@ use App\Data\BusinessSchedules\BusinessScheduleData;
 use App\Http\Controllers\Controller;
 use App\Http\Flash;
 use App\Models\BusinessSchedule;
+use App\Models\User;
 use DateTimeZone;
+use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -18,38 +20,38 @@ use Inertia\Response;
 
 class BusinessScheduleController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(#[CurrentUser] User $user): Response
     {
         Gate::authorize('viewAny', BusinessSchedule::class);
 
         return Inertia::render('settings/BusinessHours', [
             'schedules' => BusinessScheduleData::collect(BusinessSchedule::query()->orderBy('name')->get()),
             'timezones' => DateTimeZone::listIdentifiers(),
-            'canManage' => Gate::forUser($request->user())->allows('create', BusinessSchedule::class),
+            'canManage' => Gate::forUser($user)->allows('create', BusinessSchedule::class),
         ]);
     }
 
-    public function store(Request $request, CreateBusinessSchedule $createBusinessSchedule): RedirectResponse
+    public function store(Request $request, #[CurrentUser] User $user, CreateBusinessSchedule $createBusinessSchedule): RedirectResponse
     {
-        $createBusinessSchedule->handle($request->user(), $request->all());
+        $createBusinessSchedule->handle($user, $request->all());
 
         Flash::success(__('Business hours created.'));
 
         return back();
     }
 
-    public function update(Request $request, BusinessSchedule $businessSchedule, UpdateBusinessSchedule $updateBusinessSchedule): RedirectResponse
+    public function update(Request $request, #[CurrentUser] User $user, BusinessSchedule $businessSchedule, UpdateBusinessSchedule $updateBusinessSchedule): RedirectResponse
     {
-        $updateBusinessSchedule->handle($request->user(), $businessSchedule, $request->all());
+        $updateBusinessSchedule->handle($user, $businessSchedule, $request->all());
 
         Flash::success(__('Business hours updated.'));
 
         return back();
     }
 
-    public function destroy(Request $request, BusinessSchedule $businessSchedule, DeleteBusinessSchedule $deleteBusinessSchedule): RedirectResponse
+    public function destroy(#[CurrentUser] User $user, BusinessSchedule $businessSchedule, DeleteBusinessSchedule $deleteBusinessSchedule): RedirectResponse
     {
-        $deleteBusinessSchedule->handle($request->user(), $businessSchedule);
+        $deleteBusinessSchedule->handle($user, $businessSchedule);
 
         Flash::success(__('Business hours deleted.'));
 

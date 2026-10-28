@@ -21,7 +21,7 @@ class SatisfactionRatingFactory extends Factory
         return [
             'workspace_id' => fn () => Workspace::current()?->getKey() ?? Workspace::factory(),
             'ticket_id' => Ticket::factory(),
-            'contact_id' => fn (array $attributes) => Ticket::query()->find($attributes['ticket_id'])->requester_id,
+            'contact_id' => fn (array $attributes) => Ticket::query()->whereKey($attributes['ticket_id'])->value('requester_id'),
             'rating' => SatisfactionScore::GOOD,
             'comment' => null,
         ];
