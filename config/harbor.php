@@ -17,6 +17,10 @@ return [
 
     'domain' => env('HARBOR_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
 
+    // Multitenant only: the bearer token the platform (billing, sign-up) sends to create and
+    // delete workspaces at /api/platform/workspaces. Unset, that API is off.
+    'platform_token' => env('HARBOR_PLATFORM_TOKEN'),
+
     /*
     |--------------------------------------------------------------------------
     | Horizon

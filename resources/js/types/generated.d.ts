@@ -880,6 +880,14 @@ declare namespace App {
         email: string;
         password: string;
       };
+      export type ProvisionedWorkspaceData = {
+        id: string;
+        name: string;
+        subdomain: string;
+        url: string;
+        has_owner: boolean;
+        setup_url: string | null;
+      };
       export type SetAwayData = {
         away: boolean;
       };

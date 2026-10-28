@@ -1,6 +1,7 @@
 <?php
 
 use App\Data\Users\UserData;
+use App\Http\Controllers\Api\Platform\WorkspaceController as PlatformWorkspaceController;
 use App\Http\Controllers\Api\V1\ApplyMacroController;
 use App\Http\Controllers\Api\V1\AttachmentController;
 use App\Http\Controllers\Api\V1\AutomationCatalogController;
@@ -37,10 +38,16 @@ use App\Http\Controllers\Api\V1\TicketReminderController;
 use App\Http\Controllers\Api\V1\TicketTagController;
 use App\Http\Controllers\Api\V1\WorkspaceController;
 use App\Http\Controllers\Api\V1\WorkspaceSettingsController;
+use App\Http\Middleware\EnsurePlatformToken;
 use App\Http\Middleware\EnsureTokenCanAccessWorkspace;
 use App\Http\Middleware\ResolveWorkspace;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+// Landlord: the platform creates and removes workspaces, on any host and outside any workspace.
+Route::prefix('platform')->name('api.platform.')->middleware(EnsurePlatformToken::class)->group(function () {
+    Route::apiResource('workspaces', PlatformWorkspaceController::class)->only(['store', 'update', 'destroy']);
+});
 
 Route::prefix('v1')->name('api.v1.')
     ->middleware([ResolveWorkspace::class, 'auth:api', EnsureTokenCanAccessWorkspace::class])
