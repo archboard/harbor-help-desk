@@ -25,14 +25,36 @@ beforeEach(function () {
     $this->api = 'http://acme.harbor.test/api/v1/reports';
 });
 
-test('the web page renders a report over the workspace\'s own tickets', function () {
+test('the web page renders each report over the workspace\'s own tickets', function (string $report, string $key) {
     $this->actingAs($this->agent)
-        ->get("{$this->web}/overview")
+        ->get("{$this->web}/{$report}")
         ->assertInertia(fn (Assert $page) => $page
             ->component('reports/Show')
-            ->where('report', 'overview')
-            ->where('data.created.value', 2)
-            ->has('reports.responses'));
+            ->where('report', $report)
+            ->has("data.{$key}")
+            ->has('reports', 6)
+            ->has('desks', 1)
+            ->where('desks.0.id', $this->desk->id)
+            ->has('bases')
+            ->has('slaMetrics')
+            ->has('priorities'));
+})->with([
+    ['overview', 'created'],
+    ['responses', 'median_first_response'],
+    ['resolution', 'median_resolution'],
+    ['agents', 'agents'],
+    ['sla', 'metrics'],
+    ['satisfaction', 'score'],
+]);
+
+test('the overview counts only the workspace\'s own tickets', function () {
+    $this->actingAs($this->agent)
+        ->get("{$this->web}/overview")
+        ->assertInertia(fn (Assert $page) => $page->where('data.created.value', 2));
+});
+
+test('the reports link redirects to the overview', function () {
+    $this->actingAs($this->agent)->get('http://acme.harbor.test/reports')->assertRedirect('http://acme.harbor.test/reports/overview');
 });
 
 test('the API returns each report over the workspace\'s own tickets', function () {

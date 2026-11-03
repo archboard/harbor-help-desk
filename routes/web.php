@@ -123,6 +123,7 @@ Route::middleware('workspace')->group(function () {
         Route::delete('desks/{desk}/members/{user}', [DeskMemberController::class, 'destroy'])->name('desks.members.destroy');
         Route::put('desks/{desk}/custom-fields', [DeskCustomFieldController::class, 'update'])->name('desks.custom-fields.update');
 
+        Route::redirect('reports', 'reports/overview')->name('reports.index');
         Route::get('reports/{report}', [ReportController::class, 'show'])->name('reports.show');
 
         Route::get('mailboxes/oauth/{provider}', [MailboxOAuthController::class, 'redirect'])->whereIn('provider', ['google', 'microsoft'])->name('mailboxes.oauth.redirect');
