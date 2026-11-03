@@ -11,6 +11,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DeskController;
 use App\Http\Controllers\DeskCustomFieldController;
 use App\Http\Controllers\DeskMemberController;
+use App\Http\Controllers\DownloadExportController;
 use App\Http\Controllers\DuplicateAutomationController;
 use App\Http\Controllers\InstallController;
 use App\Http\Controllers\LookupTicketsController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\MarkNotificationReadController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReorderAutomationsController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\RequestContactExportController;
 use App\Http\Controllers\RotateWebhookTokenController;
 use App\Http\Controllers\SavedViewController;
 use App\Http\Controllers\SetAutomationEnabledController;
@@ -75,6 +77,8 @@ Route::middleware('workspace')->group(function () {
         Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
         Route::post('notifications/read', MarkAllNotificationsReadController::class)->name('notifications.read');
         Route::post('notifications/{notification}/read', MarkNotificationReadController::class)->name('notifications.read-one');
+        Route::post('contacts/{contact}/export', RequestContactExportController::class)->name('contacts.export');
+        Route::get('exports/{export}/download', DownloadExportController::class)->middleware('signed:relative')->name('exports.download');
         Route::get('contacts/search', [ContactController::class, 'search'])->name('contacts.search');
         Route::resource('contacts', ContactController::class)->only(['index', 'store', 'show', 'update']);
 

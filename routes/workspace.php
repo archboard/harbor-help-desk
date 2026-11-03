@@ -4,6 +4,7 @@ use App\Http\Controllers\Workspace\AttachmentsController;
 use App\Http\Controllers\Workspace\AuditLogController;
 use App\Http\Controllers\Workspace\AutomationsController;
 use App\Http\Controllers\Workspace\CustomFieldController;
+use App\Http\Controllers\Workspace\DataPrivacyController;
 use App\Http\Controllers\Workspace\EmailController;
 use App\Http\Controllers\Workspace\GeneralController;
 use App\Http\Controllers\Workspace\PortalController;
@@ -23,6 +24,8 @@ Route::middleware(['auth', 'verified'])->prefix('workspace')->name('workspace.')
         ->parameters(['email' => 'mailbox']);
 
     Route::get('attachments', [AttachmentsController::class, 'edit'])->name('attachments.edit');
+
+    Route::get('data-privacy', [DataPrivacyController::class, 'index'])->name('data-privacy.index');
 
     Route::get('audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
 

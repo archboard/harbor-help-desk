@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Form, Head, Link, useForm } from '@inertiajs/vue3';
+import AppButton from '@/components/AppButton.vue';
 import CardAction from '@/components/CardAction.vue';
 import CardPadding from '@/components/CardPadding.vue';
 import CardWrapper from '@/components/CardWrapper.vue';
 import AppFieldset from '@/components/forms/AppFieldset.vue';
 import { EmailField, InputField } from '@/components/forms/fields';
 import TicketTable from '@/components/tickets/TicketTable.vue';
+import requestExport from '@/actions/App/Http/Controllers/RequestContactExportController';
 import { index, update } from '@/routes/contacts';
 import type { Paginated } from '@/types';
 
@@ -13,6 +15,7 @@ defineOptions({ layout: { title: '' } });
 
 const { contact } = defineProps<{
   contact: App.Data.Contacts.ContactData;
+  canExport: boolean;
   tickets: Paginated<App.Data.Tickets.TicketData>;
 }>();
 
@@ -33,7 +36,20 @@ const form = useForm({
       >
         ← Contacts
       </Link>
-      <h1 class="text-2xl font-semibold tracking-tight">{{ contact.name }}</h1>
+      <div class="flex items-center justify-between gap-4">
+        <h1 class="text-2xl font-semibold tracking-tight">
+          {{ contact.name }}
+        </h1>
+        <Form
+          v-if="canExport"
+          v-bind="requestExport.form(contact.id)"
+          #default="{ processing }"
+        >
+          <AppButton type="submit" :loading="processing">
+            Export data
+          </AppButton>
+        </Form>
+      </div>
     </div>
 
     <CardWrapper>

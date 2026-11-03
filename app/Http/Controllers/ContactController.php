@@ -10,6 +10,7 @@ use App\Data\Contacts\ContactData;
 use App\Data\Tickets\TicketData;
 use App\Http\Flash;
 use App\Models\Contact;
+use App\Models\Export;
 use App\Models\User;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
@@ -63,6 +64,7 @@ class ContactController extends Controller
 
         return Inertia::render('contacts/Show', [
             'contact' => ContactData::from($contact),
+            'canExport' => $user->can('create', Export::class),
             'tickets' => Inertia::scroll(TicketData::collect($tickets)),
         ]);
     }

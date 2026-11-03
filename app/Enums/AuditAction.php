@@ -44,6 +44,8 @@ enum AuditAction: string
     case BUSINESS_SCHEDULE_DELETED = 'business_schedule_deleted';
     case API_TOKEN_CREATED = 'api_token_created';
     case API_TOKEN_REVOKED = 'api_token_revoked';
+    case CONTACT_EXPORT_REQUESTED = 'contact_export_requested';
+    case EXPORT_DOWNLOADED = 'export_downloaded';
 
     public function label(): string
     {
@@ -80,6 +82,8 @@ enum AuditAction: string
             self::BUSINESS_SCHEDULE_DELETED => __('Business schedule deleted'),
             self::API_TOKEN_CREATED => __('API token created'),
             self::API_TOKEN_REVOKED => __('API token revoked'),
+            self::CONTACT_EXPORT_REQUESTED => __('Contact data export requested'),
+            self::EXPORT_DOWNLOADED => __('Data export downloaded'),
         };
     }
 }

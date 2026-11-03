@@ -33,6 +33,7 @@ use App\Models\BusinessSchedule;
 use App\Models\Contact;
 use App\Models\CustomField;
 use App\Models\Desk;
+use App\Models\Export;
 use App\Models\Macro;
 use App\Models\Mailbox;
 use App\Models\Passkey;
@@ -129,6 +130,7 @@ class AppServiceProvider extends ServiceProvider
             'automation' => Automation::class,
             'automation_run' => AutomationRun::class,
             'audit_event' => AuditEvent::class,
+            'export' => Export::class,
             'macro' => Macro::class,
             'sla_policy' => SlaPolicy::class,
             'business_schedule' => BusinessSchedule::class,

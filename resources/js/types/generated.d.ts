@@ -512,6 +512,22 @@ declare namespace App {
         sla_policy_id?: string | null;
       };
     }
+    namespace Exports {
+      export type ExportData = {
+        id: string;
+        type: App.Enums.ExportType;
+        status: App.Enums.ExportStatus;
+        subject_id: string | null;
+        subject_name: string | null;
+        requested_by: string | null;
+        requested_by_name: string | null;
+        size: number | null;
+        download_url: string | null;
+        completed_at: string | null;
+        expires_at: string;
+        created_at: string;
+      };
+    }
     namespace Install {
       export type ServiceCheckData = {
         name: string;
@@ -1121,7 +1137,9 @@ declare namespace App {
       | 'business_schedule_updated'
       | 'business_schedule_deleted'
       | 'api_token_created'
-      | 'api_token_revoked';
+      | 'api_token_revoked'
+      | 'contact_export_requested'
+      | 'export_downloaded';
     export type AutomationRunStatus =
       | 'running'
       | 'waiting'
@@ -1139,6 +1157,8 @@ declare namespace App {
       | 'select'
       | 'multi_select';
     export type DeskRole = 'lead' | 'agent';
+    export type ExportStatus = 'pending' | 'completed' | 'failed';
+    export type ExportType = 'contact' | 'workspace';
     export type MacroScope = 'personal' | 'workspace' | 'desk';
     export type MailboxDriver = 'hosted' | 'imap' | 'google' | 'microsoft';
     export type NotificationChannel = 'database' | 'mail';

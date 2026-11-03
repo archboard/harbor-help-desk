@@ -16,7 +16,9 @@ use App\Http\Controllers\Api\V1\CustomFieldController;
 use App\Http\Controllers\Api\V1\DeskController;
 use App\Http\Controllers\Api\V1\DeskCustomFieldController;
 use App\Http\Controllers\Api\V1\DeskMemberController;
+use App\Http\Controllers\Api\V1\DownloadExportController;
 use App\Http\Controllers\Api\V1\DuplicateAutomationController;
+use App\Http\Controllers\Api\V1\ExportController;
 use App\Http\Controllers\Api\V1\MacroController;
 use App\Http\Controllers\Api\V1\MailboxController;
 use App\Http\Controllers\Api\V1\MarkNotificationsReadController;
@@ -24,6 +26,7 @@ use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\NotificationPreferenceController;
 use App\Http\Controllers\Api\V1\ReorderAutomationsController;
 use App\Http\Controllers\Api\V1\ReportController;
+use App\Http\Controllers\Api\V1\RequestContactExportController;
 use App\Http\Controllers\Api\V1\RotateWebhookTokenController;
 use App\Http\Controllers\Api\V1\SavedViewController;
 use App\Http\Controllers\Api\V1\SetAutomationEnabledController;
@@ -98,6 +101,10 @@ Route::prefix('v1')->name('api.v1.')
         Route::apiResource('sla-policies', SlaPolicyController::class)->parameters(['sla-policies' => 'slaPolicy']);
 
         Route::apiResource('mailboxes', MailboxController::class);
+
+        Route::post('contacts/{contact}/export', RequestContactExportController::class)->name('contacts.export');
+        Route::get('exports', [ExportController::class, 'index'])->name('exports.index');
+        Route::get('exports/{export}/download', DownloadExportController::class)->name('exports.download');
 
         Route::get('audit-events', [AuditEventController::class, 'index'])->name('audit-events.index');
         Route::get('ticket-events', [WorkspaceTicketEventController::class, 'index'])->name('ticket-events.index');
