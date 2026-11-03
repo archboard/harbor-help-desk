@@ -6,6 +6,8 @@ use App\Automations\EditorScope;
 use App\Automations\Templates;
 use App\Data\Automations\AutomationDefinitionData;
 use App\Data\Automations\CreateAutomationData;
+use App\Enums\AuditAction;
+use App\Models\AuditEvent;
 use App\Models\Automation;
 use App\Models\User;
 use App\Models\Workspace;
@@ -48,6 +50,8 @@ class CreateAutomation
         Gate::forUser($actor)->authorize('create', $automation);
 
         $automation->save();
+
+        AuditEvent::record(AuditAction::AUTOMATION_CREATED, $actor, $automation);
 
         return $automation;
     }

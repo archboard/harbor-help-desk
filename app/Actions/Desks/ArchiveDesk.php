@@ -2,6 +2,8 @@
 
 namespace App\Actions\Desks;
 
+use App\Enums\AuditAction;
+use App\Models\AuditEvent;
 use App\Models\Desk;
 use App\Models\User;
 use App\Models\Workspace;
@@ -18,7 +20,7 @@ class ArchiveDesk
     {
         Gate::forUser($actor)->authorize('delete', $desk);
 
-        DB::transaction(function () use ($desk): void {
+        DB::transaction(function () use ($actor, $desk): void {
             // Lock the workspace so two concurrent archives can't remove the last two desks.
             Workspace::query()->whereKey($desk->workspace_id)->lockForUpdate()->first();
 
@@ -29,6 +31,8 @@ class ArchiveDesk
             }
 
             $desk->delete();
+
+            AuditEvent::record(AuditAction::DESK_ARCHIVED, $actor, $desk);
         });
     }
 }

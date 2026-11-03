@@ -72,6 +72,7 @@ The banners are `Properties`, `Booting`, `Casts`, `Accessors`, `Scopes`, `Relati
 | `aut_` | `Automation`            |
 | `atm_` | `AutomationTicketMatch` |
 | `csr_` | `SatisfactionRating`    |
+| `aud_` | `AuditEvent`            |
 | `arn_` | `AutomationRun`         |
 | `slp_` | `SlaPolicy`             |
 | `slt_` | `TicketSlaTarget`       |

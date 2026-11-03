@@ -3,6 +3,8 @@
 namespace App\Actions\BusinessSchedules;
 
 use App\Data\BusinessSchedules\CreateBusinessScheduleData;
+use App\Enums\AuditAction;
+use App\Models\AuditEvent;
 use App\Models\BusinessSchedule;
 use App\Models\User;
 use App\Models\Workspace;
@@ -20,12 +22,16 @@ class CreateBusinessSchedule
 
         $data = CreateBusinessScheduleData::validateAndCreate($input);
 
-        return BusinessSchedule::create([
+        $schedule = BusinessSchedule::create([
             'workspace_id' => Workspace::current()?->getKey(),
             'name' => $data->name,
             'timezone' => $data->timezone,
             'weekly_hours' => [...array_fill_keys(CreateBusinessScheduleData::DAYS, []), ...$data->weeklyHours],
             'holidays' => $data->holidays instanceof Optional ? [] : array_values(array_unique($data->holidays)),
         ]);
+
+        AuditEvent::record(AuditAction::BUSINESS_SCHEDULE_CREATED, $actor, $schedule);
+
+        return $schedule;
     }
 }

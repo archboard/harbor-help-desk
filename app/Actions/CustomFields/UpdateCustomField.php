@@ -3,6 +3,8 @@
 namespace App\Actions\CustomFields;
 
 use App\Data\CustomFields\UpdateCustomFieldData;
+use App\Enums\AuditAction;
+use App\Models\AuditEvent;
 use App\Models\CustomField;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
@@ -29,6 +31,8 @@ class UpdateCustomField
         ]);
 
         $field->update($data->filled());
+
+        AuditEvent::record(AuditAction::CUSTOM_FIELD_UPDATED, $actor, $field, ['changed' => array_keys($data->filled())]);
 
         return $field;
     }

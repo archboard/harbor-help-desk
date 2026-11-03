@@ -3,7 +3,9 @@
 namespace App\Actions\Macros;
 
 use App\Data\Macros\CreateMacroData;
+use App\Enums\AuditAction;
 use App\Enums\MacroScope;
+use App\Models\AuditEvent;
 use App\Models\Macro;
 use App\Models\User;
 use App\Models\Workspace;
@@ -33,6 +35,10 @@ class CreateMacro
         Gate::forUser($actor)->authorize('create', $macro);
 
         $macro->save();
+
+        if ($macro->user_id === null) {
+            AuditEvent::record(AuditAction::MACRO_CREATED, $actor, $macro);
+        }
 
         return $macro;
     }

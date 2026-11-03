@@ -3,6 +3,8 @@
 namespace App\Actions\SlaPolicies;
 
 use App\Data\SlaPolicies\CreateSlaPolicyData;
+use App\Enums\AuditAction;
+use App\Models\AuditEvent;
 use App\Models\SlaPolicy;
 use App\Models\User;
 use App\Models\Workspace;
@@ -25,12 +27,16 @@ class CreateSlaPolicy
             'business_schedule_id' => ['nullable', Rule::exists('business_schedules', 'id')->where('workspace_id', $workspaceId)],
         ]);
 
-        return SlaPolicy::create([
+        $policy = SlaPolicy::create([
             'workspace_id' => $workspaceId,
             'business_schedule_id' => $data->businessScheduleId instanceof Optional ? null : $data->businessScheduleId,
             'name' => $data->name,
             'targets' => $data->targets,
             'warning_percent' => $data->warningPercent instanceof Optional ? 75 : $data->warningPercent,
         ]);
+
+        AuditEvent::record(AuditAction::SLA_POLICY_CREATED, $actor, $policy);
+
+        return $policy;
     }
 }

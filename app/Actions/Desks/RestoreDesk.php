@@ -2,6 +2,8 @@
 
 namespace App\Actions\Desks;
 
+use App\Enums\AuditAction;
+use App\Models\AuditEvent;
 use App\Models\Desk;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
@@ -23,6 +25,8 @@ class RestoreDesk
         }
 
         $desk->restore();
+
+        AuditEvent::record(AuditAction::DESK_RESTORED, $actor, $desk);
 
         return $desk;
     }

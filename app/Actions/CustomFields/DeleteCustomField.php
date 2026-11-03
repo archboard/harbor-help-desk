@@ -2,6 +2,8 @@
 
 namespace App\Actions\CustomFields;
 
+use App\Enums\AuditAction;
+use App\Models\AuditEvent;
 use App\Models\CustomField;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -17,13 +19,15 @@ class DeleteCustomField
     {
         Gate::forUser($actor)->authorize('delete', $field);
 
-        DB::transaction(function () use ($field): void {
+        DB::transaction(function () use ($actor, $field): void {
             DB::update(
                 'update tickets set custom_fields = custom_fields - ?::text where workspace_id = ? and jsonb_exists(custom_fields, ?)',
                 [$field->getKey(), $field->workspace_id, $field->getKey()],
             );
 
             $field->delete();
+
+            AuditEvent::record(AuditAction::CUSTOM_FIELD_DELETED, $actor, $field);
         });
     }
 }

@@ -3,6 +3,8 @@
 namespace App\Actions\Desks;
 
 use App\Data\Desks\UpdateDeskData;
+use App\Enums\AuditAction;
+use App\Models\AuditEvent;
 use App\Models\Desk;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
@@ -23,6 +25,8 @@ class UpdateDesk
         ]);
 
         $desk->update($data->filled());
+
+        AuditEvent::record(AuditAction::DESK_UPDATED, $actor, $desk, ['changed' => array_keys($data->filled())]);
 
         return $desk;
     }

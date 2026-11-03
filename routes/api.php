@@ -4,6 +4,7 @@ use App\Data\Users\UserData;
 use App\Http\Controllers\Api\Platform\WorkspaceController as PlatformWorkspaceController;
 use App\Http\Controllers\Api\V1\ApplyMacroController;
 use App\Http\Controllers\Api\V1\AttachmentController;
+use App\Http\Controllers\Api\V1\AuditEventController;
 use App\Http\Controllers\Api\V1\AutomationCatalogController;
 use App\Http\Controllers\Api\V1\AutomationController;
 use App\Http\Controllers\Api\V1\AutomationRunController;
@@ -39,6 +40,7 @@ use App\Http\Controllers\Api\V1\TicketReminderController;
 use App\Http\Controllers\Api\V1\TicketTagController;
 use App\Http\Controllers\Api\V1\WorkspaceController;
 use App\Http\Controllers\Api\V1\WorkspaceSettingsController;
+use App\Http\Controllers\Api\V1\WorkspaceTicketEventController;
 use App\Http\Middleware\EnsurePlatformToken;
 use App\Http\Middleware\EnsureTokenCanAccessWorkspace;
 use App\Http\Middleware\ResolveWorkspace;
@@ -96,6 +98,9 @@ Route::prefix('v1')->name('api.v1.')
         Route::apiResource('sla-policies', SlaPolicyController::class)->parameters(['sla-policies' => 'slaPolicy']);
 
         Route::apiResource('mailboxes', MailboxController::class);
+
+        Route::get('audit-events', [AuditEventController::class, 'index'])->name('audit-events.index');
+        Route::get('ticket-events', [WorkspaceTicketEventController::class, 'index'])->name('ticket-events.index');
 
         Route::get('reports/{report}', [ReportController::class, 'show'])->name('reports.show');
 

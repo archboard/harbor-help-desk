@@ -26,13 +26,17 @@ use App\Http\Controllers\OAuth\ApproveAuthorizationController;
 use App\Http\Controllers\OAuth\AuthorizationController;
 use App\Mail\WorkspaceTransport;
 use App\Models\Attachment;
+use App\Models\AuditEvent;
 use App\Models\Automation;
 use App\Models\AutomationRun;
+use App\Models\BusinessSchedule;
 use App\Models\Contact;
 use App\Models\CustomField;
 use App\Models\Desk;
+use App\Models\Macro;
 use App\Models\Mailbox;
 use App\Models\Passkey;
+use App\Models\SlaPolicy;
 use App\Models\Tag;
 use App\Models\Ticket;
 use App\Models\TicketComment;
@@ -124,6 +128,10 @@ class AppServiceProvider extends ServiceProvider
             'mailbox' => Mailbox::class,
             'automation' => Automation::class,
             'automation_run' => AutomationRun::class,
+            'audit_event' => AuditEvent::class,
+            'macro' => Macro::class,
+            'sla_policy' => SlaPolicy::class,
+            'business_schedule' => BusinessSchedule::class,
         ]);
 
         Passport::tokensExpireIn(CarbonImmutable::now()->addHour());

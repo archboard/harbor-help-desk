@@ -73,6 +73,33 @@ declare namespace App {
         workspaces: string[];
       };
     }
+    namespace Audit {
+      export type AuditEventData = {
+        id: string;
+        action: App.Enums.AuditAction;
+        description: string;
+        actor_name: string;
+        actor_type: string | null;
+        actor_id: string | null;
+        subject_type: string | null;
+        subject_id: string | null;
+        properties: Record<string, any>;
+        ip: string | null;
+        created_at: string;
+      };
+      export type ListAuditEventsData = {
+        action?: App.Enums.AuditAction;
+        actor_id?: string;
+        from?: string;
+        to?: string;
+      };
+      export type ListWorkspaceTicketEventsData = {
+        type?: App.Enums.TicketEventType;
+        actor_id?: string;
+        from?: string;
+        to?: string;
+      };
+    }
     namespace Auth {
       export type ResetUserPasswordData = {
         password: string;
@@ -945,6 +972,8 @@ declare namespace App {
       };
       export type TicketEventData = {
         id: string;
+        ticket_id?: string;
+        ticket_number?: number;
         type: App.Enums.TicketEventType;
         description: string;
         actor_name: string;
@@ -1060,6 +1089,39 @@ declare namespace App {
   }
   namespace Enums {
     export type AssignmentStrategy = 'manual' | 'round_robin' | 'load_balanced';
+    export type AuditAction =
+      | 'workspace_updated'
+      | 'workspace_settings_updated'
+      | 'desk_created'
+      | 'desk_updated'
+      | 'desk_archived'
+      | 'desk_restored'
+      | 'desk_member_set'
+      | 'desk_member_removed'
+      | 'desk_custom_fields_synced'
+      | 'custom_field_created'
+      | 'custom_field_updated'
+      | 'custom_field_deleted'
+      | 'mailbox_created'
+      | 'mailbox_updated'
+      | 'mailbox_deleted'
+      | 'macro_created'
+      | 'macro_updated'
+      | 'macro_deleted'
+      | 'automation_created'
+      | 'automation_updated'
+      | 'automation_deleted'
+      | 'automation_enabled'
+      | 'automation_disabled'
+      | 'automation_webhook_token_rotated'
+      | 'sla_policy_created'
+      | 'sla_policy_updated'
+      | 'sla_policy_deleted'
+      | 'business_schedule_created'
+      | 'business_schedule_updated'
+      | 'business_schedule_deleted'
+      | 'api_token_created'
+      | 'api_token_revoked';
     export type AutomationRunStatus =
       | 'running'
       | 'waiting'

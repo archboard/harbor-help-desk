@@ -4,6 +4,7 @@ import { computed } from 'vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { edit as automations } from '@/routes/workspace/automations';
 import { edit as attachments } from '@/routes/workspace/attachments';
+import { index as auditLog } from '@/routes/workspace/audit-log';
 import { edit as portal } from '@/routes/workspace/portal';
 import { index as customFields } from '@/routes/workspace/custom-fields';
 import { index as email } from '@/routes/workspace/email';
@@ -23,6 +24,7 @@ const sections = computed(() => [
     ? []
     : [{ label: 'Automations', href: automations().url }]),
   { label: 'Custom fields', href: customFields().url },
+  { label: 'Audit log', href: auditLog().url },
 ]);
 </script>
 

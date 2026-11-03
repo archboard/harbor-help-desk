@@ -3,6 +3,8 @@
 namespace App\Actions\SlaPolicies;
 
 use App\Data\SlaPolicies\UpdateSlaPolicyData;
+use App\Enums\AuditAction;
+use App\Models\AuditEvent;
 use App\Models\SlaPolicy;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
@@ -22,6 +24,8 @@ class UpdateSlaPolicy
         ]);
 
         $slaPolicy->update($data->filled());
+
+        AuditEvent::record(AuditAction::SLA_POLICY_UPDATED, $actor, $slaPolicy, ['changed' => array_keys($data->filled())]);
 
         return $slaPolicy;
     }

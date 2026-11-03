@@ -3,6 +3,8 @@
 namespace App\Actions\Macros;
 
 use App\Data\Macros\UpdateMacroData;
+use App\Enums\AuditAction;
+use App\Models\AuditEvent;
 use App\Models\Macro;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
@@ -25,7 +27,12 @@ class UpdateMacro
             throw ValidationException::withMessages(['body' => __('A macro needs a reply or some actions.')]);
         }
 
+        $changed = array_keys($macro->getDirty());
         $macro->save();
+
+        if ($macro->user_id === null) {
+            AuditEvent::record(AuditAction::MACRO_UPDATED, $actor, $macro, ['changed' => $changed]);
+        }
 
         return $macro;
     }

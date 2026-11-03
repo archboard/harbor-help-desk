@@ -3,6 +3,8 @@
 namespace App\Actions\CustomFields;
 
 use App\Data\CustomFields\CreateCustomFieldData;
+use App\Enums\AuditAction;
+use App\Models\AuditEvent;
 use App\Models\CustomField;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
@@ -19,6 +21,10 @@ class CreateCustomField
     {
         Gate::forUser($actor)->authorize('create', CustomField::class);
 
-        return CustomField::create(CreateCustomFieldData::validateAndCreate($input)->filled());
+        $field = CustomField::create(CreateCustomFieldData::validateAndCreate($input)->filled());
+
+        AuditEvent::record(AuditAction::CUSTOM_FIELD_CREATED, $actor, $field);
+
+        return $field;
     }
 }

@@ -3,6 +3,8 @@
 namespace App\Actions\Desks;
 
 use App\Data\Desks\CreateDeskData;
+use App\Enums\AuditAction;
+use App\Models\AuditEvent;
 use App\Models\Desk;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
@@ -21,6 +23,10 @@ class CreateDesk
 
         $input['slug'] ??= Str::slug((string) ($input['name'] ?? ''));
 
-        return Desk::create(CreateDeskData::validateAndCreate($input)->filled());
+        $desk = Desk::create(CreateDeskData::validateAndCreate($input)->filled());
+
+        AuditEvent::record(AuditAction::DESK_CREATED, $actor, $desk);
+
+        return $desk;
     }
 }

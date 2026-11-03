@@ -2,6 +2,8 @@
 
 namespace App\Actions\BusinessSchedules;
 
+use App\Enums\AuditAction;
+use App\Models\AuditEvent;
 use App\Models\BusinessSchedule;
 use App\Models\SlaPolicy;
 use App\Models\User;
@@ -22,5 +24,7 @@ class DeleteBusinessSchedule
         }
 
         $schedule->delete();
+
+        AuditEvent::record(AuditAction::BUSINESS_SCHEDULE_DELETED, $actor, $schedule);
     }
 }

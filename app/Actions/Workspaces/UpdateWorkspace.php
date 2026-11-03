@@ -3,6 +3,8 @@
 namespace App\Actions\Workspaces;
 
 use App\Data\Workspaces\UpdateWorkspaceData;
+use App\Enums\AuditAction;
+use App\Models\AuditEvent;
 use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Support\Facades\Gate;
@@ -16,7 +18,11 @@ class UpdateWorkspace
     {
         Gate::forUser($actor)->authorize('update', $workspace);
 
-        $workspace->update(UpdateWorkspaceData::validateAndCreate($input)->filled());
+        $changes = UpdateWorkspaceData::validateAndCreate($input)->filled();
+
+        $workspace->update($changes);
+
+        AuditEvent::record(AuditAction::WORKSPACE_UPDATED, $actor, $workspace, ['changed' => array_keys($changes)]);
 
         return $workspace;
     }

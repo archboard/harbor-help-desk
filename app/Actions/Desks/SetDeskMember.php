@@ -3,6 +3,8 @@
 namespace App\Actions\Desks;
 
 use App\Data\Desks\SetDeskMemberData;
+use App\Enums\AuditAction;
+use App\Models\AuditEvent;
 use App\Models\Desk;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
@@ -34,5 +36,7 @@ class SetDeskMember
                 ...array_intersect_key($data->filled(), ['in_rotation' => true]),
             ],
         ]);
+
+        AuditEvent::record(AuditAction::DESK_MEMBER_SET, $actor, $desk, ['user_id' => $member->getKey(), 'role' => $data->role->value]);
     }
 }

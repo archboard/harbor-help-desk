@@ -4,6 +4,8 @@ namespace App\Actions\Workspaces;
 
 use App\Data\Workspaces\UpdateWorkspaceSettingsData;
 use App\Data\Workspaces\WorkspaceSettings;
+use App\Enums\AuditAction;
+use App\Models\AuditEvent;
 use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Support\Facades\Gate;
@@ -43,6 +45,8 @@ class UpdateWorkspaceSettings
         $workspace->update([
             'settings' => [...$workspace->settings->toArray(), ...$data->filled()],
         ]);
+
+        AuditEvent::record(AuditAction::WORKSPACE_SETTINGS_UPDATED, $actor, $workspace, ['changed' => array_keys($data->filled())]);
 
         return $workspace;
     }

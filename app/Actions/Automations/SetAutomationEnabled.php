@@ -3,6 +3,8 @@
 namespace App\Actions\Automations;
 
 use App\Data\Automations\SetAutomationEnabledData;
+use App\Enums\AuditAction;
+use App\Models\AuditEvent;
 use App\Models\Automation;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
@@ -20,6 +22,8 @@ class SetAutomationEnabled
 
         // An automation switched on starts from now, so it doesn't fire for a moment that passed while it was off.
         $automation->update([...self::switchAttributes($automation, $data->enabled), 'updated_by' => $actor->getKey()]);
+
+        AuditEvent::record($data->enabled ? AuditAction::AUTOMATION_ENABLED : AuditAction::AUTOMATION_DISABLED, $actor, $automation);
 
         return $automation;
     }

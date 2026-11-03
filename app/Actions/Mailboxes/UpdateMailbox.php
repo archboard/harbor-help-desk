@@ -3,6 +3,8 @@
 namespace App\Actions\Mailboxes;
 
 use App\Data\Mailboxes\UpdateMailboxData;
+use App\Enums\AuditAction;
+use App\Models\AuditEvent;
 use App\Models\Mailbox;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
@@ -31,6 +33,8 @@ class UpdateMailbox
         }
 
         $mailbox->update($validated);
+
+        AuditEvent::record(AuditAction::MAILBOX_UPDATED, $actor, $mailbox, ['changed' => array_keys($validated)]);
 
         return $mailbox;
     }

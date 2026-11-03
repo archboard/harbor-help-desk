@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Workspace\AttachmentsController;
+use App\Http\Controllers\Workspace\AuditLogController;
 use App\Http\Controllers\Workspace\AutomationsController;
 use App\Http\Controllers\Workspace\CustomFieldController;
 use App\Http\Controllers\Workspace\EmailController;
@@ -22,6 +23,8 @@ Route::middleware(['auth', 'verified'])->prefix('workspace')->name('workspace.')
         ->parameters(['email' => 'mailbox']);
 
     Route::get('attachments', [AttachmentsController::class, 'edit'])->name('attachments.edit');
+
+    Route::get('audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
 
     Route::get('portal', [PortalController::class, 'edit'])->name('portal.edit');
 

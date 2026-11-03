@@ -4,6 +4,8 @@ namespace App\Actions\BusinessSchedules;
 
 use App\Data\BusinessSchedules\CreateBusinessScheduleData;
 use App\Data\BusinessSchedules\UpdateBusinessScheduleData;
+use App\Enums\AuditAction;
+use App\Models\AuditEvent;
 use App\Models\BusinessSchedule;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
@@ -28,6 +30,8 @@ class UpdateBusinessSchedule
         }
 
         $schedule->update($changes);
+
+        AuditEvent::record(AuditAction::BUSINESS_SCHEDULE_UPDATED, $actor, $schedule, ['changed' => array_keys($changes)]);
 
         return $schedule;
     }

@@ -2,7 +2,9 @@
 
 namespace App\Actions\Mailboxes;
 
+use App\Enums\AuditAction;
 use App\Enums\MailboxDriver;
+use App\Models\AuditEvent;
 use App\Models\Mailbox;
 use App\Models\User;
 use App\Models\Workspace;
@@ -25,7 +27,7 @@ class DeleteMailbox
             ]);
         }
 
-        DB::transaction(function () use ($mailbox): void {
+        DB::transaction(function () use ($actor, $mailbox): void {
             $workspace = Workspace::query()->findOrFail($mailbox->workspace_id);
 
             if ($workspace->settings->mailNotificationMailboxId === $mailbox->id) {
@@ -33,6 +35,8 @@ class DeleteMailbox
             }
 
             $mailbox->delete();
+
+            AuditEvent::record(AuditAction::MAILBOX_DELETED, $actor, $mailbox);
         });
     }
 }

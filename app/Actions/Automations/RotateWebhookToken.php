@@ -3,6 +3,8 @@
 namespace App\Actions\Automations;
 
 use App\Data\Automations\AutomationWebhookTokenData;
+use App\Enums\AuditAction;
+use App\Models\AuditEvent;
 use App\Models\Automation;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
@@ -28,6 +30,8 @@ class RotateWebhookToken
         $token = Str::random(40);
 
         $automation->forceFill(['webhook_token_hash' => hash('sha256', $token), 'updated_by' => $actor->getKey()])->save();
+
+        AuditEvent::record(AuditAction::AUTOMATION_WEBHOOK_TOKEN_ROTATED, $actor, $automation);
 
         return new AutomationWebhookTokenData(route('webhooks.automations', [$automation->getKey(), $token]), $token);
     }

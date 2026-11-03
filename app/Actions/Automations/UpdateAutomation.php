@@ -6,6 +6,8 @@ use App\Automations\DefinitionValidator;
 use App\Automations\EditorScope;
 use App\Data\Automations\AutomationDefinitionData;
 use App\Data\Automations\UpdateAutomationData;
+use App\Enums\AuditAction;
+use App\Models\AuditEvent;
 use App\Models\Automation;
 use App\Models\User;
 use Illuminate\Support\Arr;
@@ -62,7 +64,10 @@ class UpdateAutomation
         }
 
         $automation->updated_by = $actor->getKey();
+        $changed = array_keys($automation->getDirty());
         $automation->save();
+
+        AuditEvent::record(AuditAction::AUTOMATION_UPDATED, $actor, $automation, ['changed' => array_values(array_diff($changed, ['updated_by', 'updated_at']))]);
 
         return $automation;
     }
