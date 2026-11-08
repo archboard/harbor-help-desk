@@ -44,6 +44,7 @@ use App\Models\TicketComment;
 use App\Models\TicketEvent;
 use App\Models\TicketReminder;
 use App\Models\User;
+use App\Models\WebhookDelivery;
 use App\Models\Workspace;
 use App\OAuth\WorkspaceScopeRepository;
 use Carbon\CarbonImmutable;
@@ -136,6 +137,8 @@ class AppServiceProvider extends ServiceProvider
             'export' => Export::class,
             'macro' => Macro::class,
             'sla_policy' => SlaPolicy::class,
+            'webhook' => \App\Models\Webhook::class,
+            'webhook_delivery' => WebhookDelivery::class,
             'business_schedule' => BusinessSchedule::class,
         ]);
 

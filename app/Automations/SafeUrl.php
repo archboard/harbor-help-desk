@@ -3,6 +3,9 @@
 namespace App\Automations;
 
 use Closure;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Http;
 
 /**
  * The guard in front of outbound automation requests (SSRF). A URL must be http(s) with a clean
@@ -145,6 +148,46 @@ class SafeUrl
         $ips = array_map(fn (string $ip): string => str_contains($ip, ':') ? "[$ip]" : $ip, $target['ips']);
 
         return ['curl' => [CURLOPT_RESOLVE => ["{$target['host']}:{$target['port']}:".implode(',', $ips)]]];
+    }
+
+    /**
+     * Vet the URL and send the request, connected to the vetted addresses only. Redirects are not
+     * followed and the timeout is 10 seconds to connect and in total.
+     *
+     * @param  array<string, string>  $headers
+     *
+     * @throws AutomationException When the URL is not allowed.
+     * @throws ConnectionException
+     */
+    public function send(string $method, string $url, array $headers, ?string $body, bool $allowPrivate): Response
+    {
+        $options = $this->curlOptions($this->check($url, $allowPrivate));
+
+        $request = Http::withHeaders($headers)
+            ->timeout(10)->connectTimeout(10)->withoutRedirecting()
+            ->withOptions($options);
+
+        $contentTypes = array_filter(array_keys($headers), fn (string $name): bool => strtolower($name) === 'content-type');
+
+        if ($body !== null) {
+            $request = $request->withBody($body, $contentTypes === [] ? 'application/json' : $headers[reset($contentTypes)]);
+        }
+
+        return $request->send($method, $url);
+    }
+
+    /**
+     * A validation rule that runs {@see self::check()}, for URLs that are saved to be called later.
+     */
+    public function rule(bool $allowPrivate): Closure
+    {
+        return function (string $attribute, mixed $value, Closure $fail) use ($allowPrivate): void {
+            try {
+                $this->check(is_string($value) ? $value : '', $allowPrivate);
+            } catch (AutomationException $exception) {
+                $fail($exception->getMessage());
+            }
+        };
     }
 
     protected function isBlocked(string $packed): bool

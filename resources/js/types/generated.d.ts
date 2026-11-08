@@ -1053,6 +1053,56 @@ declare namespace App {
         email: string;
       };
     }
+    namespace Webhooks {
+      export type CreateWebhookData = {
+        url: string;
+        description?: string | null;
+        event_types?: string[];
+      };
+      export type UpdateWebhookData = {
+        url?: string;
+        description?: string | null;
+        event_types?: string[];
+        is_enabled?: boolean;
+      };
+      export type WebhookData = {
+        id: string;
+        url: string;
+        description: string | null;
+        event_types: App.Enums.TicketEventType[];
+        is_enabled: boolean;
+        consecutive_failures: number;
+        disabled_at: string | null;
+        created_by: string | null;
+        created_at: string | null;
+        updated_at: string | null;
+      };
+      export type WebhookDeliveryData = {
+        id: string;
+        webhook_id: string;
+        ticket_event_id: string | null;
+        event_type: string;
+        status: App.Enums.WebhookDeliveryStatus;
+        response_status: number | null;
+        attempts: number;
+        error: string | null;
+        duration_ms: number | null;
+        delivered_at: string | null;
+        created_at: string | null;
+      };
+      export type WebhookPayloadData = {
+        id: string;
+        type: string;
+        occurred_at: string;
+        workspace_id: string;
+        event: App.Data.Tickets.TicketEventData | null;
+        ticket: App.Data.Tickets.TicketData | null;
+      };
+      export type WebhookSecretData = {
+        webhook: App.Data.Webhooks.WebhookData;
+        secret: string;
+      };
+    }
     namespace Workspaces {
       export type CreateWorkspaceData = {
         name: string;
@@ -1145,6 +1195,11 @@ declare namespace App {
       | 'automation_enabled'
       | 'automation_disabled'
       | 'automation_webhook_token_rotated'
+      | 'webhook_created'
+      | 'webhook_updated'
+      | 'webhook_deleted'
+      | 'webhook_secret_rotated'
+      | 'webhook_disabled'
       | 'sla_policy_created'
       | 'sla_policy_updated'
       | 'sla_policy_deleted'
@@ -1243,6 +1298,7 @@ declare namespace App {
       | 'on_hold'
       | 'solved'
       | 'closed';
+    export type WebhookDeliveryStatus = 'pending' | 'succeeded' | 'failed';
     export type WorkspaceRole = 'owner' | 'admin' | 'agent';
   }
 }

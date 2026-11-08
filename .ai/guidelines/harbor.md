@@ -78,6 +78,8 @@ The banners are `Properties`, `Booting`, `Casts`, `Accessors`, `Scopes`, `Relati
 | `slt_` | `TicketSlaTarget`       |
 | `tmt_` | `TicketMetric`          |
 | `exp_` | `Export`                |
+| `whk_` | `Webhook`               |
+| `whd_` | `WebhookDelivery`       |
 
 ## Tenancy
 

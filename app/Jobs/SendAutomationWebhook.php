@@ -10,9 +10,7 @@ use App\Models\Workspace;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Throwable;
 
 /**
@@ -64,15 +62,11 @@ class SendAutomationWebhook implements ShouldQueue
         $started = hrtime(true);
 
         try {
-            $target = $safeUrl->check($this->url, Workspace::current()->settings->effectiveAllowPrivateUrls());
+            $response = $safeUrl->send($this->method, $this->url, $this->headers, $this->body, Workspace::current()->settings->effectiveAllowPrivateUrls());
         } catch (AutomationException $exception) {
             $this->finish(null, $started, $exception->getMessage(), $notifyCreator);
 
             return;
-        }
-
-        try {
-            $response = $this->request($safeUrl->curlOptions($target));
         } catch (ConnectionException) {
             if ($this->attempts() < $this->tries) {
                 throw new AutomationException(__('The webhook could not connect.'));
@@ -102,24 +96,6 @@ class SendAutomationWebhook implements ShouldQueue
     public function failed(Throwable $exception): void
     {
         $this->finish(null, hrtime(true), __('The webhook failed unexpectedly.'), app(NotifyCreatorOfFailure::class));
-    }
-
-    /**
-     * @param  array<string, mixed>  $options
-     */
-    protected function request(array $options): Response
-    {
-        $request = Http::withHeaders($this->headers)
-            ->timeout(10)->connectTimeout(10)->withoutRedirecting()
-            ->withOptions($options);
-
-        $contentTypes = array_filter(array_keys($this->headers), fn (string $name): bool => strtolower($name) === 'content-type');
-
-        if ($this->body !== null) {
-            $request = $request->withBody($this->body, $contentTypes === [] ? 'application/json' : $this->headers[reset($contentTypes)]);
-        }
-
-        return $request->send($this->method, $this->url);
     }
 
     /**
