@@ -103,6 +103,13 @@ Postgres is the only supported database, so use its features wherever they help:
 - Enums shown to people use `App\Enums\Concerns\HasLabels` and implement `label()` as a `match` returning literal `__('...')` strings, so translation tooling finds them. Never build translation keys dynamically.
 - Use `text()` when the length is unbounded. Don't pick arbitrary `string()` lengths.
 
+## MCP Tools
+
+- The MCP server is `App\Mcp\Servers\HarborServer` at `/mcp`, behind the same middleware as `/api/v1`. Tools live in `app/Mcp/Tools` and are listed on the server.
+- A tool only translates between MCP and an Action: it takes the user from `$request->user()`, passes the request arguments straight to the Action's `array $input`, and returns `Response::json()` of Data objects. It never holds business logic, validation or visibility rules of its own.
+- Input schemas come from `DataSchema::for()` on the Action's input Data class, never hand-written.
+- Mark read tools `#[IsReadOnly]`, and annotate write tools (`#[IsIdempotent]`, `#[IsOpenWorld]` for anything that emails or calls out).
+
 ## Self-Hosting
 
 - The required services are PHP, Postgres, Redis and Reverb. Never add another. All of them ship with the self-hosted installation.
