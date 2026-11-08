@@ -28,6 +28,7 @@ use App\Http\Controllers\Api\V1\NotificationPreferenceController;
 use App\Http\Controllers\Api\V1\ReorderAutomationsController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\RequestContactExportController;
+use App\Http\Controllers\Api\V1\RequestWorkspaceExportController;
 use App\Http\Controllers\Api\V1\RotateWebhookTokenController;
 use App\Http\Controllers\Api\V1\SavedViewController;
 use App\Http\Controllers\Api\V1\SetAutomationEnabledController;
@@ -105,6 +106,7 @@ Route::prefix('v1')->name('api.v1.')
 
         Route::post('contacts/{contact}/erase', EraseContactController::class)->name('contacts.erase');
         Route::post('contacts/{contact}/export', RequestContactExportController::class)->name('contacts.export');
+        Route::post('workspace/export', RequestWorkspaceExportController::class)->name('workspace.export');
         Route::get('exports', [ExportController::class, 'index'])->name('exports.index');
         Route::get('exports/{export}/download', DownloadExportController::class)->name('exports.download');
 

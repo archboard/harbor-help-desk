@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { Head, InfiniteScroll, useForm, usePage } from '@inertiajs/vue3';
+import {
+  Head,
+  InfiniteScroll,
+  router,
+  useForm,
+  usePage,
+} from '@inertiajs/vue3';
+import AppButton from '@/components/AppButton.vue';
 import CardAction from '@/components/CardAction.vue';
 import CardPadding from '@/components/CardPadding.vue';
 import CardWrapper from '@/components/CardWrapper.vue';
@@ -7,6 +14,7 @@ import AppFieldset from '@/components/forms/AppFieldset.vue';
 import { NumberField } from '@/components/forms/fields';
 import RelativeTime from '@/components/RelativeTime.vue';
 import { show as showContact } from '@/routes/contacts';
+import { store as requestWorkspaceExport } from '@/routes/workspace/exports';
 import { update as updateSettings } from '@/routes/workspace/settings';
 
 defineOptions({ layout: { title: 'Data & privacy' } });
@@ -80,9 +88,22 @@ function formatSize(bytes: number | null): string {
       </form>
     </CardWrapper>
 
-    <p class="text-sm text-gray-500 dark:text-gray-400">
-      Exports are requested from a contact's page. They expire after seven days.
-    </p>
+    <div class="flex items-center justify-between gap-4">
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        A contact's data is exported from their page. Export the whole workspace
+        here, with its files but without mailbox passwords or tokens. Exports
+        expire after seven days.
+      </p>
+      <AppButton
+        type="button"
+        class="shrink-0"
+        @click="
+          router.post(requestWorkspaceExport(), {}, { preserveScroll: true })
+        "
+      >
+        Export workspace
+      </AppButton>
+    </div>
 
     <CardWrapper>
       <p

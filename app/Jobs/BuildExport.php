@@ -14,6 +14,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Http\File;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
 use ZipArchive;
@@ -78,7 +79,7 @@ class BuildExport implements ShouldQueue
     {
         match ($this->export->type) {
             ExportType::CONTACT => $this->addContactEntries($zip, $tempFiles),
-            ExportType::WORKSPACE => throw new \LogicException('Workspace exports are not built yet.'),
+            ExportType::WORKSPACE => $this->addWorkspaceEntries($zip, $tempFiles),
         };
     }
 
@@ -95,19 +96,134 @@ class BuildExport implements ShouldQueue
         $tickets = $contact->tickets()->withTrashed()->orderBy('id');
         $ticketIds = $contact->tickets()->withTrashed()->pluck('id');
 
-        $this->addJsonLines($zip, 'contact.jsonl', [$contact]);
-        $this->addJsonLines($zip, 'tickets.jsonl', $tickets->lazyById());
-        $this->addJsonLines($zip, 'comments.jsonl', TicketComment::query()->whereIn('ticket_id', $ticketIds)->where('is_internal', false)->orderBy('id')->lazyById());
-        $this->addJsonLines($zip, 'ratings.jsonl', SatisfactionRating::query()->where('contact_id', $contact->getKey())->orderBy('id')->lazyById());
+        $this->addJsonLines($zip, 'contact.jsonl', [$contact], $tempFiles);
+        $this->addJsonLines($zip, 'tickets.jsonl', $tickets->lazyById(), $tempFiles);
+        $this->addJsonLines($zip, 'comments.jsonl', TicketComment::query()->whereIn('ticket_id', $ticketIds)->where('is_internal', false)->orderBy('id')->lazyById(), $tempFiles);
+        $this->addJsonLines($zip, 'ratings.jsonl', SatisfactionRating::query()->where('contact_id', $contact->getKey())->orderBy('id')->lazyById(), $tempFiles);
 
         $attachments = Attachment::query()
             ->whereIn('ticket_id', $ticketIds)
             ->where(fn ($query) => $query->whereNull('ticket_comment_id')->orWhereIn('ticket_comment_id', TicketComment::query()->select('id')->where('is_internal', false)))
             ->orderBy('id');
 
-        $this->addJsonLines($zip, 'attachments.jsonl', $attachments->clone()->lazyById());
+        $this->addJsonLines($zip, 'attachments.jsonl', $attachments->clone()->lazyById(), $tempFiles);
 
-        foreach ($attachments->lazyById() as $attachment) {
+        $this->addAttachmentFiles($zip, $attachments->lazyById(), $tempFiles);
+    }
+
+    protected function tempFile(): string
+    {
+        return tempnam(sys_get_temp_dir(), 'export') ?: throw new \RuntimeException('Could not create a temporary file.');
+    }
+
+    /**
+     * Every tenant table written in this order (parents first, so an import can insert in order).
+     * Each entry is the table and the columns that order it uniquely: tables with an `id`
+     * stream with `lazyById()`, pivots without one page through their key columns.
+     * Anything with a `workspace_id` column must be listed here or in {@see self::EXCLUDED_WORKSPACE_TABLES}.
+     */
+    public const array WORKSPACE_TABLES = [
+        'workspaces' => ['id'],
+        'users' => ['id'],
+        'workspace_user' => ['user_id'],
+        'business_schedules' => ['id'],
+        'sla_policies' => ['id'],
+        'desks' => ['id'],
+        'desk_user' => ['desk_id', 'user_id'],
+        'custom_fields' => ['id'],
+        'custom_field_desk' => ['custom_field_id', 'desk_id'],
+        'tags' => ['id'],
+        'contacts' => ['id'],
+        'mailboxes' => ['id'],
+        'automations' => ['id'],
+        'macros' => ['id'],
+        'saved_views' => ['id'],
+        'tickets' => ['id'],
+        'ticket_user' => ['ticket_id', 'user_id'],
+        'tag_ticket' => ['ticket_id', 'tag_id'],
+        'ticket_comments' => ['id'],
+        'attachments' => ['id'],
+        'ticket_events' => ['id'],
+        'ticket_reminders' => ['id'],
+        'satisfaction_ratings' => ['id'],
+        'ticket_metrics' => ['id'],
+        'ticket_sla_targets' => ['id'],
+        'automation_runs' => ['id'],
+        'automation_ticket_matches' => ['id'],
+        'audit_events' => ['id'],
+    ];
+
+    /**
+     * Tables with a `workspace_id` column that a workspace export leaves out on purpose:
+     * exports are this feature's own bookkeeping and notifications are per-user and transient.
+     */
+    public const array EXCLUDED_WORKSPACE_TABLES = ['exports', 'notifications'];
+
+    /**
+     * Columns written as null: mailbox credentials (`settings` holds the encrypted IMAP/SMTP/OAuth
+     * secrets) and the push subscription, and the automation webhook token hash.
+     */
+    public const array SECRET_COLUMNS = [
+        'mailboxes' => ['settings', 'push_secret', 'push_subscription_id', 'push_expires_at'],
+        'automations' => ['webhook_token_hash'],
+    ];
+
+    /**
+     * Member columns that are safe to export. Never the password, remember token, two-factor
+     * secrets or passkeys.
+     */
+    public const array USER_COLUMNS = ['id', 'name', 'email', 'email_verified_at', 'timezone', 'created_at', 'updated_at'];
+
+    /**
+     * Raw database rows of the workspace, one JSONL file per table (`{table}.jsonl`), every attachment
+     * file, and a `manifest.json` with the row counts. Rows are the raw column values so an import can
+     * insert them again with their ids. Queries use the query builder with an explicit `workspace_id`
+     * filter, as the tenant scope doesn't apply to it.
+     *
+     * @param  list<string>  $tempFiles
+     */
+    protected function addWorkspaceEntries(ZipArchive $zip, array &$tempFiles): void
+    {
+        $workspaceId = $this->export->workspace_id;
+        $counts = [];
+
+        foreach (self::WORKSPACE_TABLES as $table => $keys) {
+            $query = match ($table) {
+                'workspaces' => DB::table($table)->where('id', $workspaceId),
+                'users' => DB::table($table)->select(self::USER_COLUMNS)->whereIn('id', DB::table('workspace_user')->select('user_id')->where('workspace_id', $workspaceId)),
+                default => DB::table($table)->where('workspace_id', $workspaceId),
+            };
+
+            $rows = $keys === ['id']
+                ? $query->lazyById(1000)
+                : $query->orderBy($keys[0])->when(isset($keys[1]), fn ($q) => $q->orderBy($keys[1]))->lazy(1000);
+
+            $secrets = array_flip(self::SECRET_COLUMNS[$table] ?? []);
+
+            $counts[$table] = $this->addJsonLines($zip, "$table.jsonl", $rows, $tempFiles, $secrets);
+        }
+
+        $attachments = DB::table('attachments')->where('workspace_id', $workspaceId);
+        $this->addAttachmentFiles($zip, $attachments->lazyById(1000), $tempFiles);
+
+        $zip->addFromString('manifest.json', json_encode([
+            'version' => 1,
+            'workspace_id' => $workspaceId,
+            'exported_at' => now()->toIso8601String(),
+            'migration' => DB::table('migrations')->orderByDesc('id')->value('migration'),
+            'tables' => $counts,
+        ], JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT));
+    }
+
+    /**
+     * Copy each attachment's file into the zip under `attachments/{id}/{filename}`. Missing files are skipped.
+     *
+     * @param  iterable<int, Model|object{id: string, disk: string, path: string, filename: string}>  $attachments
+     * @param  list<string>  $tempFiles
+     */
+    protected function addAttachmentFiles(ZipArchive $zip, iterable $attachments, array &$tempFiles): void
+    {
+        foreach ($attachments as $attachment) {
             $stream = Storage::disk($attachment->disk)->readStream($attachment->path);
 
             if ($stream === null) {
@@ -119,26 +235,36 @@ class BuildExport implements ShouldQueue
             file_put_contents($tempFile, $stream);
             fclose($stream);
 
-            $zip->addFile($tempFile, "attachments/{$attachment->getKey()}/".basename($attachment->filename));
+            $zip->addFile($tempFile, "attachments/{$attachment->id}/".basename($attachment->filename));
         }
-    }
-
-    protected function tempFile(): string
-    {
-        return tempnam(sys_get_temp_dir(), 'export') ?: throw new \RuntimeException('Could not create a temporary file.');
     }
 
     /**
-     * @param  iterable<int, Model>  $models
+     * Stream rows to a temporary file as JSON Lines and add it to the zip. Models are written with
+     * `toArray()`, query-builder rows as their raw columns.
+     *
+     * @param  iterable<int, Model|object>  $rows
+     * @param  list<string>  $tempFiles
+     * @param  array<string, int>  $nullColumns  Column names (as keys) written as null.
+     * @return int The number of rows written.
      */
-    protected function addJsonLines(ZipArchive $zip, string $name, iterable $models): void
+    protected function addJsonLines(ZipArchive $zip, string $name, iterable $rows, array &$tempFiles, array $nullColumns = []): int
     {
-        $lines = '';
+        $tempFile = $this->tempFile();
+        $tempFiles[] = $tempFile;
+        $handle = fopen($tempFile, 'w');
+        $count = 0;
 
-        foreach ($models as $model) {
-            $lines .= json_encode($model->toArray(), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n";
+        foreach ($rows as $row) {
+            $data = $row instanceof Model ? $row->toArray() : array_replace((array) $row, array_map(fn () => null, array_intersect_key($nullColumns, (array) $row)));
+
+            fwrite($handle, json_encode($data, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n");
+            $count++;
         }
 
-        $zip->addFromString($name, $lines);
+        fclose($handle);
+        $zip->addFile($tempFile, $name);
+
+        return $count;
     }
 }

@@ -1146,6 +1146,7 @@ declare namespace App {
       | 'api_token_created'
       | 'api_token_revoked'
       | 'contact_export_requested'
+      | 'workspace_export_requested'
       | 'export_downloaded'
       | 'contact_erased';
     export type AutomationRunStatus =
