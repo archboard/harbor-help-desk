@@ -33,4 +33,12 @@ class ContactPolicy
     {
         return $this->view($user, $contact);
     }
+
+    /**
+     * Erasure is irreversible, so only workspace owners and admins may do it.
+     */
+    public function erase(User $user, Contact $contact): bool
+    {
+        return $user->workspaceRole($contact->workspace)?->isAdmin() === true;
+    }
 }

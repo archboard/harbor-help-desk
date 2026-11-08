@@ -65,6 +65,7 @@ class ContactController extends Controller
         return Inertia::render('contacts/Show', [
             'contact' => ContactData::from($contact),
             'canExport' => $user->can('create', Export::class),
+            'canErase' => $user->can('erase', $contact),
             'tickets' => Inertia::scroll(TicketData::collect($tickets)),
         ]);
     }

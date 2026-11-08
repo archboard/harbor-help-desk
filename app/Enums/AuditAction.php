@@ -46,6 +46,7 @@ enum AuditAction: string
     case API_TOKEN_REVOKED = 'api_token_revoked';
     case CONTACT_EXPORT_REQUESTED = 'contact_export_requested';
     case EXPORT_DOWNLOADED = 'export_downloaded';
+    case CONTACT_ERASED = 'contact_erased';
 
     public function label(): string
     {
@@ -84,6 +85,7 @@ enum AuditAction: string
             self::API_TOKEN_REVOKED => __('API token revoked'),
             self::CONTACT_EXPORT_REQUESTED => __('Contact data export requested'),
             self::EXPORT_DOWNLOADED => __('Data export downloaded'),
+            self::CONTACT_ERASED => __('Contact erased'),
         };
     }
 }

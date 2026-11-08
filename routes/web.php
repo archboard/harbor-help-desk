@@ -13,6 +13,7 @@ use App\Http\Controllers\DeskCustomFieldController;
 use App\Http\Controllers\DeskMemberController;
 use App\Http\Controllers\DownloadExportController;
 use App\Http\Controllers\DuplicateAutomationController;
+use App\Http\Controllers\EraseContactController;
 use App\Http\Controllers\InstallController;
 use App\Http\Controllers\LookupTicketsController;
 use App\Http\Controllers\MailboxOAuthController;
@@ -77,6 +78,7 @@ Route::middleware('workspace')->group(function () {
         Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
         Route::post('notifications/read', MarkAllNotificationsReadController::class)->name('notifications.read');
         Route::post('notifications/{notification}/read', MarkNotificationReadController::class)->name('notifications.read-one');
+        Route::post('contacts/{contact}/erase', EraseContactController::class)->name('contacts.erase');
         Route::post('contacts/{contact}/export', RequestContactExportController::class)->name('contacts.export');
         Route::get('exports/{export}/download', DownloadExportController::class)->middleware('signed:relative')->name('exports.download');
         Route::get('contacts/search', [ContactController::class, 'search'])->name('contacts.search');

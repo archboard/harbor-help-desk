@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { Form, Head, Link, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import CardAction from '@/components/CardAction.vue';
 import CardPadding from '@/components/CardPadding.vue';
 import CardWrapper from '@/components/CardWrapper.vue';
 import AppFieldset from '@/components/forms/AppFieldset.vue';
 import { EmailField, InputField } from '@/components/forms/fields';
+import Modal from '@/components/modals/Modal.vue';
 import TicketTable from '@/components/tickets/TicketTable.vue';
+import erase from '@/actions/App/Http/Controllers/EraseContactController';
 import requestExport from '@/actions/App/Http/Controllers/RequestContactExportController';
 import { index, update } from '@/routes/contacts';
 import type { Paginated } from '@/types';
@@ -16,6 +19,7 @@ defineOptions({ layout: { title: '' } });
 const { contact } = defineProps<{
   contact: App.Data.Contacts.ContactData;
   canExport: boolean;
+  canErase: boolean;
   tickets: Paginated<App.Data.Tickets.TicketData>;
 }>();
 
@@ -23,6 +27,15 @@ const form = useForm({
   name: contact.name,
   email: contact.email,
 } satisfies App.Data.Contacts.UpdateContactData);
+
+const erasing = ref(false);
+const eraseForm = useForm({
+  confirm_email: '',
+} satisfies App.Data.Contacts.EraseContactData);
+
+function eraseContact(close: () => void): void {
+  eraseForm.submit(erase(contact.id), { onSuccess: close });
+}
 </script>
 
 <template>
@@ -93,5 +106,47 @@ const form = useForm({
         No tickets from this contact on your desks.
       </p>
     </section>
+
+    <section
+      v-if="canErase"
+      class="space-y-3 rounded-lg border border-red-300 p-4 dark:border-red-900"
+      aria-label="Danger zone"
+    >
+      <h2 class="text-lg font-semibold text-red-700 dark:text-red-400">
+        Danger zone
+      </h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Erasing removes this contact's name, email, messages, attachments and
+        rating comments. Their tickets and your replies stay. This cannot be
+        undone.
+      </p>
+      <AppButton type="button" color="red" @click="erasing = true">
+        Erase contact
+      </AppButton>
+    </section>
   </div>
+
+  <Modal
+    v-if="erasing"
+    headline="Erase this contact?"
+    action-text="Erase permanently"
+    action-color="red"
+    :action-loading="eraseForm.processing"
+    @close="
+      erasing = false;
+      eraseForm.reset().clearErrors();
+    "
+    @action="eraseContact"
+  >
+    <form class="mt-4" @submit.prevent>
+      <AppFieldset>
+        <InputField
+          v-model="eraseForm.confirm_email"
+          :label="`Type ${contact.email} to confirm`"
+          :error="eraseForm.errors.confirm_email"
+          required
+        />
+      </AppFieldset>
+    </form>
+  </Modal>
 </template>

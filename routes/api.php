@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\V1\DeskCustomFieldController;
 use App\Http\Controllers\Api\V1\DeskMemberController;
 use App\Http\Controllers\Api\V1\DownloadExportController;
 use App\Http\Controllers\Api\V1\DuplicateAutomationController;
+use App\Http\Controllers\Api\V1\EraseContactController;
 use App\Http\Controllers\Api\V1\ExportController;
 use App\Http\Controllers\Api\V1\MacroController;
 use App\Http\Controllers\Api\V1\MailboxController;
@@ -102,6 +103,7 @@ Route::prefix('v1')->name('api.v1.')
 
         Route::apiResource('mailboxes', MailboxController::class);
 
+        Route::post('contacts/{contact}/erase', EraseContactController::class)->name('contacts.erase');
         Route::post('contacts/{contact}/export', RequestContactExportController::class)->name('contacts.export');
         Route::get('exports', [ExportController::class, 'index'])->name('exports.index');
         Route::get('exports/{export}/download', DownloadExportController::class)->name('exports.download');
