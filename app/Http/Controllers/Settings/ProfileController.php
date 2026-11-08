@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Settings;
 
+use App\Actions\Users\UpdateProfile;
 use App\Http\Controllers\Controller;
 use App\Http\Flash;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
-use App\Http\Requests\Settings\ProfileUpdateRequest;
 use App\Models\User;
 use DateTimeZone;
 use Illuminate\Container\Attributes\CurrentUser;
@@ -32,15 +32,9 @@ class ProfileController extends Controller
     /**
      * Update the user's profile information.
      */
-    public function update(ProfileUpdateRequest $request, #[CurrentUser] User $user): RedirectResponse
+    public function update(Request $request, #[CurrentUser] User $user, UpdateProfile $updateProfile): RedirectResponse
     {
-        $user->fill($request->validated());
-
-        if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
-        }
-
-        $user->save();
+        $updateProfile->handle($user, $request->only(['name', 'email', 'timezone']));
 
         Flash::success(__('Profile updated.'));
 
@@ -51,11 +45,11 @@ class ProfileController extends Controller
      * Change only the user's timezone, e.g. from the prompt shown when their browser's
      * timezone differs, and stay on the page they were on.
      */
-    public function updateTimezone(Request $request, #[CurrentUser] User $user): RedirectResponse
+    public function updateTimezone(Request $request, #[CurrentUser] User $user, UpdateProfile $updateProfile): RedirectResponse
     {
-        $validated = $request->validate(['timezone' => ['required', 'timezone:all']]);
+        $request->validate(['timezone' => ['required']]);
 
-        $user->update($validated);
+        $updateProfile->handle($user, $request->only('timezone'));
 
         Flash::success(__('Timezone updated.'));
 

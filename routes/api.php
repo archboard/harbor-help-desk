@@ -1,6 +1,5 @@
 <?php
 
-use App\Data\Users\UserData;
 use App\Http\Controllers\Api\Platform\WorkspaceController as PlatformWorkspaceController;
 use App\Http\Controllers\Api\V1\ApplyMacroController;
 use App\Http\Controllers\Api\V1\AttachmentController;
@@ -21,8 +20,10 @@ use App\Http\Controllers\Api\V1\DuplicateAutomationController;
 use App\Http\Controllers\Api\V1\EraseContactController;
 use App\Http\Controllers\Api\V1\ExportController;
 use App\Http\Controllers\Api\V1\ImportWorkspaceController;
+use App\Http\Controllers\Api\V1\LookupTicketsController;
 use App\Http\Controllers\Api\V1\MacroController;
 use App\Http\Controllers\Api\V1\MailboxController;
+use App\Http\Controllers\Api\V1\MarkNotificationReadController;
 use App\Http\Controllers\Api\V1\MarkNotificationsReadController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\NotificationPreferenceController;
@@ -35,6 +36,7 @@ use App\Http\Controllers\Api\V1\SavedViewController;
 use App\Http\Controllers\Api\V1\SetAutomationEnabledController;
 use App\Http\Controllers\Api\V1\SetAwayController;
 use App\Http\Controllers\Api\V1\SlaPolicyController;
+use App\Http\Controllers\Api\V1\TagController;
 use App\Http\Controllers\Api\V1\TestAutomationController;
 use App\Http\Controllers\Api\V1\TicketAssigneeController;
 use App\Http\Controllers\Api\V1\TicketClaimController;
@@ -44,13 +46,13 @@ use App\Http\Controllers\Api\V1\TicketDeskController;
 use App\Http\Controllers\Api\V1\TicketEventController;
 use App\Http\Controllers\Api\V1\TicketReminderController;
 use App\Http\Controllers\Api\V1\TicketTagController;
+use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\WorkspaceController;
 use App\Http\Controllers\Api\V1\WorkspaceSettingsController;
 use App\Http\Controllers\Api\V1\WorkspaceTicketEventController;
 use App\Http\Middleware\EnsurePlatformToken;
 use App\Http\Middleware\EnsureTokenCanAccessWorkspace;
 use App\Http\Middleware\ResolveWorkspace;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Landlord: the platform creates and removes workspaces, on any host and outside any workspace.
@@ -61,7 +63,8 @@ Route::prefix('platform')->name('api.platform.')->middleware(EnsurePlatformToken
 Route::prefix('v1')->name('api.v1.')
     ->middleware([ResolveWorkspace::class, 'auth:api', EnsureTokenCanAccessWorkspace::class])
     ->group(function () {
-        Route::get('user', fn (Request $request): UserData => UserData::from($request->user()))->name('user');
+        Route::get('user', [UserController::class, 'show'])->name('user');
+        Route::patch('user', [UserController::class, 'update'])->name('user.update');
 
         Route::get('workspace', [WorkspaceController::class, 'show'])->name('workspace.show');
         Route::patch('workspace', [WorkspaceController::class, 'update'])->name('workspace.update');
@@ -71,8 +74,11 @@ Route::prefix('v1')->name('api.v1.')
 
         Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
         Route::post('notifications/read', MarkNotificationsReadController::class)->name('notifications.read');
+        Route::post('notifications/{notification}/read', MarkNotificationReadController::class)->name('notifications.read-one');
         Route::get('notification-preferences', [NotificationPreferenceController::class, 'show'])->name('notification-preferences.show');
         Route::put('notification-preferences', [NotificationPreferenceController::class, 'update'])->name('notification-preferences.update');
+
+        Route::get('tags', [TagController::class, 'index'])->name('tags.index');
 
         Route::apiResource('contacts', ContactController::class)->except('destroy');
 
@@ -120,6 +126,7 @@ Route::prefix('v1')->name('api.v1.')
         Route::post('desks/{desk}/tickets', [TicketController::class, 'store'])->name('desks.tickets.store');
         Route::post('tickets/bulk', [TicketController::class, 'bulk'])->name('tickets.bulk');
         Route::post('tickets/claim', TicketClaimController::class)->name('tickets.claim');
+        Route::get('tickets/lookup', LookupTicketsController::class)->name('tickets.lookup');
         Route::apiResource('tickets', TicketController::class)->except('store');
         Route::post('tickets/{ticket}/restore', [TicketController::class, 'restore'])->withTrashed()->name('tickets.restore');
         Route::put('tickets/{ticket}/desk', [TicketDeskController::class, 'update'])->name('tickets.desk.update');

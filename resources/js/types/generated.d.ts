@@ -1042,6 +1042,11 @@ declare namespace App {
         email_verified_at: string | null;
         timezone: string | null;
       };
+      export type UpdateProfileData = {
+        name?: string;
+        email?: string;
+        timezone?: string;
+      };
       export type UserData = {
         id: string;
         name: string;
