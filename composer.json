@@ -15,6 +15,7 @@
         "directorytree/imapengine": "^1.25",
         "grantholle/scru128-laravel": "^1.1",
         "inertiajs/inertia-laravel": "^3.0",
+        "laravel/ai": "^1.3",
         "laravel/chisel": "^0.1.0",
         "laravel/fortify": "^1.37.2",
         "laravel/framework": "^13.17",
