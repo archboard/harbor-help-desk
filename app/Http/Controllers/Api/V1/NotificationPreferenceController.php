@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Notifications\UpdateNotificationPreferences;
 use App\Data\Notifications\NotificationPreferenceData;
+use App\Data\Notifications\UpdateNotificationPreferencesData;
+use App\Http\Attributes\ApiBody;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Workspace;
@@ -23,6 +25,7 @@ class NotificationPreferenceController extends Controller
     /**
      * @return array<int, NotificationPreferenceData>
      */
+    #[ApiBody(UpdateNotificationPreferencesData::class)]
     public function update(Request $request, #[CurrentUser] User $user, UpdateNotificationPreferences $updateNotificationPreferences): array
     {
         return NotificationPreferenceData::forMembership($updateNotificationPreferences->handle($user, $request->all()));

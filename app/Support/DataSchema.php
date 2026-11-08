@@ -106,7 +106,7 @@ class DataSchema
     /**
      * The JSON Schema type for a PHP type name.
      */
-    protected static function base(string $name, string $docType = ''): Type
+    public static function base(string $name, string $docType = ''): Type
     {
         // ponytail: nested Data, maps and objects become a bare object, because ObjectType can't declare additionalProperties; give them typed properties if clients need them.
         return match (true) {
@@ -187,10 +187,10 @@ class DataSchema
     /**
      * The `@param` type and description of each constructor parameter, keyed by name.
      *
-     * @param  class-string<InputData>  $class
+     * @param  class-string  $class
      * @return array<string, array{0: string, 1: string}>
      */
-    protected static function docblock(string $class): array
+    public static function docblock(string $class): array
     {
         $doc = (new ReflectionClass($class))->getConstructor()?->getDocComment() ?: '';
         preg_match_all('/@param\s+(.+?)\s+\$(\w+)[ \t]*(.*)$/m', $doc, $matches, PREG_SET_ORDER);

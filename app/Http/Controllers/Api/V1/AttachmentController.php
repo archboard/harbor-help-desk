@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Tickets\AddTicketAttachment;
 use App\Actions\Tickets\DeleteTicketAttachment;
+use App\Data\Tickets\AddTicketAttachmentData;
 use App\Data\Tickets\AttachmentData;
+use App\Http\Attributes\ApiBody;
 use App\Http\Controllers\Controller;
 use App\Models\Attachment;
 use App\Models\Ticket;
@@ -31,6 +33,7 @@ class AttachmentController extends Controller
     /**
      * Attach the multipart `file` to the ticket.
      */
+    #[ApiBody(AddTicketAttachmentData::class)]
     public function store(Request $request, #[CurrentUser] User $user, Ticket $ticket, AddTicketAttachment $addTicketAttachment): AttachmentData
     {
         return AttachmentData::from($addTicketAttachment->handle($user, $ticket, $request->all()));

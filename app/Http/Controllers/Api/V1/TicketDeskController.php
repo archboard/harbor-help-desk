@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Tickets\MoveTicket;
 use App\Data\Tickets\TicketData;
+use App\Http\Attributes\ApiBody;
 use App\Http\Controllers\Controller;
 use App\Models\Desk;
 use App\Models\Ticket;
@@ -16,6 +17,7 @@ class TicketDeskController extends Controller
     /**
      * Move the ticket to the desk in `desk_id`. An unknown or archived desk is a 404.
      */
+    #[ApiBody(schema: ['type' => 'object', 'properties' => ['desk_id' => ['type' => 'string']], 'required' => ['desk_id']])]
     public function update(Request $request, #[CurrentUser] User $user, Ticket $ticket, MoveTicket $moveTicket): TicketData
     {
         $request->validate(['desk_id' => ['required', 'string']]);

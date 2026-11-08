@@ -6,7 +6,11 @@ use App\Actions\Desks\ArchiveDesk;
 use App\Actions\Desks\CreateDesk;
 use App\Actions\Desks\RestoreDesk;
 use App\Actions\Desks\UpdateDesk;
+use App\Data\Desks\CreateDeskData;
 use App\Data\Desks\DeskData;
+use App\Data\Desks\UpdateDeskData;
+use App\Http\Attributes\ApiBody;
+use App\Http\Attributes\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Models\Desk;
 use App\Models\User;
@@ -34,6 +38,7 @@ class DeskController extends Controller
         );
     }
 
+    #[ApiBody(CreateDeskData::class)]
     public function store(Request $request, #[CurrentUser] User $user, CreateDesk $createDesk): DeskData
     {
         return DeskData::from($createDesk->handle($user, $request->all()));
@@ -46,6 +51,7 @@ class DeskController extends Controller
         return DeskData::from($desk->load('customFields'));
     }
 
+    #[ApiBody(UpdateDeskData::class)]
     public function update(Request $request, #[CurrentUser] User $user, Desk $desk, UpdateDesk $updateDesk): DeskData
     {
         return DeskData::from($updateDesk->handle($user, $desk, $request->all()));
@@ -61,6 +67,8 @@ class DeskController extends Controller
         return response()->noContent();
     }
 
+    #[ApiBody]
+    #[ApiResponse(DeskData::class)]
     public function restore(#[CurrentUser] User $user, Desk $desk, RestoreDesk $restoreDesk): JsonResponse
     {
         return response()->json(DeskData::from($restoreDesk->handle($user, $desk)));

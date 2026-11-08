@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Api\V1;
 use App\Actions\CustomFields\CreateCustomField;
 use App\Actions\CustomFields\DeleteCustomField;
 use App\Actions\CustomFields\UpdateCustomField;
+use App\Data\CustomFields\CreateCustomFieldData;
 use App\Data\CustomFields\CustomFieldData;
+use App\Data\CustomFields\UpdateCustomFieldData;
+use App\Http\Attributes\ApiBody;
 use App\Http\Controllers\Controller;
 use App\Models\CustomField;
 use App\Models\User;
@@ -29,11 +32,13 @@ class CustomFieldController extends Controller
         return CustomFieldData::collect(CustomField::query()->orderBy('position')->orderBy('id')->get());
     }
 
+    #[ApiBody(CreateCustomFieldData::class)]
     public function store(Request $request, #[CurrentUser] User $user, CreateCustomField $createCustomField): CustomFieldData
     {
         return CustomFieldData::from($createCustomField->handle($user, $request->all()));
     }
 
+    #[ApiBody(UpdateCustomFieldData::class)]
     public function update(Request $request, #[CurrentUser] User $user, CustomField $customField, UpdateCustomField $updateCustomField): CustomFieldData
     {
         return CustomFieldData::from($updateCustomField->handle($user, $customField, $request->all()));

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Tickets\SyncTicketAssignees;
+use App\Data\Tickets\SyncTicketAssigneesData;
 use App\Data\Users\UserData;
+use App\Http\Attributes\ApiBody;
 use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use App\Models\User;
@@ -18,6 +20,7 @@ class TicketAssigneeController extends Controller
      *
      * @return Collection<int, UserData>
      */
+    #[ApiBody(SyncTicketAssigneesData::class)]
     public function update(Request $request, #[CurrentUser] User $user, Ticket $ticket, SyncTicketAssignees $syncTicketAssignees): Collection
     {
         $syncTicketAssignees->handle($user, $ticket, $request->all());

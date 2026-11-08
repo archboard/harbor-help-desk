@@ -6,6 +6,9 @@ use App\Actions\Automations\CreateAutomation;
 use App\Actions\Automations\DeleteAutomation;
 use App\Actions\Automations\UpdateAutomation;
 use App\Data\Automations\AutomationData;
+use App\Data\Automations\CreateAutomationData;
+use App\Data\Automations\UpdateAutomationData;
+use App\Http\Attributes\ApiBody;
 use App\Http\Controllers\Controller;
 use App\Models\Automation;
 use App\Models\User;
@@ -29,6 +32,7 @@ class AutomationController extends Controller
         return AutomationData::collect(Automation::visibleTo($user)->withRunStats()->orderBy('trigger_type')->orderBy('position')->orderBy('id')->get());
     }
 
+    #[ApiBody(CreateAutomationData::class)]
     public function store(Request $request, #[CurrentUser] User $user, CreateAutomation $createAutomation): AutomationData
     {
         return AutomationData::from($createAutomation->handle($user, $request->all()));
@@ -41,6 +45,7 @@ class AutomationController extends Controller
         return AutomationData::from($automation);
     }
 
+    #[ApiBody(UpdateAutomationData::class)]
     public function update(Request $request, #[CurrentUser] User $user, Automation $automation, UpdateAutomation $updateAutomation): AutomationData
     {
         return AutomationData::from($updateAutomation->handle($user, $automation, $request->all()));

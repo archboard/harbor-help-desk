@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Api\V1;
 use App\Actions\Webhooks\CreateWebhook;
 use App\Actions\Webhooks\DeleteWebhook;
 use App\Actions\Webhooks\UpdateWebhook;
+use App\Data\Webhooks\CreateWebhookData;
+use App\Data\Webhooks\UpdateWebhookData;
 use App\Data\Webhooks\WebhookData;
 use App\Data\Webhooks\WebhookSecretData;
+use App\Http\Attributes\ApiBody;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Webhook;
@@ -33,6 +36,7 @@ class WebhookController extends Controller
     /**
      * The new webhook with its secret, shown once.
      */
+    #[ApiBody(CreateWebhookData::class)]
     public function store(Request $request, #[CurrentUser] User $user, CreateWebhook $createWebhook): WebhookSecretData
     {
         return $createWebhook->handle($user, $request->all());
@@ -45,6 +49,7 @@ class WebhookController extends Controller
         return WebhookData::from($webhook);
     }
 
+    #[ApiBody(UpdateWebhookData::class)]
     public function update(Request $request, #[CurrentUser] User $user, Webhook $webhook, UpdateWebhook $updateWebhook): WebhookData
     {
         return WebhookData::from($updateWebhook->handle($user, $webhook, $request->all()));

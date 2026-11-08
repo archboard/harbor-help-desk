@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Api\V1;
 use App\Actions\Tickets\AddTicketComment;
 use App\Actions\Tickets\DeleteTicketComment;
 use App\Actions\Tickets\UpdateTicketComment;
+use App\Data\Tickets\AddTicketCommentData;
 use App\Data\Tickets\TicketCommentData;
+use App\Data\Tickets\UpdateTicketCommentData;
+use App\Http\Attributes\ApiBody;
 use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use App\Models\TicketComment;
@@ -33,11 +36,13 @@ class TicketCommentController extends Controller
     /**
      * Reply or add an internal note. Send as multipart to include `attachments[]`.
      */
+    #[ApiBody(AddTicketCommentData::class)]
     public function store(Request $request, #[CurrentUser] User $user, Ticket $ticket, AddTicketComment $addTicketComment): TicketCommentData
     {
         return TicketCommentData::from($addTicketComment->handle($user, $ticket, $request->all())->load(['author', 'attachments']));
     }
 
+    #[ApiBody(UpdateTicketCommentData::class)]
     public function update(Request $request, #[CurrentUser] User $user, TicketComment $comment, UpdateTicketComment $updateTicketComment): TicketCommentData
     {
         return TicketCommentData::from($updateTicketComment->handle($user, $comment, $request->all())->load(['author', 'attachments']));

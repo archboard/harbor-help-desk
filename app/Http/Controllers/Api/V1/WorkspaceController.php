@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Workspaces\UpdateWorkspace;
+use App\Data\Workspaces\UpdateWorkspaceData;
 use App\Data\Workspaces\WorkspaceData;
+use App\Http\Attributes\ApiBody;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Workspace;
@@ -20,6 +22,7 @@ class WorkspaceController extends Controller
         return WorkspaceData::from(Workspace::current());
     }
 
+    #[ApiBody(UpdateWorkspaceData::class)]
     public function update(Request $request, #[CurrentUser] User $user, UpdateWorkspace $updateWorkspace): WorkspaceData
     {
         return WorkspaceData::from($updateWorkspace->handle($user, Workspace::current(), $request->all()));

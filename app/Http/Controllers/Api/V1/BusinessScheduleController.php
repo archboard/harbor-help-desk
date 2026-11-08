@@ -6,6 +6,9 @@ use App\Actions\BusinessSchedules\CreateBusinessSchedule;
 use App\Actions\BusinessSchedules\DeleteBusinessSchedule;
 use App\Actions\BusinessSchedules\UpdateBusinessSchedule;
 use App\Data\BusinessSchedules\BusinessScheduleData;
+use App\Data\BusinessSchedules\CreateBusinessScheduleData;
+use App\Data\BusinessSchedules\UpdateBusinessScheduleData;
+use App\Http\Attributes\ApiBody;
 use App\Http\Controllers\Controller;
 use App\Models\BusinessSchedule;
 use App\Models\User;
@@ -29,6 +32,7 @@ class BusinessScheduleController extends Controller
         return BusinessScheduleData::collect(BusinessSchedule::query()->orderBy('name')->orderBy('id')->get());
     }
 
+    #[ApiBody(CreateBusinessScheduleData::class)]
     public function store(Request $request, #[CurrentUser] User $user, CreateBusinessSchedule $createBusinessSchedule): BusinessScheduleData
     {
         return BusinessScheduleData::from($createBusinessSchedule->handle($user, $request->all()));
@@ -41,6 +45,7 @@ class BusinessScheduleController extends Controller
         return BusinessScheduleData::from($businessSchedule);
     }
 
+    #[ApiBody(UpdateBusinessScheduleData::class)]
     public function update(Request $request, #[CurrentUser] User $user, BusinessSchedule $businessSchedule, UpdateBusinessSchedule $updateBusinessSchedule): BusinessScheduleData
     {
         return BusinessScheduleData::from($updateBusinessSchedule->handle($user, $businessSchedule, $request->all()));

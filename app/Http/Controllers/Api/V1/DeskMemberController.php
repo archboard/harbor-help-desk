@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\V1;
 use App\Actions\Desks\RemoveDeskMember;
 use App\Actions\Desks\SetDeskMember;
 use App\Data\Desks\DeskMemberData;
+use App\Data\Desks\SetDeskMemberData;
+use App\Http\Attributes\ApiBody;
 use App\Http\Controllers\Controller;
 use App\Models\Desk;
 use App\Models\User;
@@ -29,6 +31,7 @@ class DeskMemberController extends Controller
     /**
      * Add the user to the desk, or change their role.
      */
+    #[ApiBody(SetDeskMemberData::class)]
     public function update(Request $request, #[CurrentUser] User $actor, Desk $desk, User $user, SetDeskMember $setDeskMember): Response
     {
         $setDeskMember->handle($actor, $desk, $user, $request->all());

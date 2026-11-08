@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\V1\MarkNotificationReadController;
 use App\Http\Controllers\Api\V1\MarkNotificationsReadController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\NotificationPreferenceController;
+use App\Http\Controllers\Api\V1\OpenApiController;
 use App\Http\Controllers\Api\V1\ReorderAutomationsController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\RequestContactExportController;
@@ -63,6 +64,8 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('platform')->name('api.platform.')->middleware(EnsurePlatformToken::class)->group(function () {
     Route::apiResource('workspaces', PlatformWorkspaceController::class)->only(['store', 'update', 'destroy']);
 });
+
+Route::get('v1/openapi.json', OpenApiController::class)->middleware('throttle:60,1')->name('api.v1.openapi');
 
 Route::prefix('v1')->name('api.v1.')
     ->middleware([ResolveWorkspace::class, 'auth:api', EnsureTokenCanAccessWorkspace::class])

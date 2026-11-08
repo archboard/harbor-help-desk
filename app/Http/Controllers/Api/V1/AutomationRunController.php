@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Automations\ListAutomationRuns;
 use App\Data\Automations\AutomationRunData;
+use App\Data\Automations\ListAutomationRunsData;
+use App\Http\Attributes\ApiQuery;
 use App\Http\Controllers\Controller;
 use App\Models\Automation;
 use App\Models\AutomationRun;
@@ -20,6 +22,7 @@ class AutomationRunController extends Controller
      *
      * @return PaginatedDataCollection<int, AutomationRunData>
      */
+    #[ApiQuery(ListAutomationRunsData::class)]
     public function index(Request $request, #[CurrentUser] User $user, ListAutomationRuns $listAutomationRuns, ?Automation $automation = null): PaginatedDataCollection
     {
         return AutomationRunData::collect($listAutomationRuns->handle($user, $automation, $request->query()), PaginatedDataCollection::class);

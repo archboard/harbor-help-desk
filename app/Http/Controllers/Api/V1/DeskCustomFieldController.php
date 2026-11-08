@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Desks\SyncDeskCustomFields;
 use App\Data\CustomFields\CustomFieldData;
+use App\Data\Desks\SyncDeskCustomFieldsData;
+use App\Http\Attributes\ApiBody;
 use App\Http\Controllers\Controller;
 use App\Models\Desk;
 use App\Models\User;
@@ -18,6 +20,7 @@ class DeskCustomFieldController extends Controller
      *
      * @return Collection<int, CustomFieldData>
      */
+    #[ApiBody(SyncDeskCustomFieldsData::class)]
     public function update(Request $request, #[CurrentUser] User $user, Desk $desk, SyncDeskCustomFields $syncDeskCustomFields): Collection
     {
         $syncDeskCustomFields->handle($user, $desk, $request->all());

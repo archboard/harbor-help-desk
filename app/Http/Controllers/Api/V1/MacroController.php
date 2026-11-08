@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Api\V1;
 use App\Actions\Macros\CreateMacro;
 use App\Actions\Macros\DeleteMacro;
 use App\Actions\Macros\UpdateMacro;
+use App\Data\Macros\CreateMacroData;
 use App\Data\Macros\MacroData;
+use App\Data\Macros\UpdateMacroData;
+use App\Http\Attributes\ApiBody;
 use App\Http\Controllers\Controller;
 use App\Models\Macro;
 use App\Models\User;
@@ -29,6 +32,7 @@ class MacroController extends Controller
         return MacroData::collect(Macro::visibleTo($user)->orderBy('name')->get());
     }
 
+    #[ApiBody(CreateMacroData::class)]
     public function store(Request $request, #[CurrentUser] User $user, CreateMacro $createMacro): MacroData
     {
         return MacroData::from($createMacro->handle($user, $request->all()));
@@ -41,6 +45,7 @@ class MacroController extends Controller
         return MacroData::from($macro);
     }
 
+    #[ApiBody(UpdateMacroData::class)]
     public function update(Request $request, #[CurrentUser] User $user, Macro $macro, UpdateMacro $updateMacro): MacroData
     {
         return MacroData::from($updateMacro->handle($user, $macro, $request->all()));

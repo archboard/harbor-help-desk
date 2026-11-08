@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Tickets\CancelTicketReminder;
 use App\Actions\Tickets\SetTicketReminder;
+use App\Data\Tickets\SetTicketReminderData;
 use App\Data\Tickets\TicketReminderData;
+use App\Http\Attributes\ApiBody;
 use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use App\Models\TicketReminder;
@@ -31,6 +33,7 @@ class TicketReminderController extends Controller
         );
     }
 
+    #[ApiBody(SetTicketReminderData::class)]
     public function store(Request $request, #[CurrentUser] User $user, Ticket $ticket, SetTicketReminder $setTicketReminder): TicketReminderData
     {
         return TicketReminderData::from($setTicketReminder->handle($user, $ticket, $request->all()));
