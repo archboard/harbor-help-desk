@@ -11,6 +11,7 @@
   --font-sans:
     Inter, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
     'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-display: 'DM Serif Display', ui-serif, Georgia, serif;
 
   /* Brand color: point these at another Tailwind palette to re-theme the app */
   --color-primary-50: var(--color-blue-50);
@@ -36,6 +37,56 @@
   --color-gray-800: var(--color-zinc-800);
   --color-gray-900: var(--color-zinc-900);
   --color-gray-950: var(--color-zinc-950);
+
+  /*
+    Archboard design system semantic tokens (harbor-light). `.dark` below swaps them
+    for harbor-dark, so `bg-surface` etc. need no `dark:` variant.
+  */
+  --color-bg: var(--color-white);
+  --color-surface: var(--color-white);
+  --color-surface-raised: var(--color-white);
+  --color-surface-muted: var(--color-gray-100);
+  --color-divider: var(--color-gray-200);
+  --color-border-input: var(--color-gray-300);
+  --color-input-bg: var(--color-white);
+  --color-text: var(--color-gray-900);
+  --color-text-body: var(--color-gray-700);
+  --color-text-muted: var(--color-gray-500);
+  --color-focus: var(--color-primary-500);
+  --color-primary: var(--color-primary-600);
+  --color-on-primary: var(--color-white);
+  --color-link: var(--color-primary-600);
+  --color-accent: var(--color-primary-600);
+  --color-nav-bg: var(--color-primary-100);
+  --color-nav-active-bg: var(--color-primary-200);
+  --color-nav-text: var(--color-primary-800);
+  --color-nav-text-active: var(--color-primary-900);
+  --color-nav-icon: var(--color-primary-400);
+  --color-danger-text: var(--color-red-600);
+  --color-danger-border: var(--color-red-300);
+}
+
+@layer base {
+  .dark {
+    --color-bg: var(--color-black);
+    --color-surface: var(--color-gray-800);
+    --color-surface-raised: var(--color-gray-600);
+    --color-surface-muted: var(--color-gray-700);
+    --color-divider: var(--color-gray-500);
+    --color-border-input: var(--color-gray-600);
+    --color-input-bg: var(--color-gray-900);
+    --color-text: var(--color-white);
+    --color-text-body: var(--color-gray-300);
+    --color-text-muted: var(--color-gray-300);
+    --color-link: var(--color-primary-400);
+    --color-accent: var(--color-primary-400);
+    --color-nav-bg: var(--color-primary-900);
+    --color-nav-active-bg: var(--color-primary-800);
+    --color-nav-text: var(--color-gray-300);
+    --color-nav-text-active: var(--color-white);
+    --color-nav-icon: var(--color-gray-300);
+    --color-danger-text: var(--color-red-400);
+  }
 }
 
 /*
@@ -52,6 +103,6 @@
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: var(--color-gray-200, currentcolor);
+    border-color: var(--color-divider, currentcolor);
   }
 }

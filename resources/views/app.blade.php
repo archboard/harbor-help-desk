@@ -22,11 +22,11 @@
         {{-- Inline style to set the HTML background color before app.css loads --}}
         <style>
             html {
-                background-color: #fafafa;
+                background-color: #ffffff;
             }
 
             html.dark {
-                background-color: #000;
+                background-color: #000000;
             }
         </style>
 
@@ -40,7 +40,7 @@
             <title>{{ config('app.name', 'Laravel') }}</title>
         </x-inertia::head>
     </head>
-    <body class="bg-gray-50 font-sans text-gray-900 antialiased dark:bg-black dark:text-gray-100">
+    <body class="bg-bg font-sans text-text antialiased">
         <x-inertia::app />
     </body>
 </html>

@@ -41,7 +41,7 @@ function send(): void {
       >
         ← Your tickets
       </Link>
-      <h1 class="text-2xl font-semibold tracking-tight">New ticket</h1>
+      <h1 class="font-display text-3xl tracking-tight">New ticket</h1>
     </div>
 
     <form class="space-y-4" @submit.prevent="send">

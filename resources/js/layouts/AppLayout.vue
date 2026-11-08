@@ -237,7 +237,7 @@ const userNavigation = [
       <Container>
         <TimezonePrompt />
 
-        <h1 v-if="title" class="mb-6 text-2xl font-semibold tracking-tight">
+        <h1 v-if="title" class="mb-6 font-display text-3xl tracking-tight">
           {{ title }}
         </h1>
 
