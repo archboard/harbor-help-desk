@@ -3,6 +3,11 @@
 namespace App\Mcp\Servers;
 
 use App\Mcp\Tools\DescribeWorkspaceTool;
+use App\Mcp\Tools\GetContactTool;
+use App\Mcp\Tools\GetTicketStatsTool;
+use App\Mcp\Tools\GetTicketTool;
+use App\Mcp\Tools\SearchContactsTool;
+use App\Mcp\Tools\SearchTicketsTool;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Instructions;
 use Laravel\Mcp\Server\Attributes\Name;
@@ -25,5 +30,10 @@ class HarborServer extends Server
 {
     protected array $tools = [
         DescribeWorkspaceTool::class,
+        SearchTicketsTool::class,
+        GetTicketTool::class,
+        SearchContactsTool::class,
+        GetContactTool::class,
+        GetTicketStatsTool::class,
     ];
 }
