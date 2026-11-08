@@ -1058,6 +1058,9 @@ declare namespace App {
         email: string;
         password: string;
       };
+      export type ImportWorkspaceData = {
+        file: File;
+      };
       export type ProvisionedWorkspaceData = {
         id: string;
         name: string;
@@ -1148,7 +1151,10 @@ declare namespace App {
       | 'contact_export_requested'
       | 'workspace_export_requested'
       | 'export_downloaded'
-      | 'contact_erased';
+      | 'contact_erased'
+      | 'workspace_import_requested'
+      | 'workspace_imported'
+      | 'workspace_import_failed';
     export type AutomationRunStatus =
       | 'running'
       | 'waiting'

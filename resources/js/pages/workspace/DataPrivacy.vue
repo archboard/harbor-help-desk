@@ -14,6 +14,7 @@ import AppFieldset from '@/components/forms/AppFieldset.vue';
 import { NumberField } from '@/components/forms/fields';
 import RelativeTime from '@/components/RelativeTime.vue';
 import { show as showContact } from '@/routes/contacts';
+import { store as importWorkspace } from '@/routes/workspace/import';
 import { store as requestWorkspaceExport } from '@/routes/workspace/exports';
 import { update as updateSettings } from '@/routes/workspace/settings';
 
@@ -30,6 +31,16 @@ const form = useForm({
     settings?.retention_resolved_ticket_days ?? null,
   retention_trash_days: settings?.retention_trash_days ?? 30,
 });
+
+const importForm = useForm<{ file: File | null }>({ file: null });
+
+function submitImport(): void {
+  importForm.post(importWorkspace.url(), {
+    forceFormData: true,
+    preserveScroll: true,
+    onSuccess: () => importForm.reset(),
+  });
+}
 
 const typeLabels: Record<App.Enums.ExportType, string> = {
   contact: 'Contact data',
@@ -155,6 +166,41 @@ function formatSize(bytes: number | null): string {
           </a>
         </li>
       </InfiniteScroll>
+    </CardWrapper>
+
+    <CardWrapper>
+      <form @submit.prevent="submitImport">
+        <CardPadding>
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            Import a workspace export (a .zip from "Export workspace") into this
+            workspace. It only works while the workspace has no tickets or
+            contacts. Mailboxes come in disconnected and automation webhook URLs
+            must be generated again. Members are matched by email; new ones sign
+            in with a magic link.
+          </p>
+          <input
+            type="file"
+            accept=".zip,application/zip"
+            class="mt-3 block text-sm"
+            @input="
+              importForm.file =
+                ($event.target as HTMLInputElement).files?.[0] ?? null
+            "
+          />
+          <p v-if="importForm.errors.file" class="mt-1 text-sm text-red-600">
+            {{ importForm.errors.file }}
+          </p>
+        </CardPadding>
+        <CardAction>
+          <AppButton
+            type="submit"
+            :loading="importForm.processing"
+            :disabled="!importForm.file"
+          >
+            Import workspace
+          </AppButton>
+        </CardAction>
+      </form>
     </CardWrapper>
   </div>
 </template>

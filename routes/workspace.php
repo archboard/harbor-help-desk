@@ -7,6 +7,7 @@ use App\Http\Controllers\Workspace\CustomFieldController;
 use App\Http\Controllers\Workspace\DataPrivacyController;
 use App\Http\Controllers\Workspace\EmailController;
 use App\Http\Controllers\Workspace\GeneralController;
+use App\Http\Controllers\Workspace\ImportWorkspaceController;
 use App\Http\Controllers\Workspace\PortalController;
 use App\Http\Controllers\Workspace\RequestWorkspaceExportController;
 use App\Http\Controllers\Workspace\SettingsController;
@@ -28,6 +29,7 @@ Route::middleware(['auth', 'verified'])->prefix('workspace')->name('workspace.')
 
     Route::get('data-privacy', [DataPrivacyController::class, 'index'])->name('data-privacy.index');
     Route::post('exports', RequestWorkspaceExportController::class)->name('exports.store');
+    Route::post('import', ImportWorkspaceController::class)->name('import.store');
 
     Route::get('audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
 

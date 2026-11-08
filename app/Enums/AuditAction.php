@@ -48,6 +48,9 @@ enum AuditAction: string
     case WORKSPACE_EXPORT_REQUESTED = 'workspace_export_requested';
     case EXPORT_DOWNLOADED = 'export_downloaded';
     case CONTACT_ERASED = 'contact_erased';
+    case WORKSPACE_IMPORT_REQUESTED = 'workspace_import_requested';
+    case WORKSPACE_IMPORTED = 'workspace_imported';
+    case WORKSPACE_IMPORT_FAILED = 'workspace_import_failed';
 
     public function label(): string
     {
@@ -88,6 +91,9 @@ enum AuditAction: string
             self::WORKSPACE_EXPORT_REQUESTED => __('Workspace export requested'),
             self::EXPORT_DOWNLOADED => __('Data export downloaded'),
             self::CONTACT_ERASED => __('Contact erased'),
+            self::WORKSPACE_IMPORT_REQUESTED => __('Workspace import requested'),
+            self::WORKSPACE_IMPORTED => __('Workspace imported'),
+            self::WORKSPACE_IMPORT_FAILED => __('Workspace import failed'),
         };
     }
 }

@@ -127,7 +127,7 @@ class Mailbox extends Model
 
     /**
      * Limit to the mailboxes `mailboxes:poll` should queue a poll for this minute. Hosted
-     * mailboxes receive by webhook, so only the workspace's own mailboxes are polled. While
+     * mailboxes receive by webhook, so only the workspace's own mailboxes are polled, and not those without credentials (imported ones). While
      * `mailboxes:watch` runs, or for a mailbox with an unexpired push subscription, only those
      * not polled for 5 minutes are, as a backstop.
      *
@@ -137,6 +137,7 @@ class Mailbox extends Model
     protected function needsScheduledPoll(Builder $query): void
     {
         $query->where('driver', '!=', MailboxDriver::HOSTED)
+            ->whereNotNull('settings')
             ->where(fn (Builder $query) => $query
                 ->whereNull('polled_at')
                 ->orWhere('polled_at', '<', now()->subMinutes(5))

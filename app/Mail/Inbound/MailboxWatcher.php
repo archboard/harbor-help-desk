@@ -81,6 +81,7 @@ class MailboxWatcher
     {
         $this->mailboxes = Mailbox::withoutGlobalScope('workspace')
             ->where('driver', '!=', MailboxDriver::HOSTED)
+            ->whereNotNull('settings')
             ->withoutPush()
             ->with('workspace')
             ->get()
