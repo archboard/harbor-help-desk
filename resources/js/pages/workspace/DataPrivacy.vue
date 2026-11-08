@@ -1,14 +1,27 @@
 <script setup lang="ts">
-import { Head, InfiniteScroll } from '@inertiajs/vue3';
+import { Head, InfiniteScroll, useForm, usePage } from '@inertiajs/vue3';
+import CardAction from '@/components/CardAction.vue';
+import CardPadding from '@/components/CardPadding.vue';
 import CardWrapper from '@/components/CardWrapper.vue';
+import AppFieldset from '@/components/forms/AppFieldset.vue';
+import { NumberField } from '@/components/forms/fields';
 import RelativeTime from '@/components/RelativeTime.vue';
 import { show as showContact } from '@/routes/contacts';
+import { update as updateSettings } from '@/routes/workspace/settings';
 
 defineOptions({ layout: { title: 'Data & privacy' } });
 
 defineProps<{
   exports: { data: App.Data.Exports.ExportData[] };
 }>();
+
+const settings = usePage().props.workspace?.settings;
+
+const form = useForm({
+  retention_resolved_ticket_days:
+    settings?.retention_resolved_ticket_days ?? null,
+  retention_trash_days: settings?.retention_trash_days ?? 30,
+});
 
 const typeLabels: Record<App.Enums.ExportType, string> = {
   contact: 'Contact data',
@@ -35,6 +48,37 @@ function formatSize(bytes: number | null): string {
 <template>
   <div class="space-y-6">
     <Head title="Data & privacy" />
+
+    <CardWrapper>
+      <form
+        @submit.prevent="
+          form.submit(updateSettings(), { preserveScroll: true })
+        "
+      >
+        <CardPadding>
+          <AppFieldset>
+            <NumberField
+              v-model="form.retention_resolved_ticket_days"
+              label="Delete resolved tickets after (days)"
+              help-text="Solved and closed tickets move to the trash this many days after they were resolved. Leave empty to keep them forever."
+              :error="form.errors.retention_resolved_ticket_days"
+              :min="1"
+              :max="3650"
+            />
+            <NumberField
+              v-model="form.retention_trash_days"
+              label="Keep deleted tickets for (days)"
+              help-text="After this many days in the trash, a ticket and its files are removed permanently."
+              :error="form.errors.retention_trash_days"
+              :min="1"
+              :max="365"
+              required
+            />
+          </AppFieldset>
+        </CardPadding>
+        <CardAction :loading="form.processing" />
+      </form>
+    </CardWrapper>
 
     <p class="text-sm text-gray-500 dark:text-gray-400">
       Exports are requested from a contact's page. They expire after seven days.

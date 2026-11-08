@@ -14,5 +14,6 @@ Schedule::command('automations:resume')->everyMinute()->withoutOverlapping();
 Schedule::command('automations:sweep')->everyMinute()->withoutOverlapping();
 Schedule::command('mailboxes:poll')->everyMinute()->withoutOverlapping();
 Schedule::command('mailboxes:renew-push')->daily()->withoutOverlapping();
+Schedule::command('tickets:apply-retention')->daily()->withoutOverlapping();
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
 Schedule::command('model:prune')->daily();

@@ -19,6 +19,14 @@ class DeleteTicket
     {
         Gate::forUser($actor)->authorize('delete', $ticket);
 
+        $this->trash($ticket, $actor);
+    }
+
+    /**
+     * Soft-delete without authorizing; a null actor is the system (retention).
+     */
+    public function trash(Ticket $ticket, ?User $actor): void
+    {
         DB::transaction(function () use ($actor, $ticket): void {
             $ticket->delete();
             AutomationRun::query()->where('ticket_id', $ticket->getKey())->where('status', AutomationRunStatus::WAITING)->get()

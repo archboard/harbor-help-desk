@@ -1085,6 +1085,8 @@ declare namespace App {
         portal_enabled?: boolean | null;
         portal_access?: App.Enums.PortalAccess | null;
         surveys_enabled?: boolean | null;
+        retention_resolved_ticket_days?: number | null;
+        retention_trash_days?: number | null;
       };
       export type WorkspaceData = {
         id: string;
@@ -1103,6 +1105,8 @@ declare namespace App {
         portal_enabled: boolean;
         portal_access: App.Enums.PortalAccess;
         surveys_enabled: boolean;
+        retention_resolved_ticket_days: number | null;
+        retention_trash_days: number;
       };
     }
   }

@@ -28,5 +28,9 @@ class UpdateWorkspaceSettingsData extends InputData
         public bool|Optional|null $portalEnabled,
         public PortalAccess|Optional|null $portalAccess,
         public bool|Optional|null $surveysEnabled,
+        #[Between(1, 3650)]
+        public int|Optional|null $retentionResolvedTicketDays,
+        #[Between(1, 365)]
+        public int|Optional|null $retentionTrashDays,
     ) {}
 }

@@ -34,6 +34,10 @@ class WorkspaceSettings extends Data
         public PortalAccess $portalAccess = PortalAccess::ANYONE,
         /** Whether a satisfaction survey is emailed when a ticket is first solved. */
         public bool $surveysEnabled = false,
+        /** Soft-deletes tickets that were resolved more than this many days ago; null keeps them forever. */
+        public ?int $retentionResolvedTicketDays = null,
+        /** How many days a deleted ticket stays in the trash before it and its files are removed for good. */
+        public int $retentionTrashDays = 30,
     ) {}
 
     /**

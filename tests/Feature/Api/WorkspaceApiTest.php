@@ -26,7 +26,7 @@ test('members read the workspace and admins update it', function () {
     actAs($this->admin, $this->acme);
     $this->patchJson('http://acme.harbor.test/api/v1/workspace', ['name' => 'Acme Support'])
         ->assertOk()
-        ->assertExactJson(['id' => $this->acme->id, 'name' => 'Acme Support', 'subdomain' => 'acme', 'is_admin' => true, 'away_at' => null, 'settings' => ['mail_notification_mailbox_id' => null, 'mail_new_tickets_per_sender_per_hour' => 20, 'attachments_max_size_kb' => 25600, 'attachments_blocked_extensions' => ['bat', 'cmd', 'com', 'cpl', 'dll', 'exe', 'hta', 'jar', 'js', 'jse', 'lnk', 'msi', 'msp', 'ps1', 'scr', 'sh', 'vbe', 'vbs', 'wsf'], 'automations_allow_private_urls' => false, 'portal_enabled' => true, 'portal_access' => 'anyone', 'surveys_enabled' => false]]);
+        ->assertExactJson(['id' => $this->acme->id, 'name' => 'Acme Support', 'subdomain' => 'acme', 'is_admin' => true, 'away_at' => null, 'settings' => ['mail_notification_mailbox_id' => null, 'mail_new_tickets_per_sender_per_hour' => 20, 'attachments_max_size_kb' => 25600, 'attachments_blocked_extensions' => ['bat', 'cmd', 'com', 'cpl', 'dll', 'exe', 'hta', 'jar', 'js', 'jse', 'lnk', 'msi', 'msp', 'ps1', 'scr', 'sh', 'vbe', 'vbs', 'wsf'], 'automations_allow_private_urls' => false, 'portal_enabled' => true, 'portal_access' => 'anyone', 'surveys_enabled' => false, 'retention_resolved_ticket_days' => null, 'retention_trash_days' => 30]]);
 });
 
 test('agents cannot update the workspace', function () {
