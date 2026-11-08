@@ -29,6 +29,7 @@ test('api tokens page lists only active personal access tokens', function () {
         ->get(route('api-tokens.edit'))
         ->assertInertia(fn (Assert $page) => $page
             ->component('settings/ApiTokens')
+            ->where('mcpUrl', route('mcp'))
             ->where('tokens', [[
                 'id' => $token->id,
                 'name' => 'Active',

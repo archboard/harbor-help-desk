@@ -108,6 +108,7 @@ Postgres is the only supported database, so use its features wherever they help:
 - The MCP server is `App\Mcp\Servers\HarborServer` at `/mcp`, behind the same middleware as `/api/v1`. Tools live in `app/Mcp/Tools` and are listed on the server.
 - A tool only translates between MCP and an Action: it takes the user from `$request->user()`, passes the request arguments straight to the Action's `array $input`, and returns `Response::json()` of Data objects. It never holds business logic, validation or visibility rules of its own.
 - Input schemas come from `DataSchema::for()` on the Action's input Data class, never hand-written.
+- Prompts live in `app/Mcp/Prompts`. They embed the data through Data objects, name the tools the client should call next, hold no logic and never call an LLM.
 - Mark read tools `#[IsReadOnly]`, and annotate write tools (`#[IsIdempotent]`, `#[IsOpenWorld]` for anything that emails or calls out).
 
 ## Self-Hosting

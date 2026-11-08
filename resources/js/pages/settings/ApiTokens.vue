@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Check, Copy } from '@lucide/vue';
+import { useClipboard } from '@vueuse/core';
+import { computed, ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import SimpleAlert from '@/components/alerts/SimpleAlert.vue';
 import CardAction from '@/components/CardAction.vue';
@@ -22,7 +24,8 @@ import { destroy, store } from '@/routes/api-tokens';
 
 defineOptions({ layout: { title: 'API tokens' } });
 
-const { workspaces } = defineProps<{
+const { workspaces, mcpUrl } = defineProps<{
+  mcpUrl: string;
   workspaces: App.Data.Workspaces.WorkspaceData[];
   tokens: App.Data.ApiTokens.ApiTokenData[];
 }>();
@@ -33,6 +36,37 @@ const form = useForm({
   name: '',
   workspaces: workspaces.length === 1 ? [workspaces[0].id] : ([] as string[]),
 } satisfies App.Data.ApiTokens.CreatePersonalAccessTokenData);
+
+const { copy } = useClipboard();
+const copied = ref('');
+
+const snippets = computed(() => [
+  { key: 'claude', label: 'Claude (connector URL)', text: mcpUrl },
+  {
+    key: 'claude-code',
+    label: 'Claude Code',
+    text: `claude mcp add --transport http harbor ${mcpUrl}`,
+  },
+  {
+    key: 'cursor',
+    label: 'Cursor (.cursor/mcp.json)',
+    text: JSON.stringify({ mcpServers: { harbor: { url: mcpUrl } } }, null, 2),
+  },
+  {
+    key: 'vscode',
+    label: 'VS Code (.vscode/mcp.json)',
+    text: JSON.stringify(
+      { servers: { harbor: { type: 'http', url: mcpUrl } } },
+      null,
+      2,
+    ),
+  },
+]);
+
+async function copySnippet(key: string, text: string): Promise<void> {
+  await copy(text);
+  copied.value = key;
+}
 
 const revoking = ref<App.Data.ApiTokens.ApiTokenData | null>(null);
 const revokeLoading = ref(false);
@@ -78,6 +112,46 @@ function revoke(close: () => void): void {
         </AppButton>
       </span>
     </SimpleAlert>
+
+    <CardWrapper>
+      <CardPadding>
+        <CardHeader class="mb-2">Connect an AI assistant</CardHeader>
+        <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+          Harbor Help has an MCP server, so AI assistants can read and update
+          tickets as you. Most clients open a browser to sign in with OAuth.
+          Alternatively, create a personal token below and send it as an
+          <code>Authorization: Bearer &lt;token&gt;</code> header.
+        </p>
+        <div class="space-y-4">
+          <div v-for="item in snippets" :key="item.key" class="space-y-1">
+            <div class="flex items-center justify-between">
+              <span
+                class="text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                {{ item.label }}
+              </span>
+              <AppButton
+                type="button"
+                size="xs"
+                color="white"
+                @click="copySnippet(item.key, item.text)"
+              >
+                <Check
+                  v-if="copied === item.key"
+                  class="size-3"
+                  aria-hidden="true"
+                />
+                <Copy v-else class="size-3" aria-hidden="true" />
+                {{ copied === item.key ? 'Copied' : 'Copy' }}
+              </AppButton>
+            </div>
+            <pre
+              class="overflow-x-auto rounded-lg bg-gray-100 p-3 text-xs break-all whitespace-pre-wrap dark:bg-gray-900"
+              >{{ item.text }}</pre>
+          </div>
+        </div>
+      </CardPadding>
+    </CardWrapper>
 
     <CardWrapper>
       <form

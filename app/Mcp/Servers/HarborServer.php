@@ -2,6 +2,9 @@
 
 namespace App\Mcp\Servers;
 
+use App\Mcp\Prompts\DraftReplyPrompt;
+use App\Mcp\Prompts\SummarizeTicketPrompt;
+use App\Mcp\Prompts\TriageQueuePrompt;
 use App\Mcp\Tools\ApplyMacroTool;
 use App\Mcp\Tools\BulkUpdateTicketsTool;
 use App\Mcp\Tools\ClaimNextTicketTool;
@@ -38,6 +41,12 @@ Comments are either internal notes or public replies. Internal notes are only se
 TEXT)]
 class HarborServer extends Server
 {
+    protected array $prompts = [
+        SummarizeTicketPrompt::class,
+        DraftReplyPrompt::class,
+        TriageQueuePrompt::class,
+    ];
+
     protected array $tools = [
         DescribeWorkspaceTool::class,
         SearchTicketsTool::class,

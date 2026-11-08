@@ -24,6 +24,7 @@ class ApiTokenController extends Controller
     public function edit(#[CurrentUser] User $user): Response
     {
         return Inertia::render('settings/ApiTokens', [
+            'mcpUrl' => route('mcp'),
             'workspaces' => WorkspaceData::collect($user->workspaces),
             'tokens' => ApiTokenData::collect($user
                 ->tokens()
