@@ -39,7 +39,7 @@ class WebhookDisabledNotification extends Notification
             ->subject($this->title())
             ->line($this->title())
             ->line($this->body())
-            ->action(__('Open Harbor'), $this->webhook->workspace->url('/'));
+            ->action(__('Open Harbor'), $this->webhook->workspace->url(route('workspace.webhooks.index', [], false)));
     }
 
     /**

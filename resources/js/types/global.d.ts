@@ -31,6 +31,7 @@ declare module '@inertiajs/core' {
     flashDataType: {
       toast?: FlashToast;
       apiToken?: string;
+      webhookSecret?: App.Data.Webhooks.WebhookSecretData;
     };
   }
 }

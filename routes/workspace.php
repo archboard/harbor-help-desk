@@ -10,7 +10,10 @@ use App\Http\Controllers\Workspace\GeneralController;
 use App\Http\Controllers\Workspace\ImportWorkspaceController;
 use App\Http\Controllers\Workspace\PortalController;
 use App\Http\Controllers\Workspace\RequestWorkspaceExportController;
+use App\Http\Controllers\Workspace\RotateWebhookSecretController;
+use App\Http\Controllers\Workspace\SendWebhookPingController;
 use App\Http\Controllers\Workspace\SettingsController;
+use App\Http\Controllers\Workspace\WebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('workspace')->name('workspace.')->group(function () {
@@ -40,4 +43,9 @@ Route::middleware(['auth', 'verified'])->prefix('workspace')->name('workspace.')
     Route::resource('custom-fields', CustomFieldController::class)
         ->only(['index', 'store', 'update', 'destroy'])
         ->parameters(['custom-fields' => 'customField']);
+
+    Route::resource('webhooks', WebhookController::class)
+        ->only(['index', 'store', 'update', 'destroy']);
+    Route::post('webhooks/{webhook}/secret', RotateWebhookSecretController::class)->name('webhooks.secret');
+    Route::post('webhooks/{webhook}/ping', SendWebhookPingController::class)->name('webhooks.ping');
 });

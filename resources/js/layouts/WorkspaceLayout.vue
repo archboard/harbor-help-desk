@@ -9,6 +9,7 @@ import { edit as portal } from '@/routes/workspace/portal';
 import { index as customFields } from '@/routes/workspace/custom-fields';
 import { index as dataPrivacy } from '@/routes/workspace/data-privacy';
 import { index as email } from '@/routes/workspace/email';
+import { index as webhooks } from '@/routes/workspace/webhooks';
 import { edit as general } from '@/routes/workspace/general';
 
 const { isCurrentOrParentUrl } = useCurrentUrl();
@@ -25,6 +26,7 @@ const sections = computed(() => [
     ? []
     : [{ label: 'Automations', href: automations().url }]),
   { label: 'Custom fields', href: customFields().url },
+  { label: 'Webhooks', href: webhooks().url },
   { label: 'Data & privacy', href: dataPrivacy().url },
   { label: 'Audit log', href: auditLog().url },
 ]);

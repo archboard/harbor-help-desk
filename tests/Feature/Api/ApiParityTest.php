@@ -77,6 +77,11 @@ function webToApiRoutes(): array
         'workspace.general.update' => 'api.v1.workspace.update',
         'workspace.import.store' => 'api.v1.workspace.import',
         'workspace.settings.update' => 'api.v1.workspace.settings.update',
+        'workspace.webhooks.store' => 'api.v1.webhooks.store',
+        'workspace.webhooks.update' => 'api.v1.webhooks.update',
+        'workspace.webhooks.destroy' => 'api.v1.webhooks.destroy',
+        'workspace.webhooks.secret' => 'api.v1.webhooks.secret',
+        'workspace.webhooks.ping' => 'api.v1.webhooks.ping',
     ];
 }
 
