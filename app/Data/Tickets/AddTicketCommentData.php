@@ -14,8 +14,9 @@ use Spatie\LaravelData\Optional;
 class AddTicketCommentData extends InputData
 {
     /**
-     * @param  list<UploadedFile>|Optional  $attachments
-     * @param  list<string>|Optional  $mentionedUserIds
+     * @param  bool|Optional  $isInternal  Whether the comment is only visible to agents.
+     * @param  list<UploadedFile>|Optional  $attachments  Files to attach to the comment.
+     * @param  list<string>|Optional  $mentionedUserIds  Ids of the agents to notify.
      */
     public function __construct(
         public string $body,
