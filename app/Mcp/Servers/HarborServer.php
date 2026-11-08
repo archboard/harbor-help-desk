@@ -2,12 +2,22 @@
 
 namespace App\Mcp\Servers;
 
+use App\Mcp\Tools\ApplyMacroTool;
+use App\Mcp\Tools\BulkUpdateTicketsTool;
+use App\Mcp\Tools\ClaimNextTicketTool;
+use App\Mcp\Tools\CreateTicketTool;
 use App\Mcp\Tools\DescribeWorkspaceTool;
 use App\Mcp\Tools\GetContactTool;
 use App\Mcp\Tools\GetTicketStatsTool;
 use App\Mcp\Tools\GetTicketTool;
+use App\Mcp\Tools\MoveTicketTool;
+use App\Mcp\Tools\ReplyToTicketTool;
 use App\Mcp\Tools\SearchContactsTool;
 use App\Mcp\Tools\SearchTicketsTool;
+use App\Mcp\Tools\SetReminderTool;
+use App\Mcp\Tools\SetTicketAssigneesTool;
+use App\Mcp\Tools\SetTicketTagsTool;
+use App\Mcp\Tools\UpdateTicketTool;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Instructions;
 use Laravel\Mcp\Server\Attributes\Name;
@@ -35,5 +45,15 @@ class HarborServer extends Server
         SearchContactsTool::class,
         GetContactTool::class,
         GetTicketStatsTool::class,
+        CreateTicketTool::class,
+        UpdateTicketTool::class,
+        MoveTicketTool::class,
+        SetTicketAssigneesTool::class,
+        SetTicketTagsTool::class,
+        ReplyToTicketTool::class,
+        ApplyMacroTool::class,
+        SetReminderTool::class,
+        ClaimNextTicketTool::class,
+        BulkUpdateTicketsTool::class,
     ];
 }
