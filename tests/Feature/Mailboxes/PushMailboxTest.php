@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 
 beforeEach(function () {
+    $this->freezeSecond();
     config([
         'app.url' => 'https://harbor.test',
         'harbor.mail.push_secret' => 'push-secret',

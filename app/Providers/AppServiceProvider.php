@@ -50,11 +50,14 @@ use App\OAuth\WorkspaceScopeRepository;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Auth\StatefulGuard;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\LazyLoadingViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -156,6 +159,17 @@ class AppServiceProvider extends ServiceProvider
             'authToken' => $parameters['authToken'],
             'csrfToken' => csrf_token(),
         ])->toResponse($parameters['request']));
+
+        Model::preventLazyLoading();
+        Model::handleLazyLoadingViolationUsing(function (Model $model, string $relation): void {
+            if (app()->isProduction()) {
+                Log::warning('Lazy loading violation: '.$model::class.'::'.$relation);
+
+                return;
+            }
+
+            throw new LazyLoadingViolationException($model, $relation);
+        });
 
         DB::prohibitDestructiveCommands(
             app()->isProduction(),

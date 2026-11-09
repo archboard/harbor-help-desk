@@ -31,7 +31,7 @@ test('uploads are stored under the ticket with their checksum and logged', funct
         ->checksum->toBe(hash('sha256', 'PDF-BYTES'))
         ->path->toBe("{$this->workspace->id}/tickets/{$ticket->id}/{$attachment->id}/invoice.pdf");
     expect(Storage::disk('local')->get($attachment->path))->toBe('PDF-BYTES');
-    expect($ticket->events()->sole()->description())->toBe('Jane Doe attached invoice.pdf.');
+    expect($ticket->events()->with('actor')->sole()->description())->toBe('Jane Doe attached invoice.pdf.');
 });
 
 test('path segments are stripped from uploaded filenames', function () {
@@ -90,7 +90,7 @@ test('uploaders can remove their file, which deletes it from the disk', function
 
     expect(Attachment::find($attachment->id))->toBeNull();
     expect(Storage::disk('local')->exists($attachment->path))->toBeFalse();
-    expect($ticket->events()->get()->last()->description())->toBe('Jane Doe removed the attachment a.pdf.');
+    expect($ticket->events()->with('actor')->get()->last()->description())->toBe('Jane Doe removed the attachment a.pdf.');
 });
 
 test('agents cannot remove someone else file but desk leads can', function () {

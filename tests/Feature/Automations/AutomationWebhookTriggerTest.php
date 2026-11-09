@@ -237,7 +237,7 @@ test('create opens a ticket from the payload as the automation with source webho
     expect($tickets)->toHaveCount(2)
         ->and($ticket->source)->toBe(TicketSource::WEBHOOK)
         ->and($ticket->desk_id)->toBe($this->desk->id)
-        ->and($ticket->requester->email)->toBe('Ann@Example.com')
+        ->and($ticket->load('requester')->requester->email)->toBe('Ann@Example.com')
         ->and(Contact::query()->whereRaw('lower(email) = ?', ['ann@example.com'])->count())->toBe(1)
         ->and($ticket->events()->where('type', 'created')->sole()->actor->is($automation))->toBeTrue()
         ->and($run->ticket_id)->toBe($ticket->id)

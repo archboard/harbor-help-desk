@@ -96,7 +96,7 @@ test('replies thread by in-reply-to and reopen a solved ticket', function () {
         ->and($reply->body)->toBe('Still broken.')
         ->and($first->ticket->fresh()->status)->toBe(TicketStatus::OPEN)
         ->and(Ticket::count())->toBe(1);
-    expect($first->ticket->events()->get()->last()->description())->toBe('Pat Lee changed the status to Open.');
+    expect($first->ticket->events()->with('actor')->get()->last()->description())->toBe('Pat Lee changed the status to Open.');
 });
 
 test('replies thread by the ticket number in the subject', function () {

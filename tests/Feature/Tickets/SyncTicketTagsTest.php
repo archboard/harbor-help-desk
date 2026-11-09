@@ -19,7 +19,7 @@ test('tags are reused ignoring case, created when new, and every change is logge
 
     expect(Tag::orderBy('name')->pluck('name')->all())->toBe(['Billing', 'Urgent']);
     expect($ticket->tags()->pluck('name')->all())->toBe(['Urgent']);
-    expect($ticket->events()->get()->map->description()->all())->toBe([
+    expect($ticket->events()->with('actor')->get()->map->description()->all())->toBe([
         'Jane Doe added the tag “Billing”.',
         'Jane Doe added the tag “Urgent”.',
         'Jane Doe removed the tag “Billing”.',

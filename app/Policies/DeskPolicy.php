@@ -57,6 +57,6 @@ class DeskPolicy
 
     protected function isWorkspaceAdmin(User $user, Desk $desk): bool
     {
-        return $user->workspaceRole($desk->workspace)?->isAdmin() === true;
+        return $user->workspaceRole($desk->loadMissing('workspace')->workspace)?->isAdmin() === true;
     }
 }

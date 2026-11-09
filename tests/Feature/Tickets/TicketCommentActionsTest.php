@@ -27,7 +27,7 @@ test('agents reply or add internal notes and each is logged', function () {
         ['id' => $note->id, 'body' => 'Probably the toner.', 'is_internal' => true],
     ]);
     expect($reply->author->is($agent))->toBeTrue();
-    expect($ticket->events()->get()->map->description()->all())->toBe([
+    expect($ticket->events()->with('actor')->get()->map->description()->all())->toBe([
         'Jane Doe replied.',
         'Jane Doe added an internal note.',
     ]);
@@ -95,7 +95,7 @@ test('desk leads can delete any comment and it is soft-deleted', function () {
 
     expect($ticket->comments()->count())->toBe(0);
     expect($comment->fresh()->trashed())->toBeTrue();
-    expect($ticket->events()->sole()->description())->toBe('Jane Doe deleted a comment.');
+    expect($ticket->events()->with('actor')->sole()->description())->toBe('Jane Doe deleted a comment.');
 });
 
 test('workspace b cannot read workspace a comments', function () {

@@ -154,6 +154,6 @@ class Export extends Model
     {
         $path = URL::temporarySignedRoute('exports.download', $this->expires_at, ['export' => $this->getKey()], absolute: false);
 
-        return $this->workspace->url($path);
+        return $this->loadMissing('workspace')->workspace->url($path);
     }
 }

@@ -18,7 +18,7 @@ class NotifyCreatorOfFailure
 {
     public function handle(Automation $automation, AutomationRun $run): void
     {
-        $creator = $automation->createdBy;
+        $creator = $automation->loadMissing(['createdBy', 'workspace'])->createdBy;
 
         if ($creator === null
             || ! $automation->workspace->users()->whereKey($creator->getKey())->exists()

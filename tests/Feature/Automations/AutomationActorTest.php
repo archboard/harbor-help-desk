@@ -33,7 +33,7 @@ test('an automation changes a ticket without a policy check and the trail names 
     app(SetTicketReminder::class)->handle($this->automation, $this->ticket, ['remind_at' => now()->addDay()->toIso8601String(), 'for_assignees' => true]);
     app(MoveTicket::class)->handle($this->automation, $this->ticket, $otherDesk);
 
-    $events = $this->ticket->events()->get();
+    $events = $this->ticket->events()->with('actor')->get();
 
     expect($events)->toHaveCount(6)
         ->and($events->every(fn ($event) => $event->actorName() === 'Triage bot'))->toBeTrue()
@@ -53,7 +53,7 @@ test('an automation creates a ticket and assigns it', function () {
     ]);
 
     expect($ticket->assignees()->sole()->is($assignee))->toBeTrue()
-        ->and($ticket->events()->first()->description())->toBe('Triage bot created the ticket.');
+        ->and($ticket->events()->with('actor')->first()->description())->toBe('Triage bot created the ticket.');
 });
 
 test('a reminder set by an automation serializes without a creator', function () {

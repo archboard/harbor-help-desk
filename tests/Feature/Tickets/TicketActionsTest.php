@@ -126,7 +126,7 @@ test('updating a ticket logs one event per changed field', function () {
         'due_at' => '2026-11-02 15:00:00',
     ]);
 
-    expect($ticket->events()->get()->map->description()->all())->toBe([
+    expect($ticket->events()->with('actor')->get()->map->description()->all())->toBe([
         "{$agent->name} changed the status to Pending.",
         "{$agent->name} changed the priority to Urgent.",
         "{$agent->name} set the due date to Mon, Nov 2, 2026 3:00 PM.",
@@ -146,7 +146,7 @@ test('moving a ticket needs access to the target desk', function () {
     app(MoveTicket::class)->handle($agent, $ticket, $otherDesk);
 
     expect($ticket->fresh()->desk_id)->toBe($otherDesk->id);
-    expect($ticket->events()->sole()->description())->toBe("{$agent->name} moved the ticket to South.");
+    expect($ticket->events()->with('actor')->sole()->description())->toBe("{$agent->name} moved the ticket to South.");
 });
 
 test('assignees are synced and each change is logged', function () {
@@ -158,7 +158,7 @@ test('assignees are synced and each change is logged', function () {
     app(SyncTicketAssignees::class)->handle($actor, $ticket, ['user_ids' => [$actor->id]]);
 
     expect($ticket->assignees()->pluck('users.id')->all())->toBe([$actor->id]);
-    expect($ticket->events()->get()->map->description()->all())->toBe([
+    expect($ticket->events()->with('actor')->get()->map->description()->all())->toBe([
         'Jane Doe assigned Jane Doe.',
         'Jane Doe assigned John Smith.',
         'Jane Doe unassigned John Smith.',
@@ -285,7 +285,7 @@ test('updating custom fields patches values and logs only real changes', functio
     app(UpdateTicket::class)->handle($agent, $ticket, ['custom_fields' => [$order->id => null]]);
 
     expect($ticket->fresh()->custom_fields)->toBe([$vip->id => true, $size->id => ['S', 'M']]);
-    expect($ticket->events()->get()->map->description()->all())->toBe([
+    expect($ticket->events()->with('actor')->get()->map->description()->all())->toBe([
         'Jane Doe set VIP to Yes.',
         'Jane Doe set Sizes to S, M.',
         'Jane Doe cleared Order number.',

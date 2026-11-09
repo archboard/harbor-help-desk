@@ -21,7 +21,7 @@ class CustomFieldRules
      */
     public static function for(Desk $desk, bool $creating): array
     {
-        $fields = $desk->customFields;
+        $fields = $desk->loadMissing('customFields')->customFields;
 
         $rules = [
             'custom_fields' => $fields->isEmpty()
@@ -54,7 +54,7 @@ class CustomFieldRules
      */
     public static function cast(Desk $desk, array $values): array
     {
-        return $desk->customFields
+        return $desk->loadMissing('customFields')->customFields
             ->filter(fn (CustomField $field): bool => ($values[$field->id] ?? null) !== null)
             ->mapWithKeys(fn (CustomField $field): array => [$field->id => $field->type->cast($values[$field->id])])
             ->all();
