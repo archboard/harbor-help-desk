@@ -10,24 +10,17 @@ use App\Actions\Tickets\SearchTickets;
 use App\Actions\Tickets\UpdateTicket;
 use App\Data\CustomFields\CustomFieldData;
 use App\Data\Desks\DeskData;
-use App\Data\Desks\DeskMemberData;
-use App\Data\Macros\MacroData;
 use App\Data\SavedViews\SavedViewData;
 use App\Data\Tags\TagData;
-use App\Data\Tickets\AttachmentData;
-use App\Data\Tickets\TicketCommentData;
 use App\Data\Tickets\TicketData;
-use App\Data\Tickets\TicketEventData;
-use App\Data\Tickets\TicketReminderData;
 use App\Data\Users\UserData;
-use App\Enums\TicketEventType;
 use App\Enums\TicketPriority;
 use App\Enums\TicketSource;
 use App\Enums\TicketStatus;
 use App\Http\Flash;
+use App\Http\TicketPageProps;
 use App\Models\CustomField;
 use App\Models\Desk;
-use App\Models\Macro;
 use App\Models\SavedView;
 use App\Models\Tag;
 use App\Models\Ticket;
@@ -104,45 +97,11 @@ class TicketController extends Controller
         return back();
     }
 
-    /**
-     * Events that the thread already shows as comments.
-     */
-    protected const array EVENTS_SHOWN_AS_COMMENTS = [
-        TicketEventType::COMMENT_ADDED,
-        TicketEventType::INTERNAL_NOTE_ADDED,
-    ];
-
     public function show(#[CurrentUser] User $user, Ticket $ticket): Response
     {
         Gate::authorize('view', $ticket);
 
-        $ticket->load(['desk.customFields', 'requester', 'assignees', 'tags', 'slaTargets', 'satisfactionRating']);
-
-        return Inertia::render('tickets/Show', [
-            'ticket' => TicketData::from($ticket),
-            'comments' => TicketCommentData::collect($ticket->comments()->with(['author', 'attachments'])->get()),
-            'events' => TicketEventData::collect($ticket->events()
-                ->with('actor')
-                ->whereNotIn('type', self::EVENTS_SHOWN_AS_COMMENTS)
-                ->get()),
-            'attachments' => AttachmentData::collect($ticket->attachments()->whereNull('ticket_comment_id')->oldest()->get()),
-            'reminders' => TicketReminderData::collect($ticket->reminders()
-                ->visibleTo($user)
-                ->whereNull('sent_at')
-                ->orderBy('remind_at')
-                ->get()),
-            'deskMembers' => DeskMemberData::collect($ticket->desk->users()->orderBy('name')->get()),
-            'desks' => DeskData::collect(Desk::visibleTo($user)->orderBy('name')->get()),
-            'tags' => TagData::collect(Tag::query()->orderBy('name')->get()),
-            'macros' => Inertia::defer(fn () => MacroData::collect(Macro::visibleTo($user)->usableOn($ticket)->orderBy('name')->get())),
-            'statuses' => TicketStatus::options(),
-            'priorities' => TicketPriority::options(),
-            'can' => [
-                'update' => $user->can('update', $ticket),
-                'delete' => $user->can('delete', $ticket),
-                'restore' => $user->can('restore', $ticket),
-            ],
-        ]);
+        return Inertia::render('tickets/Show', TicketPageProps::handle($user, $ticket, deferMacros: true));
     }
 
     public function update(Request $request, #[CurrentUser] User $user, Ticket $ticket, UpdateTicket $updateTicket): RedirectResponse

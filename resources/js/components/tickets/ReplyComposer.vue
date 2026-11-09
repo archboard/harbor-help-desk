@@ -14,13 +14,24 @@ import { firstListError } from '@/lib/files';
 import { apply } from '@/routes/tickets/macros';
 import { store } from '@/routes/tickets/comments';
 
-const { ticketId, deskMembers, macros, lastSeenCommentId } = defineProps<{
+const {
+  ticketId,
+  deskMembers,
+  macros,
+  lastSeenCommentId,
+  initialBody = '',
+  reloadOnly,
+} = defineProps<{
   ticketId: string;
   deskMembers: App.Data.Desks.DeskMemberData[];
   /** Undefined while the deferred prop loads. */
   macros?: App.Data.Macros.MacroData[];
   /** The newest comment rendered, or null when there are none. */
   lastSeenCommentId: string | null;
+  /** Seeds the body, e.g. with a macro's text. */
+  initialBody?: string;
+  /** The props that reload after a macro is applied or a newer comment is shown. */
+  reloadOnly: string[];
 }>();
 
 /** True while the body is non-empty and was edited in the last 3 seconds. */
@@ -32,7 +43,7 @@ const { start: startIdleTimer } = useTimeoutFn(
 );
 
 const form = useForm({
-  body: '',
+  body: initialBody,
   last_seen_comment_id: null as string | null,
   is_internal: false as boolean,
   attachments: [] as File[],
@@ -86,7 +97,7 @@ async function applyMacro(
     }
 
     pickingMacro.value = false;
-    router.reload({ only: ['ticket', 'events', 'tags'] });
+    router.reload({ only: reloadOnly });
   } catch {
     macroError.value =
       Object.values<string>(http.errors)[0] ??
@@ -319,7 +330,7 @@ function send(skipStaleCheck = false): void {
         class="ml-2 underline"
         @click="
           router.reload({
-            only: ['ticket', 'comments', 'events', 'tags', 'attachments'],
+            only: reloadOnly,
             onSuccess: () => form.clearErrors('last_seen_comment_id'),
           })
         "

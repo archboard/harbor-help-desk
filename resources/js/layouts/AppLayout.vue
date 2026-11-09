@@ -16,6 +16,7 @@ import AppCheckbox from '@/components/forms/AppCheckbox.vue';
 import ArchboardLogo from '@/components/icons/ArchboardLogo.vue';
 import NotificationBell from '@/components/NotificationBell.vue';
 import Notifications from '@/components/Notifications.vue';
+import QuickView from '@/components/tickets/QuickView.vue';
 import TimezonePrompt from '@/components/TimezonePrompt.vue';
 import ScaleIn from '@/components/transitions/ScaleIn.vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
@@ -256,5 +257,6 @@ const userNavigation = [
     </main>
 
     <Notifications />
+    <QuickView />
   </div>
 </template>

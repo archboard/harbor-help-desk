@@ -21,6 +21,8 @@ const { comments, events, canWork } = defineProps<{
   canWork: boolean;
   /** Can delete anyone's comment, like the ticket itself. */
   canDeleteAny: boolean;
+  /** The props to reload after a change that the composer makes. */
+  reloadOnly: string[];
 }>();
 
 const page = usePage();
@@ -145,6 +147,7 @@ function isResolution(event: App.Data.Tickets.TicketEventData): boolean {
         :ticket-id="ticketId"
         :desk-members="deskMembers"
         :macros="macros"
+        :reload-only="reloadOnly"
         :last-seen-comment-id="
           comments.reduce<string | null>(
             (newest, { id }) => (newest === null || id > newest ? id : newest),

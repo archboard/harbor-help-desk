@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { InfiniteScroll, Link } from '@inertiajs/vue3';
+import { Eye } from '@lucide/vue';
 import { computed } from 'vue';
 import AppCheckbox from '@/components/forms/AppCheckbox.vue';
 import Spinner from '@/components/Spinner.vue';
@@ -31,11 +32,14 @@ const {
   tickets,
   hideRequester = false,
   customFields = [],
+  previewable = false,
 } = defineProps<{
   prop: string;
   tickets: App.Data.Tickets.TicketData[];
   hideRequester?: boolean;
   customFields?: App.Data.CustomFields.CustomFieldData[];
+  /** Adds an eye button to each row that emits `preview`. */
+  previewable?: boolean;
 }>();
 
 /** Ids of the columns to show; unknown ids (e.g. deleted custom fields) are dropped. */
@@ -62,6 +66,8 @@ function customFieldText(
     : '';
 }
 
+const emit = defineEmits<{ preview: [id: string] }>();
+
 const selected = defineModel<string[]>('selected');
 const focusedId = defineModel<string>('focusedId');
 
@@ -86,8 +92,9 @@ const allSelected = computed({
             </AppCheckbox>
           </Th>
           <Th v-for="column in shown" :key="column.id">{{ column.label }}</Th>
-          <Th v-if="columns" class="w-0" right>
+          <Th v-if="columns || previewable" class="w-0" right>
             <ColumnPicker
+              v-if="columns"
               v-model="columns"
               :available="availableColumns(customFields)"
             />
@@ -165,7 +172,17 @@ const allSelected = computed({
               {{ customFieldText(column.id, ticket) }}
             </Td>
           </template>
-          <Td v-if="columns" />
+          <Td v-if="columns || previewable" class="w-0">
+            <button
+              v-if="previewable"
+              type="button"
+              class="rounded-md p-1 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+              @click.stop="emit('preview', ticket.id)"
+            >
+              <Eye class="size-4" aria-hidden="true" />
+              <span class="sr-only">Quick view #{{ ticket.number }}</span>
+            </button>
+          </Td>
         </tr>
       </Tbody>
     </Table>

@@ -1,5 +1,6 @@
 import type { Directive } from 'vue';
 import type { Auth } from '@/types/auth';
+import type { TicketPageProps } from '@/types/tickets';
 import type { FlashToast } from '@/types/ui';
 
 // Extend ImportMeta interface for Vite...
@@ -26,6 +27,7 @@ declare module '@inertiajs/core' {
       portalEnabled?: boolean;
       notifications?: { unread_count: number } | null;
       realtime?: App.Data.Realtime.RealtimeData;
+      preview?: TicketPageProps | null;
       [key: string]: unknown;
     };
     flashDataType: {

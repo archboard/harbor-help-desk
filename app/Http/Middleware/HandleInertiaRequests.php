@@ -6,10 +6,13 @@ use App\Data\Contacts\ContactData;
 use App\Data\Realtime\RealtimeData;
 use App\Data\Users\CurrentUserData;
 use App\Data\Workspaces\WorkspaceData;
+use App\Http\TicketPageProps;
 use App\Models\Automation;
+use App\Models\Ticket;
 use App\Models\Workspace;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -64,6 +67,19 @@ class HandleInertiaRequests extends Middleware
             ]]),
             // Lazy like the workspace. Whether to show the Automations link.
             ...($user === null ? [] : ['canViewAutomations' => fn (): bool => Workspace::current() !== null && $user->can('viewAny', Automation::class)]),
+            // The quick view's ticket, for `?preview={id}`. A closure so a mutation that redirects back refreshes it.
+            ...($user === null ? [] : ['preview' => function () use ($request, $user): ?array {
+                $id = $request->string('preview')->toString();
+
+                if ($id === '') {
+                    return null;
+                }
+
+                $ticket = Ticket::withTrashed()->findOrFail($id);
+                Gate::authorize('view', $ticket);
+
+                return TicketPageProps::handle($user, $ticket);
+            }]),
             // Authenticated pages only, so guests never open a socket.
             ...($user === null ? [] : ['realtime' => fn (): RealtimeData => RealtimeData::fromConfig()]),
         ];

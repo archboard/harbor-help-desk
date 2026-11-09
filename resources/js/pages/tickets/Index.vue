@@ -10,6 +10,7 @@ import TicketTable from '@/components/tickets/TicketTable.vue';
 import type { TicketQuery } from '@/components/tickets/TicketFilters.vue';
 import { useLiveReload } from '@/composables/useLiveReload';
 import { useRowNavigation } from '@/composables/useRowNavigation';
+import { openQuickView } from '@/lib/quickView';
 import { DEFAULT_COLUMNS } from '@/lib/ticketColumns';
 import { cleanQuery, sameQuery } from '@/lib/tickets';
 import { claim, index } from '@/routes/tickets';
@@ -69,6 +70,7 @@ useRowNavigation({
   focusedId,
   selected,
   canSelect: () => !filters.deleted,
+  onPreview: openQuickView,
 });
 
 /** Mirrors `TicketPolicy@delete` for every selected ticket. */
@@ -145,6 +147,8 @@ function apply(query: TicketQuery): void {
       v-model:focused-id="focusedId"
       :custom-fields="customFields"
       @update:selected="selected = $event ?? []"
+      previewable
+      @preview="openQuickView"
     />
     <p v-else class="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
       No tickets match these filters.

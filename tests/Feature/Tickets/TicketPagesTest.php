@@ -167,11 +167,76 @@ test("the list offers only this workspace's custom fields", function () {
     $size = CustomField::factory()->select()->create(['name' => 'Size', 'position' => 1]);
     $notes = CustomField::factory()->create(['name' => 'Notes', 'type' => CustomFieldType::TEXT, 'position' => 2]);
 
+    $ticket = Ticket::factory()->for($this->desk)->create();
+
     $this->actingAs($this->agent)
-        ->get(route('tickets.index', ['preview' => 'tkt_x']))
+        ->get(route('tickets.index', ['preview' => $ticket->id]))
         ->assertInertia(fn (Assert $page) => $page
             ->has('customFields', 2)
             ->where('customFields.0.id', $size->id)
             ->where('customFields.1.id', $notes->id)
             ->missing('filters.preview'));
+});
+
+test('the list carries the previewed ticket when asked', function () {
+    $ticket = Ticket::factory()->for($this->desk)->create(['subject' => 'Printer jam']);
+    TicketComment::factory()->for($ticket)->create(['body' => 'Have you tried turning it off?', 'author_id' => $this->agent->id]);
+
+    $this->actingAs($this->agent)
+        ->get(route('tickets.index', ['preview' => $ticket->id]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('tickets/Index')
+            ->where('preview.ticket.subject', 'Printer jam')
+            ->where('preview.comments.0.body', 'Have you tried turning it off?')
+            ->where('preview.can.update', true)
+            ->missing('filters.preview'));
+});
+
+test('the preview is loaded with its macros, and null without the param', function () {
+    $ticket = Ticket::factory()->for($this->desk)->create();
+
+    $this->actingAs($this->agent)
+        ->get(route('tickets.index', ['preview' => $ticket->id]))
+        ->assertInertia(fn (Assert $page) => $page->has('preview.macros'));
+
+    $this->actingAs($this->agent)
+        ->get(route('tickets.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('preview', null));
+});
+
+test('the preview costs no queries without the param', function () {
+    $ticket = Ticket::factory()->for($this->desk)->create();
+    $this->actingAs($this->agent);
+
+    $queries = function (array $query): int {
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        $this->get(route('tickets.index', $query))->assertOk();
+
+        return count(DB::getQueryLog());
+    };
+
+    $without = $queries([]);
+
+    expect($queries(['preview' => $ticket->id]))->toBeGreaterThan($without);
+    expect($queries([]))->toBe($without);
+});
+
+test('agents not on the desk cannot preview its tickets', function () {
+    $ticket = Ticket::factory()->create();
+
+    $this->actingAs($this->agent)
+        ->get(route('tickets.index', ['preview' => $ticket->id]))
+        ->assertForbidden();
+});
+
+test("another workspace's ticket cannot be previewed", function () {
+    config(['harbor.multitenant' => true, 'harbor.domain' => 'harbor.test']);
+
+    $foreign = Workspace::factory()->create()->execute(fn () => Ticket::factory()->create());
+    $this->workspace->makeCurrent();
+
+    $this->actingAs($this->agent)
+        ->get(route('tickets.index', ['preview' => $foreign->id]))
+        ->assertNotFound();
 });
