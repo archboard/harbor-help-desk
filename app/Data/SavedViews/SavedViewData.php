@@ -22,7 +22,7 @@ class SavedViewData extends Data
         public string $userId,
         public UserData|Lazy $owner,
         public string $name,
-        #[LiteralTypeScriptType('Record<string, string | string[] | boolean>')]
+        #[LiteralTypeScriptType('Record<string, string | string[] | boolean | Record<string, string | string[] | boolean>>')]
         public stdClass $filters,
         public bool $isShared,
         public ?CarbonImmutable $createdAt,

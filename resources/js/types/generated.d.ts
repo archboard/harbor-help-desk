@@ -820,7 +820,13 @@ declare namespace App {
         user_id: string;
         owner?: App.Data.Users.UserData;
         name: string;
-        filters: Record<string, string | string[] | boolean>;
+        filters: Record<
+          string,
+          | string
+          | string[]
+          | boolean
+          | Record<string, string | string[] | boolean>
+        >;
         is_shared: boolean;
         created_at: string | null;
         updated_at: string | null;
@@ -935,7 +941,8 @@ declare namespace App {
         status?: string | string[];
         priority?: string | string[];
         tag?: string | string[];
-        assignee_id?: string;
+        assignee_id?: string | string[];
+        custom_fields?: Record<string, string | string[]>;
         requester_id?: string;
         deleted?: boolean;
         sort?: string;

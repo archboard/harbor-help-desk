@@ -1,9 +1,11 @@
 <?php
 
 use App\Actions\Tickets\SearchTickets;
+use App\Enums\CustomFieldType;
 use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
 use App\Models\Contact;
+use App\Models\CustomField;
 use App\Models\Desk;
 use App\Models\Tag;
 use App\Models\Ticket;
@@ -125,4 +127,58 @@ test("another workspace's tickets never match", function () {
 
     expect(searchIds($this->agent, ['search' => 'printer']))->toBe([$mine->id])
         ->and(searchIds($this->agent, ['desk_id' => $foreign->desk_id]))->toBe([]);
+});
+
+test('assignee filter matches any of several assignees, none and me included', function () {
+    $other = User::factory()->create();
+    $mine = deskTicket($this->desk);
+    $mine->assignees()->attach($this->agent, ['workspace_id' => $this->workspace->id]);
+    $theirs = deskTicket($this->desk);
+    $theirs->assignees()->attach($other, ['workspace_id' => $this->workspace->id]);
+    $unassigned = deskTicket($this->desk);
+
+    expect(searchIds($this->agent, ['assignee_id' => ['me', $other->id]]))->toEqualCanonicalizing([$mine->id, $theirs->id])
+        ->and(searchIds($this->agent, ['assignee_id' => ['none', 'me']]))->toEqualCanonicalizing([$unassigned->id, $mine->id])
+        ->and(searchIds($this->agent, ['assignee_id' => ['none']]))->toBe([$unassigned->id]);
+});
+
+test('custom field filters match select, multi-select and checkbox values', function () {
+    $size = CustomField::factory()->select()->create();
+    $areas = CustomField::factory()->create(['type' => CustomFieldType::MULTI_SELECT, 'options' => ['Web', 'API', 'Mobile']]);
+    $vip = CustomField::factory()->create(['type' => CustomFieldType::CHECKBOX]);
+
+    $small = deskTicket($this->desk, ['custom_fields' => [$size->id => 'Small', $areas->id => ['Web', 'API'], $vip->id => true]]);
+    $large = deskTicket($this->desk, ['custom_fields' => [$size->id => 'Large', $areas->id => ['Mobile'], $vip->id => false]]);
+    deskTicket($this->desk);
+
+    expect(searchIds($this->agent, ['custom_fields' => [$size->id => 'Small']]))->toBe([$small->id])
+        ->and(searchIds($this->agent, ['custom_fields' => [$size->id => ['Small', 'Large']]]))->toEqualCanonicalizing([$small->id, $large->id])
+        ->and(searchIds($this->agent, ['custom_fields' => [$areas->id => ['API', 'Mobile']]]))->toEqualCanonicalizing([$small->id, $large->id])
+        ->and(searchIds($this->agent, ['custom_fields' => [$areas->id => 'Mobile']]))->toBe([$large->id])
+        ->and(searchIds($this->agent, ['custom_fields' => [$vip->id => '1']]))->toBe([$small->id])
+        ->and(searchIds($this->agent, ['custom_fields' => [$vip->id => false]]))->toBe([$large->id])
+        ->and(searchIds($this->agent, ['custom_fields' => [$vip->id => ['0', '1']]]))->toEqualCanonicalizing([$small->id, $large->id])
+        ->and(searchIds($this->agent, ['custom_fields' => [$size->id => 'Small', $areas->id => 'Mobile']]))->toBe([]);
+});
+
+test('only choice custom fields can be filtered on', function () {
+    $text = CustomField::factory()->create();
+
+    expect(fn () => searchIds($this->agent, ['custom_fields' => [$text->id => 'x', 'cfd_missing' => 'y']]))
+        ->toThrow(fn (ValidationException $e) => expect($e->errors())->toHaveKeys(["custom_fields.{$text->id}", 'custom_fields.cfd_missing']));
+});
+
+test("another workspace's custom field is rejected and leaks nothing", function () {
+    config(['harbor.multitenant' => true, 'harbor.domain' => 'harbor.test']);
+
+    [$foreignField, $foreignTicket] = Workspace::factory()->create()->execute(function () {
+        $field = CustomField::factory()->select()->create();
+
+        return [$field, Ticket::factory()->create(['custom_fields' => [$field->id => 'Small']])];
+    });
+    $this->workspace->makeCurrent();
+    deskTicket($this->desk);
+
+    expect(fn () => searchIds($this->agent, ['custom_fields' => [$foreignField->id => 'Small']]))
+        ->toThrow(fn (ValidationException $e) => expect($e->errors())->toHaveKey("custom_fields.{$foreignField->id}"));
 });

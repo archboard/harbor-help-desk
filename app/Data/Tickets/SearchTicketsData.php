@@ -18,16 +18,18 @@ class SearchTicketsData extends InputData
     public const array SORTS = ['updated', 'created', 'due', 'priority'];
 
     /** Filters that take one value or a list. */
-    public const array LIST_FILTERS = ['desk_id', 'status', 'priority', 'tag'];
+    public const array LIST_FILTERS = ['desk_id', 'status', 'priority', 'tag', 'assignee_id'];
 
     /** Every filter. */
-    public const array FILTERS = [...self::LIST_FILTERS, 'search', 'assignee_id', 'requester_id', 'deleted', 'sort'];
+    public const array FILTERS = [...self::LIST_FILTERS, 'search', 'custom_fields', 'requester_id', 'deleted', 'sort'];
 
     /**
      * @param  string|list<string>|Optional  $deskId
      * @param  string|list<string>|Optional  $status
      * @param  string|list<string>|Optional  $priority
      * @param  string|list<string>|Optional  $tag
+     * @param  string|list<string>|Optional  $assigneeId
+     * @param  array<string, string|list<string>>|Optional  $customFields  Select, multi-select and checkbox values keyed by custom field ID.
      */
     public function __construct(
         public string|Optional|null $search,
@@ -35,7 +37,8 @@ class SearchTicketsData extends InputData
         public string|array|Optional $status,
         public string|array|Optional $priority,
         public string|array|Optional $tag,
-        public string|Optional $assigneeId,
+        public string|array|Optional $assigneeId,
+        public array|Optional $customFields,
         public string|Optional $requesterId,
         public bool|Optional $deleted,
         public string|Optional $sort,
@@ -54,11 +57,12 @@ class SearchTicketsData extends InputData
             'status' => [Rule::enum(TicketStatus::class)],
             'priority' => [Rule::enum(TicketPriority::class)],
             'tag' => ['string'],
+            'assignee_id' => ['string'],
         ];
 
         $rules = [
             'search' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'assignee_id' => ['sometimes', 'string'],
+            'custom_fields' => ['sometimes', 'array'],
             'requester_id' => ['sometimes', 'string'],
             'deleted' => ['sometimes', 'boolean'],
             'sort' => ['sometimes', Rule::in(self::SORTS)],

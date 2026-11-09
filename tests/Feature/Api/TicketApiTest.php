@@ -3,6 +3,7 @@
 use App\Enums\DeskRole;
 use App\Enums\TicketPriority;
 use App\Enums\WorkspaceRole;
+use App\Models\CustomField;
 use App\Models\Desk;
 use App\Models\SatisfactionRating;
 use App\Models\Tag;
@@ -83,7 +84,8 @@ test('another workspace tickets and desks are invisible', function () {
 
 test('the list shows visible tickets and filters them', function () {
     ['workspace' => $workspace, 'desk' => $desk, 'agent' => $agent] = acmeWithAgent();
-    $urgent = Ticket::factory()->for($desk)->create(['priority' => TicketPriority::URGENT]);
+    $field = CustomField::factory()->select()->create();
+    $urgent = Ticket::factory()->for($desk)->create(['priority' => TicketPriority::URGENT, 'custom_fields' => [$field->id => 'Small']]);
     $urgent->tags()->attach(Tag::factory()->create(['name' => 'Billing']), ['workspace_id' => $workspace->id]);
     $assigned = Ticket::factory()->for($desk)->create();
     $assigned->assignees()->attach($agent, ['workspace_id' => $workspace->id]);
@@ -96,6 +98,9 @@ test('the list shows visible tickets and filters them', function () {
     $this->getJson("http://acme.harbor.test/api/v1/tickets?assignee_id={$agent->id}")->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $assigned->id);
     $this->getJson('http://acme.harbor.test/api/v1/tickets?priority[]=urgent&priority[]=low')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $urgent->id);
     $this->getJson('http://acme.harbor.test/api/v1/tickets?assignee_id=me')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $assigned->id);
+    $this->getJson("http://acme.harbor.test/api/v1/tickets?assignee_id[]=none&assignee_id[]={$agent->id}")->assertJsonCount(2, 'data');
+    $this->getJson("http://acme.harbor.test/api/v1/tickets?custom_fields[{$field->id}][]=Small")->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $urgent->id);
+    $this->getJson('http://acme.harbor.test/api/v1/tickets?custom_fields[cfd_nope]=x')->assertJsonValidationErrors('custom_fields.cfd_nope');
     $this->getJson('http://acme.harbor.test/api/v1/tickets?status=nope')->assertJsonValidationErrors('status');
 });
 
