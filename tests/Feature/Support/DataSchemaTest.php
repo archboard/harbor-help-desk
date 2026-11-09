@@ -42,7 +42,8 @@ test('search list filters accept one value or a list', function () {
 
     expect($properties['status'])->toEqual(['anyOf' => [$statuses, ['type' => 'array', 'items' => $statuses]]])
         ->and($properties['tag']['anyOf'][1])->toEqual(['type' => 'array', 'items' => ['type' => 'string']])
-        ->and($properties['sort']['enum'])->toBe(['updated', 'created', 'due', 'priority'])
+        ->and($properties['sort']['enum'])->toBe(['updated', 'created', 'due', 'priority', 'status', 'number', 'subject'])
+        ->and($properties['direction']['enum'])->toBe(['asc', 'desc'])
         ->and($properties['deleted']['type'])->toBe('boolean');
 });
 

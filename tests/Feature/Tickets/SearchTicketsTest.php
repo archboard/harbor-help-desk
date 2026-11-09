@@ -102,15 +102,21 @@ test('requester and deleted filters', function () {
         ->and(searchIds($this->agent, ['deleted' => '1']))->toBe([$deleted->id]);
 });
 
-test('sorts by updated, created, due date or priority', function () {
-    $old = deskTicket($this->desk, ['priority' => TicketPriority::URGENT, 'due_at' => null, 'created_at' => now()->subDays(3), 'updated_at' => now()]);
-    $middle = deskTicket($this->desk, ['priority' => TicketPriority::LOW, 'due_at' => now()->addDay(), 'created_at' => now()->subDays(2), 'updated_at' => now()->subDays(2)]);
-    $new = deskTicket($this->desk, ['priority' => TicketPriority::HIGH, 'due_at' => now()->addDays(2), 'created_at' => now()->subDay(), 'updated_at' => now()->subDay()]);
+test('sorts by updated, created, due date, priority, status, number or subject, either way', function () {
+    $old = deskTicket($this->desk, ['subject' => 'charlie', 'number' => 1, 'status' => TicketStatus::SOLVED, 'priority' => TicketPriority::URGENT, 'due_at' => null, 'created_at' => now()->subDays(3), 'updated_at' => now()]);
+    $middle = deskTicket($this->desk, ['subject' => 'Alpha', 'number' => 2, 'status' => TicketStatus::OPEN, 'priority' => TicketPriority::LOW, 'due_at' => now()->addDay(), 'created_at' => now()->subDays(2), 'updated_at' => now()->subDays(2)]);
+    $new = deskTicket($this->desk, ['subject' => 'bravo', 'number' => 3, 'status' => TicketStatus::PENDING, 'priority' => TicketPriority::HIGH, 'due_at' => now()->addDays(2), 'created_at' => now()->subDay(), 'updated_at' => now()->subDay()]);
 
     expect(searchIds($this->agent))->toBe([$old->id, $new->id, $middle->id])
         ->and(searchIds($this->agent, ['sort' => 'created']))->toBe([$new->id, $middle->id, $old->id])
         ->and(searchIds($this->agent, ['sort' => 'due']))->toBe([$middle->id, $new->id, $old->id])
-        ->and(searchIds($this->agent, ['sort' => 'priority']))->toBe([$old->id, $new->id, $middle->id]);
+        ->and(searchIds($this->agent, ['sort' => 'priority']))->toBe([$old->id, $new->id, $middle->id])
+        ->and(searchIds($this->agent, ['sort' => 'status']))->toBe([$middle->id, $new->id, $old->id])
+        ->and(searchIds($this->agent, ['sort' => 'number']))->toBe([$new->id, $middle->id, $old->id])
+        ->and(searchIds($this->agent, ['sort' => 'subject']))->toBe([$middle->id, $new->id, $old->id])
+        ->and(searchIds($this->agent, ['direction' => 'asc']))->toBe([$middle->id, $new->id, $old->id])
+        ->and(searchIds($this->agent, ['sort' => 'due', 'direction' => 'desc']))->toBe([$new->id, $middle->id, $old->id])
+        ->and(searchIds($this->agent, ['sort' => 'priority', 'direction' => 'asc']))->toBe([$middle->id, $new->id, $old->id]);
 });
 
 test('unknown filter values are rejected', function (array $filters, string $field) {
@@ -118,6 +124,7 @@ test('unknown filter values are rejected', function (array $filters, string $fie
 })->with([
     'status' => [['status' => ['open', 'nope']], 'status'],
     'sort' => [['sort' => 'random'], 'sort'],
+    'direction' => [['direction' => 'sideways'], 'direction'],
 ]);
 
 test("another workspace's tickets never match", function () {

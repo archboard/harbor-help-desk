@@ -963,6 +963,7 @@ declare namespace App {
         requester_id?: string;
         deleted?: boolean;
         sort?: string;
+        direction?: string;
       };
       export type SetTicketReminderData = {
         remind_at: string;

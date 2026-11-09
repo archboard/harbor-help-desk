@@ -13,7 +13,12 @@ import { useLiveReload } from '@/composables/useLiveReload';
 import { useRowNavigation } from '@/composables/useRowNavigation';
 import { paletteTarget } from '@/lib/commandPalette';
 import { openQuickView } from '@/lib/quickView';
-import { DEFAULT_COLUMNS } from '@/lib/ticketColumns';
+import {
+  builtInColumns,
+  DEFAULT_COLUMNS,
+  DEFAULT_SORT,
+} from '@/lib/ticketColumns';
+import type { TicketSort } from '@/lib/ticketColumns';
 import { cleanQuery, sameQuery } from '@/lib/tickets';
 import { claim, index } from '@/routes/tickets';
 import type { Paginated } from '@/types';
@@ -64,11 +69,68 @@ const quickFilters = computed<Array<{ label: string; query: TicketQuery }>>(
   ],
 );
 
+/** The filters without the sort, which the user's stored preference owns. */
+function withoutSort(query: TicketQuery): TicketQuery {
+  return Object.fromEntries(
+    Object.entries(query).filter(
+      ([key]) => !['sort', 'direction'].includes(key),
+    ),
+  );
+}
+
+const listFilters = computed(() => withoutSort(filters));
+
 /** The quick filter that matches the current filters exactly, if any. */
 const activeQuickFilter = computed(
   () =>
-    quickFilters.value.find((quick) => sameQuery(quick.query, filters))?.label,
+    quickFilters.value.find((quick) =>
+      sameQuery(quick.query, listFilters.value),
+    )?.label,
 );
+
+/** A query's sort, falling back to the defaults for anything a column doesn't offer. */
+function sortOf(query: Record<string, unknown>): TicketSort {
+  const column = builtInColumns().find(
+    (candidate) => candidate.sort && candidate.sort.sort === query.sort,
+  );
+
+  if (!column?.sort) {
+    return DEFAULT_SORT;
+  }
+
+  return {
+    sort: column.sort.sort,
+    direction:
+      query.direction === 'asc' || query.direction === 'desc'
+        ? query.direction
+        : column.sort.direction,
+  };
+}
+
+const storedSort = useLocalStorage<TicketSort>(
+  'harbor.ticket-sort',
+  DEFAULT_SORT,
+);
+/** The URL decides what's shown; picking a sort also remembers it for next time. */
+const sort = computed({
+  get: () => sortOf(filters),
+  set: (value: TicketSort) => {
+    storedSort.value = value;
+    apply(filters, value);
+  },
+});
+
+onMounted(() => {
+  const remembered = sortOf(storedSort.value ?? {});
+
+  if (
+    !filters.sort &&
+    (remembered.sort !== DEFAULT_SORT.sort ||
+      remembered.direction !== DEFAULT_SORT.direction)
+  ) {
+    apply(filters, remembered);
+  }
+});
 
 const storedColumns = useLocalStorage<string[]>(
   'harbor.ticket-columns',
@@ -121,16 +183,27 @@ const canDeleteSelected = computed(() =>
     .every((ticket) => leadDeskIds.includes(ticket.desk_id)),
 );
 
-function apply(query: TicketQuery): void {
+/** Keeps the current sort unless the query (e.g. a saved view) brings its own. */
+function apply(
+  query: TicketQuery,
+  sorted: TicketSort = query.sort ? sortOf(query) : sort.value,
+): void {
   selected.value = [];
+  const isDefault =
+    sorted.sort === DEFAULT_SORT.sort &&
+    sorted.direction === DEFAULT_SORT.direction;
 
-  router.get(index.url(), cleanQuery(query), {
-    only: ['tickets', 'filters'],
-    reset: ['tickets'],
-    preserveState: true,
-    preserveScroll: true,
-    replace: true,
-  });
+  router.get(
+    index.url(),
+    cleanQuery({ ...withoutSort(query), ...(isDefault ? {} : sorted) }),
+    {
+      only: ['tickets', 'filters'],
+      reset: ['tickets'],
+      preserveState: true,
+      preserveScroll: true,
+      replace: true,
+    },
+  );
 }
 </script>
 
@@ -159,7 +232,7 @@ function apply(query: TicketQuery): void {
       <div class="flex flex-wrap items-center gap-2">
         <SavedViews
           :views="savedViews"
-          :filters="cleanQuery(filters)"
+          :filters="cleanQuery(listFilters)"
           @apply="apply"
         />
         <AppButton color="white" @click="router.post(claim.url())">
@@ -185,6 +258,7 @@ function apply(query: TicketQuery): void {
       prop="tickets"
       :tickets="tickets.data"
       v-model:columns="columns"
+      v-model:sort="sort"
       v-model:focused-id="focusedId"
       :custom-fields="customFields"
       :flashing-ids="flashingIds"

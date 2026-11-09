@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { InfiniteScroll, Link } from '@inertiajs/vue3';
-import { Eye } from '@lucide/vue';
+import { ArrowDown, ArrowUp, Eye } from '@lucide/vue';
 import { computed } from 'vue';
 import AppCheckbox from '@/components/forms/AppCheckbox.vue';
 import Spinner from '@/components/Spinner.vue';
@@ -20,13 +20,15 @@ import {
   DEFAULT_COLUMNS,
   formatCustomField,
 } from '@/lib/ticketColumns';
+import type { TicketColumn, TicketSort } from '@/lib/ticketColumns';
 import { show } from '@/routes/tickets';
 
 /**
  * A page of tickets that loads more as it scrolls. `prop` is the name of the
  * `Inertia::scroll()` prop holding them. Binding `v-model:selected` adds checkboxes, and
  * binding `v-model:columns` adds a column picker to the header. `v-model:focusedId` is the
- * keyboard-focused row; clicking a row focuses it.
+ * keyboard-focused row; clicking a row focuses it. Binding `v-model:sort` makes the sortable
+ * columns' headers clickable.
  */
 const {
   tickets,
@@ -71,6 +73,27 @@ function customFieldText(
 
 const emit = defineEmits<{ preview: [id: string] }>();
 
+const sort = defineModel<TicketSort>('sort');
+
+/** Clicking the sorted column flips it; any other starts in its own default direction. */
+function sortBy(column: TicketColumn): void {
+  sort.value =
+    sort.value?.sort === column.sort!.sort
+      ? {
+          ...column.sort!,
+          direction: sort.value.direction === 'asc' ? 'desc' : 'asc',
+        }
+      : column.sort;
+}
+
+function ariaSort(column: TicketColumn): 'ascending' | 'descending' | 'none' {
+  if (sort.value?.sort !== column.sort?.sort) {
+    return 'none';
+  }
+
+  return sort.value?.direction === 'asc' ? 'ascending' : 'descending';
+}
+
 const selected = defineModel<string[]>('selected');
 const focusedId = defineModel<string>('focusedId');
 
@@ -94,7 +117,24 @@ const allSelected = computed({
               <span class="sr-only">{{ $t('Select all loaded tickets') }}</span>
             </AppCheckbox>
           </Th>
-          <Th v-for="column in shown" :key="column.id">{{ column.label }}</Th>
+          <template v-for="column in shown" :key="column.id">
+            <Th v-if="sort && column.sort" :aria-sort="ariaSort(column)">
+              <button
+                type="button"
+                class="inline-flex cursor-pointer items-center gap-1"
+                @click="sortBy(column)"
+              >
+                {{ column.label }}
+                <component
+                  :is="sort.direction === 'asc' ? ArrowUp : ArrowDown"
+                  v-if="sort.sort === column.sort.sort"
+                  class="size-3"
+                  aria-hidden="true"
+                />
+              </button>
+            </Th>
+            <Th v-else>{{ column.label }}</Th>
+          </template>
           <Th v-if="columns || previewable" class="w-0" right>
             <ColumnPicker
               v-if="columns"
@@ -110,6 +150,7 @@ const allSelected = computed({
           :key="ticket.id"
           :data-ticket-id="ticket.id"
           :aria-selected="focusedId === ticket.id"
+          class="whitespace-nowrap"
           :class="[
             focusedId === ticket.id &&
               'bg-primary-50/50 dark:bg-primary-950/30 [&>td:first-child]:shadow-[inset_3px_0_0_var(--color-primary-500)]',
@@ -127,22 +168,23 @@ const allSelected = computed({
           <template v-for="column in shown" :key="column.id">
             <Td
               v-if="column.id === 'number'"
-              class="whitespace-nowrap text-gray-500 dark:text-gray-400"
+              class="text-gray-500 dark:text-gray-400"
             >
               {{ ticket.number }}
             </Td>
-            <Td v-else-if="column.id === 'subject'" darker class="max-w-md">
+            <Td v-else-if="column.id === 'subject'" darker>
               <Link
                 :href="show(ticket.id)"
-                class="line-clamp-2 hover:text-primary-600 hover:underline dark:hover:text-primary-400"
+                :title="ticket.subject"
+                class="block max-w-md truncate hover:text-primary-600 hover:underline dark:hover:text-primary-400"
               >
                 {{ ticket.subject }}
               </Link>
             </Td>
-            <Td v-else-if="column.id === 'requester'" class="whitespace-nowrap">
+            <Td v-else-if="column.id === 'requester'">
               {{ ticket.requester?.name }}
             </Td>
-            <Td v-else-if="column.id === 'desk'" class="whitespace-nowrap">
+            <Td v-else-if="column.id === 'desk'">
               {{ ticket.desk?.name }}
             </Td>
             <Td v-else-if="column.id === 'status'">
@@ -165,13 +207,13 @@ const allSelected = computed({
             <Td v-else-if="column.id === 'tags'">
               {{ ticket.tags?.map((tag) => tag.name).join(', ') || '—' }}
             </Td>
-            <Td v-else-if="column.id === 'due'" class="whitespace-nowrap">
+            <Td v-else-if="column.id === 'due'">
               {{ formatDate(ticket.due_at) }}
             </Td>
-            <Td v-else-if="column.id === 'created'" class="whitespace-nowrap">
+            <Td v-else-if="column.id === 'created'">
               <RelativeTime :datetime="ticket.created_at" />
             </Td>
-            <Td v-else-if="column.id === 'updated'" class="whitespace-nowrap">
+            <Td v-else-if="column.id === 'updated'">
               <RelativeTime :datetime="ticket.updated_at" />
             </Td>
             <Td v-else>

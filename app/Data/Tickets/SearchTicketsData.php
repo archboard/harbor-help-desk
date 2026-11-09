@@ -15,13 +15,15 @@ use Spatie\LaravelData\Support\Validation\ValidationContext;
  */
 class SearchTicketsData extends InputData
 {
-    public const array SORTS = ['updated', 'created', 'due', 'priority'];
+    public const array SORTS = ['updated', 'created', 'due', 'priority', 'status', 'number', 'subject'];
+
+    public const array DIRECTIONS = ['asc', 'desc'];
 
     /** Filters that take one value or a list. */
     public const array LIST_FILTERS = ['desk_id', 'status', 'priority', 'tag', 'assignee_id'];
 
     /** Every filter. */
-    public const array FILTERS = [...self::LIST_FILTERS, 'search', 'custom_fields', 'requester_id', 'deleted', 'sort'];
+    public const array FILTERS = [...self::LIST_FILTERS, 'search', 'custom_fields', 'requester_id', 'deleted', 'sort', 'direction'];
 
     /**
      * @param  string|list<string>|Optional  $deskId
@@ -42,6 +44,7 @@ class SearchTicketsData extends InputData
         public string|Optional $requesterId,
         public bool|Optional $deleted,
         public string|Optional $sort,
+        public string|Optional $direction,
     ) {}
 
     /**
@@ -66,6 +69,7 @@ class SearchTicketsData extends InputData
             'requester_id' => ['sometimes', 'string'],
             'deleted' => ['sometimes', 'boolean'],
             'sort' => ['sometimes', Rule::in(self::SORTS)],
+            'direction' => ['sometimes', Rule::in(self::DIRECTIONS)],
         ];
 
         foreach ($listRules as $key => $itemRules) {

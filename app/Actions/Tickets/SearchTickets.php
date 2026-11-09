@@ -5,11 +5,13 @@ namespace App\Actions\Tickets;
 use App\Data\Tickets\SearchTicketsData;
 use App\Enums\CustomFieldType;
 use App\Enums\TicketPriority;
+use App\Enums\TicketStatus;
 use App\Models\Contact;
 use App\Models\CustomField;
 use App\Models\Ticket;
 use App\Models\TicketComment;
 use App\Models\User;
+use BackedEnum;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Arr;
@@ -31,8 +33,10 @@ class SearchTickets
      *   matches any of its values and the fields all have to match.
      * - `requester_id`: a contact ID.
      * - `deleted`: only deleted tickets.
-     * - `sort`: `updated` (default, newest first), `created`, `due` (soonest first) or
-     *   `priority` (most urgent first).
+     * - `sort`: `updated` (default, newest first), `created` (newest first), `due` (soonest
+     *   first, undated last), `priority` (most urgent first), `status` (workflow order) or
+     *   `number` (newest first) or `subject` (A to Z, ignoring case).
+     * - `direction`: `asc` or `desc`, overriding the sort's default direction.
      *
      * @param  array<string, mixed>  $filters
      * @return Builder<Ticket>
@@ -63,7 +67,7 @@ class SearchTickets
             ->when($validated['requester_id'] ?? null, fn (Builder $query, string $contactId) => $query->where('requester_id', $contactId))
             ->when((bool) ($validated['deleted'] ?? false), fn (Builder $query) => $query->onlyTrashed());
 
-        return $this->sort($query, $validated['sort'] ?? 'updated');
+        return $this->sort($query, $validated['sort'] ?? 'updated', $validated['direction'] ?? null);
     }
 
     /**
@@ -182,22 +186,41 @@ class SearchTickets
     }
 
     /**
+     * Sorts by the column in its default direction unless one is given. Ties fall back to
+     * the newest update, then the ID.
+     *
      * @param  Builder<Ticket>  $query
      * @return Builder<Ticket>
      */
-    private function sort(Builder $query, string $sort): Builder
+    private function sort(Builder $query, string $sort, ?string $direction): Builder
     {
-        $mostUrgentFirst = array_reverse(array_column(TicketPriority::cases(), 'value'));
+        $direction = ($direction ?? (in_array($sort, ['due', 'status', 'subject'], true) ? 'asc' : 'desc')) === 'asc' ? 'asc' : 'desc';
 
-        $query = match ($sort) {
-            'created' => $query->latest(),
-            'due' => $query->orderByRaw('due_at asc nulls last'),
-            'priority' => $query
-                ->orderByRaw('array_position(array['.implode(',', array_fill(0, count($mostUrgentFirst), '?')).']::text[], priority)', $mostUrgentFirst)
-                ->latest('updated_at'),
-            default => $query->latest('updated_at'),
+        match ($sort) {
+            'created' => $query->orderBy('created_at', $direction),
+            'due' => $query->orderByRaw("due_at {$direction} nulls last"),
+            'priority' => $this->orderByCase($query, 'priority', TicketPriority::cases(), $direction),
+            'status' => $this->orderByCase($query, 'status', TicketStatus::cases(), $direction),
+            'number' => $query->orderBy('number', $direction),
+            'subject' => $query->orderByRaw("lower(subject) {$direction}"),
+            default => $query->orderBy('updated_at', $direction),
         };
 
-        return $query->orderByDesc('id');
+        return $query->latest('updated_at')->orderByDesc('id');
+    }
+
+    /**
+     * Orders a string-backed enum column by the enum's declaration order.
+     *
+     * @param  Builder<Ticket>  $query
+     * @param  'priority'|'status'  $column
+     * @param  list<BackedEnum>  $cases
+     * @param  'asc'|'desc'  $direction
+     */
+    private function orderByCase(Builder $query, string $column, array $cases, string $direction): void
+    {
+        $values = array_column($cases, 'value');
+
+        $query->orderByRaw('array_position(array['.implode(',', array_fill(0, count($values), '?')).']::text[], '.$column.') '.$direction, $values);
     }
 }
