@@ -49,7 +49,7 @@ const preview = computed(() => page.props.preview ?? null);
               class="absolute top-4 right-4 rounded-full text-gray-400 hover:text-gray-500 focus:ring-3 focus:ring-gray-300 focus:outline-hidden dark:focus:ring-gray-500"
               @click="closeQuickView"
             >
-              <span class="sr-only">Close</span>
+              <span class="sr-only">{{ $t('Close') }}</span>
               <X class="size-6" aria-hidden="true" />
             </button>
 

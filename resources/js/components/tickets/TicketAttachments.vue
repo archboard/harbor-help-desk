@@ -56,7 +56,7 @@ function remove(attachment: App.Data.Tickets.AttachmentData): void {
 <template>
   <CardWrapper v-if="attachments.length || canUpload">
     <CardPadding class="space-y-2 text-sm">
-      <h2 class="font-medium">Attachments</h2>
+      <h2 class="font-medium">{{ $t('Attachments') }}</h2>
       <ul v-if="attachments.length" class="space-y-1">
         <li
           v-for="attachment in attachments"
@@ -71,12 +71,14 @@ function remove(attachment: App.Data.Tickets.AttachmentData): void {
             :disabled="removing === attachment.id"
             @click="remove(attachment)"
           >
-            <span class="sr-only">Remove {{ attachment.filename }}</span>
+            <span class="sr-only">{{
+              $t('Remove :name', { name: attachment.filename })
+            }}</span>
             <X class="size-4" aria-hidden="true" />
           </button>
         </li>
       </ul>
-      <p v-else class="text-gray-400">None</p>
+      <p v-else class="text-gray-400">{{ $t('None') }}</p>
 
       <div v-if="canUpload" class="space-y-1 pt-1">
         <AppButton
@@ -87,7 +89,7 @@ function remove(attachment: App.Data.Tickets.AttachmentData): void {
           @click="fileDialog.open()"
         >
           <Paperclip class="mr-1 size-4" aria-hidden="true" />
-          Attach a file
+          {{ $t('Attach a file') }}
         </AppButton>
         <FieldError v-if="form.errors.file">{{ form.errors.file }}</FieldError>
       </div>

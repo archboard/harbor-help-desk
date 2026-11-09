@@ -120,7 +120,7 @@ function restoreTicket(): void {
         :href="compact ? show(ticket.id) : index()"
         class="text-sm text-gray-500 hover:underline dark:text-gray-400"
       >
-        {{ compact ? 'Open full page →' : '← Tickets' }}
+        {{ compact ? $t('Open full page →') : $t('← Tickets') }}
       </Link>
 
       <form
@@ -132,16 +132,16 @@ function restoreTicket(): void {
           <AppInput
             v-model="subjectForm.subject"
             autofocus
-            aria-label="Subject"
+            :aria-label="$t('Subject')"
             :has-error="!!subjectForm.errors.subject"
             class="text-lg"
           />
           <div class="flex shrink-0 gap-2">
             <AppButton type="submit" :loading="subjectForm.processing">
-              Save
+              {{ $t('Save') }}
             </AppButton>
             <AppButton type="button" color="white" @click="cancelSubject">
-              Cancel
+              {{ $t('Cancel') }}
             </AppButton>
           </div>
         </div>
@@ -162,7 +162,7 @@ function restoreTicket(): void {
           class="mt-1.5 shrink-0"
           @click="editingSubject = true"
         >
-          Edit
+          {{ $t('Edit') }}
         </AppButton>
       </div>
 
@@ -174,13 +174,17 @@ function restoreTicket(): void {
         >
           <Avatar :name="viewer.name" class="ring-2 ring-primary-500" />
           <span v-if="typingUserIds.includes(viewer.id)">
-            {{ viewer.name }} is typing a reply…
+            {{ $t(':name is typing a reply…', { name: viewer.name }) }}
           </span>
         </li>
       </ul>
 
       <SimpleAlert v-if="isDeleted" level="warning">
-        This ticket was deleted <RelativeTime :datetime="ticket.deleted_at" />.
+        <i18n-t keypath="This ticket was deleted :time." tag="span">
+          <template #time>
+            <RelativeTime :datetime="ticket.deleted_at" />
+          </template>
+        </i18n-t>
         <AppButton
           v-if="can.restore"
           type="button"
@@ -190,13 +194,13 @@ function restoreTicket(): void {
           :loading="restoring"
           @click="restoreTicket"
         >
-          Restore
+          {{ $t('Restore') }}
         </AppButton>
       </SimpleAlert>
 
       <div class="grid gap-3 sm:grid-cols-3">
         <div class="space-y-1">
-          <AppLabel for="ticket-status">Status</AppLabel>
+          <AppLabel for="ticket-status">{{ $t('Status') }}</AppLabel>
           <AppSelect
             id="ticket-status"
             :model-value="ticket.status"
@@ -211,7 +215,7 @@ function restoreTicket(): void {
           </FieldError>
         </div>
         <div class="space-y-1">
-          <AppLabel for="ticket-priority">Priority</AppLabel>
+          <AppLabel for="ticket-priority">{{ $t('Priority') }}</AppLabel>
           <AppSelect
             id="ticket-priority"
             :model-value="ticket.priority"
@@ -226,7 +230,7 @@ function restoreTicket(): void {
           </FieldError>
         </div>
         <div class="space-y-1">
-          <AppLabel for="ticket-due">Due</AppLabel>
+          <AppLabel for="ticket-due">{{ $t('Due') }}</AppLabel>
           <AppDatepicker
             id="ticket-due"
             mode="datetime"
@@ -245,7 +249,10 @@ function restoreTicket(): void {
     </div>
 
     <div :class="compact ? 'flex flex-col gap-6' : 'grid gap-6 lg:grid-cols-3'">
-      <section :class="{ 'lg:col-span-2': !compact }" aria-label="Activity">
+      <section
+        :class="{ 'lg:col-span-2': !compact }"
+        :aria-label="$t('Activity')"
+      >
         <TicketTimeline
           v-model:typing="typing"
           :ticket-id="ticket.id"
@@ -273,7 +280,7 @@ function restoreTicket(): void {
           v-if="compact"
           class="group flex w-full items-center justify-between rounded-lg px-4 py-3 text-sm font-medium hover:bg-gray-50 focus:ring-2 focus:ring-primary-500 focus:outline-hidden focus:ring-inset data-[headlessui-state~=open]:rounded-b-none dark:hover:bg-gray-800"
         >
-          Properties, reminders and attachments
+          {{ $t('Properties, reminders and attachments') }}
           <ChevronDown
             class="size-4 text-gray-500 transition-transform group-data-[headlessui-state~=open]:rotate-180"
             aria-hidden="true"
@@ -317,7 +324,7 @@ function restoreTicket(): void {
             full
             @click="deleting = true"
           >
-            Delete ticket
+            {{ $t('Delete ticket') }}
           </AppButton>
         </component>
       </component>
@@ -330,8 +337,10 @@ function restoreTicket(): void {
     @close="deleting = false"
     @confirmed="deleteTicket"
   >
-    <template #headline>Delete ticket #{{ ticket.number }}?</template>
-    It moves to the Deleted list, where a desk lead can restore it.
-    <template #actionText>Delete ticket</template>
+    <template #headline>{{
+      $t('Delete ticket #:number?', { number: String(ticket.number) })
+    }}</template>
+    {{ $t('It moves to the Deleted list, where a desk lead can restore it.') }}
+    <template #actionText>{{ $t('Delete ticket') }}</template>
   </ConfirmationModal>
 </template>

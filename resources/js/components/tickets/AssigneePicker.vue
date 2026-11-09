@@ -52,15 +52,19 @@ function remove(id: string): void {
           class="-mr-1 ml-1 rounded-full hover:text-red-600"
           @click="remove(member.id)"
         >
-          <span class="sr-only">Unassign {{ member.name }}</span>
+          <span class="sr-only">{{
+            $t('Unassign :name', { name: member.name })
+          }}</span>
           <X class="size-3" aria-hidden="true" />
         </button>
       </Pill>
     </div>
-    <p v-else-if="disabled" class="text-sm text-gray-400">Unassigned</p>
+    <p v-else-if="disabled" class="text-sm text-gray-400">
+      {{ $t('Unassigned') }}
+    </p>
 
     <div v-if="!disabled && assignable.length">
-      <label :for="searchId" class="sr-only">Assign someone</label>
+      <label :for="searchId" class="sr-only">{{ $t('Assign someone') }}</label>
       <GenericObjectCombobox
         :id="searchId"
         :key="searchKey"
@@ -69,7 +73,7 @@ function remove(id: string): void {
       />
     </div>
     <p v-else-if="!disabled && !members.length" class="text-sm text-gray-400">
-      Nobody is on this desk yet.
+      {{ $t('Nobody is on this desk yet.') }}
     </p>
   </div>
 </template>

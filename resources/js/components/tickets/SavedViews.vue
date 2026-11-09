@@ -91,7 +91,7 @@ function remove(
 <template>
   <div class="flex items-center gap-2">
     <DropDownButton size="base">
-      {{ activeView?.name ?? 'Views' }}
+      {{ activeView?.name ?? $t('Views') }}
       <template #dropdown>
         <div class="max-h-80 overflow-y-auto p-1">
           <AppMenuItem
@@ -106,16 +106,16 @@ function remove(
             <span
               v-if="view.is_shared"
               class="shrink-0 text-xs opacity-70"
-              :title="`Shared by ${view.owner?.name}`"
+              :title="$t('Shared by :name', { name: view.owner?.name ?? '' })"
             >
-              {{ isOwner(view) ? 'Shared' : view.owner?.name }}
+              {{ isOwner(view) ? $t('Shared') : view.owner?.name }}
             </span>
           </AppMenuItem>
           <p
             v-if="!views.length"
             class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400"
           >
-            No saved views yet.
+            {{ $t('No saved views yet.') }}
           </p>
         </div>
       </template>
@@ -127,7 +127,7 @@ function remove(
       color="white"
       @click="open(activeView)"
     >
-      Edit view
+      {{ $t('Edit view') }}
     </AppButton>
     <AppButton
       v-else-if="!activeView"
@@ -135,27 +135,27 @@ function remove(
       color="white"
       @click="open('new')"
     >
-      Save view
+      {{ $t('Save view') }}
     </AppButton>
 
     <Modal
       v-if="editing"
-      :headline="editing === 'new' ? 'Save view' : 'Edit view'"
+      :headline="editing === 'new' ? $t('Save view') : $t('Edit view')"
       @close="editing = null"
     >
       <form class="mt-4" @submit.prevent>
         <AppFieldset>
           <InputField
             v-model="form.name"
-            label="Name"
+            :label="$t('Name')"
             :error="form.errors.name"
             required
           />
           <CheckboxField
             v-if="editing === 'new' || isOwner(editing)"
             v-model="form.is_shared"
-            label="Share with the workspace"
-            help-text="Everyone in the workspace can pick a shared view."
+            :label="$t('Share with the workspace')"
+            :help-text="$t('Everyone in the workspace can pick a shared view.')"
             :error="form.errors.is_shared"
           />
         </AppFieldset>
@@ -170,9 +170,11 @@ function remove(
           :loading="form.processing"
           @click="save(close)"
         >
-          {{ editing === 'new' ? 'Save view' : 'Save' }}
+          {{ editing === 'new' ? $t('Save view') : $t('Save') }}
         </AppButton>
-        <AppButton type="button" color="white" @click="close">Cancel</AppButton>
+        <AppButton type="button" color="white" @click="close">{{
+          $t('Cancel')
+        }}</AppButton>
         <AppButton
           v-if="editing !== 'new'"
           type="button"
@@ -181,7 +183,7 @@ function remove(
           :loading="deleting"
           @click="remove(editing, close)"
         >
-          Delete view
+          {{ $t('Delete view') }}
         </AppButton>
       </template>
     </Modal>

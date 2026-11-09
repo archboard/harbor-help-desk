@@ -3,6 +3,7 @@ import { Float } from '@headlessui-float/vue';
 import { Menu, MenuButton } from '@headlessui/vue';
 import { watchDebounced } from '@vueuse/core';
 import { Plus, Search } from '@lucide/vue';
+import { trans } from 'laravel-vue-i18n';
 import { computed, ref, watch } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import AppInput from '@/components/forms/AppInput.vue';
@@ -61,7 +62,7 @@ const search = ref(toList(filters.search)[0] ?? '');
 const definitions = computed<FilterDefinition[]>(() => [
   {
     id: 'status',
-    label: 'Status',
+    label: trans('Status'),
     key: 'status',
     options: Object.entries(statuses).map(([value, label]) => ({
       value,
@@ -70,7 +71,7 @@ const definitions = computed<FilterDefinition[]>(() => [
   },
   {
     id: 'priority',
-    label: 'Priority',
+    label: trans('Priority'),
     key: 'priority',
     options: Object.entries(priorities).map(([value, label]) => ({
       value,
@@ -79,17 +80,17 @@ const definitions = computed<FilterDefinition[]>(() => [
   },
   {
     id: 'desk_id',
-    label: 'Desk',
+    label: trans('Desk'),
     key: 'desk_id',
     options: desks.map((desk) => ({ value: desk.id, label: desk.name })),
   },
   {
     id: 'assignee_id',
-    label: 'Assignee',
+    label: trans('Assignee'),
     key: 'assignee_id',
     options: [
-      { value: 'me', label: 'Me' },
-      { value: 'none', label: 'Unassigned' },
+      { value: 'me', label: trans('Me') },
+      { value: 'none', label: trans('Unassigned') },
       ...agents.map((agent) => ({ value: agent.id, label: agent.name })),
     ],
   },
@@ -97,7 +98,7 @@ const definitions = computed<FilterDefinition[]>(() => [
     ? [
         {
           id: 'tag',
-          label: 'Tag',
+          label: trans('Tag'),
           key: 'tag',
           options: tags.map((tag) => ({ value: tag.name, label: tag.name })),
         },
@@ -113,8 +114,8 @@ const definitions = computed<FilterDefinition[]>(() => [
       options:
         field.type === 'checkbox'
           ? [
-              { value: '1', label: 'Yes' },
-              { value: '0', label: 'No' },
+              { value: '1', label: trans('Yes') },
+              { value: '0', label: trans('No') },
             ]
           : (field.options ?? []).map((option) => ({
               value: option,
@@ -195,8 +196,8 @@ watch(
       <AppInput
         v-model="search"
         type="search"
-        placeholder="Search subject, messages, #number or requester"
-        aria-label="Search tickets"
+        :placeholder="$t('Search subject, messages, #number or requester')"
+        :aria-label="$t('Search tickets')"
         class="pl-9"
       />
     </div>
@@ -227,7 +228,7 @@ watch(
       >
         <MenuButton :as="AppButton" color="white">
           <Plus class="mr-1 -ml-1 size-4" aria-hidden="true" />
-          Add filter
+          {{ $t('Add filter') }}
         </MenuButton>
         <AppMenuItems class="max-h-72 overflow-auto">
           <div class="p-1">

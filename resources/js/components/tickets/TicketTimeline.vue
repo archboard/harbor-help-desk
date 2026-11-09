@@ -105,10 +105,10 @@ function isResolution(event: App.Data.Tickets.TicketEventData): boolean {
         :loading="earlier.loading.value"
         @click="earlier.loadEarlier()"
       >
-        Load earlier
+        {{ $t('Load earlier') }}
       </AppButton>
       <p v-if="earlier.failed.value" class="mt-2 text-xs text-red-600">
-        The earlier activity could not be loaded.
+        {{ $t('The earlier activity could not be loaded.') }}
       </p>
     </div>
 

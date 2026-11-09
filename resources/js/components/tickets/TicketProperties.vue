@@ -142,7 +142,9 @@ function slaColor(target: App.Data.Tickets.TicketSlaTargetData): string {
   <CardWrapper>
     <CardPadding class="space-y-5 text-sm">
       <div>
-        <h2 class="font-medium text-gray-500 dark:text-gray-400">Requester</h2>
+        <h2 class="font-medium text-gray-500 dark:text-gray-400">
+          {{ $t('Requester') }}
+        </h2>
         <Link
           v-if="ticket.requester"
           :href="showContact(ticket.requester.id)"
@@ -156,7 +158,7 @@ function slaColor(target: App.Data.Tickets.TicketSlaTargetData): string {
       </div>
 
       <div class="space-y-1">
-        <AppLabel for="ticket-desk">Desk</AppLabel>
+        <AppLabel for="ticket-desk">{{ $t('Desk') }}</AppLabel>
         <AppSelect
           id="ticket-desk"
           :model-value="ticket.desk_id"
@@ -173,7 +175,7 @@ function slaColor(target: App.Data.Tickets.TicketSlaTargetData): string {
 
       <div v-if="ticket.satisfaction_rating" class="space-y-1">
         <h2 class="font-medium text-gray-500 dark:text-gray-400">
-          Satisfaction
+          {{ $t('Satisfaction') }}
         </h2>
         <Pill
           :color="
@@ -191,7 +193,9 @@ function slaColor(target: App.Data.Tickets.TicketSlaTargetData): string {
       </div>
 
       <div v-if="ticket.sla_targets?.length" class="space-y-1">
-        <h2 class="font-medium text-gray-500 dark:text-gray-400">SLA</h2>
+        <h2 class="font-medium text-gray-500 dark:text-gray-400">
+          {{ $t('SLA') }}
+        </h2>
         <p
           v-for="target in ticket.sla_targets"
           :key="target.metric"
@@ -199,23 +203,44 @@ function slaColor(target: App.Data.Tickets.TicketSlaTargetData): string {
         >
           {{ target.metric_label }}
           <template v-if="target.achieved_at">
-            met in {{ formatDuration(target.started_at, target.achieved_at)
-            }}{{ target.breached_at ? ' (breached)' : '' }}
+            {{
+              $t(
+                target.breached_at
+                  ? 'met in :duration (breached)'
+                  : 'met in :duration',
+                {
+                  duration: formatDuration(
+                    target.started_at,
+                    target.achieved_at,
+                  ),
+                },
+              )
+            }}
           </template>
-          <template v-else-if="target.breached_at">
-            breached <RelativeTime :datetime="target.breached_at" />
-          </template>
-          <template v-else-if="target.paused || !target.due_at"
-            >paused</template
+          <i18n-t
+            v-else-if="target.breached_at"
+            keypath="breached :time"
+            tag="span"
           >
-          <template v-else
-            >due <RelativeTime :datetime="target.due_at"
-          /></template>
+            <template #time>
+              <RelativeTime :datetime="target.breached_at" />
+            </template>
+          </i18n-t>
+          <template v-else-if="target.paused || !target.due_at">{{
+            $t('paused')
+          }}</template>
+          <i18n-t v-else keypath="due :time" tag="span">
+            <template #time
+              ><RelativeTime :datetime="target.due_at"
+            /></template>
+          </i18n-t>
         </p>
       </div>
 
       <div class="space-y-2">
-        <h2 class="font-medium text-gray-500 dark:text-gray-400">Assignees</h2>
+        <h2 class="font-medium text-gray-500 dark:text-gray-400">
+          {{ $t('Assignees') }}
+        </h2>
         <AssigneePicker
           :model-value="(ticket.assignees ?? []).map((agent) => agent.id)"
           :members="deskMembers"
@@ -226,7 +251,9 @@ function slaColor(target: App.Data.Tickets.TicketSlaTargetData): string {
       </div>
 
       <div class="space-y-2">
-        <h2 class="font-medium text-gray-500 dark:text-gray-400">Tags</h2>
+        <h2 class="font-medium text-gray-500 dark:text-gray-400">
+          {{ $t('Tags') }}
+        </h2>
         <div v-if="ticket.tags?.length" class="flex flex-wrap gap-1">
           <Pill v-for="tag in ticket.tags" :key="tag.id">
             {{ tag.name }}
@@ -236,7 +263,9 @@ function slaColor(target: App.Data.Tickets.TicketSlaTargetData): string {
               class="-mr-1 ml-1 rounded-full hover:text-red-600"
               @click="removeTag(tag.name)"
             >
-              <span class="sr-only">Remove {{ tag.name }}</span>
+              <span class="sr-only">{{
+                $t('Remove :name', { name: tag.name })
+              }}</span>
               <X class="size-3" aria-hidden="true" />
             </button>
           </Pill>
@@ -246,14 +275,16 @@ function slaColor(target: App.Data.Tickets.TicketSlaTargetData): string {
           <AppInput
             v-model="newTag"
             list="ticket-tag-options"
-            placeholder="Add a tag and press Enter"
-            aria-label="Add a tag"
+            :placeholder="$t('Add a tag and press Enter')"
+            :aria-label="$t('Add a tag')"
           />
           <datalist id="ticket-tag-options">
             <option v-for="tag in tags" :key="tag.id" :value="tag.name" />
           </datalist>
         </form>
-        <p v-else-if="!ticket.tags?.length" class="text-gray-400">None</p>
+        <p v-else-if="!ticket.tags?.length" class="text-gray-400">
+          {{ $t('None') }}
+        </p>
         <FieldError v-if="errors.names">{{ errors.names }}</FieldError>
       </div>
 

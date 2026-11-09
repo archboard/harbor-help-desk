@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
+import { trans } from 'laravel-vue-i18n';
 import { computed, ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import AppInput from '@/components/forms/AppInput.vue';
@@ -29,7 +30,7 @@ const newTag = ref('');
 const deleting = ref(false);
 
 const assigneeOptions = computed(() => [
-  { value: 'none', label: 'Nobody' },
+  { value: 'none', label: trans('Nobody') },
   ...agents.map((agent) => ({ value: agent.id, label: agent.name })),
 ]);
 
@@ -73,17 +74,17 @@ function addTag(): void {
   <div
     class="sticky bottom-4 z-10 space-y-3 rounded-lg bg-white p-3 shadow-lg ring-1 ring-gray-200 dark:bg-gray-800 dark:ring-gray-700"
     role="region"
-    aria-label="Bulk actions"
+    :aria-label="$t('Bulk actions')"
   >
     <div class="flex items-center justify-between gap-2">
       <p class="text-sm font-medium">
-        {{ ticketIds.length }} selected
+        {{ $t(':count selected', { count: String(ticketIds.length) }) }}
         <button
           type="button"
           class="ml-1 text-gray-500 hover:underline dark:text-gray-400"
           @click="emit('clear')"
         >
-          Clear
+          {{ $t('Clear') }}
         </button>
       </p>
       <AppButton
@@ -93,7 +94,7 @@ function addTag(): void {
         :disabled="processing"
         @click="deleting = true"
       >
-        Delete
+        {{ $t('Delete') }}
       </AppButton>
     </div>
 
@@ -101,40 +102,40 @@ function addTag(): void {
       <AppSelect
         :model-value="null"
         :options="statuses"
-        null-option="Set status…"
-        aria-label="Set status"
+        :null-option="$t('Set status…')"
+        :aria-label="$t('Set status')"
         :disabled="processing"
         @update:model-value="$event && apply({ status: String($event) })"
       />
       <AppSelect
         :model-value="null"
         :options="priorities"
-        null-option="Set priority…"
-        aria-label="Set priority"
+        :null-option="$t('Set priority…')"
+        :aria-label="$t('Set priority')"
         :disabled="processing"
         @update:model-value="$event && apply({ priority: String($event) })"
       />
       <AppSelect
         :model-value="null"
         :options="assigneeOptions"
-        null-option="Assign to…"
-        aria-label="Assign to"
+        :null-option="$t('Assign to…')"
+        :aria-label="$t('Assign to')"
         :disabled="processing"
         @update:model-value="assign"
       />
       <AppSelect
         :model-value="null"
         :options="desks"
-        null-option="Move to…"
-        aria-label="Move to desk"
+        :null-option="$t('Move to…')"
+        :aria-label="$t('Move to desk')"
         :disabled="processing"
         @update:model-value="$event && apply({ desk_id: String($event) })"
       />
       <form class="flex gap-2" @submit.prevent="addTag">
         <AppInput
           v-model="newTag"
-          placeholder="Add tag"
-          aria-label="Add a tag"
+          :placeholder="$t('Add tag')"
+          :aria-label="$t('Add a tag')"
           class="flex-1"
           :disabled="processing"
         />
@@ -143,7 +144,7 @@ function addTag(): void {
           color="white"
           :disabled="processing || !newTag.trim()"
         >
-          Add
+          {{ $t('Add') }}
         </AppButton>
       </form>
     </div>
@@ -156,9 +157,19 @@ function addTag(): void {
       @close="deleting = false"
       @confirmed="(close) => apply({ delete: true }, close)"
     >
-      <template #headline>Delete {{ ticketIds.length }} tickets?</template>
-      They move to the Deleted list, where a desk lead can restore them.
-      <template #actionText>Delete tickets</template>
+      <template #headline>{{
+        $tChoice(
+          '{1} Delete :count ticket?|[2,*] Delete :count tickets?',
+          ticketIds.length,
+          {
+            count: String(ticketIds.length),
+          },
+        )
+      }}</template>
+      {{
+        $t('They move to the Deleted list, where a desk lead can restore them.')
+      }}
+      <template #actionText>{{ $t('Delete tickets') }}</template>
     </ConfirmationModal>
   </div>
 </template>
