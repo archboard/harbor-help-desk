@@ -9,6 +9,7 @@ import TicketFilters from '@/components/tickets/TicketFilters.vue';
 import TicketTable from '@/components/tickets/TicketTable.vue';
 import type { TicketQuery } from '@/components/tickets/TicketFilters.vue';
 import { useLiveReload } from '@/composables/useLiveReload';
+import { useRowNavigation } from '@/composables/useRowNavigation';
 import { DEFAULT_COLUMNS } from '@/lib/ticketColumns';
 import { cleanQuery, sameQuery } from '@/lib/tickets';
 import { claim, index } from '@/routes/tickets';
@@ -61,6 +62,14 @@ const columns = computed({
 });
 
 const selected = ref<string[]>([]);
+const focusedId = ref<string>();
+
+useRowNavigation({
+  ids: () => tickets.data.map((ticket) => ticket.id),
+  focusedId,
+  selected,
+  canSelect: () => !filters.deleted,
+});
 
 /** Mirrors `TicketPolicy@delete` for every selected ticket. */
 const canDeleteSelected = computed(() =>
@@ -133,6 +142,7 @@ function apply(query: TicketQuery): void {
       prop="tickets"
       :tickets="tickets.data"
       v-model:columns="columns"
+      v-model:focused-id="focusedId"
       :custom-fields="customFields"
       @update:selected="selected = $event ?? []"
     />

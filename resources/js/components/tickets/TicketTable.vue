@@ -24,7 +24,8 @@ import { show } from '@/routes/tickets';
 /**
  * A page of tickets that loads more as it scrolls. `prop` is the name of the
  * `Inertia::scroll()` prop holding them. Binding `v-model:selected` adds checkboxes, and
- * binding `v-model:columns` adds a column picker to the header.
+ * binding `v-model:columns` adds a column picker to the header. `v-model:focusedId` is the
+ * keyboard-focused row; clicking a row focuses it.
  */
 const {
   tickets,
@@ -62,6 +63,7 @@ function customFieldText(
 }
 
 const selected = defineModel<string[]>('selected');
+const focusedId = defineModel<string>('focusedId');
 
 /** Selects or clears every ticket loaded so far. */
 const allSelected = computed({
@@ -93,7 +95,17 @@ const allSelected = computed({
         </tr>
       </Thead>
       <Tbody>
-        <tr v-for="ticket in tickets" :key="ticket.id">
+        <tr
+          v-for="ticket in tickets"
+          :key="ticket.id"
+          :data-ticket-id="ticket.id"
+          :aria-selected="focusedId === ticket.id"
+          :class="
+            focusedId === ticket.id &&
+            'bg-primary-50/50 dark:bg-primary-950/30 [&>td:first-child]:shadow-[inset_3px_0_0_var(--color-primary-500)]'
+          "
+          @click="focusedId = ticket.id"
+        >
           <Td v-if="selected" class="w-0 pr-0">
             <AppCheckbox v-model="selected" :value="ticket.id">
               <span class="sr-only">Select #{{ ticket.number }}</span>
