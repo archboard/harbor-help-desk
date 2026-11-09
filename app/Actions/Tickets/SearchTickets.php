@@ -5,8 +5,10 @@ namespace App\Actions\Tickets;
 use App\Data\Tickets\SearchTicketsData;
 use App\Enums\CustomFieldType;
 use App\Enums\TicketPriority;
+use App\Models\Contact;
 use App\Models\CustomField;
 use App\Models\Ticket;
+use App\Models\TicketComment;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -169,12 +171,14 @@ class SearchTickets
 
         $like = '%'.addcslashes($search, '%_\\').'%';
 
-        $query->where(fn (Builder $query) => $query
-            ->whereFullText('subject', $search, ['mode' => 'websearch'])
-            ->orWhereHas('comments', fn (Builder $query) => $query->whereFullText('body', $search, ['mode' => 'websearch']))
-            ->orWhereHas('requester', fn (Builder $query) => $query
-                ->whereLike('name', $like)
-                ->orWhereLike('email', $like)));
+        // A UNION of id subqueries (trashed included; the deleted filter decides), so each branch can use its own index; an OR across EXISTS can't.
+        $bySubject = Ticket::withTrashed()->select('id')->whereFullText('subject', $search, ['mode' => 'websearch']);
+        $byComment = TicketComment::query()->select('ticket_id')->whereFullText('body', $search, ['mode' => 'websearch']);
+        $byRequester = Ticket::withTrashed()->select('id')->whereIn('requester_id', Contact::query()->select('id')
+            ->whereLike('name', $like)
+            ->orWhereLike('email', $like));
+
+        $query->whereIn('id', $bySubject->union($byComment)->union($byRequester));
     }
 
     /**
