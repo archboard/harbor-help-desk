@@ -1,30 +1,35 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Head, InfiniteScroll, Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import RelativeTime from '@/components/RelativeTime.vue';
 import StatusPill from '@/components/tickets/StatusPill.vue';
 import AppButton from '@/components/AppButton.vue';
 import { create, index, show } from '@/routes/portal/tickets';
 import type { Paginated } from '@/types';
 
-defineOptions({ layout: { title: 'Your tickets' } });
+defineOptions({ layout: { title: trans('Your tickets') } });
 
 const { filter = null } = defineProps<{
   tickets: Paginated<App.Data.Portal.PortalTicketData>;
   filter?: 'open' | 'resolved' | null;
 }>();
 
-const tabs = [
-  { label: 'All', value: null },
-  { label: 'Open', value: 'open' },
-  { label: 'Resolved', value: 'resolved' },
-] as const;
+const tabs = computed(
+  () =>
+    [
+      { label: trans('All'), value: null },
+      { label: trans('Open'), value: 'open' },
+      { label: trans('Resolved'), value: 'resolved' },
+    ] as const,
+);
 </script>
 
 <template>
-  <Head title="Your tickets" />
+  <Head :title="$t('Your tickets')" />
 
   <div class="mb-6 flex items-center justify-between gap-4">
-    <nav class="flex gap-4 text-sm" aria-label="Filter tickets">
+    <nav class="flex gap-4 text-sm" :aria-label="$t('Filter tickets')">
       <Link
         v-for="tab in tabs"
         :key="tab.label"
@@ -38,7 +43,9 @@ const tabs = [
         {{ tab.label }}
       </Link>
     </nav>
-    <AppButton :component="Link" :href="create()">New ticket</AppButton>
+    <AppButton :component="Link" :href="create()">{{
+      $t('New ticket')
+    }}</AppButton>
   </div>
 
   <InfiniteScroll v-if="tickets.data.length" data="tickets">
@@ -55,8 +62,13 @@ const tabs = [
               {{ ticket.subject }}
             </p>
             <p class="text-sm text-gray-500 dark:text-gray-400">
-              #{{ ticket.number }} · {{ ticket.desk_name }} · Updated
-              <RelativeTime :datetime="ticket.updated_at" />
+              <i18n-t keypath="#:number · :desk · Updated :time" tag="span">
+                <template #number>{{ ticket.number }}</template>
+                <template #desk>{{ ticket.desk_name }}</template>
+                <template #time>
+                  <RelativeTime :datetime="ticket.updated_at" />
+                </template>
+              </i18n-t>
             </p>
           </div>
           <StatusPill :status="ticket.status" :label="ticket.status_label" />
@@ -65,6 +77,6 @@ const tabs = [
     </ul>
   </InfiniteScroll>
   <p v-else class="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
-    No tickets yet.
+    {{ $t('No tickets yet.') }}
   </p>
 </template>

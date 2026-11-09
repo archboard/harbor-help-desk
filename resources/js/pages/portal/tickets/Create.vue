@@ -31,7 +31,7 @@ function send(): void {
 </script>
 
 <template>
-  <Head title="New ticket" />
+  <Head :title="$t('New ticket')" />
 
   <div class="space-y-6">
     <div class="space-y-3">
@@ -39,28 +39,30 @@ function send(): void {
         :href="index()"
         class="text-sm text-gray-500 hover:underline dark:text-gray-400"
       >
-        ← Your tickets
+        {{ $t('← Your tickets') }}
       </Link>
-      <h1 class="font-display text-3xl tracking-tight">New ticket</h1>
+      <h1 class="font-display text-3xl tracking-tight">
+        {{ $t('New ticket') }}
+      </h1>
     </div>
 
     <form class="space-y-4" @submit.prevent="send">
       <SelectField
         v-if="desks.length > 1"
         v-model="form.desk_id"
-        label="Department"
+        :label="$t('Department')"
         :options="desks.map((desk) => ({ value: desk.id, label: desk.name }))"
         required
       />
       <InputField
         v-model="form.subject"
-        label="Subject"
+        :label="$t('Subject')"
         :error="form.errors.subject"
         required
       />
       <TextareaField
         v-model="form.body"
-        label="How can we help?"
+        :label="$t('How can we help?')"
         :error="form.errors.body"
         required
       />
@@ -69,9 +71,9 @@ function send(): void {
       </FieldError>
       <div class="flex items-start justify-between gap-4">
         <FilePicker v-model="form.attachments" />
-        <AppButton type="submit" :loading="form.processing"
-          >Open ticket</AppButton
-        >
+        <AppButton type="submit" :loading="form.processing">{{
+          $t('Open ticket')
+        }}</AppButton>
       </div>
     </form>
   </div>

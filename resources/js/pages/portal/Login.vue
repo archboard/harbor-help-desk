@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Head, useForm } from '@inertiajs/vue3';
 import AppButton from '@/components/AppButton.vue';
 import AppLink from '@/components/AppLink.vue';
@@ -10,8 +11,10 @@ import { store } from '@/routes/portal/login';
 
 defineOptions({
   layout: {
-    title: 'Sign in to see your tickets',
-    description: "Enter your email address and we'll send you a sign-in link.",
+    title: trans('Sign in to see your tickets'),
+    description: trans(
+      "Enter your email address and we'll send you a sign-in link.",
+    ),
   },
 });
 
@@ -21,7 +24,7 @@ const form = useForm({ email: '' });
 </script>
 
 <template>
-  <Head title="Sign in" />
+  <Head :title="$t('Sign in')" />
 
   <SimpleAlert v-if="status" level="success" class="mb-6">
     {{ status }}
@@ -31,21 +34,21 @@ const form = useForm({ email: '' });
     <AppFieldset>
       <EmailField
         v-model="form.email"
-        label="Email address"
+        :label="$t('Email address')"
         placeholder="email@example.com"
         :error="form.errors.email"
         required
       />
 
       <AppButton type="submit" :loading="form.processing" full>
-        Email me a sign-in link
+        {{ $t('Email me a sign-in link') }}
       </AppButton>
     </AppFieldset>
   </form>
 
   <p class="mt-6 text-sm">
     <AppLink :href="login()" class="font-normal">
-      Are you an agent? Sign in here.
+      {{ $t('Are you an agent? Sign in here.') }}
     </AppLink>
   </p>
 </template>

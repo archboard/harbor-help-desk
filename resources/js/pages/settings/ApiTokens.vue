@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { Check, Copy } from '@lucide/vue';
 import { useClipboard } from '@vueuse/core';
@@ -22,7 +23,7 @@ import { formatDate } from '@/lib/dates';
 import { notify } from '@/lib/notifications';
 import { destroy, store } from '@/routes/api-tokens';
 
-defineOptions({ layout: { title: 'API tokens' } });
+defineOptions({ layout: { title: trans('API tokens') } });
 
 const { workspaces, mcpUrl } = defineProps<{
   mcpUrl: string;
@@ -41,7 +42,7 @@ const { copy } = useClipboard();
 const copied = ref('');
 
 const snippets = computed(() => [
-  { key: 'claude', label: 'Claude (connector URL)', text: mcpUrl },
+  { key: 'claude', label: trans('Claude (connector URL)'), text: mcpUrl },
   {
     key: 'claude-code',
     label: 'Claude Code',
@@ -73,7 +74,7 @@ const revokeLoading = ref(false);
 
 async function copyToken(token: string): Promise<void> {
   await navigator.clipboard.writeText(token);
-  notify({ level: 'success', text: 'Token copied.' });
+  notify({ level: 'success', text: trans('Token copied.') });
 }
 
 function revoke(close: () => void): void {
@@ -87,14 +88,14 @@ function revoke(close: () => void): void {
 </script>
 
 <template>
-  <Head title="API tokens" />
+  <Head :title="$t('API tokens')" />
 
   <SettingsNav />
 
   <div class="space-y-6">
     <SimpleAlert v-if="page.flash.apiToken" level="success">
       <span class="block">
-        Copy your new token now. It won't be shown again.
+        {{ $t("Copy your new token now. It won't be shown again.") }}
       </span>
       <span class="mt-2 flex items-center gap-2">
         <code
@@ -108,19 +109,25 @@ function revoke(close: () => void): void {
           color="white"
           @click="copyToken(page.flash.apiToken)"
         >
-          Copy
+          {{ $t('Copy') }}
         </AppButton>
       </span>
     </SimpleAlert>
 
     <CardWrapper>
       <CardPadding>
-        <CardHeader class="mb-2">Connect an AI assistant</CardHeader>
+        <CardHeader class="mb-2">{{
+          $t('Connect an AI assistant')
+        }}</CardHeader>
         <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
-          Harbor Help has an MCP server, so AI assistants can read and update
-          tickets as you. Most clients open a browser to sign in with OAuth.
-          Alternatively, create a personal token below and send it as an
-          <code>Authorization: Bearer &lt;token&gt;</code> header.
+          <i18n-t
+            keypath="Harbor Help has an MCP server, so AI assistants can read and update tickets as you. Most clients open a browser to sign in with OAuth. Alternatively, create a personal token below and send it as an :header header."
+            tag="span"
+          >
+            <template #header>
+              <code>Authorization: Bearer &lt;token&gt;</code>
+            </template>
+          </i18n-t>
         </p>
         <div class="space-y-4">
           <div v-for="item in snippets" :key="item.key" class="space-y-1">
@@ -142,7 +149,7 @@ function revoke(close: () => void): void {
                   aria-hidden="true"
                 />
                 <Copy v-else class="size-3" aria-hidden="true" />
-                {{ copied === item.key ? 'Copied' : 'Copy' }}
+                {{ copied === item.key ? $t('Copied') : $t('Copy') }}
               </AppButton>
             </div>
             <pre
@@ -163,17 +170,17 @@ function revoke(close: () => void): void {
         "
       >
         <CardPadding>
-          <CardHeader class="mb-4">Create token</CardHeader>
+          <CardHeader class="mb-4">{{ $t('Create token') }}</CardHeader>
           <AppFieldset>
             <InputField
               v-model="form.name"
-              label="Name"
+              :label="$t('Name')"
               :error="form.errors.name"
               required
             />
             <CheckboxListField
               v-model="form.workspaces"
-              label="Workspaces"
+              :label="$t('Workspaces')"
               :options="workspaces"
               :error="form.errors.workspaces"
               required
@@ -182,7 +189,7 @@ function revoke(close: () => void): void {
         </CardPadding>
         <CardAction>
           <AppButton type="submit" :loading="form.processing">
-            Create token
+            {{ $t('Create token') }}
           </AppButton>
         </CardAction>
       </form>
@@ -191,11 +198,13 @@ function revoke(close: () => void): void {
     <Table v-if="tokens.length">
       <Thead>
         <tr>
-          <Th>Name</Th>
-          <Th>Workspaces</Th>
-          <Th>Created</Th>
-          <Th>Expires</Th>
-          <Th right><span class="sr-only">Actions</span></Th>
+          <Th>{{ $t('Name') }}</Th>
+          <Th>{{ $t('Workspaces') }}</Th>
+          <Th>{{ $t('Created') }}</Th>
+          <Th>{{ $t('Expires') }}</Th>
+          <Th right
+            ><span class="sr-only">{{ $t('Actions') }}</span></Th
+          >
         </tr>
       </Thead>
       <Tbody>
@@ -211,14 +220,14 @@ function revoke(close: () => void): void {
               color="red"
               @click="revoking = token"
             >
-              Revoke
+              {{ $t('Revoke') }}
             </AppButton>
           </Td>
         </tr>
       </Tbody>
     </Table>
     <p v-else class="text-sm text-gray-500 dark:text-gray-400">
-      You don't have any API tokens yet.
+      {{ $t("You don't have any API tokens yet.") }}
     </p>
   </div>
 
@@ -228,8 +237,10 @@ function revoke(close: () => void): void {
     @close="revoking = null"
     @confirmed="revoke"
   >
-    <template #headline>Revoke “{{ revoking.name }}”?</template>
-    Anything using this token will lose access immediately.
-    <template #actionText>Revoke token</template>
+    <template #headline>{{
+      $t('Revoke “:name”?', { name: revoking.name ?? '' })
+    }}</template>
+    {{ $t('Anything using this token will lose access immediately.') }}
+    <template #actionText>{{ $t('Revoke token') }}</template>
   </ConfirmationModal>
 </template>

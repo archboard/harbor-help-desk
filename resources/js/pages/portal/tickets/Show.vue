@@ -77,7 +77,7 @@ function send(): void {
         :href="index()"
         class="text-sm text-gray-500 hover:underline dark:text-gray-400"
       >
-        ← Your tickets
+        {{ $t('← Your tickets') }}
       </Link>
       <div class="flex items-start justify-between gap-4">
         <div class="min-w-0">
@@ -85,8 +85,13 @@ function send(): void {
             {{ ticket.subject }}
           </h1>
           <p class="text-sm text-gray-500 dark:text-gray-400">
-            #{{ ticket.number }} · {{ ticket.desk_name }} · Opened
-            <RelativeTime :datetime="ticket.created_at" />
+            <i18n-t keypath="#:number · :desk · Opened :time" tag="span">
+              <template #number>{{ ticket.number }}</template>
+              <template #desk>{{ ticket.desk_name }}</template>
+              <template #time>
+                <RelativeTime :datetime="ticket.created_at" />
+              </template>
+            </i18n-t>
           </p>
         </div>
         <StatusPill :status="ticket.status" :label="ticket.status_label" />
@@ -101,10 +106,10 @@ function send(): void {
         :loading="earlier.loading.value"
         @click="earlier.loadEarlier()"
       >
-        Load earlier
+        {{ $t('Load earlier') }}
       </AppButton>
       <p v-if="earlier.failed.value" class="mt-2 text-xs text-red-600">
-        The earlier messages could not be loaded.
+        {{ $t('The earlier messages could not be loaded.') }}
       </p>
     </div>
 
@@ -137,20 +142,23 @@ function send(): void {
     >
       <div v-if="ticket.satisfaction_rating && !changing" class="space-y-2">
         <p class="text-sm">
-          You rated this support
-          <Pill
-            :color="
-              ticket.satisfaction_rating.rating === 'good' ? 'green' : 'red'
-            "
-          >
-            {{ ticket.satisfaction_rating.rating_label }}
-          </Pill>
+          <i18n-t keypath="You rated this support :rating" tag="span">
+            <template #rating>
+              <Pill
+                :color="
+                  ticket.satisfaction_rating.rating === 'good' ? 'green' : 'red'
+                "
+              >
+                {{ ticket.satisfaction_rating.rating_label }}
+              </Pill>
+            </template>
+          </i18n-t>
           <button
             type="button"
             class="ml-2 text-primary-600 hover:underline dark:text-primary-400"
             @click="changing = true"
           >
-            Change
+            {{ $t('Change') }}
           </button>
         </p>
         <p
@@ -163,18 +171,20 @@ function send(): void {
       <form v-else class="space-y-3" @submit.prevent="rate">
         <RadioField
           v-model="ratingForm.rating"
-          label="How was the support you received?"
+          :label="$t('How was the support you received?')"
           :options="options"
           :error="ratingForm.errors.rating"
         />
         <TextareaField
           v-model="ratingForm.comment"
-          label="Anything to add? (optional)"
+          :label="$t('Anything to add? (optional)')"
           :error="ratingForm.errors.comment"
         />
         <AppButton type="submit" :loading="ratingForm.processing">
           {{
-            ticket.satisfaction_rating ? 'Update my rating' : 'Send my rating'
+            ticket.satisfaction_rating
+              ? $t('Update my rating')
+              : $t('Send my rating')
           }}
         </AppButton>
       </form>
@@ -183,7 +193,7 @@ function send(): void {
     <form class="space-y-3" @submit.prevent="send">
       <TextareaField
         v-model="form.body"
-        label="Reply"
+        :label="$t('Reply')"
         :error="form.errors.body"
         required
       />
@@ -192,9 +202,9 @@ function send(): void {
       </FieldError>
       <div class="flex items-start justify-between gap-4">
         <FilePicker v-model="form.attachments" />
-        <AppButton type="submit" :loading="form.processing"
-          >Send reply</AppButton
-        >
+        <AppButton type="submit" :loading="form.processing">{{
+          $t('Send reply')
+        }}</AppButton>
       </div>
     </form>
   </div>

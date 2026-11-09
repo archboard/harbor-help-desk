@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import AppButton from '@/components/AppButton.vue';
 import AppLink from '@/components/AppLink.vue';
@@ -16,8 +17,8 @@ import { login as portalLogin } from '@/routes/portal';
 
 defineOptions({
   layout: {
-    title: 'Log in to your account',
-    description: 'Enter your email and password below to log in',
+    title: trans('Log in to your account'),
+    description: trans('Enter your email and password below to log in'),
   },
 });
 
@@ -51,7 +52,7 @@ function submit(): void {
 </script>
 
 <template>
-  <Head title="Log in" />
+  <Head :title="$t('Log in')" />
 
   <SimpleAlert v-if="status" level="success" class="mb-6">
     {{ status }}
@@ -60,7 +61,7 @@ function submit(): void {
   <form @submit.prevent="submit">
     <AppFieldset>
       <FormField :error="form.errors.email ?? magicLinkForm.errors.email">
-        Email address
+        {{ $t('Email address') }}
         <template #component="{ id, hasError }">
           <AppInput
             :id="id"
@@ -76,7 +77,7 @@ function submit(): void {
       </FormField>
 
       <FormField :error="form.errors.password">
-        Password
+        {{ $t('Password') }}
         <template #component="{ id, hasError }">
           <AppInput
             :id="id"
@@ -89,14 +90,16 @@ function submit(): void {
         </template>
       </FormField>
 
-      <AppCheckbox v-model="form.remember">Keep me logged in</AppCheckbox>
+      <AppCheckbox v-model="form.remember">{{
+        $t('Keep me logged in')
+      }}</AppCheckbox>
 
       <AppButton type="submit" :loading="form.processing" full>
-        Log in
+        {{ $t('Log in') }}
       </AppButton>
 
       <BorderSeparator background="bg-gray-50 dark:bg-black">
-        Or
+        {{ $t('Or') }}
       </BorderSeparator>
 
       <AppButton
@@ -106,12 +109,12 @@ function submit(): void {
         full
         @click="submitMagicLink"
       >
-        Email me a sign-in link
+        {{ $t('Email me a sign-in link') }}
       </AppButton>
 
       <p v-if="canResetPassword">
         <AppLink :href="request()" class="text-sm">
-          Forgot your password?
+          {{ $t('Forgot your password?') }}
         </AppLink>
       </p>
     </AppFieldset>
@@ -119,7 +122,7 @@ function submit(): void {
 
   <p v-if="page.props.portalEnabled" class="mt-6 text-sm">
     <AppLink :href="portalLogin()" class="font-normal">
-      Looking for tickets you've submitted?
+      {{ $t("Looking for tickets you've submitted?") }}
     </AppLink>
   </p>
 </template>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
@@ -13,8 +14,8 @@ import { store } from '@/routes/install';
 
 defineOptions({
   layout: {
-    title: 'Set up Harbor Help',
-    description: 'Create the owner account to get started',
+    title: trans('Set up Harbor Help'),
+    description: trans('Create the owner account to get started'),
   },
 });
 
@@ -50,7 +51,7 @@ function submit(): void {
 </script>
 
 <template>
-  <Head title="Set up" />
+  <Head :title="$t('Set up')" />
 
   <form @submit.prevent="submit">
     <AppFieldset>
@@ -75,44 +76,44 @@ function submit(): void {
           :loading="checking"
           @click="checkAgain"
         >
-          Check again
+          {{ $t('Check again') }}
         </AppButton>
       </div>
 
       <InputField
         v-if="needsWorkspace"
         v-model="form.workspace_name"
-        label="Workspace name"
+        :label="$t('Workspace name')"
         :error="form.errors.workspace_name"
         required
       />
       <InputField
         v-model="form.name"
-        label="Your name"
+        :label="$t('Your name')"
         :error="form.errors.name"
         required
       />
       <EmailField
         v-model="form.email"
-        label="Email"
+        :label="$t('Email')"
         :error="form.errors.email"
         required
       />
       <PasswordField
         v-model="form.password"
-        label="Password"
+        :label="$t('Password')"
         :error="form.errors.password"
         required
       />
       <PasswordField
         v-model="form.password_confirmation"
-        label="Confirm password"
+        :label="$t('Confirm password')"
         :error="form.errors.password_confirmation"
         required
       />
 
       <AppButton type="submit" :loading="form.processing" full>
-        Create account
+        {{ $t('Create account') }}
       </AppButton>
     </AppFieldset>
   </form>
