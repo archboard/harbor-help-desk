@@ -81,7 +81,7 @@ function pick(key: string): void {
   <StepCard
     v-model:open="open"
     :icon="triggerIcon(trigger.type)"
-    kind="Trigger"
+    :kind="$t('Trigger')"
     :summary="summarizeTrigger(trigger, catalog)"
     :details="
       current
@@ -108,8 +108,8 @@ function pick(key: string): void {
       testResult
         ? (testResult.trigger_note ??
           (testResult.trigger_matched
-            ? 'The trigger matches the chosen event.'
-            : 'The trigger does not match the chosen event.'))
+            ? $t('The trigger matches the chosen event.')
+            : $t('The trigger does not match the chosen event.')))
         : undefined
     "
   >
@@ -117,7 +117,7 @@ function pick(key: string): void {
       <div
         class="grid grid-cols-2 gap-2 sm:grid-cols-3"
         role="group"
-        aria-label="Trigger type"
+        :aria-label="$t('Trigger type')"
       >
         <button
           v-for="item in catalog.triggers"

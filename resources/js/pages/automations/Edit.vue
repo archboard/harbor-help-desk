@@ -7,6 +7,7 @@ import {
   useForm,
 } from '@inertiajs/vue3';
 import { useEventListener } from '@vueuse/core';
+import { trans } from 'laravel-vue-i18n';
 import {
   computed,
   onBeforeUnmount,
@@ -70,7 +71,9 @@ defineOptions({ layout: { title: '' } });
 
 // Again after the first save, which lands on the edit page without remounting this one.
 watchEffect(() =>
-  setLayoutProps({ title: automation ? 'Edit automation' : 'New automation' }),
+  setLayoutProps({
+    title: automation ? trans('Edit automation') : trans('New automation'),
+  }),
 );
 
 const source = automation ?? template;
@@ -120,20 +123,24 @@ const testSummary = computed(() => {
   }
 
   if (result.error) {
-    return `The test failed on an error: ${result.error}`;
+    return trans('The test failed on an error: :error', {
+      error: result.error,
+    });
   }
 
   if (result.trigger_matched === false) {
-    return 'The trigger does not match the chosen event, so a real run would not start.';
+    return trans(
+      'The trigger does not match the chosen event, so a real run would not start.',
+    );
   }
 
   if (result.stopped) {
-    return 'The test reached a stop step.';
+    return trans('The test reached a stop step.');
   }
 
   return result.matched
-    ? 'All the steps that apply were run.'
-    : 'A condition did not pass, so the steps after it did not run.';
+    ? trans('All the steps that apply were run.')
+    : trans('A condition did not pass, so the steps after it did not run.');
 });
 
 /** The card that is expanded: the trigger, a step id, or none. */
@@ -169,7 +176,9 @@ const names = computed<Record<string, string>>(() =>
 );
 
 const scopeOptions = computed(() => [
-  ...(canScopeToWorkspace ? [{ value: '', label: 'Whole workspace' }] : []),
+  ...(canScopeToWorkspace
+    ? [{ value: '', label: trans('Whole workspace') }]
+    : []),
   ...desks.map((desk) => ({ value: desk.id, label: desk.name })),
 ]);
 
@@ -180,13 +189,15 @@ const summaryLines = computed(() =>
 
     return {
       cardId: problem.cardId,
-      text: `${
-        problem.cardId === TRIGGER_CARD
-          ? 'Trigger'
-          : index === -1
-            ? 'Automation'
-            : `Step ${index + 1}`
-      }: ${problem.message}`,
+      text: trans(':subject: :message', {
+        subject:
+          problem.cardId === TRIGGER_CARD
+            ? trans('Trigger')
+            : index === -1
+              ? trans('Automation')
+              : trans('Step :number', { number: String(index + 1) }),
+        message: problem.message,
+      }),
     };
   }),
 );
@@ -243,7 +254,7 @@ const stopBefore = router.on('before', (event) => {
     return;
   }
 
-  return confirm('You have unsaved changes. Leave this page?');
+  return confirm(trans('You have unsaved changes. Leave this page?'));
 });
 
 onBeforeUnmount(stopBefore);
@@ -256,7 +267,7 @@ useEventListener(window, 'beforeunload', (event) => {
 </script>
 
 <template>
-  <Head :title="automation ? 'Edit automation' : 'New automation'" />
+  <Head :title="automation ? $t('Edit automation') : $t('New automation')" />
 
   <form class="mx-auto max-w-3xl space-y-8" @submit.prevent="save()">
     <AutomationTabs
@@ -268,21 +279,25 @@ useEventListener(window, 'beforeunload', (event) => {
     <div class="space-y-4">
       <InputField
         v-model="form.name"
-        label="Name"
+        :label="$t('Name')"
         required
         :error="form.errors.name"
       />
       <TextareaField
         v-model="form.description"
-        label="Description"
+        :label="$t('Description')"
         :error="form.errors.description"
       />
       <SelectField
         v-model="form.desk_id"
-        label="Scope"
+        :label="$t('Scope')"
         :options="scopeOptions"
         :error="form.errors.desk_id"
-        help-text="Who can edit this automation, and which desk's tickets it works on."
+        :help-text="
+          $t(
+            'Who can edit this automation, and which desk\'s tickets it works on.',
+          )
+        "
       />
     </div>
 
@@ -291,7 +306,7 @@ useEventListener(window, 'beforeunload', (event) => {
       class="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200"
       role="alert"
     >
-      <p class="font-medium">Fix these before saving:</p>
+      <p class="font-medium">{{ $t('Fix these before saving:') }}</p>
       <ul class="mt-2 list-disc space-y-1 ps-5">
         <li v-for="(line, i) in summaryLines" :key="i">
           <button
@@ -309,7 +324,10 @@ useEventListener(window, 'beforeunload', (event) => {
 
     <Deferred data="catalog">
       <template #fallback>
-        <div class="animate-pulse space-y-3" aria-label="Loading the builder">
+        <div
+          class="animate-pulse space-y-3"
+          :aria-label="$t('Loading the builder')"
+        >
           <div class="h-16 rounded-xl bg-gray-200 dark:bg-gray-800" />
           <div class="mx-auto h-10 w-px bg-gray-200 dark:bg-gray-800" />
           <div class="h-16 rounded-xl bg-gray-200 dark:bg-gray-800" />
@@ -333,7 +351,7 @@ useEventListener(window, 'beforeunload', (event) => {
           color="white"
           @click="testResult = null"
         >
-          Clear results
+          {{ $t('Clear results') }}
         </AppButton>
       </div>
 
@@ -362,13 +380,13 @@ useEventListener(window, 'beforeunload', (event) => {
         v-if="form.isDirty"
         class="me-auto text-sm text-gray-500 dark:text-gray-400"
       >
-        Unsaved changes
+        {{ $t('Unsaved changes') }}
       </span>
       <AppButton type="button" color="white" @click="testing = true">
-        Test
+        {{ $t('Test') }}
       </AppButton>
       <AppButton type="button" color="white" @click="router.visit(index().url)">
-        {{ form.isDirty ? 'Discard' : 'Back' }}
+        {{ form.isDirty ? $t('Discard') : $t('Back') }}
       </AppButton>
       <AppButton
         type="submit"
@@ -376,7 +394,7 @@ useEventListener(window, 'beforeunload', (event) => {
         :loading="form.processing"
         :disabled="!form.isDirty && !!automation"
       >
-        Save
+        {{ $t('Save') }}
       </AppButton>
       <AppButton
         v-if="!automation?.enabled"
@@ -384,7 +402,7 @@ useEventListener(window, 'beforeunload', (event) => {
         :loading="form.processing"
         @click="save(true)"
       >
-        Save &amp; enable
+        {{ $t('Save & enable') }}
       </AppButton>
     </div>
   </form>

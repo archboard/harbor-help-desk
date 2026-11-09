@@ -13,11 +13,15 @@ const config = defineModel<{ sla_policy_id?: string | null }>({
 <template>
   <SelectField
     :model-value="config.sla_policy_id ?? null"
-    label="SLA policy"
+    :label="$t('SLA policy')"
     :options="
       slaPolicies.map((policy) => ({ value: policy.id, label: policy.name }))
     "
-    help-text="Choose no policy to clear the ticket's own, so its desk's policy applies."
+    :help-text="
+      $t(
+        'Choose no policy to clear the ticket\'s own, so its desk\'s policy applies.',
+      )
+    "
     :error="errors.sla_policy_id"
     @update:model-value="config.sla_policy_id = ($event as string) || null"
   />

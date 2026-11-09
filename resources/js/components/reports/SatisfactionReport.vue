@@ -21,24 +21,29 @@ const { data } = defineProps<{
 <template>
   <div class="space-y-6">
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <KpiTile label="Score" :kpi="data.score" kind="percent" />
-      <KpiTile label="Rated good" :kpi="data.good" kind="count" />
-      <KpiTile label="Rated bad" :kpi="data.bad" kind="count" goodWhen="down" />
+      <KpiTile :label="$t('Score')" :kpi="data.score" kind="percent" />
+      <KpiTile :label="$t('Rated good')" :kpi="data.good" kind="count" />
       <KpiTile
-        label="Surveys answered"
+        :label="$t('Rated bad')"
+        :kpi="data.bad"
+        kind="count"
+        goodWhen="down"
+      />
+      <KpiTile
+        :label="$t('Surveys answered')"
         :kpi="data.response_rate"
         kind="percent"
       />
     </div>
 
     <div class="grid gap-6 lg:grid-cols-3">
-      <ReportCard title="Score over time" class="lg:col-span-2">
+      <ReportCard :title="$t('Score over time')" class="lg:col-span-2">
         <Chart
-          label="Satisfaction score over time"
+          :label="$t('Satisfaction score over time')"
           :option="
             lineChart(
               data.trend,
-              [{ key: 'score', label: 'Score' }],
+              [{ key: 'score', label: $t('Score') }],
               'percent',
               data.period.bucket,
             )
@@ -46,14 +51,14 @@ const { data } = defineProps<{
         />
       </ReportCard>
 
-      <ReportCard title="By desk">
+      <ReportCard :title="$t('By desk')">
         <Table hide-shadow>
           <Thead>
             <tr>
-              <Th>Desk</Th>
-              <Th right>Good</Th>
-              <Th right>Bad</Th>
-              <Th right>Score</Th>
+              <Th>{{ $t('Desk') }}</Th>
+              <Th right>{{ $t('Good') }}</Th>
+              <Th right>{{ $t('Bad') }}</Th>
+              <Th right>{{ $t('Score') }}</Th>
             </tr>
           </Thead>
           <Tbody>
@@ -66,14 +71,14 @@ const { data } = defineProps<{
               }}</Td>
             </tr>
             <tr v-if="data.by_desk.length === 0">
-              <Td :colspan="4">No ratings yet.</Td>
+              <Td :colspan="4">{{ $t('No ratings yet.') }}</Td>
             </tr>
           </Tbody>
         </Table>
       </ReportCard>
     </div>
 
-    <ReportCard title="Latest comments">
+    <ReportCard :title="$t('Latest comments')">
       <ul
         v-if="data.comments.length"
         class="divide-y divide-gray-100 dark:divide-gray-800"
@@ -84,7 +89,7 @@ const { data } = defineProps<{
           class="flex gap-4 py-3"
         >
           <Pill :color="comment.rating === 'good' ? 'green' : 'red'">
-            {{ comment.rating === 'good' ? 'Good' : 'Bad' }}
+            {{ comment.rating === 'good' ? $t('Good') : $t('Bad') }}
           </Pill>
           <div class="min-w-0 flex-1">
             <p class="text-sm whitespace-pre-line">{{ comment.comment }}</p>
@@ -101,7 +106,7 @@ const { data } = defineProps<{
         </li>
       </ul>
       <p v-else class="text-sm text-gray-500 dark:text-gray-400">
-        No comments in this period.
+        {{ $t('No comments in this period.') }}
       </p>
     </ReportCard>
   </div>

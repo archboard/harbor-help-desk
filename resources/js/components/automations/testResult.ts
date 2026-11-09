@@ -1,3 +1,5 @@
+import { trans } from 'laravel-vue-i18n';
+
 /**
  * What a test run reports, typed from the entries {@see App\Automations\Engine} and
  * {@see App\Automations\ConditionEvaluator} write: a run's log has the same shape.
@@ -63,7 +65,7 @@ export function statusOf(entry: LogEntry | undefined): StepStatus {
 /** The line a step card shows under its header. */
 export function noteOf(entry: LogEntry | undefined): string | undefined {
   if (!entry) {
-    return 'Not reached.';
+    return trans('Not reached.');
   }
 
   if (entry.error) {
@@ -76,17 +78,17 @@ export function noteOf(entry: LogEntry | undefined): string | undefined {
     case 'delay':
       return entry.note;
     case 'stop':
-      return 'Stopped: later steps and automations are skipped.';
+      return trans('Stopped: later steps and automations are skipped.');
     case 'condition':
       return entry.passed
-        ? 'Passed.'
-        : 'Did not pass: the steps after it did not run.';
+        ? trans('Passed.')
+        : trans('Did not pass: the steps after it did not run.');
     case 'paths':
       return entry.branch === 'else'
-        ? 'Took “Otherwise”.'
+        ? trans('Took “Otherwise”.')
         : entry.branch
-          ? `Took “${entry.branch}”.`
-          : 'No path matched.';
+          ? trans('Took “:branch”.', { branch: entry.branch })
+          : trans('No path matched.');
     default:
       return undefined;
   }

@@ -11,7 +11,7 @@ const config = defineModel<{ desk_id?: string | null }>({ required: true });
 <template>
   <SelectField
     v-model="config.desk_id"
-    label="Desk"
+    :label="$t('Desk')"
     required
     :options="moveDesks.map((desk) => ({ value: desk.id, label: desk.name }))"
     :error="errors.desk_id"

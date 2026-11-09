@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { GripVertical, Plus, Trash2 } from '@lucide/vue';
+import { trans } from 'laravel-vue-i18n';
+import { computed } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import AppSelect from '@/components/forms/AppSelect.vue';
 import FieldError from '@/components/forms/FieldError.vue';
@@ -39,6 +41,11 @@ const emit = defineEmits<{ remove: [] }>();
 
 const group = defineModel<Group>({ required: true });
 
+const matchOptions = computed(() => [
+  { value: 'all', label: trans('all rules') },
+  { value: 'any', label: trans('any rule') },
+]);
+
 const groupError = (): string | undefined =>
   errors.match ?? errors.rules ?? errors[''];
 
@@ -53,15 +60,14 @@ function move(from: number, to: number): void {
     :class="{ 'bg-gray-50 dark:bg-gray-800/40': depth % 2 === 0 }"
   >
     <div class="flex flex-wrap items-center gap-2">
-      <span class="text-sm text-gray-700 dark:text-gray-300">Match</span>
+      <span class="text-sm text-gray-700 dark:text-gray-300">{{
+        $t('Match')
+      }}</span>
       <div class="w-28">
         <AppSelect
           hide-null
-          aria-label="Match mode"
-          :options="[
-            { value: 'all', label: 'all rules' },
-            { value: 'any', label: 'any rule' },
-          ]"
+          :aria-label="$t('Match mode')"
+          :options="matchOptions"
           :model-value="group.match"
           @update:model-value="group.match = $event as Group['match']"
         />
@@ -75,7 +81,7 @@ function move(from: number, to: number): void {
         @click="emit('remove')"
       >
         <Trash2 class="size-3" aria-hidden="true" />
-        <span class="sr-only">Remove group</span>
+        <span class="sr-only">{{ $t('Remove group') }}</span>
       </AppButton>
     </div>
 
@@ -83,7 +89,7 @@ function move(from: number, to: number): void {
       v-if="!group.rules.length"
       class="text-sm text-gray-500 dark:text-gray-400"
     >
-      No rules yet. A condition without rules always passes.
+      {{ $t('No rules yet. A condition without rules always passes.') }}
     </p>
 
     <SortableList class="space-y-3" @reorder="move">
@@ -126,7 +132,7 @@ function move(from: number, to: number): void {
             @click="group.rules.splice(index, 1)"
           >
             <Trash2 class="size-3" aria-hidden="true" />
-            <span class="sr-only">Remove rule</span>
+            <span class="sr-only">{{ $t('Remove rule') }}</span>
           </AppButton>
         </template>
       </div>
@@ -142,7 +148,7 @@ function move(from: number, to: number): void {
         @click="group.rules.push(newRule())"
       >
         <Plus class="size-3" aria-hidden="true" />
-        Rule
+        {{ $t('Rule') }}
       </AppButton>
       <AppButton
         v-if="depth < MAX_DEPTH"
@@ -152,7 +158,7 @@ function move(from: number, to: number): void {
         @click="group.rules.push(newGroup())"
       >
         <Plus class="size-3" aria-hidden="true" />
-        Group
+        {{ $t('Group') }}
       </AppButton>
     </div>
   </div>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { computed, ref } from 'vue';
 import AppInput from '@/components/forms/AppInput.vue';
 import AppSelect from '@/components/forms/AppSelect.vue';
@@ -18,7 +19,7 @@ export type Interval = {
 const {
   schedules = [],
   relative = false,
-  directions = ['ago', 'from now'],
+  directions = [trans('ago'), trans('from now')],
   errors = {},
 } = defineProps<{
   schedules?: App.Data.BusinessSchedules.BusinessScheduleData[];
@@ -33,11 +34,11 @@ const model = defineModel<Interval>({
   default: () => ({ amount: 1, unit: 'days' }),
 });
 
-const units = [
-  { value: 'minutes', label: 'Minutes' },
-  { value: 'hours', label: 'Hours' },
-  { value: 'days', label: 'Days' },
-];
+const units = computed(() => [
+  { value: 'minutes', label: trans('Minutes') },
+  { value: 'hours', label: trans('Hours') },
+  { value: 'days', label: trans('Days') },
+]);
 
 const past = ref(model.value.amount <= 0);
 const size = computed(() => Math.abs(model.value.amount));
@@ -71,7 +72,7 @@ const message = computed(
         <AppInput
           type="number"
           min="0"
-          aria-label="Amount"
+          :aria-label="$t('Amount')"
           :has-error="!!errors.amount"
           :model-value="size"
           @update:model-value="setAmount"
@@ -80,7 +81,7 @@ const message = computed(
       <div class="w-32">
         <AppSelect
           hide-null
-          aria-label="Unit"
+          :aria-label="$t('Unit')"
           :has-error="!!errors.unit"
           :options="units"
           :model-value="model.unit"
@@ -90,7 +91,7 @@ const message = computed(
       <div v-if="relative" class="w-32">
         <AppSelect
           hide-null
-          aria-label="Direction"
+          :aria-label="$t('Direction')"
           :options="[
             { value: 'ago', label: directions[0] },
             { value: 'from_now', label: directions[1] },
@@ -101,14 +102,16 @@ const message = computed(
       </div>
       <div v-if="schedules.length" class="w-48">
         <AppSelect
-          null-option="Calendar time"
+          :null-option="$t('Calendar time')"
           clearable
-          aria-label="Business schedule"
+          :aria-label="$t('Business schedule')"
           :has-error="!!errors.business_schedule_id"
           :options="
             schedules.map((schedule) => ({
               value: schedule.id,
-              label: `Business hours: ${schedule.name}`,
+              label: $t('Business hours: :name', {
+                name: schedule.name,
+              }),
             }))
           "
           :model-value="model.business_schedule_id ?? null"

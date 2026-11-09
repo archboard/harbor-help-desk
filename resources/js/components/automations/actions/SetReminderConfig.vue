@@ -26,7 +26,7 @@ if (!config.value.after) {
 <template>
   <div class="space-y-4">
     <div class="space-y-1">
-      <AppLabel :has-error="!!errors.after">Remind after</AppLabel>
+      <AppLabel :has-error="!!errors.after">{{ $t('Remind after') }}</AppLabel>
       <DurationInput
         v-model="config.after as Interval"
         :schedules="schedules"
@@ -40,7 +40,7 @@ if (!config.value.after) {
       v-model="config.note"
       :catalog="catalog"
       :trigger="trigger"
-      label="Note"
+      :label="$t('Note')"
       :error="errors.note"
     />
   </div>

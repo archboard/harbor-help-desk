@@ -7,6 +7,7 @@ import {
   setLayoutProps,
 } from '@inertiajs/vue3';
 import { watchDebounced } from '@vueuse/core';
+import { trans } from 'laravel-vue-i18n';
 import { ref, watchEffect } from 'vue';
 import AutomationTabs from '@/components/automations/AutomationTabs.vue';
 import { runDuration, statusColors } from '@/components/automations/runStatus';
@@ -38,7 +39,7 @@ const { automation, filters } = defineProps<{
 
 watchEffect(() =>
   setLayoutProps({
-    title: automation ? 'Automation history' : 'Automation runs',
+    title: automation ? trans('Automation history') : trans('Automation runs'),
   }),
 );
 
@@ -81,7 +82,9 @@ if (automation) {
 </script>
 
 <template>
-  <Head :title="automation ? 'Automation history' : 'Automation runs'" />
+  <Head
+    :title="automation ? $t('Automation history') : $t('Automation runs')"
+  />
 
   <div class="space-y-6">
     <AutomationTabs
@@ -94,17 +97,17 @@ if (automation) {
       <AppSelect
         v-model="status"
         class="sm:w-48"
-        null-option="Any status"
+        :null-option="$t('Any status')"
         clearable
         :options="statuses"
-        aria-label="Status"
+        :aria-label="$t('Status')"
       />
       <AppInput
         v-model="ticketNumber"
         type="number"
         min="1"
-        placeholder="Ticket number"
-        aria-label="Ticket number"
+        :placeholder="$t('Ticket number')"
+        :aria-label="$t('Ticket number')"
         class="sm:w-48"
       />
     </div>
@@ -113,12 +116,12 @@ if (automation) {
       <Table>
         <Thead>
           <tr>
-            <Th>Time</Th>
-            <Th v-if="!automation">Automation</Th>
-            <Th>Ticket</Th>
-            <Th>Status</Th>
-            <Th>Duration</Th>
-            <Th right>Depth</Th>
+            <Th>{{ $t('Time') }}</Th>
+            <Th v-if="!automation">{{ $t('Automation') }}</Th>
+            <Th>{{ $t('Ticket') }}</Th>
+            <Th>{{ $t('Status') }}</Th>
+            <Th>{{ $t('Duration') }}</Th>
+            <Th right>{{ $t('Depth') }}</Th>
           </tr>
         </Thead>
         <Tbody>
@@ -140,7 +143,7 @@ if (automation) {
               >
                 #{{ run.ticket_number }} {{ run.ticket_subject }}
               </Link>
-              <span v-else class="text-gray-500">None</span>
+              <span v-else class="text-gray-500">{{ $t('None') }}</span>
             </Td>
             <Td>
               <Pill :color="statusColors[run.status]">
@@ -162,8 +165,8 @@ if (automation) {
     <p v-else class="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
       {{
         status || ticketNumber
-          ? 'No runs match these filters.'
-          : 'No runs yet. Runs are kept for 30 days.'
+          ? $t('No runs match these filters.')
+          : $t('No runs yet. Runs are kept for 30 days.')
       }}
     </p>
   </div>

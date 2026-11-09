@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { computed, inject } from 'vue';
 import AppSelect from '@/components/forms/AppSelect.vue';
 import FieldError from '@/components/forms/FieldError.vue';
@@ -41,14 +42,14 @@ function show(value: unknown): string {
     return (
       value
         .map(show)
-        .filter((item) => item !== 'nothing')
-        .join(', ') || 'nothing'
+        .filter((item) => item !== trans('nothing'))
+        .join(', ') || trans('nothing')
     );
   }
 
   const text = valueText(field.value, value);
 
-  return names?.value[text] ?? (text || 'nothing');
+  return names?.value[text] ?? (text || trans('nothing'));
 }
 
 const field = computed(() => fieldFor(catalog, rule.value.field));
@@ -113,7 +114,7 @@ function setOperator(operator: Rule['operator']): void {
     <div class="space-y-1">
       <AppSelect
         hide-null
-        aria-label="Operator"
+        :aria-label="$t('Operator')"
         :disabled="!field"
         :has-error="!!errors.operator"
         :options="
@@ -147,11 +148,15 @@ function setOperator(operator: Rule['operator']): void {
           : 'text-red-600 dark:text-red-400'
       "
     >
-      {{ result.passed ? 'Pass' : 'Fail' }}:
+      {{ result.passed ? $t('Pass') : $t('Fail') }}:
       <template v-if="result.error">{{ result.error }}</template>
       <template v-else>
-        the ticket has {{ show(result.actual) }}, the rule expects
-        {{ show(result.expected) }}.
+        {{
+          $t('the ticket has :actual, the rule expects :expected.', {
+            actual: show(result.actual),
+            expected: show(result.expected),
+          })
+        }}
       </template>
     </p>
   </div>

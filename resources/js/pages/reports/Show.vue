@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
+import { trans } from 'laravel-vue-i18n';
 import { ref } from 'vue';
 import AgentsReport from '@/components/reports/AgentsReport.vue';
 import OverviewReport from '@/components/reports/OverviewReport.vue';
@@ -11,7 +12,7 @@ import SatisfactionReport from '@/components/reports/SatisfactionReport.vue';
 import SlaReport from '@/components/reports/SlaReport.vue';
 import { show } from '@/routes/reports';
 
-defineOptions({ layout: { title: 'Reports' } });
+defineOptions({ layout: { title: trans('Reports') } });
 
 type ReportData =
   | App.Data.Reports.OverviewReportData
@@ -52,11 +53,11 @@ function load(query: ReportQuery): void {
 
 <template>
   <div class="space-y-6">
-    <Head :title="`${reports[report]} report`" />
+    <Head :title="$t(':report report', { report: reports[report] })" />
 
     <nav
       class="flex gap-6 overflow-x-auto border-b border-gray-200 dark:border-gray-800"
-      aria-label="Reports"
+      :aria-label="$t('Reports')"
     >
       <Link
         v-for="(label, key) in reports"

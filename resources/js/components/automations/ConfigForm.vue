@@ -90,7 +90,7 @@ const text = (key: string): string | null =>
         :label="field.label"
         :options="choices[field.key] ?? options[field.key] ?? field.options"
         :required="field.required"
-        :null-option="field.required ? undefined : 'Any'"
+        :null-option="field.required ? undefined : $t('Any')"
         :error="errorFor(field.key)"
         @update:model-value="set(field.key, $event)"
       />
@@ -123,7 +123,7 @@ const text = (key: string): string | null =>
         :options="options[field.key]"
         :required="field.required"
         :help-text="
-          field.required ? undefined : 'Leave all unchecked to match any.'
+          field.required ? undefined : $t('Leave all unchecked to match any.')
         "
         :error="errorFor(field.key)"
         @update:model-value="set(field.key, $event.length ? $event : null)"
@@ -133,7 +133,7 @@ const text = (key: string): string | null =>
         :model-value="listText(field.key)"
         :label="field.label"
         :required="field.required"
-        help-text="Separate values with commas."
+        :help-text="$t('Separate values with commas.')"
         :error="errorFor(field.key)"
         @update:model-value="setList(field.key, $event)"
       />

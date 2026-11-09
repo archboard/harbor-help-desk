@@ -17,14 +17,14 @@ const config = defineModel<{ mode?: string; names?: string[] }>({
   <div class="space-y-4">
     <SelectField
       v-model="config.mode"
-      label="Mode"
+      :label="$t('Mode')"
       required
       :options="optionsOf(catalog, 'tags', 'mode')"
       :error="errors.mode"
     />
     <TagsInput
       v-model="config.names"
-      label="Tags"
+      :label="$t('Tags')"
       :options="fieldFor(catalog, 'ticket.tags')?.options"
       :error="
         errors.names ??

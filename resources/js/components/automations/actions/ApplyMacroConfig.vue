@@ -24,7 +24,7 @@ const options = computed(() =>
 <template>
   <SelectField
     v-model="config.macro_id"
-    label="Macro"
+    :label="$t('Macro')"
     required
     :options="options"
     :error="errors.macro_id"

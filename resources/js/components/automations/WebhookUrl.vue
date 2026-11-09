@@ -2,6 +2,7 @@
 import { useHttp } from '@inertiajs/vue3';
 import { Check, Copy } from '@lucide/vue';
 import { useClipboard } from '@vueuse/core';
+import { trans } from 'laravel-vue-i18n';
 import { computed, ref, watch } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import ConfirmationModal from '@/components/modals/ConfirmationModal.vue';
@@ -46,9 +47,9 @@ const curl = computed(
 );
 
 const items = computed(() => [
-  { key: 'url', label: 'URL', text: issued.value?.url ?? '' },
-  { key: 'token', label: 'Secret', text: issued.value?.token ?? '' },
-  { key: 'curl', label: 'Example request', text: curl.value },
+  { key: 'url', label: trans('URL'), text: issued.value?.url ?? '' },
+  { key: 'token', label: trans('Secret'), text: issued.value?.token ?? '' },
+  { key: 'curl', label: trans('Example request'), text: curl.value },
 ]);
 
 async function rotate(close?: () => void): Promise<void> {
@@ -63,7 +64,7 @@ async function rotate(close?: () => void): Promise<void> {
   } catch {
     error.value =
       Object.values<string>(http.errors)[0] ??
-      'The secret could not be rotated.';
+      trans('The secret could not be rotated.');
     close?.();
   }
 }
@@ -79,17 +80,17 @@ async function copyText(key: string, text: string): Promise<void> {
     class="space-y-3 rounded-lg border border-gray-200 p-3 dark:border-gray-700"
   >
     <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
-      Webhook URL
+      {{ $t('Webhook URL') }}
     </p>
 
     <p v-if="!automation" class="text-sm text-gray-500 dark:text-gray-400">
-      Save the automation to get its secret URL.
+      {{ $t('Save the automation to get its secret URL.') }}
     </p>
     <p
       v-else-if="automation.definition.trigger.type !== 'webhook'"
       class="text-sm text-gray-500 dark:text-gray-400"
     >
-      Save the new trigger to get a secret URL.
+      {{ $t('Save the new trigger to get a secret URL.') }}
     </p>
     <template v-else>
       <p class="text-sm break-all text-gray-600 dark:text-gray-300">
@@ -98,8 +99,10 @@ async function copyText(key: string, text: string): Promise<void> {
       <p class="text-sm text-gray-500 dark:text-gray-400">
         {{
           hasSecret
-            ? 'The secret is stored hashed, so the full URL can only be shown when you rotate it.'
-            : 'No secret has been made yet, so the URL does not work.'
+            ? $t(
+                'The secret is stored hashed, so the full URL can only be shown when you rotate it.',
+              )
+            : $t('No secret has been made yet, so the URL does not work.')
         }}
       </p>
       <p v-if="error" class="text-sm text-red-600 dark:text-red-400">
@@ -112,7 +115,7 @@ async function copyText(key: string, text: string): Promise<void> {
         :loading="http.processing"
         @click="hasSecret ? (confirming = true) : rotate()"
       >
-        {{ hasSecret ? 'Rotate secret' : 'Create secret' }}
+        {{ hasSecret ? $t('Rotate secret') : $t('Create secret') }}
       </AppButton>
     </template>
   </div>
@@ -123,21 +126,24 @@ async function copyText(key: string, text: string): Promise<void> {
     @close="confirming = false"
     @confirmed="rotate"
   >
-    <template #headline>Rotate the secret?</template>
-    The current URL stops working at once, so anything that calls it needs the
-    new one.
-    <template #actionText>Rotate secret</template>
+    <template #headline>{{ $t('Rotate the secret?') }}</template>
+    {{
+      $t(
+        'The current URL stops working at once, so anything that calls it needs the new one.',
+      )
+    }}
+    <template #actionText>{{ $t('Rotate secret') }}</template>
   </ConfirmationModal>
 
   <Modal
     v-if="issued"
-    headline="Your webhook URL"
+    :headline="$t('Your webhook URL')"
     size="2xl"
     @close="issued = null"
   >
     <div class="space-y-4">
       <p class="text-sm text-gray-600 dark:text-gray-300">
-        Copy it now: the secret is not shown again.
+        {{ $t('Copy it now: the secret is not shown again.') }}
       </p>
 
       <div v-for="item in items" :key="item.key" class="space-y-1">
@@ -157,7 +163,7 @@ async function copyText(key: string, text: string): Promise<void> {
               aria-hidden="true"
             />
             <Copy v-else class="size-3" aria-hidden="true" />
-            {{ copied === item.key ? 'Copied' : 'Copy' }}
+            {{ copied === item.key ? $t('Copied') : $t('Copy') }}
           </AppButton>
         </div>
         <pre

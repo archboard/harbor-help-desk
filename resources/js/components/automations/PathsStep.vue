@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Plus, Trash2 } from '@lucide/vue';
+import { trans } from 'laravel-vue-i18n';
 import { computed, inject } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import AppInput from '@/components/forms/AppInput.vue';
@@ -53,10 +54,10 @@ function removeBranch(index: number): void {
   notify(
     {
       level: 'neutral',
-      title: 'Path deleted',
+      title: trans('Path deleted'),
       text: branch.name,
       action: {
-        label: 'Undo',
+        label: trans('Undo'),
         onClick: () =>
           step.value.branches.splice(
             Math.min(index, step.value.branches.length),
@@ -86,7 +87,7 @@ function removeBranch(index: number): void {
             <div class="min-w-0 flex-1 space-y-1">
               <AppInput
                 v-model="branch.name"
-                aria-label="Path name"
+                :aria-label="$t('Path name')"
                 :has-error="!!errors[`branches.${index}.name`]"
               />
               <FieldError v-if="errors[`branches.${index}.name`]">
@@ -102,12 +103,12 @@ function removeBranch(index: number): void {
               @click="removeBranch(index)"
             >
               <Trash2 class="size-3" aria-hidden="true" />
-              <span class="sr-only">Delete path</span>
+              <span class="sr-only">{{ $t('Delete path') }}</span>
             </AppButton>
           </div>
 
           <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
-            If the ticket matches
+            {{ $t('If the ticket matches') }}
           </p>
           <ConditionGroup
             v-model="branch.condition"
@@ -121,7 +122,9 @@ function removeBranch(index: number): void {
           />
         </fieldset>
 
-        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Then</p>
+        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
+          {{ $t('Then') }}
+        </p>
         <StepList v-model="branch.steps" :depth="depth" :parent-id="step.id" />
       </section>
 
@@ -132,10 +135,10 @@ function removeBranch(index: number): void {
         "
       >
         <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
-          Otherwise
+          {{ $t('Otherwise') }}
         </p>
         <p class="text-sm text-gray-500 dark:text-gray-400">
-          Runs when no path above matches.
+          {{ $t('Runs when no path above matches.') }}
         </p>
         <StepList v-model="step.else" :depth="depth" :parent-id="step.id" />
       </section>
@@ -149,7 +152,7 @@ function removeBranch(index: number): void {
       @click="step.branches.push(newBranch(step.branches.length))"
     >
       <Plus class="size-3" aria-hidden="true" />
-      Path
+      {{ $t('Path') }}
     </AppButton>
   </div>
 </template>

@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import { trans } from 'laravel-vue-i18n';
 import { computed } from 'vue';
 import { triggerIcon } from '@/components/automations/triggerIcons';
 import AppButton from '@/components/AppButton.vue';
 import { create, index } from '@/routes/automations';
 
-defineOptions({ layout: { title: 'New automation' } });
+defineOptions({ layout: { title: trans('New automation') } });
 
 const { templates } = defineProps<{
   templates: App.Data.Automations.AutomationTemplateData[];
@@ -23,7 +24,7 @@ const categories = computed(() =>
 </script>
 
 <template>
-  <Head title="New automation" />
+  <Head :title="$t('New automation')" />
 
   <div class="space-y-8">
     <div
@@ -31,18 +32,20 @@ const categories = computed(() =>
     >
       <div>
         <h2 class="text-base font-semibold text-gray-900 dark:text-white">
-          Start from scratch
+          {{ $t('Start from scratch') }}
         </h2>
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Build an automation step by step, starting with an empty flow.
+          {{
+            $t('Build an automation step by step, starting with an empty flow.')
+          }}
         </p>
       </div>
       <div class="flex gap-2">
         <AppButton :component="Link" :href="index().url" color="white">
-          Back
+          {{ $t('Back') }}
         </AppButton>
         <AppButton :component="Link" :href="create().url">
-          Start from scratch
+          {{ $t('Start from scratch') }}
         </AppButton>
       </div>
     </div>

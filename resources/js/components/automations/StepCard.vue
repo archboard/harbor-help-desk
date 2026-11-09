@@ -6,6 +6,8 @@ import {
   GripVertical,
   Trash2,
 } from '@lucide/vue';
+import { trans } from 'laravel-vue-i18n';
+import { computed } from 'vue';
 import type { Component } from 'vue';
 import Pill from '@/components/Pill.vue';
 import type { StepStatus } from './testResult';
@@ -50,11 +52,14 @@ const emit = defineEmits<{ move: [offset: -1 | 1]; remove: [] }>();
 
 const open = defineModel<boolean>('open', { default: false });
 
-const statuses = {
-  pass: { color: 'green', label: 'Pass' },
-  fail: { color: 'red', label: 'Fail' },
-  skip: { color: 'gray', label: 'Skipped' },
-} as const;
+const statuses = computed(
+  () =>
+    ({
+      pass: { color: 'green', label: trans('Pass') },
+      fail: { color: 'red', label: trans('Fail') },
+      skip: { color: 'gray', label: trans('Skipped') },
+    }) as const,
+);
 </script>
 
 <template>
@@ -122,7 +127,7 @@ const statuses = {
           @click="emit('move', -1)"
         >
           <ArrowUp class="size-3" aria-hidden="true" />
-          <span class="sr-only">Move up</span>
+          <span class="sr-only">{{ $t('Move up') }}</span>
         </AppButton>
         <AppButton
           type="button"
@@ -132,7 +137,7 @@ const statuses = {
           @click="emit('move', 1)"
         >
           <ArrowDown class="size-3" aria-hidden="true" />
-          <span class="sr-only">Move down</span>
+          <span class="sr-only">{{ $t('Move down') }}</span>
         </AppButton>
       </template>
       <AppButton
@@ -143,7 +148,7 @@ const statuses = {
         @click="emit('remove')"
       >
         <Trash2 class="size-3" aria-hidden="true" />
-        <span class="sr-only">Delete step</span>
+        <span class="sr-only">{{ $t('Delete step') }}</span>
       </AppButton>
     </div>
 

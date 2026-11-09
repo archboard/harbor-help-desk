@@ -1,3 +1,4 @@
+import { trans, transChoice } from 'laravel-vue-i18n';
 import type { Step } from './steps';
 import { parseConfigRules } from './configRules';
 
@@ -25,8 +26,39 @@ export function fieldFor(catalog: Catalog, key: string): Field | undefined {
   return fields.get(key);
 }
 
-const plural = (amount: number, unit: string): string =>
-  `${amount} ${amount === 1 ? unit.replace(/s$/, '') : unit}`;
+/** "3 days", "1 hour", "2 business hours". */
+function plural(amount: number, unit: string, business = false): string {
+  const count = { count: String(amount) };
+
+  switch (unit) {
+    case 'minutes':
+      return business
+        ? transChoice(
+            '{1} :count business minute|[0,*] :count business minutes',
+            amount,
+            count,
+          )
+        : transChoice('{1} :count minute|[0,*] :count minutes', amount, count);
+    case 'hours':
+      return business
+        ? transChoice(
+            '{1} :count business hour|[0,*] :count business hours',
+            amount,
+            count,
+          )
+        : transChoice('{1} :count hour|[0,*] :count hours', amount, count);
+    case 'days':
+      return business
+        ? transChoice(
+            '{1} :count business day|[0,*] :count business days',
+            amount,
+            count,
+          )
+        : transChoice('{1} :count day|[0,*] :count days', amount, count);
+    default:
+      return `${amount} ${unit}`;
+  }
+}
 
 /** "3 days ago", "in 2 hours" for a signed amount, negative being in the past. */
 function relativeText(amount?: number, unit?: string): string {
@@ -35,12 +67,12 @@ function relativeText(amount?: number, unit?: string): string {
   }
 
   if (amount === 0) {
-    return 'now';
+    return trans('now');
   }
 
   return amount < 0
-    ? `${plural(-amount, unit)} ago`
-    : `in ${plural(amount, unit)}`;
+    ? trans(':duration ago', { duration: plural(-amount, unit) })
+    : trans('in :duration', { duration: plural(amount, unit) });
 }
 
 export function valueText(field: Field | undefined, value: unknown): string {
@@ -49,7 +81,7 @@ export function valueText(field: Field | undefined, value: unknown): string {
   }
 
   if (typeof value === 'boolean') {
-    return value ? 'Yes' : 'No';
+    return value ? trans('Yes') : trans('No');
   }
 
   if (Array.isArray(value)) {
@@ -112,7 +144,9 @@ export function conditionText(
         : ruleText(node, catalog),
     )
     .filter(Boolean);
-  const text = parts.join(group.match === 'any' ? ' or ' : ' and ');
+  const text = parts.join(
+    group.match === 'any' ? ` ${trans('or')} ` : ` ${trans('and')} `,
+  );
 
   return nested && parts.length > 1 ? `(${text})` : text;
 }
@@ -155,39 +189,54 @@ function actionText(
   switch (action) {
     case 'tags': {
       const tags = Array.isArray(config.names) ? config.names.join(', ') : '';
-      const verb = { remove: 'Remove', replace: 'Replace' }[
-        String(config.mode)
-      ];
+      if (!tags) {
+        return null;
+      }
 
-      return tags ? `${verb ?? 'Add'} tags ${truncate(tags)}` : null;
+      switch (config.mode) {
+        case 'remove':
+          return trans('Remove tags :tags', { tags: truncate(tags) });
+        case 'replace':
+          return trans('Replace tags :tags', { tags: truncate(tags) });
+        default:
+          return trans('Add tags :tags', { tags: truncate(tags) });
+      }
     }
     case 'assign': {
       const people = list(config.user_ids);
 
       switch (config.mode) {
         case 'unassign_all':
-          return 'Unassign everyone';
+          return trans('Unassign everyone');
         case 'add':
-          return people ? `Assign to ${truncate(people)}` : null;
+          return people
+            ? trans('Assign to :people', { people: truncate(people) })
+            : null;
         case 'replace':
-          return people ? `Set assignees to ${truncate(people)}` : null;
+          return people
+            ? trans('Set assignees to :people', { people: truncate(people) })
+            : null;
         case 'round_robin':
-          return 'Assign by round robin';
+          return trans('Assign by round robin');
         case 'load_balanced':
-          return 'Assign by load balancing';
+          return trans('Assign by load balancing');
         default:
           return null;
       }
     }
     case 'move_desk':
-      return name(config.desk_id) ? `Move to ${name(config.desk_id)}` : null;
+      return name(config.desk_id)
+        ? trans('Move to :desk', { desk: name(config.desk_id) })
+        : null;
     case 'apply_macro':
       return name(config.macro_id)
-        ? `Apply the macro ${name(config.macro_id)}`
+        ? trans('Apply the macro :macro', { macro: name(config.macro_id) })
         : null;
     case 'set_sla_policy':
       return name(config.sla_policy_id)
-        ? `Set the SLA policy to ${name(config.sla_policy_id)}`
+        ? trans('Set the SLA policy to :policy', {
+            policy: name(config.sla_policy_id),
+          })
         : null;
     case 'send_webhook':
       return config.url
@@ -195,20 +244,27 @@ function actionText(
         : null;
     case 'notify':
       return config.subject
-        ? `Notify: ${truncate(text(config.subject))}`
+        ? trans('Notify: :subject', { subject: truncate(text(config.subject)) })
         : null;
     case 'add_note':
     case 'send_reply':
-      return config.body
-        ? `${action === 'add_note' ? 'Add a note' : 'Send a reply'}: ${truncate(text(config.body).replace(/\s+/g, ' '))}`
-        : null;
+      if (!config.body) {
+        return null;
+      }
+
+      return trans(
+        action === 'add_note' ? 'Add a note: :body' : 'Send a reply: :body',
+        { body: truncate(text(config.body).replace(/\s+/g, ' ')) },
+      );
     case 'set_reminder': {
       const after = config.after as
         | { amount?: number; unit?: string }
         | undefined;
 
       return after?.amount && after.unit
-        ? `Remind in ${plural(after.amount, after.unit)}`
+        ? trans('Remind in :duration', {
+            duration: plural(after.amount, after.unit),
+          })
         : null;
     }
     default:
@@ -223,28 +279,33 @@ export function summarizeStep(
 ): string {
   switch (step.type) {
     case 'condition':
-      return `Only continue if ${conditionText(step, catalog) || '(no rules yet)'}`;
+      return trans('Only continue if :condition', {
+        condition: conditionText(step, catalog) || trans('(no rules yet)'),
+      });
     case 'action':
       if (step.action === 'set_field' && step.config.field) {
         const field = fieldFor(catalog, String(step.config.field));
 
         if (field) {
-          return `Set ${field.label} to ${valueText(field, step.config.value) || 'nothing'}`;
+          return trans('Set :field to :value', {
+            field: field.label,
+            value: valueText(field, step.config.value) || trans('nothing'),
+          });
         }
       }
 
       return (
         actionText(step.action, step.config, names) ??
         catalog.actions.find((action) => action.key === step.action)?.label ??
-        (step.action || 'Choose an action')
+        (step.action || trans('Choose an action'))
       );
     case 'delay': {
       if (step.for) {
         const { amount, unit, business_schedule_id: schedule } = step.for;
 
-        return schedule
-          ? `Wait ${amount} business ${amount === 1 ? unit.replace(/s$/, '') : unit}`
-          : `Wait ${plural(amount, unit)}`;
+        return trans('Wait :duration', {
+          duration: plural(amount, unit, !!schedule),
+        });
       }
 
       if (step.until) {
@@ -252,25 +313,41 @@ export function summarizeStep(
           fieldFor(catalog, step.until.field)?.label ?? step.until.field;
         const offset = step.until.offset;
 
-        return offset
-          ? `Wait until ${minutesText(Math.abs(offset))} ${offset < 0 ? 'before' : 'after'} ${label}`
-          : `Wait until ${label}`;
+        if (!offset) {
+          return trans('Wait until :field', { field: label });
+        }
+
+        return trans(
+          offset < 0
+            ? 'Wait until :duration before :field'
+            : 'Wait until :duration after :field',
+          { duration: minutesText(Math.abs(offset)), field: label },
+        );
       }
 
-      return 'Wait';
+      return trans('Wait');
     }
     case 'paths': {
-      const names = step.branches.map((branch) => branch.name || 'Unnamed');
+      const names = step.branches.map(
+        (branch) => branch.name || trans('Unnamed'),
+      );
 
-      return `${plural(names.length, 'paths')}: ${[
-        ...names,
-        ...(step.else.length ? ['otherwise'] : []),
-      ].join(', ')}`;
+      return transChoice(
+        '{1} :count path: :names|[0,*] :count paths: :names',
+        names.length,
+        {
+          count: String(names.length),
+          names: [
+            ...names,
+            ...(step.else.length ? [trans('otherwise')] : []),
+          ].join(', '),
+        },
+      );
     }
     case 'stop':
-      return 'Stop';
+      return trans('Stop');
     default:
-      return 'Unknown step';
+      return trans('Unknown step');
   }
 }
 
@@ -283,12 +360,15 @@ export function cancelSummary(
     return undefined;
   }
 
-  return `Cancelled if: ${step.cancel_on
-    .map(
-      (type) =>
-        catalog.triggers.find((trigger) => trigger.key === type)?.label ?? type,
-    )
-    .join(', ')}`;
+  return trans('Cancelled if: :triggers', {
+    triggers: step.cancel_on
+      .map(
+        (type) =>
+          catalog.triggers.find((trigger) => trigger.key === type)?.label ??
+          type,
+      )
+      .join(', '),
+  });
 }
 
 export function summarizeTrigger(
@@ -297,7 +377,7 @@ export function summarizeTrigger(
 ): string {
   return (
     catalog.triggers.find((item) => item.key === trigger.type)?.label ??
-    (trigger.type || 'Choose a trigger')
+    (trigger.type || trans('Choose a trigger'))
   );
 }
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { EChartsOption } from 'echarts';
+import { trans, transChoice } from 'laravel-vue-i18n';
 import { computed } from 'vue';
 import Chart from '@/components/charts/Chart.vue';
 import KpiTile from '@/components/reports/KpiTile.vue';
@@ -11,10 +12,18 @@ import { barChart, lineChart } from '@/lib/reports';
 const { data } = defineProps<{ data: App.Data.Reports.OverviewReportData }>();
 
 const isDark = useIsDark();
-const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const heatmap = computed<EChartsOption>(() => {
   const tokens = chartTokens(isDark.value);
+  const weekdays = [
+    trans('Mon'),
+    trans('Tue'),
+    trans('Wed'),
+    trans('Thu'),
+    trans('Fri'),
+    trans('Sat'),
+    trans('Sun'),
+  ];
 
   return {
     grid: { left: 8, right: 8, top: 8, bottom: 8, containLabel: true },
@@ -23,7 +32,11 @@ const heatmap = computed<EChartsOption>(() => {
       formatter: (params) => {
         const [hour, day, count] = (params as { value: number[] }).value;
 
-        return `${weekdays[day]} ${String(hour).padStart(2, '0')}:00 · ${count} ticket${count === 1 ? '' : 's'}`;
+        return `${weekdays[day]} ${String(hour).padStart(2, '0')}:00 · ${transChoice(
+          '{1} :count ticket|[0,*] :count tickets',
+          count,
+          { count: String(count) },
+        )}`;
       },
     },
     xAxis: {
@@ -60,14 +73,14 @@ const heatmap = computed<EChartsOption>(() => {
   <div class="space-y-6">
     <div class="grid gap-4 sm:grid-cols-3">
       <KpiTile
-        label="Created"
+        :label="$t('Created')"
         :kpi="data.created"
         kind="count"
         goodWhen="neutral"
       />
-      <KpiTile label="Resolved" :kpi="data.resolved" kind="count" />
+      <KpiTile :label="$t('Resolved')" :kpi="data.resolved" kind="count" />
       <KpiTile
-        label="Reopened"
+        :label="$t('Reopened')"
         :kpi="data.reopened"
         kind="count"
         goodWhen="down"
@@ -75,15 +88,15 @@ const heatmap = computed<EChartsOption>(() => {
     </div>
 
     <div class="grid gap-6 lg:grid-cols-3">
-      <ReportCard title="Created vs resolved" class="lg:col-span-2">
+      <ReportCard :title="$t('Created vs resolved')" class="lg:col-span-2">
         <Chart
-          label="Tickets created and resolved over time"
+          :label="$t('Tickets created and resolved over time')"
           :option="
             lineChart(
               data.volume,
               [
-                { key: 'created', label: 'Created' },
-                { key: 'resolved', label: 'Resolved' },
+                { key: 'created', label: $t('Created') },
+                { key: 'resolved', label: $t('Resolved') },
               ],
               'count',
               data.period.bucket,
@@ -92,7 +105,7 @@ const heatmap = computed<EChartsOption>(() => {
         />
       </ReportCard>
 
-      <ReportCard title="Open now">
+      <ReportCard :title="$t('Open now')">
         <dl class="divide-y divide-gray-100 dark:divide-gray-800">
           <div
             v-for="status in data.backlog"
@@ -108,25 +121,25 @@ const heatmap = computed<EChartsOption>(() => {
       </ReportCard>
     </div>
 
-    <ReportCard title="When tickets arrive">
+    <ReportCard :title="$t('When tickets arrive')">
       <Chart
-        label="Tickets created by weekday and hour"
+        :label="$t('Tickets created by weekday and hour')"
         :option="heatmap"
         height="14rem"
       />
     </ReportCard>
 
     <div class="grid gap-6 lg:grid-cols-2">
-      <ReportCard title="By source">
+      <ReportCard :title="$t('By source')">
         <Chart
-          label="Tickets created by source"
+          :label="$t('Tickets created by source')"
           :option="barChart(data.by_source, true)"
           height="12rem"
         />
       </ReportCard>
-      <ReportCard title="By desk">
+      <ReportCard :title="$t('By desk')">
         <Chart
-          label="Tickets created by desk"
+          :label="$t('Tickets created by desk')"
           :option="barChart(data.by_desk, true)"
           height="12rem"
         />

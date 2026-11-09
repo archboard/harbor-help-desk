@@ -50,7 +50,7 @@ const types = computed(() =>
           class="relative inline-flex size-6 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-500 hover:border-primary-500 hover:text-primary-600 focus:ring-2 focus:ring-primary-500 focus:outline-hidden dark:border-gray-600 dark:bg-gray-800"
         >
           <Plus class="size-4" aria-hidden="true" />
-          <span class="sr-only">Add a step</span>
+          <span class="sr-only">{{ $t('Add a step') }}</span>
         </MenuButton>
         <AppMenuItems>
           <MenuItem

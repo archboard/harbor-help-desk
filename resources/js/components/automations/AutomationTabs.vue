@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
+import { trans } from 'laravel-vue-i18n';
+import { computed } from 'vue';
 import { edit } from '@/routes/automations';
 import { index } from '@/routes/automations/runs';
 
@@ -8,16 +10,23 @@ const { automationId, current } = defineProps<{
   current: 'builder' | 'history';
 }>();
 
-const tabs = [
-  { key: 'builder', label: 'Builder', href: edit(automationId).url },
-  { key: 'history', label: 'History', href: index(automationId).url },
-] as const;
+const tabs = computed(
+  () =>
+    [
+      { key: 'builder', label: trans('Builder'), href: edit(automationId).url },
+      {
+        key: 'history',
+        label: trans('History'),
+        href: index(automationId).url,
+      },
+    ] as const,
+);
 </script>
 
 <template>
   <nav
     class="flex gap-6 border-b border-gray-200 dark:border-gray-800"
-    aria-label="Automation"
+    :aria-label="$t('Automation')"
   >
     <Link
       v-for="tab in tabs"

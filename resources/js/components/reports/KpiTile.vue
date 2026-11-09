@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { computed } from 'vue';
 import type { ValueKind } from '@/lib/reports';
 import { formatValue } from '@/lib/reports';
@@ -24,7 +25,9 @@ const change = computed(() => {
   const difference = kpi.value - kpi.previous;
   const text =
     kind === 'percent'
-      ? `${Number(Math.abs(difference).toFixed(1))} pts`
+      ? trans(':count pts', {
+          count: String(Number(Math.abs(difference).toFixed(1))),
+        })
       : formatValue(Math.abs(difference), kind);
   const isGood =
     goodWhen === 'neutral' || difference === 0
@@ -56,20 +59,22 @@ const change = computed(() => {
           }}</span>
           <span class="sr-only">{{
             change.difference > 0
-              ? 'Up'
+              ? $t('Up')
               : change.difference < 0
-                ? 'Down'
-                : 'No change'
+                ? $t('Down')
+                : $t('No change')
           }}</span>
           {{ change.difference === 0 ? '' : change.text }}
         </span>
-        vs {{ formatValue(kpi.previous, kind) }} before
+        {{ $t('vs :value before', { value: formatValue(kpi.previous, kind) }) }}
       </template>
       <template v-else>
         {{
           kpi.previous === null
-            ? 'Nothing to compare with'
-            : `vs ${formatValue(kpi.previous, kind)} before`
+            ? $t('Nothing to compare with')
+            : $t('vs :value before', {
+                value: formatValue(kpi.previous, kind),
+              })
         }}
       </template>
     </p>

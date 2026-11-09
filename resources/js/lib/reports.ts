@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import { trans } from 'laravel-vue-i18n';
 import type { EChartsOption } from 'echarts';
 
 export type ValueKind = 'count' | 'minutes' | 'percent';
@@ -42,7 +43,7 @@ export function formatValue(
  */
 export function formatBucket(date: string, bucket: string): string {
   return bucket === 'week'
-    ? `Week of ${dayjs(date).format('MMM D')}`
+    ? trans('Week of :date', { date: dayjs(date).format('MMM D') })
     : dayjs(date).format('MMM D');
 }
 
@@ -108,7 +109,7 @@ export function barChart(
     series: [
       {
         type: 'bar',
-        name: 'Tickets',
+        name: trans('Tickets'),
         data: items.map((item) => item.count),
         itemStyle: { borderRadius: horizontal ? [0, 4, 4, 0] : [4, 4, 0, 0] },
       },
