@@ -5,7 +5,7 @@ use App\Models\User;
 use App\Models\Workspace;
 
 beforeEach(function () {
-    config(['harbor.multitenant' => true, 'harbor.platform_token' => 'platform-secret']);
+    config(['app.url' => 'http://harbor-help.test', 'harbor.domain' => 'harbor-help.test', 'harbor.multitenant' => true, 'harbor.platform_token' => 'platform-secret']);
 });
 
 /**
