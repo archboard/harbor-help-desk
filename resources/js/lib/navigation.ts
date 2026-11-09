@@ -3,7 +3,6 @@ import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { edit as editApiTokens } from '@/routes/api-tokens';
 import { index as automations } from '@/routes/automations';
-import { edit as editAppearance } from '@/routes/appearance';
 import { index as contacts } from '@/routes/contacts';
 import { index as desks } from '@/routes/desks';
 import { edit as editProfile } from '@/routes/profile';
@@ -33,7 +32,6 @@ export function useNavigation() {
     { label: trans('Profile'), href: editProfile().url },
     { label: trans('Security'), href: editSecurity().url },
     { label: trans('API tokens'), href: editApiTokens().url },
-    { label: trans('Appearance'), href: editAppearance().url },
   ]);
 
   return { navigation, userNavigation };

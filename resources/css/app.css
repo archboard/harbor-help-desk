@@ -13,6 +13,19 @@
     'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   --font-display: 'DM Serif Display', ui-serif, Georgia, serif;
 
+  /* A new row fades from a primary tint to its own background. */
+  --animate-row-flash: row-flash 2s ease-out;
+
+  @keyframes row-flash {
+    from {
+      background-color: color-mix(
+        in oklab,
+        var(--color-primary-500) 25%,
+        transparent
+      );
+    }
+  }
+
   /* Brand color: point these at another Tailwind palette to re-theme the app */
   --color-primary-50: var(--color-blue-50);
   --color-primary-100: var(--color-blue-100);

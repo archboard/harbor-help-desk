@@ -1,5 +1,6 @@
 import { createInertiaApp, router } from '@inertiajs/vue3';
 import { i18nVue, loadLanguageAsync } from 'laravel-vue-i18n';
+import I18nT from '@/components/I18nT';
 import { initializeTheme } from '@/composables/useAppearance';
 import AppLayout from '@/layouts/AppLayout.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
@@ -56,6 +57,8 @@ void createInertiaApp({
     router.on('navigate', (event) => {
       void loadLanguageAsync(event.detail.page.props.locale);
     });
+
+    app.component('I18nT', I18nT);
 
     app.directive('focus', {
       mounted: (el: HTMLElement, shouldFocus) => {

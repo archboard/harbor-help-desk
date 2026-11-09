@@ -15,6 +15,8 @@ export function useLiveReload(options: {
   event?: string;
   only: string[];
   reset?: string[];
+  /** Called with each ping's payload, before the reload. */
+  onPing?: (ping: { ticket_id?: string; type?: string }) => void;
 }): void {
   const reload = useDebounceFn(() => {
     router.reload({
@@ -24,7 +26,14 @@ export function useLiveReload(options: {
   }, 300);
 
   for (const channel of options.channels) {
-    useEcho(channel, options.event ?? '.TicketChanged', () => void reload());
+    useEcho<{ ticket_id?: string; type?: string }>(
+      channel,
+      options.event ?? '.TicketChanged',
+      (ping) => {
+        options.onPing?.(ping);
+        void reload();
+      },
+    );
   }
 
   const status = useConnectionStatus();

@@ -33,6 +33,7 @@ const {
   hideRequester = false,
   customFields = [],
   previewable = false,
+  flashingIds = [],
 } = defineProps<{
   prop: string;
   tickets: App.Data.Tickets.TicketData[];
@@ -40,6 +41,8 @@ const {
   customFields?: App.Data.CustomFields.CustomFieldData[];
   /** Adds an eye button to each row that emits `preview`. */
   previewable?: boolean;
+  /** Rows that play a brief highlight, e.g. tickets that just arrived live. */
+  flashingIds?: string[];
 }>();
 
 /** Ids of the columns to show; unknown ids (e.g. deleted custom fields) are dropped. */
@@ -107,10 +110,11 @@ const allSelected = computed({
           :key="ticket.id"
           :data-ticket-id="ticket.id"
           :aria-selected="focusedId === ticket.id"
-          :class="
+          :class="[
             focusedId === ticket.id &&
-            'bg-primary-50/50 dark:bg-primary-950/30 [&>td:first-child]:shadow-[inset_3px_0_0_var(--color-primary-500)]'
-          "
+              'bg-primary-50/50 dark:bg-primary-950/30 [&>td:first-child]:shadow-[inset_3px_0_0_var(--color-primary-500)]',
+            flashingIds.includes(ticket.id) && 'animate-row-flash',
+          ]"
           @click="focusedId = ticket.id"
         >
           <Td v-if="selected" class="w-0 pr-0">

@@ -34,10 +34,24 @@ const { tickets, filters, leadDeskIds, desks, customFields } = defineProps<{
   priorities: Record<string, string>;
 }>();
 
+/** Tickets that just arrived over the socket, highlighted once their row appears. */
+const flashingIds = ref<string[]>([]);
+
 useLiveReload({
   channels: desks.map((desk) => `desks.${desk.id}`),
   only: ['tickets'],
   reset: ['tickets'],
+  onPing: ({ ticket_id, type }) => {
+    if (type !== 'created' || !ticket_id) {
+      return;
+    }
+
+    flashingIds.value.push(ticket_id);
+    // ponytail: outlasts the reload plus the 2s animation; the row mounts with the class and plays it once
+    setTimeout(() => {
+      flashingIds.value = flashingIds.value.filter((id) => id !== ticket_id);
+    }, 5000);
+  },
 });
 
 const quickFilters = computed<Array<{ label: string; query: TicketQuery }>>(
@@ -173,6 +187,7 @@ function apply(query: TicketQuery): void {
       v-model:columns="columns"
       v-model:focused-id="focusedId"
       :custom-fields="customFields"
+      :flashing-ids="flashingIds"
       @update:selected="selected = $event ?? []"
       previewable
       @preview="openQuickView"

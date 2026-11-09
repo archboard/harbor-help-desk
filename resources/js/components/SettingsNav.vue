@@ -4,7 +4,6 @@ import { Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { edit as editApiTokens } from '@/routes/api-tokens';
-import { edit as editAppearance } from '@/routes/appearance';
 import { index as businessHours } from '@/routes/business-hours';
 import { index as slaPolicies } from '@/routes/sla-policies';
 import { index as macros } from '@/routes/macros';
@@ -22,7 +21,6 @@ const tabs = computed(() => [
   { label: trans('Business hours'), href: businessHours().url },
   { label: trans('SLA policies'), href: slaPolicies().url },
   { label: trans('API tokens'), href: editApiTokens().url },
-  { label: trans('Appearance'), href: editAppearance().url },
 ]);
 </script>
 

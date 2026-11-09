@@ -11,6 +11,7 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 import { ChevronDown, Menu as MenuIcon, Plus, Search, X } from '@lucide/vue';
 import { computed, watch } from 'vue';
 import AppButton from '@/components/AppButton.vue';
+import AppearanceTabs from '@/components/AppearanceTabs.vue';
 import CommandPalette from '@/components/CommandPalette.vue';
 import Container from '@/components/Container.vue';
 import AppCheckbox from '@/components/forms/AppCheckbox.vue';
@@ -97,12 +98,16 @@ function setAway(away: boolean): void {
             </AppButton>
             <button
               type="button"
-              class="mr-1 inline-flex items-center gap-2 rounded-md p-2 text-gray-500 hover:bg-gray-100 focus:ring-2 focus:ring-primary-500 focus:outline-hidden dark:text-gray-300 dark:hover:bg-gray-800"
+              class="mr-1 inline-flex items-center gap-2 rounded-md border border-gray-200 px-2.5 py-1.5 text-gray-500 hover:bg-gray-100 focus:ring-2 focus:ring-primary-500 focus:outline-hidden dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
               @click="paletteOpen = true"
             >
-              <Search class="size-5" aria-hidden="true" />
+              <Search class="size-4" aria-hidden="true" />
               <span class="sr-only">{{ $t('Search') }}</span>
-              <kbd class="hidden text-xs lg:inline" aria-hidden="true">⌘K</kbd>
+              <kbd
+                class="hidden rounded border border-gray-200 bg-gray-50 px-1.5 py-px font-sans text-xs/none font-medium text-gray-500 lg:inline dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400"
+                aria-hidden="true"
+                >⌘K</kbd
+              >
             </button>
             <NotificationBell />
 
@@ -139,7 +144,8 @@ function setAway(away: boolean): void {
                       {{ item.label }}
                     </Link>
                   </div>
-                  <div class="px-4 py-2">
+                  <div class="space-y-2 px-4 py-2">
+                    <AppearanceTabs />
                     <AppCheckbox
                       :model-value="isAway"
                       @update:model-value="setAway(Boolean($event))"
@@ -208,7 +214,8 @@ function setAway(away: boolean): void {
           >
             {{ item.label }}
           </Link>
-          <div class="px-3 py-2">
+          <div class="space-y-3 px-3 py-2">
+            <AppearanceTabs class="max-w-xs" />
             <AppCheckbox
               :model-value="isAway"
               @update:model-value="setAway(Boolean($event))"

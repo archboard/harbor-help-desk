@@ -42,6 +42,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('settings/business-hours', BusinessScheduleController::class)->parameters(['business-hours' => 'businessSchedule'])->only(['index', 'store', 'update', 'destroy']);
     Route::resource('settings/sla-policies', SlaPolicyController::class)->parameters(['sla-policies' => 'slaPolicy'])->only(['index', 'store', 'update', 'destroy']);
-
-    Route::inertia('settings/appearance', 'settings/Appearance')->name('appearance.edit');
 });
