@@ -14,7 +14,7 @@ test('events describe what happened in a sentence', function (TicketEventType $t
 
     expect($ticket->recordEvent($type, $actor, $properties)->description())->toBe($expected);
 })->with([
-    'created' => [TicketEventType::CREATED, [], 'Jane Doe created the ticket.'],
+    'created' => [TicketEventType::CREATED, [], 'Jane Doe created a ticket.'],
     'subject' => [TicketEventType::SUBJECT_CHANGED, ['from' => 'Old', 'to' => 'Printer jam'], 'Jane Doe changed the subject to “Printer jam”.'],
     'status' => [TicketEventType::STATUS_CHANGED, ['from' => 'open', 'to' => 'on_hold'], 'Jane Doe changed the status to On hold.'],
     'priority' => [TicketEventType::PRIORITY_CHANGED, ['from' => 'normal', 'to' => 'high'], 'Jane Doe changed the priority to High.'],
@@ -49,9 +49,9 @@ test('events name contacts, harbor itself, and deleted users', function () {
     $byUser = $ticket->recordEvent(TicketEventType::CREATED, $user);
     $user->delete();
 
-    expect($ticket->recordEvent(TicketEventType::CREATED, $contact)->description())->toBe('Pat Lee created the ticket.');
-    expect($ticket->recordEvent(TicketEventType::CREATED, null)->description())->toBe('Harbor created the ticket.');
-    expect($byUser->fresh()->description())->toBe('A deleted user created the ticket.');
+    expect($ticket->recordEvent(TicketEventType::CREATED, $contact)->description())->toBe('Pat Lee created a ticket.');
+    expect($ticket->recordEvent(TicketEventType::CREATED, null)->description())->toBe('Harbor created a ticket.');
+    expect($byUser->fresh()->description())->toBe('A deleted user created a ticket.');
 });
 
 test('events cannot be changed or deleted', function () {

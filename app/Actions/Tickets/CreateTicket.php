@@ -64,7 +64,7 @@ class CreateTicket
             }
 
             if (filled($validated['body'] ?? null)) {
-                $this->addTicketComment->handle($actor, $ticket, Arr::only($validated, ['body', 'attachments', 'message_id']));
+                $this->addTicketComment->handle($actor, $ticket, Arr::only($validated, ['body', 'attachments', 'message_id']), opening: true);
             }
 
             return $ticket;

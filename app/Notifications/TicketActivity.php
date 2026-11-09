@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Enums\NotificationType;
+use App\Enums\TicketEventType;
 use App\Models\TicketComment;
 use App\Models\TicketEvent;
 use App\Models\User;
@@ -60,13 +61,24 @@ class TicketActivity extends Notification
     }
 
     /**
-     * The comment's text for reply and note events, or null when there's none or it was deleted.
+     * The comment's text for reply and note events, or the message the ticket was opened with for
+     * new and assigned tickets. Null when there's none or it was deleted.
      */
     protected function commentBody(): ?string
     {
-        $commentId = $this->ticketEvent->properties['comment_id'] ?? null;
+        $commentId = $this->ticketEvent->properties['comment_id']
+            ?? (in_array($this->type, [NotificationType::NEW_TICKET, NotificationType::ASSIGNED], true) ? $this->openingCommentId() : null);
 
         return $commentId === null ? null : TicketComment::query()->whereKey($commentId)->first()?->body;
+    }
+
+    protected function openingCommentId(): ?string
+    {
+        return $this->ticketEvent->ticket->events()
+            ->where('type', TicketEventType::COMMENT_ADDED)
+            ->where('properties->opening', true)
+            ->first()
+            ?->properties['comment_id'];
     }
 
     /**

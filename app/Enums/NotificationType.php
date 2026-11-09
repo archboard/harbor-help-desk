@@ -56,8 +56,8 @@ enum NotificationType: string
     public function defaultChannels(): array
     {
         return match ($this) {
-            self::NEW_TICKET, self::TICKET_UPDATED, self::AUTOMATION => [NotificationChannel::DATABASE],
-            self::ASSIGNED, self::REQUESTER_REPLIED, self::MENTIONED, self::REMINDER_DUE, self::SLA_WARNING, self::SLA_BREACHED => [NotificationChannel::DATABASE, NotificationChannel::MAIL],
+            self::TICKET_UPDATED, self::AUTOMATION => [NotificationChannel::DATABASE],
+            self::NEW_TICKET, self::ASSIGNED, self::REQUESTER_REPLIED, self::MENTIONED, self::REMINDER_DUE, self::SLA_WARNING, self::SLA_BREACHED => [NotificationChannel::DATABASE, NotificationChannel::MAIL],
         };
     }
 }

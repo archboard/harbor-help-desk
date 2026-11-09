@@ -142,7 +142,7 @@ class TicketEvent extends Model
         $replace = ['actor' => $this->actorName()];
 
         return match ($this->type) {
-            TicketEventType::CREATED => __(':actor created the ticket.', $replace),
+            TicketEventType::CREATED => __(':actor created a ticket.', $replace),
             TicketEventType::SUBJECT_CHANGED => __(':actor changed the subject to “:to”.', $replace + ['to' => $properties['to']]),
             TicketEventType::STATUS_CHANGED => __(':actor changed the status to :to.', $replace + ['to' => TicketStatus::from($properties['to'])->label()]),
             TicketEventType::PRIORITY_CHANGED => __(':actor changed the priority to :to.', $replace + ['to' => TicketPriority::from($properties['to'])->label()]),

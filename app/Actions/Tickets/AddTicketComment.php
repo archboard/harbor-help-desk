@@ -30,10 +30,12 @@ class AddTicketComment
      * A user may send `last_seen_comment_id` (null when none were shown): if anyone else commented
      * after it, the reply is rejected so two people don't answer at once. Omitting it skips the check.
      * An internal note's `mentioned_user_ids` (desk members) are stored on its event.
+     * `$opening` marks the message a ticket was opened with ({@see CreateTicket}), so it is announced
+     * as part of the new ticket instead of as a reply.
      *
      * @param  array<string, mixed>  $input
      */
-    public function handle(User|Contact|Automation $actor, Ticket $ticket, array $input): TicketComment
+    public function handle(User|Contact|Automation $actor, Ticket $ticket, array $input, bool $opening = false): TicketComment
     {
         if ($actor instanceof User) {
             Gate::forUser($actor)->authorize('update', $ticket);
@@ -47,7 +49,7 @@ class AddTicketComment
             'mentioned_user_ids.*' => [Rule::in($ticket->desk->users()->pluck('users.id')->all())],
         ])->filled();
 
-        return DB::transaction(function () use ($actor, $ticket, $validated): TicketComment {
+        return DB::transaction(function () use ($actor, $ticket, $validated, $opening): TicketComment {
             if ($actor instanceof User && array_key_exists('last_seen_comment_id', $validated)) {
                 $this->ensureNoNewReplies($actor, $ticket, $validated['last_seen_comment_id']);
             }
@@ -63,7 +65,7 @@ class AddTicketComment
             $ticket->recordEvent(
                 $comment->is_internal ? TicketEventType::INTERNAL_NOTE_ADDED : TicketEventType::COMMENT_ADDED,
                 $actor,
-                ['comment_id' => $comment->id] + ($comment->is_internal && filled($validated['mentioned_user_ids'] ?? null)
+                ['comment_id' => $comment->id] + ($opening ? ['opening' => true] : []) + ($comment->is_internal && filled($validated['mentioned_user_ids'] ?? null)
                     ? ['mentioned_user_ids' => $validated['mentioned_user_ids']]
                     : []),
             );

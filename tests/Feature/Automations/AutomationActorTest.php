@@ -53,7 +53,7 @@ test('an automation creates a ticket and assigns it', function () {
     ]);
 
     expect($ticket->assignees()->sole()->is($assignee))->toBeTrue()
-        ->and($ticket->events()->with('actor')->first()->description())->toBe('Triage bot created the ticket.');
+        ->and($ticket->events()->with('actor')->first()->description())->toBe('Triage bot created a ticket.');
 });
 
 test('a reminder set by an automation serializes without a creator', function () {

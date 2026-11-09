@@ -46,6 +46,31 @@ test('a new ticket assigned at creation is not announced to the desk', function 
     Notification::assertCount(1);
 });
 
+test('a requester opening a ticket announces it with their message instead of as a reply', function () {
+    app(CreateTicket::class)->handle($this->ticket->requester, $this->desk, [
+        'subject' => 'Printer',
+        'requester_id' => $this->ticket->requester_id,
+        'body' => 'The printer is jammed again.',
+    ]);
+
+    Notification::assertSentTo($this->colleague, TicketActivity::class, fn (TicketActivity $notification) => $notification->type === NotificationType::NEW_TICKET
+        && str_contains((string) $notification->toMail($this->colleague)->render(), 'The printer is jammed again.'));
+    Notification::assertCount(2);
+});
+
+test('an assignee of a new ticket gets its opening message and no update for it', function () {
+    app(CreateTicket::class)->handle($this->actor, $this->desk, [
+        'subject' => 'Printer',
+        'requester' => ['name' => 'Rita', 'email' => 'rita@example.com'],
+        'assignee_ids' => [$this->colleague->id],
+        'body' => 'Rita called about the printer.',
+    ]);
+
+    Notification::assertSentTo($this->colleague, TicketActivity::class, fn (TicketActivity $notification) => $notification->type === NotificationType::ASSIGNED
+        && str_contains((string) $notification->toMail($this->colleague)->render(), 'Rita called about the printer.'));
+    Notification::assertCount(1);
+});
+
 test('an assignee is notified unless they assigned themselves', function () {
     app(SyncTicketAssignees::class)->handle($this->actor, $this->ticket, ['user_ids' => [$this->actor->id, $this->colleague->id]]);
 

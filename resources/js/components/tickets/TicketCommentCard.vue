@@ -74,6 +74,8 @@ function remove(close: () => void): void {
             </span>
           </template>
         </i18n-t>
+        <span aria-hidden="true"> · </span>
+        <RelativeTime :datetime="comment.created_at" />
         <Pill v-if="comment.is_internal" color="yellow" class="ml-1">
           {{ $t('Internal') }}
         </Pill>
@@ -85,10 +87,6 @@ function remove(close: () => void): void {
           {{ $t('(edited)') }}
         </span>
       </p>
-      <RelativeTime
-        :datetime="comment.created_at"
-        class="flex-none py-0.5 text-xs/5 text-gray-500 dark:text-gray-400"
-      />
       <span v-if="!editing && (canEdit || canDelete)" class="flex gap-1">
         <AppButton
           v-if="canEdit"

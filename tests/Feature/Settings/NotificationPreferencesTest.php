@@ -25,7 +25,7 @@ test('members get the enum defaults until they choose', function () {
 
     expect($rows)->toHaveCount(count(NotificationType::cases()))
         ->and($rows['assigned']['channels'])->toBe(['database' => true, 'mail' => true])
-        ->and($rows['new_ticket']['channels'])->toBe(['database' => true, 'mail' => false])
+        ->and($rows['new_ticket']['channels'])->toBe(['database' => true, 'mail' => true])
         ->and($this->agent->notificationChannels($this->acme, NotificationType::TICKET_UPDATED))->toBe(['database'])
         ->and($this->agent->notificationChannels($this->acme, NotificationType::MENTIONED))->toBe(['database', 'mail']);
 });
@@ -34,12 +34,12 @@ test('an update merges into the current choices', function () {
     actAs($this->agent, $this->acme);
 
     $this->putJson($this->url, ['preferences' => ['assigned' => ['mail' => false]]])->assertOk();
-    $this->putJson($this->url, ['preferences' => ['new_ticket' => ['mail' => true], 'assigned' => ['database' => false]]])
+    $this->putJson($this->url, ['preferences' => ['new_ticket' => ['mail' => false], 'assigned' => ['database' => false]]])
         ->assertOk()
-        ->assertJsonPath('0.channels.mail', true);
+        ->assertJsonPath('0.channels.mail', false);
 
     expect($this->agent->notificationChannels($this->acme, NotificationType::ASSIGNED))->toBe([])
-        ->and($this->agent->notificationChannels($this->acme, NotificationType::NEW_TICKET))->toBe(['database', 'mail'])
+        ->and($this->agent->notificationChannels($this->acme, NotificationType::NEW_TICKET))->toBe(['database'])
         ->and($this->agent->notificationChannels($this->acme, NotificationType::MENTIONED))->toBe(['database', 'mail']);
 });
 
