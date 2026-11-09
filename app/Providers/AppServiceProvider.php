@@ -61,6 +61,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use InvalidArgumentException;
@@ -146,6 +147,13 @@ class AppServiceProvider extends ServiceProvider
         ]);
 
         RateLimiter::for('api', fn (Request $request): Limit => Limit::perMinute(120)->by($request->user('api')?->getAuthIdentifier() ?: $request->ip()));
+
+        // Fortify has no limiter slot for these, so the limiter rides on every Fortify route and only counts these two.
+        RateLimiter::for('password-reset', fn (Request $request): Limit => $request->routeIs('password.email', 'password.update')
+            ? Limit::perMinute(5)->by($request->ip().'|'.Str::lower((string) $request->input('email')))
+            : Limit::none());
+        RateLimiter::for('webhooks', fn (Request $request): Limit => Limit::perMinute(600)->by($request->ip()));
+        RateLimiter::for('platform', fn (Request $request): Limit => Limit::perMinute(60)->by($request->ip()));
 
         Passport::tokensExpireIn(CarbonImmutable::now()->addHour());
         Passport::refreshTokensExpireIn(CarbonImmutable::now()->addDays(30));

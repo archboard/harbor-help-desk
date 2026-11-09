@@ -14,17 +14,17 @@ Route::middleware('portal.enabled')->prefix('portal')->name('portal.')->group(fu
     Route::get('login', [PortalLoginController::class, 'create'])->name('login');
     Route::post('login', [PortalLoginController::class, 'store'])->middleware('throttle:6,1')->name('login.store');
     Route::get('login/link', [PortalLoginController::class, 'show'])->name('login.show');
-    Route::post('logout', [PortalLoginController::class, 'destroy'])->name('logout');
+    Route::post('logout', [PortalLoginController::class, 'destroy'])->middleware('throttle:30,1')->name('logout');
 
     Route::middleware('auth:contact')->group(function () {
         Route::get('/', fn () => to_route('portal.tickets.index'))->name('home');
         Route::get('tickets', [TicketController::class, 'index'])->name('tickets.index');
         Route::get('tickets/create', [TicketController::class, 'create'])->name('tickets.create');
-        Route::post('desks/{desk}/tickets', [TicketController::class, 'store'])->name('desks.tickets.store');
+        Route::post('desks/{desk}/tickets', [TicketController::class, 'store'])->middleware('throttle:30,1')->name('desks.tickets.store');
         Route::get('tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
         Route::get('tickets/{ticket}/thread', TicketThreadController::class)->name('tickets.thread');
-        Route::post('tickets/{ticket}/comments', [TicketCommentController::class, 'store'])->name('tickets.comments.store');
-        Route::post('tickets/{ticket}/rating', RateTicketController::class)->middleware('surveys.enabled')->name('tickets.rating.store');
+        Route::post('tickets/{ticket}/comments', [TicketCommentController::class, 'store'])->middleware('throttle:30,1')->name('tickets.comments.store');
+        Route::post('tickets/{ticket}/rating', RateTicketController::class)->middleware(['surveys.enabled', 'throttle:30,1'])->name('tickets.rating.store');
         Route::get('attachments/{attachment}/download', AttachmentDownloadController::class)->name('attachments.download');
     });
 });

@@ -52,14 +52,14 @@ Route::middleware('guest')->group(function () {
     Route::get('login/magic/{user}', [MagicLinkController::class, 'show'])->name('magic-link.login');
 });
 
-Route::middleware(VerifyPostmarkWebhook::class)->prefix('webhooks/postmark')->name('webhooks.postmark.')->group(function () {
+Route::middleware(['throttle:webhooks', VerifyPostmarkWebhook::class])->prefix('webhooks/postmark')->name('webhooks.postmark.')->group(function () {
     Route::post('inbound', [PostmarkWebhookController::class, 'inbound'])->name('inbound');
     Route::post('bounce', [PostmarkWebhookController::class, 'bounce'])->name('bounce');
 });
 
-Route::post('webhooks/automations/{automation}/{token}', AutomationWebhookController::class)->name('webhooks.automations');
-Route::post('webhooks/google/gmail', [MailboxPushController::class, 'gmail'])->name('webhooks.google.gmail');
-Route::post('webhooks/microsoft/graph', [MailboxPushController::class, 'graph'])->name('webhooks.microsoft.graph');
+Route::post('webhooks/automations/{automation}/{token}', AutomationWebhookController::class)->middleware('throttle:webhooks')->name('webhooks.automations');
+Route::post('webhooks/google/gmail', [MailboxPushController::class, 'gmail'])->middleware('throttle:webhooks')->name('webhooks.google.gmail');
+Route::post('webhooks/microsoft/graph', [MailboxPushController::class, 'graph'])->middleware('throttle:webhooks')->name('webhooks.microsoft.graph');
 
 // On the central domain: OAuth redirect URIs can't be wildcards. The `state` names the workspace.
 Route::get('mailboxes/oauth/callback', [MailboxOAuthController::class, 'callback'])->name('mailboxes.oauth.callback');
