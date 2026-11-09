@@ -151,21 +151,25 @@ class BuildExport implements ShouldQueue
         'automation_runs' => ['id'],
         'automation_ticket_matches' => ['id'],
         'audit_events' => ['id'],
+        'webhooks' => ['id'],
     ];
 
     /**
      * Tables with a `workspace_id` column that a workspace export leaves out on purpose:
-     * exports are this feature's own bookkeeping and notifications are per-user and transient.
+     * exports are this feature's own bookkeeping, notifications are per-user and transient, and
+     * webhook deliveries are a short-lived delivery log.
      */
-    public const array EXCLUDED_WORKSPACE_TABLES = ['exports', 'notifications'];
+    public const array EXCLUDED_WORKSPACE_TABLES = ['exports', 'notifications', 'webhook_deliveries'];
 
     /**
      * Columns written as null: mailbox credentials (`settings` holds the encrypted IMAP/SMTP/OAuth
-     * secrets) and the push subscription, and the automation webhook token hash.
+     * secrets) and the push subscription, the automation webhook token hash, and the outgoing
+     * webhook signing secret.
      */
     public const array SECRET_COLUMNS = [
         'mailboxes' => ['settings', 'push_secret', 'push_subscription_id', 'push_expires_at'],
         'automations' => ['webhook_token_hash'],
+        'webhooks' => ['secret'],
     ];
 
     /**

@@ -12,6 +12,7 @@ use Generator;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
@@ -232,6 +233,8 @@ class RunWorkspaceImport implements ShouldQueue
                 ];
             case 'automations':
                 return [...$row, 'webhook_token_hash' => null];
+            case 'webhooks':
+                return [...$row, 'secret' => Crypt::encryptString('whsec_'.Str::random(40)), 'is_enabled' => false, 'disabled_at' => now()];
             case 'ticket_events':
                 return [...$row, 'automation_run_id' => null];
             case 'attachments':

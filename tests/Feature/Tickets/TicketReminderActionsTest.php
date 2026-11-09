@@ -16,6 +16,7 @@ use Tests\Concerns\InWorkspace;
 uses(InWorkspace::class);
 
 test('personal reminders are private and ticket-level ones are logged', function () {
+    $this->travelTo('2026-11-01 12:00:00');
     $ticket = Ticket::factory()->create();
     $agent = deskMember($this->workspace, $ticket->desk);
 

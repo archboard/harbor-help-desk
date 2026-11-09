@@ -27,6 +27,7 @@ use App\Models\TicketMetric;
 use App\Models\TicketReminder;
 use App\Models\TicketSlaTarget;
 use App\Models\User;
+use App\Models\Webhook;
 use App\Models\Workspace;
 use App\Notifications\WorkspaceImportFinishedNotification;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -89,6 +90,7 @@ function seedWorkspace(): void
     DB::table('automations')->where('id', $automation->id)->update(['webhook_token_hash' => hash('sha256', 'old-token'), 'created_by' => $agent->id]);
     Macro::factory()->personal($agent)->create();
     SavedView::factory()->create(['user_id' => $agent->id, 'filters' => ['assignee_id' => $agent->id]]);
+    Webhook::factory()->create(['secret' => 'whsec_old', 'created_by' => $agent->id]);
 
     $ticket = Ticket::factory()->create(['desk_id' => $desk->id, 'requester_id' => $contact->id, 'sla_policy_id' => $sla->id, 'mailbox_id' => $mailbox->id]);
     Ticket::factory()->count(2)->create(['desk_id' => $desk->id, 'requester_id' => $contact->id]);
@@ -338,7 +340,7 @@ test('the importing admin keeps their role and is not duplicated as a member', f
         ->and(DB::table('workspace_user')->where('workspace_id', $target->id)->count())->toBe(2);
 });
 
-test('mailboxes come in disconnected and webhook tokens are not carried over', function () {
+test('mailboxes come in disconnected and webhook tokens and secrets are not carried over', function () {
     seedWorkspace();
     $upload = exportAndDeleteSource($this->admin);
     $target = freshWorkspace($this->admin);
@@ -352,6 +354,8 @@ test('mailboxes come in disconnected and webhook tokens are not carried over', f
         ->and($mailbox->polled_at)->toBeNull()
         ->and($mailbox->last_error)->toContain('Imported without credentials')
         ->and(DB::table('automations')->where('trigger_type', 'webhook')->value('webhook_token_hash'))->toBeNull()
+        ->and(Webhook::sole()->secret)->toStartWith('whsec_')->not->toBe('whsec_old')
+        ->and(Webhook::sole()->is_enabled)->toBeFalse()
         ->and($target->desks()->where('slug', 'default')->count())->toBe(1);
 });
 
