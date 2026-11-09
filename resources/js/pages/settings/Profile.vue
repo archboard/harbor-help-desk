@@ -13,10 +13,11 @@ import { send } from '@/routes/verification';
 
 defineOptions({ layout: { title: 'Profile' } });
 
-defineProps<{
+const props = defineProps<{
   mustVerifyEmail: boolean;
   status?: string;
   timezones: string[];
+  locales: string[];
 }>();
 
 const page = usePage();
@@ -25,9 +26,16 @@ const form = useForm({
   name: page.props.auth.user.name,
   email: page.props.auth.user.email,
   timezone: page.props.auth.user.timezone ?? guessTimezone(),
+  locale: page.props.auth.user.locale ?? '',
 });
 
 const resend = useForm({});
+
+const languages = props.locales.map((value) => ({
+  value,
+  label:
+    new Intl.DisplayNames([value], { type: 'language' }).of(value) ?? value,
+}));
 </script>
 
 <template>
@@ -58,6 +66,15 @@ const resend = useForm({});
             :error="form.errors.timezone"
             help-text="Dates and times are shown in this timezone."
             required
+          />
+
+          <SelectField
+            v-if="locales.length > 1"
+            v-model="form.locale"
+            label="Language"
+            :options="languages"
+            :null-option="$t('Browser default')"
+            :error="form.errors.locale"
           />
 
           <div

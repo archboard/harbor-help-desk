@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { edit as editApiTokens } from '@/routes/api-tokens';
 import { edit as editAppearance } from '@/routes/appearance';
@@ -12,20 +14,20 @@ import { edit as editSecurity } from '@/routes/security';
 
 const { isCurrentUrl } = useCurrentUrl();
 
-const tabs = [
-  { label: 'Profile', href: editProfile().url },
-  { label: 'Security', href: editSecurity().url },
-  { label: 'Notifications', href: editNotifications().url },
-  { label: 'Macros', href: macros().url },
-  { label: 'Business hours', href: businessHours().url },
-  { label: 'SLA policies', href: slaPolicies().url },
-  { label: 'API tokens', href: editApiTokens().url },
-  { label: 'Appearance', href: editAppearance().url },
-];
+const tabs = computed(() => [
+  { label: trans('Profile'), href: editProfile().url },
+  { label: trans('Security'), href: editSecurity().url },
+  { label: trans('Notifications'), href: editNotifications().url },
+  { label: trans('Macros'), href: macros().url },
+  { label: trans('Business hours'), href: businessHours().url },
+  { label: trans('SLA policies'), href: slaPolicies().url },
+  { label: trans('API tokens'), href: editApiTokens().url },
+  { label: trans('Appearance'), href: editAppearance().url },
+]);
 </script>
 
 <template>
-  <nav class="mb-6 flex gap-1 overflow-x-auto" aria-label="Settings">
+  <nav class="mb-6 flex gap-1 overflow-x-auto" :aria-label="$t('Settings')">
     <Link
       v-for="tab in tabs"
       :key="tab.href"

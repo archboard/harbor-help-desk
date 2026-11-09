@@ -10,6 +10,7 @@ use Carbon\CarbonImmutable;
 use Database\Factories\UserFactory;
 use GrantHolle\Scru128Laravel\Concerns\HasScru128Ids;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Collection;
@@ -76,11 +77,15 @@ use Spatie\Multitenancy\TenantCollection;
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereTimezone($value)
  *
+ * @property string|null $locale
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereLocale($value)
+ *
  * @mixin \Eloquent
  */
 #[Unguarded]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable implements MustVerifyEmail, OAuthenticatable, PasskeyUser
+class User extends Authenticatable implements HasLocalePreference, MustVerifyEmail, OAuthenticatable, PasskeyUser
 {
     /*
     |--------------------------------------------------------------------------
@@ -163,6 +168,14 @@ class User extends Authenticatable implements MustVerifyEmail, OAuthenticatable,
     public function idPrefix(): string
     {
         return 'usr_';
+    }
+
+    /**
+     * The locale mail and notifications to this user are sent in.
+     */
+    public function preferredLocale(): ?string
+    {
+        return $this->locale;
     }
 
     /**

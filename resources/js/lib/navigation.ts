@@ -1,3 +1,4 @@
+import { trans } from 'laravel-vue-i18n';
 import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { edit as editApiTokens } from '@/routes/api-tokens';
@@ -16,23 +17,23 @@ export function useNavigation() {
   const page = usePage();
 
   const navigation = computed(() => [
-    { label: 'Tickets', href: tickets().url },
-    { label: 'Contacts', href: contacts().url },
-    { label: 'Desks', href: desks().url },
-    { label: 'Reports', href: reports().url },
+    { label: trans('Tickets'), href: tickets().url },
+    { label: trans('Contacts'), href: contacts().url },
+    { label: trans('Desks'), href: desks().url },
+    { label: trans('Reports'), href: reports().url },
     ...(page.props.canViewAutomations
-      ? [{ label: 'Automations', href: automations().url }]
+      ? [{ label: trans('Automations'), href: automations().url }]
       : []),
     ...(page.props.workspace?.is_admin
-      ? [{ label: 'Workspace', href: workspaceSettings().url }]
+      ? [{ label: trans('Workspace'), href: workspaceSettings().url }]
       : []),
   ]);
 
   const userNavigation = computed(() => [
-    { label: 'Profile', href: editProfile().url },
-    { label: 'Security', href: editSecurity().url },
-    { label: 'API tokens', href: editApiTokens().url },
-    { label: 'Appearance', href: editAppearance().url },
+    { label: trans('Profile'), href: editProfile().url },
+    { label: trans('Security'), href: editSecurity().url },
+    { label: trans('API tokens'), href: editApiTokens().url },
+    { label: trans('Appearance'), href: editAppearance().url },
   ]);
 
   return { navigation, userNavigation };

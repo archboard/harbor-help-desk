@@ -1,3 +1,4 @@
+import { trans, transChoice } from 'laravel-vue-i18n';
 import { router } from '@inertiajs/vue3';
 import type { Command, PaletteTarget } from '@/lib/commandPalette';
 import { bulk, update } from '@/routes/tickets';
@@ -22,8 +23,12 @@ export function ticketCommands({
 }: Context): Command[] {
   const { ticketIds, ticket } = target;
   const group = ticket
-    ? `Ticket #${ticket.number}`
-    : `${ticketIds.length} selected tickets`;
+    ? trans('Ticket #:number', { number: String(ticket.number) })
+    : transChoice(
+        '{1} :count selected ticket|[2,*] :count selected tickets',
+        ticketIds.length,
+        { count: String(ticketIds.length) },
+      );
 
   function change(body: Record<string, string | string[]>): void {
     router.post(
@@ -50,30 +55,30 @@ export function ticketCommands({
     return items.map(([value, label]) => ({
       id: `${id}-${value}`,
       label,
-      group: 'Choose',
+      group: trans('Choose'),
       run: () => pick(value),
     }));
   }
 
   const commands: Command[] = [
-    level('status', 'Set status', 'Status', () =>
+    level('status', trans('Set status'), trans('Status'), () =>
       choices('status', Object.entries(palette?.statuses ?? {}), (status) =>
         change({ status }),
       ),
     ),
-    level('priority', 'Set priority', 'Priority', () =>
+    level('priority', trans('Set priority'), trans('Priority'), () =>
       choices(
         'priority',
         Object.entries(palette?.priorities ?? {}),
         (priority) => change({ priority }),
       ),
     ),
-    level('assign', 'Assign to', 'Assign', () =>
+    level('assign', trans('Assign to'), trans('Assign'), () =>
       choices(
         'assign',
         [
-          [userId, 'Me'],
-          ['none', 'Nobody'],
+          [userId, trans('Me')],
+          ['none', trans('Nobody')],
           ...(palette?.agents ?? [])
             .filter((agent) => agent.id !== userId)
             .map((agent): [string, string] => [agent.id, agent.name]),
@@ -81,7 +86,7 @@ export function ticketCommands({
         (id) => change({ assignee_ids: id === 'none' ? [] : [id] }),
       ),
     ),
-    level('desk', 'Move to desk', 'Desk', () =>
+    level('desk', trans('Move to desk'), trans('Desk'), () =>
       choices(
         'desk',
         (palette?.desks ?? [])
@@ -90,7 +95,7 @@ export function ticketCommands({
         (desk_id) => change({ desk_id }),
       ),
     ),
-    level('tag', 'Add tag', 'Tag', (query) => {
+    level('tag', trans('Add tag'), trans('Tag'), (query) => {
       const name = query.trim();
       const tags = palette?.tags ?? [];
       const exists = tags.some(
@@ -107,8 +112,8 @@ export function ticketCommands({
           ? [
               {
                 id: 'tag-new',
-                label: `Create tag "${name}"`,
-                group: 'Choose',
+                label: trans('Create tag ":name"', { name }),
+                group: trans('Choose'),
                 run: () => change({ add_tag: name }),
               },
             ]
@@ -138,19 +143,19 @@ export function ticketCommands({
 
   if (fields.length > 0) {
     commands.push(
-      level('field', 'Set field', 'Field', () =>
+      level('field', trans('Set field'), trans('Field'), () =>
         fields.map((field) => ({
           id: `field-${field.id}`,
           label: field.name,
           chip: field.name,
-          group: 'Fields',
+          group: trans('Fields'),
           children: (query: string) => {
             if (field.type === 'checkbox') {
               return choices(
                 `field-${field.id}`,
                 [
-                  ['yes', 'Yes'],
-                  ['no', 'No'],
+                  ['yes', trans('Yes')],
+                  ['no', trans('No')],
                 ],
                 (value) => setField(field.id, value === 'yes'),
               );
@@ -175,8 +180,11 @@ export function ticketCommands({
               ? [
                   {
                     id: `field-${field.id}-value`,
-                    label: `Set ${field.name} to "${value}"`,
-                    group: 'Choose',
+                    label: trans('Set :field to ":value"', {
+                      field: field.name,
+                      value,
+                    }),
+                    group: trans('Choose'),
                     run: () =>
                       setField(
                         field.id,
@@ -199,11 +207,11 @@ export function ticketCommands({
 
   if (macros.length > 0) {
     commands.push(
-      level('macro', 'Run macro', 'Macro', () =>
+      level('macro', trans('Run macro'), trans('Macro'), () =>
         macros.map((macro) => ({
           id: `macro-${macro.id}`,
           label: macro.name,
-          group: 'Macros',
+          group: trans('Macros'),
           run: () => applyMacro(ticket.id, macro),
         })),
       ),

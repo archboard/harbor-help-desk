@@ -53,6 +53,8 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => config('app.name'),
+            // The request's locale (see `SetLocale`), for the client's translations and dates.
+            'locale' => app()->getLocale(),
             'multitenant' => (bool) config('harbor.multitenant'),
             'auth' => [
                 'user' => $user === null ? null : CurrentUserData::from($user),

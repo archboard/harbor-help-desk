@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { computed } from 'vue';
 import { normalizeOptions } from '@/lib/options';
 import type { OptionsInput } from '@/types';
@@ -6,7 +7,7 @@ import type { OptionsInput } from '@/types';
 const {
   hasError = false,
   options = [],
-  nullOption = 'Select an option',
+  nullOption = trans('Select an option'),
   hideNull = false,
   clearable = false,
 } = defineProps<{

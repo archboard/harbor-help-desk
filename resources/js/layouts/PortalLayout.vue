@@ -35,7 +35,7 @@ const page = usePage();
             as="button"
             class="shrink-0 font-medium text-primary-600 hover:underline dark:text-primary-400"
           >
-            Sign out
+            {{ $t('Sign out') }}
           </Link>
         </div>
       </Container>

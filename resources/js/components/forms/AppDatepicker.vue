@@ -56,7 +56,7 @@ const inputValue = computed({
         class="flex items-center justify-center"
         @click.prevent="model = null"
       >
-        <span class="sr-only">Clear date</span>
+        <span class="sr-only">{{ $t('Clear date') }}</span>
         <Trash2 class="size-4 text-red-500" />
       </button>
     </div>

@@ -16,5 +16,6 @@ class CurrentUserData extends Data
         public string $email,
         public ?CarbonImmutable $emailVerifiedAt,
         public ?string $timezone,
+        public ?string $locale,
     ) {}
 }

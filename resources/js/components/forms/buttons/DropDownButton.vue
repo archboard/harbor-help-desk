@@ -35,7 +35,7 @@ const {
       portal
     >
       <MenuButton :as="AppButton" :size="size" :color="color">
-        <slot>Actions</slot>
+        <slot>{{ $t('Actions') }}</slot>
         <component
           :is="icon"
           :class="[size === 'base' ? 'size-5' : 'size-4', '-mr-1 ml-1']"

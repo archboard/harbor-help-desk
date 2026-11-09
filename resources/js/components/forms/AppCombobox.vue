@@ -3,6 +3,7 @@
   lang="ts"
   generic="T extends Record<string, unknown> = Record<string, unknown>"
 >
+import { trans } from 'laravel-vue-i18n';
 import {
   Combobox,
   ComboboxButton,
@@ -19,7 +20,7 @@ const {
   hasError = false,
   id,
   optionKey = 'id',
-  placeholder = 'Type for options…',
+  placeholder = trans('Type for options…'),
   loading = false,
   disabled = false,
 } = defineProps<{
@@ -70,7 +71,7 @@ const display = (item: unknown): string => {
         @click.prevent="model = null"
       >
         <Trash2 class="size-4 text-red-400" aria-hidden="true" />
-        <span class="sr-only">Clear selection</span>
+        <span class="sr-only">{{ $t('Clear selection') }}</span>
       </button>
 
       <ComboboxButton class="absolute inset-y-0 right-0 flex items-center pr-2">
@@ -98,7 +99,7 @@ const display = (item: unknown): string => {
             v-else-if="options.length === 0 && query"
             class="px-4 py-2 text-gray-700 select-none dark:text-gray-400"
           >
-            Nothing found.
+            {{ $t('Nothing found.') }}
           </div>
 
           <ComboboxOption

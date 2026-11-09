@@ -36,14 +36,16 @@ function remove(index: number): void {
           class="shrink-0 rounded p-0.5 text-gray-400 hover:text-red-600"
           @click="remove(index)"
         >
-          <span class="sr-only">Remove {{ file.name }}</span>
+          <span class="sr-only">{{
+            $t('Remove :name', { name: file.name })
+          }}</span>
           <X class="size-4" aria-hidden="true" />
         </button>
       </li>
     </ul>
     <AppButton type="button" size="sm" color="white" @click="dialog.open()">
       <Paperclip class="mr-1 size-4" aria-hidden="true" />
-      Attach files
+      {{ $t('Attach files') }}
     </AppButton>
   </div>
 </template>

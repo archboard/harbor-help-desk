@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { CircleAlert, CircleCheck, Info, X } from '@lucide/vue';
 import type { AppNotification } from '@/lib/notifications';
 import { removeNotification } from '@/lib/notifications';
@@ -6,10 +7,18 @@ import { removeNotification } from '@/lib/notifications';
 const { notification } = defineProps<{ notification: AppNotification }>();
 
 const styles = {
-  success: { icon: CircleCheck, color: 'text-green-400', title: 'Success!' },
-  error: { icon: CircleAlert, color: 'text-red-400', title: 'Error!' },
-  warning: { icon: CircleAlert, color: 'text-yellow-400', title: 'Warning!' },
-  neutral: { icon: Info, color: 'text-gray-400', title: 'Hey!' },
+  success: {
+    icon: CircleCheck,
+    color: 'text-green-400',
+    title: trans('Success!'),
+  },
+  error: { icon: CircleAlert, color: 'text-red-400', title: trans('Error!') },
+  warning: {
+    icon: CircleAlert,
+    color: 'text-yellow-400',
+    title: trans('Warning!'),
+  },
+  neutral: { icon: Info, color: 'text-gray-400', title: trans('Hey!') },
 };
 const style = styles[notification.level];
 </script>
@@ -48,7 +57,7 @@ const style = styles[notification.level];
             class="inline-flex rounded-full p-0.5 text-gray-400 hover:bg-gray-50 hover:text-gray-500 focus:bg-gray-100 focus:ring-2 focus:ring-gray-300 focus:outline-hidden dark:text-gray-300 dark:hover:bg-gray-600"
             @click.prevent="removeNotification(notification.id)"
           >
-            <span class="sr-only">Close</span>
+            <span class="sr-only">{{ $t('Close') }}</span>
             <X class="size-5" aria-hidden="true" />
           </button>
         </div>

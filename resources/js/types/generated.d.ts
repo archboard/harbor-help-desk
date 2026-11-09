@@ -1070,11 +1070,13 @@ declare namespace App {
         email: string;
         email_verified_at: string | null;
         timezone: string | null;
+        locale: string | null;
       };
       export type UpdateProfileData = {
         name?: string;
         email?: string;
         timezone?: string;
+        locale?: string | null;
       };
       export type UserData = {
         id: string;
