@@ -372,7 +372,8 @@ class RunWorkspaceImport implements ShouldQueue
      */
     protected function applyWorkspace(ZipArchive $zip, string $workspaceId, array $replacements): void
     {
-        $exported = $this->rows($zip, 'workspaces')->current() ?? [];
+        $workspaceRows = $this->rows($zip, 'workspaces');
+        $exported = $workspaceRows->valid() ? $workspaceRows->current() : [];
         $settings = is_string($exported['settings'] ?? null) ? strtr($exported['settings'], $replacements) : null;
         $highest = (int) DB::table('tickets')->where('workspace_id', $workspaceId)->max('number');
 

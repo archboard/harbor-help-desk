@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use RuntimeException;
 use Throwable;
 use ZipArchive;
 
@@ -38,6 +39,10 @@ class ImportWorkspace
 
         $disk = Storage::disk(config('harbor.attachments.disk'));
         $path = $disk->putFileAs("{$workspace->getKey()}/imports", $file, Str::ulid().'.zip');
+
+        if ($path === false) {
+            throw new RuntimeException(__('The export file could not be stored.'));
+        }
 
         try {
             DB::transaction(function () use ($actor, $workspace, $path): void {

@@ -56,7 +56,7 @@ class SearchTickets
             ->when($validated['status'] ?? null, fn (Builder $query, array $statuses) => $query->whereIn('status', $statuses))
             ->when($validated['priority'] ?? null, fn (Builder $query, array $priorities) => $query->whereIn('priority', $priorities))
             ->when($validated['tag'] ?? null, fn (Builder $query, array $tags) => $query->whereHas('tags', fn (Builder $query) => $query->whereIn(DB::raw('lower(name)'), array_map(mb_strtolower(...), $tags))))
-            ->when($validated['assignee_id'] ?? null, fn (Builder $query, array $assignees) => $this->assignedTo($query, $actor, $assignees))
+            ->when($validated['assignee_id'] ?? null, fn (Builder $query, array $assignees) => $this->assignedTo($query, $actor, array_values($assignees)))
             ->when($validated['custom_fields'] ?? null, fn (Builder $query, array $values) => $this->customFieldValues($query, $fields, $values))
             ->when($validated['requester_id'] ?? null, fn (Builder $query, string $contactId) => $query->where('requester_id', $contactId))
             ->when((bool) ($validated['deleted'] ?? false), fn (Builder $query) => $query->onlyTrashed());

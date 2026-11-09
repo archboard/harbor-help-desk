@@ -200,7 +200,7 @@ class BuildExport implements ShouldQueue
 
             $rows = $keys === ['id']
                 ? $query->lazyById(1000)
-                : $query->orderBy($keys[0])->when(isset($keys[1]), fn ($q) => $q->orderBy($keys[1]))->lazy(1000);
+                : $query->orderBy($keys[0])->when($keys[1] ?? null, fn ($q, string $secondKey) => $q->orderBy($secondKey))->lazy(1000);
 
             $secrets = array_flip(self::SECRET_COLUMNS[$table] ?? []);
 
@@ -222,7 +222,7 @@ class BuildExport implements ShouldQueue
     /**
      * Copy each attachment's file into the zip under `attachments/{id}/{filename}`. Missing files are skipped.
      *
-     * @param  iterable<int, Model|object{id: string, disk: string, path: string, filename: string}>  $attachments
+     * @param  iterable<int, Attachment|\stdClass>  $attachments
      * @param  list<string>  $tempFiles
      */
     protected function addAttachmentFiles(ZipArchive $zip, iterable $attachments, array &$tempFiles): void
@@ -256,7 +256,7 @@ class BuildExport implements ShouldQueue
     {
         $tempFile = $this->tempFile();
         $tempFiles[] = $tempFile;
-        $handle = fopen($tempFile, 'w');
+        $handle = fopen($tempFile, 'w') ?: throw new \RuntimeException('Could not open a temporary file.');
         $count = 0;
 
         foreach ($rows as $row) {
