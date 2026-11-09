@@ -36,6 +36,16 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
+      # /up checks Redis as well as Postgres
+      redis:
+        image: redis:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
 
     steps:
       - uses: actions/checkout@v7
@@ -68,7 +78,7 @@ jobs:
           docker run -d --name app --network host \
             -e APP_KEY=base64:$(openssl rand -base64 32) \
             -e DB_CONNECTION=pgsql -e DB_HOST=127.0.0.1 -e DB_DATABASE=harbor -e DB_USERNAME=harbor -e DB_PASSWORD=secret \
-            -e HARBOR_MULTITENANT=false \
+            -e HARBOR_MULTITENANT=false -e REDIS_HOST=127.0.0.1 \
             -e CACHE_STORE=array -e SESSION_DRIVER=array -e QUEUE_CONNECTION=sync -e BROADCAST_CONNECTION=log \
             harbor-help:ci sh -c "php artisan migrate --force && frankenphp php-server --root public --listen :8000"
           for i in $(seq 1 30); do curl -f http://localhost:8000/up && exit 0; sleep 2; done

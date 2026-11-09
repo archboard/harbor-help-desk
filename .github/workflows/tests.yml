@@ -39,6 +39,8 @@ jobs:
           --health-retries 5
 
     env:
+      # .env comes from .env.example without Reverb keys, and booting the app builds the broadcaster
+      BROADCAST_CONNECTION: log
       REDIS_HOST: 127.0.0.1
       REDIS_PORT: 6379
       DB_CONNECTION: pgsql
