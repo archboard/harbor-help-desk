@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Head, InfiniteScroll, Link, router, useForm } from '@inertiajs/vue3';
 import { Search } from '@lucide/vue';
 import { watchDebounced } from '@vueuse/core';
@@ -17,7 +18,7 @@ import Thead from '@/components/tables/Thead.vue';
 import { index, show, store } from '@/routes/contacts';
 import type { Paginated } from '@/types';
 
-defineOptions({ layout: { title: 'Contacts' } });
+defineOptions({ layout: { title: trans('Contacts') } });
 
 const { filters } = defineProps<{
   contacts: Paginated<App.Data.Contacts.ContactData>;
@@ -53,7 +54,7 @@ function openCreate(): void {
 </script>
 
 <template>
-  <Head title="Contacts" />
+  <Head :title="$t('Contacts')" />
 
   <div class="space-y-4">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -65,13 +66,13 @@ function openCreate(): void {
         <AppInput
           v-model="search"
           type="search"
-          placeholder="Search by name or email"
-          aria-label="Search contacts"
+          :placeholder="$t('Search by name or email')"
+          :aria-label="$t('Search contacts')"
           class="pl-9"
         />
       </div>
       <AppButton type="button" class="shrink-0" @click="openCreate">
-        New contact
+        {{ $t('New contact') }}
       </AppButton>
     </div>
 
@@ -79,9 +80,9 @@ function openCreate(): void {
       <Table>
         <Thead>
           <tr>
-            <Th>Name</Th>
-            <Th>Email</Th>
-            <Th right>Tickets</Th>
+            <Th>{{ $t('Name') }}</Th>
+            <Th>{{ $t('Email') }}</Th>
+            <Th right>{{ $t('Tickets') }}</Th>
           </tr>
         </Thead>
         <Tbody>
@@ -107,14 +108,16 @@ function openCreate(): void {
       </template>
     </InfiniteScroll>
     <p v-else class="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
-      {{ search ? 'No contacts match your search.' : 'No contacts yet.' }}
+      {{
+        search ? $t('No contacts match your search.') : $t('No contacts yet.')
+      }}
     </p>
   </div>
 
   <Modal
     v-if="creating"
-    headline="New contact"
-    action-text="Create contact"
+    :headline="$t('New contact')"
+    :action-text="$t('Create contact')"
     :action-loading="form.processing"
     @close="creating = false"
     @action="form.submit(store())"
@@ -123,13 +126,13 @@ function openCreate(): void {
       <AppFieldset>
         <InputField
           v-model="form.name"
-          label="Name"
+          :label="$t('Name')"
           :error="form.errors.name"
           required
         />
         <EmailField
           v-model="form.email"
-          label="Email"
+          :label="$t('Email')"
           :error="form.errors.email"
           required
         />

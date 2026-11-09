@@ -28,7 +28,7 @@ const { menuItems = [], size = 'sm' } = defineProps<{
       <MenuButton
         class="inline-flex items-center justify-center rounded-full p-1 focus:ring-2 focus:ring-primary-500 focus:outline-hidden"
       >
-        <span class="sr-only">Open menu</span>
+        <span class="sr-only">{{ $t('Open menu') }}</span>
         <slot name="icon">
           <EllipsisVertical
             :class="[

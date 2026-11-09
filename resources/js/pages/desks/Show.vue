@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import CardAction from '@/components/CardAction.vue';
 import CardHeader from '@/components/CardHeader.vue';
@@ -41,7 +42,7 @@ const { desk, slaPolicies } = defineProps<{
   can: { update: boolean; manageMembers: boolean; archive: boolean };
 }>();
 
-defineOptions({ layout: { title: 'Desk' } });
+defineOptions({ layout: { title: trans('Desk') } });
 
 const page = usePage();
 
@@ -52,10 +53,10 @@ const form = useForm({
   sla_policy_id: desk.sla_policy_id ?? '',
 });
 
-const policyOptions = {
-  '': 'No SLA',
+const policyOptions = computed(() => ({
+  '': trans('No SLA'),
   ...Object.fromEntries(slaPolicies.map(({ id, name }) => [id, name])),
-};
+}));
 
 const fieldsForm = useForm({
   field_ids: (desk.custom_fields ?? []).map((field) => field.id),
@@ -76,7 +77,7 @@ const archiveLoading = ref(false);
 
 function addMember(): void {
   if (!addForm.user_id) {
-    addForm.setError('user_id', 'Choose someone to add.');
+    addForm.setError('user_id', trans('Choose someone to add.'));
 
     return;
   }
@@ -129,7 +130,10 @@ function archive(close: () => void): void {
     onFinish: () => (archiveLoading.value = false),
     onError: (errors) => {
       close();
-      notify({ level: 'error', text: errors.desk ?? 'Unable to archive.' });
+      notify({
+        level: 'error',
+        text: errors.desk ?? trans('Unable to archive.'),
+      });
     },
   });
 }
@@ -155,26 +159,26 @@ function archive(close: () => void): void {
           <AppFieldset>
             <InputField
               v-model="form.name"
-              label="Name"
+              :label="$t('Name')"
               :error="form.errors.name"
               required
             />
             <InputField
               v-model="form.slug"
-              label="Slug"
+              :label="$t('Slug')"
               :error="form.errors.slug"
               required
             />
             <SelectField
               v-model="form.assignment_strategy"
-              label="Automatic assignment"
+              :label="$t('Automatic assignment')"
               :options="strategies"
               hide-null
               :error="form.errors.assignment_strategy"
             />
             <SelectField
               v-model="form.sla_policy_id"
-              label="SLA policy"
+              :label="$t('SLA policy')"
               :options="policyOptions"
               :error="form.errors.sla_policy_id"
             />
@@ -193,17 +197,17 @@ function archive(close: () => void): void {
     </CardWrapper>
 
     <div class="space-y-4">
-      <h2 class="text-lg font-semibold">Members</h2>
+      <h2 class="text-lg font-semibold">{{ $t('Members') }}</h2>
 
       <Table v-if="members.length">
         <Thead>
           <tr>
-            <Th>Name</Th>
-            <Th>Email</Th>
-            <Th>Role</Th>
-            <Th>In rotation</Th>
+            <Th>{{ $t('Name') }}</Th>
+            <Th>{{ $t('Email') }}</Th>
+            <Th>{{ $t('Role') }}</Th>
+            <Th>{{ $t('In rotation') }}</Th>
             <Th v-if="can.manageMembers" right>
-              <span class="sr-only">Actions</span>
+              <span class="sr-only">{{ $t('Actions') }}</span>
             </Th>
           </tr>
         </Thead>
@@ -217,7 +221,7 @@ function archive(close: () => void): void {
                 :model-value="member.role"
                 :options="roles"
                 hide-null
-                :aria-label="`Role for ${member.name}`"
+                :aria-label="$t('Role for :name', { name: member.name })"
                 class="max-w-40"
                 @update:model-value="
                   changeRole(member, $event as App.Enums.DeskRole)
@@ -231,11 +235,11 @@ function archive(close: () => void): void {
               <AppCheckbox
                 v-if="can.manageMembers"
                 :model-value="member.in_rotation"
-                :aria-label="`In rotation: ${member.name}`"
+                :aria-label="$t('In rotation: :name', { name: member.name })"
                 @update:model-value="setInRotation(member, Boolean($event))"
               />
               <template v-else>{{
-                member.in_rotation ? 'Yes' : 'No'
+                member.in_rotation ? $t('Yes') : $t('No')
               }}</template>
             </Td>
             <Td v-if="can.manageMembers" class="text-end">
@@ -244,15 +248,14 @@ function archive(close: () => void): void {
                 size="xs"
                 color="red"
                 @click="removing = member"
+                >{{ $t('Remove') }}</AppButton
               >
-                Remove
-              </AppButton>
             </Td>
           </tr>
         </Tbody>
       </Table>
       <p v-else class="text-sm text-gray-500 dark:text-gray-400">
-        Nobody is on this desk yet.
+        {{ $t('Nobody is on this desk yet.') }}
       </p>
 
       <CardWrapper v-if="can.manageMembers && candidates.length">
@@ -263,13 +266,13 @@ function archive(close: () => void): void {
             <ObjectComboboxField
               :key="addFormKey"
               v-model="addForm.user_id"
-              label="Add a member"
+              :label="$t('Add a member')"
               :options="candidates"
               :error="addForm.errors.user_id"
             />
             <SelectField
               v-model="addForm.role"
-              label="Role"
+              :label="$t('Role')"
               :options="roles"
               :error="addForm.errors.role"
             />
@@ -277,9 +280,8 @@ function archive(close: () => void): void {
               type="submit"
               class="sm:mt-6"
               :loading="addForm.processing"
+              >{{ $t('Add') }}</AppButton
             >
-              Add
-            </AppButton>
           </CardPadding>
         </form>
       </CardWrapper>
@@ -287,14 +289,13 @@ function archive(close: () => void): void {
 
     <div class="space-y-4">
       <div class="flex items-center justify-between gap-4">
-        <h2 class="text-lg font-semibold">Custom fields</h2>
+        <h2 class="text-lg font-semibold">{{ $t('Custom fields') }}</h2>
         <Link
           v-if="page.props.workspace?.is_admin"
           :href="customFieldSettings()"
           class="text-sm text-primary-600 hover:underline dark:text-primary-400"
+          >{{ $t('Manage fields') }}</Link
         >
-          Manage fields
-        </Link>
       </div>
 
       <CardWrapper v-if="can.update && customFields.length">
@@ -308,7 +309,7 @@ function archive(close: () => void): void {
           <CardPadding>
             <CheckboxListField
               v-model="fieldsForm.field_ids"
-              label="Fields on this desk's tickets"
+              :label="$t('Fields on this desk\'s tickets')"
               :options="customFields"
               :error="fieldsForm.errors.field_ids"
             />
@@ -325,16 +326,16 @@ function archive(close: () => void): void {
       <p v-else class="text-sm text-gray-500 dark:text-gray-400">
         {{
           customFields.length
-            ? 'No custom fields are enabled on this desk.'
-            : 'The workspace has no custom fields yet.'
+            ? $t('No custom fields are enabled on this desk.')
+            : $t('The workspace has no custom fields yet.')
         }}
       </p>
     </div>
 
     <div v-if="can.archive" class="flex justify-end">
-      <AppButton type="button" color="red" @click="archiving = true">
-        Archive desk
-      </AppButton>
+      <AppButton type="button" color="red" @click="archiving = true">{{
+        $t('Archive desk')
+      }}</AppButton>
     </div>
   </div>
 
@@ -344,9 +345,11 @@ function archive(close: () => void): void {
     @close="removing = null"
     @confirmed="remove"
   >
-    <template #headline>Remove {{ removing.name }}?</template>
-    They'll lose access to this desk's tickets.
-    <template #actionText>Remove</template>
+    <template #headline>{{
+      $t('Remove :name?', { name: removing.name })
+    }}</template
+    >{{ $t("They'll lose access to this desk's tickets.")
+    }}<template #actionText>{{ $t('Remove') }}</template>
   </ConfirmationModal>
 
   <ConfirmationModal
@@ -355,8 +358,11 @@ function archive(close: () => void): void {
     @close="archiving = false"
     @confirmed="archive"
   >
-    <template #headline>Archive {{ desk.name }}?</template>
-    Its tickets stay as they are. An admin can restore the desk later.
-    <template #actionText>Archive desk</template>
+    <template #headline>{{
+      $t('Archive :name?', { name: desk.name })
+    }}</template
+    >{{
+      $t('Its tickets stay as they are. An admin can restore the desk later.')
+    }}<template #actionText>{{ $t('Archive desk') }}</template>
   </ConfirmationModal>
 </template>

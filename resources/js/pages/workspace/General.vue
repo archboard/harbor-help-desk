@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Deferred, Head, useForm, usePage } from '@inertiajs/vue3';
 import CardAction from '@/components/CardAction.vue';
 import CardPadding from '@/components/CardPadding.vue';
@@ -8,7 +9,7 @@ import AppFieldset from '@/components/forms/AppFieldset.vue';
 import { InputField } from '@/components/forms/fields';
 import { update } from '@/routes/workspace/general';
 
-defineOptions({ layout: { title: 'Workspace' } });
+defineOptions({ layout: { title: trans('Workspace') } });
 
 defineProps<{
   /** Deferred, self-hosted only. */
@@ -23,7 +24,7 @@ const form = useForm({
 </script>
 
 <template>
-  <Head title="Workspace" />
+  <Head :title="$t('Workspace')" />
 
   <CardWrapper>
     <form @submit.prevent="form.submit(update(), { preserveScroll: true })">
@@ -31,7 +32,7 @@ const form = useForm({
         <AppFieldset>
           <InputField
             v-model="form.name"
-            label="Name"
+            :label="$t('Name')"
             :error="form.errors.name"
             required
           />
@@ -44,11 +45,14 @@ const form = useForm({
   <CardWrapper v-if="status || $page.props.multitenant === false">
     <CardPadding>
       <h3 class="mb-4 text-lg font-medium text-gray-900 dark:text-white">
-        System status
+        {{ $t('System status') }}
       </h3>
       <Deferred data="status">
         <template #fallback>
-          <div class="animate-pulse space-y-2" aria-label="Checking services">
+          <div
+            class="animate-pulse space-y-2"
+            :aria-label="$t('Checking services')"
+          >
             <div class="h-5 w-2/3 rounded bg-gray-200 dark:bg-gray-800" />
             <div class="h-5 w-1/2 rounded bg-gray-200 dark:bg-gray-800" />
             <div class="h-5 w-3/5 rounded bg-gray-200 dark:bg-gray-800" />
@@ -72,7 +76,7 @@ const form = useForm({
             }}</span>
           </li>
           <li class="text-gray-500 dark:text-gray-400">
-            Harbor Help {{ status.version }}
+            {{ $t('Harbor Help :version', { version: status.version }) }}
           </li>
         </ul>
       </Deferred>

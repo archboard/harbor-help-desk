@@ -47,7 +47,7 @@ function eraseContact(close: () => void): void {
         :href="index()"
         class="text-sm text-gray-500 hover:underline dark:text-gray-400"
       >
-        ← Contacts
+        {{ $t('← Contacts') }}
       </Link>
       <div class="flex items-center justify-between gap-4">
         <h1 class="text-2xl font-semibold tracking-tight">
@@ -59,7 +59,7 @@ function eraseContact(close: () => void): void {
           #default="{ processing }"
         >
           <AppButton type="submit" :loading="processing">
-            Export data
+            {{ $t('Export data') }}
           </AppButton>
         </Form>
       </div>
@@ -78,13 +78,13 @@ function eraseContact(close: () => void): void {
           <AppFieldset class="grid gap-4 space-y-0 sm:grid-cols-2">
             <InputField
               v-model="form.name"
-              label="Name"
+              :label="$t('Name')"
               :error="form.errors.name"
               required
             />
             <EmailField
               v-model="form.email"
-              label="Email"
+              :label="$t('Email')"
               :error="form.errors.email"
               required
             />
@@ -94,8 +94,8 @@ function eraseContact(close: () => void): void {
       </form>
     </CardWrapper>
 
-    <section class="space-y-3" aria-label="Tickets">
-      <h2 class="text-lg font-semibold">Tickets</h2>
+    <section class="space-y-3" :aria-label="$t('Tickets')">
+      <h2 class="text-lg font-semibold">{{ $t('Tickets') }}</h2>
       <TicketTable
         v-if="tickets.data.length"
         prop="tickets"
@@ -103,33 +103,35 @@ function eraseContact(close: () => void): void {
         hide-requester
       />
       <p v-else class="text-sm text-gray-500 dark:text-gray-400">
-        No tickets from this contact on your desks.
+        {{ $t('No tickets from this contact on your desks.') }}
       </p>
     </section>
 
     <section
       v-if="canErase"
       class="space-y-3 rounded-lg border border-red-300 p-4 dark:border-red-900"
-      aria-label="Danger zone"
+      :aria-label="$t('Danger zone')"
     >
       <h2 class="text-lg font-semibold text-red-700 dark:text-red-400">
-        Danger zone
+        {{ $t('Danger zone') }}
       </h2>
       <p class="text-sm text-gray-500 dark:text-gray-400">
-        Erasing removes this contact's name, email, messages, attachments and
-        rating comments. Their tickets and your replies stay. This cannot be
-        undone.
+        {{
+          $t(
+            "Erasing removes this contact's name, email, messages, attachments and rating comments. Their tickets and your replies stay. This cannot be undone.",
+          )
+        }}
       </p>
       <AppButton type="button" color="red" @click="erasing = true">
-        Erase contact
+        {{ $t('Erase contact') }}
       </AppButton>
     </section>
   </div>
 
   <Modal
     v-if="erasing"
-    headline="Erase this contact?"
-    action-text="Erase permanently"
+    :headline="$t('Erase this contact?')"
+    :action-text="$t('Erase permanently')"
     action-color="red"
     :action-loading="eraseForm.processing"
     @close="
@@ -142,7 +144,7 @@ function eraseContact(close: () => void): void {
       <AppFieldset>
         <InputField
           v-model="eraseForm.confirm_email"
-          :label="`Type ${contact.email} to confirm`"
+          :label="$t('Type :email to confirm', { email: contact.email })"
           :error="eraseForm.errors.confirm_email"
           required
         />

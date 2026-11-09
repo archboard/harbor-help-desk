@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { X } from '@lucide/vue';
 import { computed, ref } from 'vue';
@@ -13,7 +14,7 @@ import { NumberField } from '@/components/forms/fields';
 import Pill from '@/components/Pill.vue';
 import { update as updateSettings } from '@/routes/workspace/settings';
 
-defineOptions({ layout: { title: 'Attachments' } });
+defineOptions({ layout: { title: trans('Attachments') } });
 
 const { maxSizeKb } = defineProps<{
   /** The limit that applies now: the setting held down by the platform cap and PHP. */
@@ -61,7 +62,7 @@ function addExtension(): void {
 </script>
 
 <template>
-  <Head title="Attachments" />
+  <Head :title="$t('Attachments')" />
 
   <CardWrapper>
     <form
@@ -71,10 +72,12 @@ function addExtension(): void {
         <AppFieldset>
           <NumberField
             v-model="maxSizeMb"
-            label="Largest file (MB)"
+            :label="$t('Largest file (MB)')"
             :help-text="
               serverLimited
-                ? `Server limit: ${+(maxSizeKb / 1024).toFixed(2)} MB. Larger files are rejected.`
+                ? $t('Server limit: :size MB. Larger files are rejected.', {
+                    size: String(+(maxSizeKb / 1024).toFixed(2)),
+                  })
                 : undefined
             "
             :error="form.errors.attachments_max_size_kb"
@@ -84,7 +87,7 @@ function addExtension(): void {
 
           <div class="space-y-2">
             <h3 class="text-sm font-medium text-gray-900 dark:text-white">
-              Blocked file types
+              {{ $t('Blocked file types') }}
             </h3>
             <div class="flex flex-wrap gap-1.5">
               <Pill
@@ -99,20 +102,25 @@ function addExtension(): void {
                   class="-mr-1 ml-1 rounded-full hover:text-red-600"
                   @click="form.attachments_blocked_extensions.splice(index, 1)"
                 >
-                  <span class="sr-only">Unblock {{ extension }}</span>
+                  <span class="sr-only">{{
+                    $t('Unblock :extension', { extension })
+                  }}</span>
                   <X class="size-3" aria-hidden="true" />
                 </button>
               </Pill>
             </div>
             <AppInput
               v-model="newExtension"
-              placeholder="Add an extension and press Enter"
-              aria-label="Block an extension"
+              :placeholder="$t('Add an extension and press Enter')"
+              :aria-label="$t('Block an extension')"
               @keydown.enter.prevent="addExtension"
             />
             <HelpText v-if="multitenant">
-              These are blocked as well:
-              {{ platformBlockedExtensions.join(', ') }}.
+              {{
+                $t('These are blocked as well: :extensions.', {
+                  extensions: platformBlockedExtensions.join(', '),
+                })
+              }}
             </HelpText>
             <FieldError v-if="extensionsError">
               {{ extensionsError }}

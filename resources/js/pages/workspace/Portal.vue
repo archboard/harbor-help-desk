@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import CardAction from '@/components/CardAction.vue';
 import CardPadding from '@/components/CardPadding.vue';
@@ -7,7 +8,7 @@ import AppFieldset from '@/components/forms/AppFieldset.vue';
 import { CheckboxField, RadioField } from '@/components/forms/fields';
 import { update as updateSettings } from '@/routes/workspace/settings';
 
-defineOptions({ layout: { title: 'Customer portal' } });
+defineOptions({ layout: { title: trans('Customer portal') } });
 
 defineProps<{
   accessOptions: Record<string, string>;
@@ -23,7 +24,7 @@ const form = useForm({
 </script>
 
 <template>
-  <Head title="Customer portal" />
+  <Head :title="$t('Customer portal')" />
 
   <CardWrapper>
     <form
@@ -33,21 +34,29 @@ const form = useForm({
         <AppFieldset>
           <CheckboxField
             v-model="form.portal_enabled"
-            label="Enable the customer portal"
-            help-text="Lets contacts sign in by email to see their tickets, reply and open new ones."
+            :label="$t('Enable the customer portal')"
+            :help-text="
+              $t(
+                'Lets contacts sign in by email to see their tickets, reply and open new ones.',
+              )
+            "
             :error="form.errors.portal_enabled"
           />
           <RadioField
             v-model="form.portal_access"
-            label="Who can sign in"
+            :label="$t('Who can sign in')"
             :options="accessOptions"
             :disabled="!form.portal_enabled"
             :error="form.errors.portal_access"
           />
           <CheckboxField
             v-model="form.surveys_enabled"
-            label="Send satisfaction surveys"
-            help-text="Asks the requester to rate their experience when a ticket is closed."
+            :label="$t('Send satisfaction surveys')"
+            :help-text="
+              $t(
+                'Asks the requester to rate their experience when a ticket is closed.',
+              )
+            "
             :error="form.errors.surveys_enabled"
           />
         </AppFieldset>

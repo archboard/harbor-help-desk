@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { Check, Copy } from '@lucide/vue';
 import { useClipboard } from '@vueuse/core';
@@ -28,7 +29,7 @@ import {
   update,
 } from '@/routes/workspace/webhooks';
 
-defineOptions({ layout: { title: 'Webhooks' } });
+defineOptions({ layout: { title: trans('Webhooks') } });
 
 type Webhook = App.Data.Webhooks.WebhookData;
 
@@ -121,31 +122,37 @@ function call(
 function summary(webhook: Webhook): string {
   return webhook.event_types.length
     ? webhook.event_types.map((type) => eventTypes[type]).join(', ')
-    : 'All events';
+    : trans('All events');
 }
 </script>
 
 <template>
-  <Head title="Webhooks" />
+  <Head :title="$t('Webhooks')" />
 
   <div class="space-y-6">
     <div class="flex items-center justify-between gap-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
-        Harbor sends a signed JSON request to each URL when a ticket changes.
+        {{
+          $t(
+            'Harbor sends a signed JSON request to each URL when a ticket changes.',
+          )
+        }}
       </p>
-      <AppButton type="button" class="shrink-0" @click="open('new')">
-        New webhook
-      </AppButton>
+      <AppButton type="button" class="shrink-0" @click="open('new')">{{
+        $t('New webhook')
+      }}</AppButton>
     </div>
 
     <Table v-if="webhooks.length">
       <Thead>
         <tr>
-          <Th>URL</Th>
-          <Th>Events</Th>
-          <Th>Status</Th>
-          <Th>Enabled</Th>
-          <Th right><span class="sr-only">Actions</span></Th>
+          <Th>{{ $t('URL') }}</Th>
+          <Th>{{ $t('Events') }}</Th>
+          <Th>{{ $t('Status') }}</Th>
+          <Th>{{ $t('Enabled') }}</Th>
+          <Th right
+            ><span class="sr-only">{{ $t('Actions') }}</span></Th
+          >
         </tr>
       </Thead>
       <Tbody>
@@ -161,22 +168,21 @@ function summary(webhook: Webhook): string {
           </Td>
           <Td>{{ summary(webhook) }}</Td>
           <Td>
-            <Pill v-if="webhook.disabled_at" color="red">
-              Switched off after failures
-            </Pill>
-            <Pill v-else-if="!webhook.is_enabled">Disabled</Pill>
+            <Pill v-if="webhook.disabled_at" color="red">{{
+              $t('Switched off after failures')
+            }}</Pill>
+            <Pill v-else-if="!webhook.is_enabled">{{ $t('Disabled') }}</Pill>
             <Pill v-else-if="webhook.consecutive_failures" color="yellow">
               {{ webhook.consecutive_failures }} failed in a row
             </Pill>
-            <Pill v-else color="green">Healthy</Pill>
+            <Pill v-else color="green">{{ $t('Healthy') }}</Pill>
           </Td>
           <Td>
             <AppToggle
               :model-value="webhook.is_enabled"
               @update:model-value="toggle(webhook, $event)"
+              >{{ $t('Enabled') }}</AppToggle
             >
-              Enabled
-            </AppToggle>
           </Td>
           <Td class="space-x-2 text-end whitespace-nowrap">
             <AppButton
@@ -184,64 +190,62 @@ function summary(webhook: Webhook): string {
               size="xs"
               color="white"
               @click="viewing = webhook.id"
+              >{{ $t('Deliveries') }}</AppButton
             >
-              Deliveries
-            </AppButton>
             <AppButton
               type="button"
               size="xs"
               color="white"
               :loading="busy"
               @click="call('post', ping(webhook.id).url)"
+              >{{ $t('Send ping') }}</AppButton
             >
-              Send ping
-            </AppButton>
             <AppButton
               type="button"
               size="xs"
               color="white"
               @click="rotating = webhook"
+              >{{ $t('Rotate secret') }}</AppButton
             >
-              Rotate secret
-            </AppButton>
             <AppButton
               type="button"
               size="xs"
               color="white"
               @click="open(webhook)"
+              >{{ $t('Edit') }}</AppButton
             >
-              Edit
-            </AppButton>
             <AppButton
               type="button"
               size="xs"
               color="red"
               @click="deleting = webhook"
+              >{{ $t('Delete') }}</AppButton
             >
-              Delete
-            </AppButton>
           </Td>
         </tr>
       </Tbody>
     </Table>
     <p v-else class="text-sm text-gray-500 dark:text-gray-400">
-      There are no webhooks yet.
+      {{ $t('There are no webhooks yet.') }}
     </p>
 
     <section v-if="viewed" class="space-y-3">
       <h2 class="text-sm font-medium text-gray-900 dark:text-gray-100">
-        Recent deliveries to
-        <span class="break-all">{{ viewed.url }}</span>
+        <i18n-t keypath="Recent deliveries to :url" tag="span">
+          <template #url
+            ><span class="break-all">{{ viewed.url }}</span></template
+          >
+        </i18n-t>
       </h2>
       <Table v-if="deliveries[viewed.id]?.length">
         <Thead>
           <tr>
-            <Th>Event</Th>
-            <Th>Status</Th>
-            <Th>Response</Th>
-            <Th>Duration</Th>
-            <Th>Attempts</Th>
-            <Th>When</Th>
+            <Th>{{ $t('Event') }}</Th>
+            <Th>{{ $t('Status') }}</Th>
+            <Th>{{ $t('Response') }}</Th>
+            <Th>{{ $t('Duration') }}</Th>
+            <Th>{{ $t('Attempts') }}</Th>
+            <Th>{{ $t('When') }}</Th>
           </tr>
         </Thead>
         <Tbody>
@@ -265,7 +269,7 @@ function summary(webhook: Webhook): string {
               {{
                 delivery.duration_ms === null
                   ? '—'
-                  : `${delivery.duration_ms} ms`
+                  : $t(':ms ms', { ms: String(delivery.duration_ms) })
               }}
             </Td>
             <Td>{{ delivery.attempts }}</Td>
@@ -274,14 +278,14 @@ function summary(webhook: Webhook): string {
         </Tbody>
       </Table>
       <p v-else class="text-sm text-gray-500 dark:text-gray-400">
-        Nothing has been delivered to this webhook yet.
+        {{ $t('Nothing has been delivered to this webhook yet.') }}
       </p>
     </section>
   </div>
 
   <Modal
     v-if="editing"
-    :headline="editing === 'new' ? 'New webhook' : 'Edit webhook'"
+    :headline="editing === 'new' ? $t('New webhook') : $t('Edit webhook')"
     :action-loading="form.processing"
     @close="editing = null"
     @action="save"
@@ -290,22 +294,22 @@ function summary(webhook: Webhook): string {
       <AppFieldset>
         <InputField
           v-model="form.url"
-          label="URL"
+          :label="$t('URL')"
           type="url"
           :error="form.errors.url"
           required
         />
         <TextareaField
           v-model="form.description"
-          label="Description"
+          :label="$t('Description')"
           :error="form.errors.description"
         />
         <CheckboxListField
           v-model="form.event_types"
-          label="Events"
+          :label="$t('Events')"
           :options="eventTypes"
           :error="form.errors.event_types"
-          help-text="Leave all unchecked to send every event."
+          :help-text="$t('Leave all unchecked to send every event.')"
         />
       </AppFieldset>
     </form>
@@ -319,10 +323,13 @@ function summary(webhook: Webhook): string {
       call('delete', destroy(deleting!.id).url, () => (deleting = null))
     "
   >
-    <template #headline>Delete this webhook?</template>
-    Nothing more is sent to {{ deleting.url }}, and its delivery history is
-    removed.
-    <template #actionText>Delete webhook</template>
+    <template #headline>{{ $t('Delete this webhook?') }}</template>
+    {{
+      $t('Nothing more is sent to :url, and its delivery history is removed.', {
+        url: deleting.url,
+      })
+    }}
+    <template #actionText>{{ $t('Delete webhook') }}</template>
   </ConfirmationModal>
 
   <ConfirmationModal
@@ -333,22 +340,29 @@ function summary(webhook: Webhook): string {
       call('post', rotateSecret(rotating!.id).url, () => (rotating = null))
     "
   >
-    <template #headline>Rotate the secret?</template>
-    The current secret stops working at once, so the receiver needs the new one
-    to verify signatures.
-    <template #actionText>Rotate secret</template>
+    <template #headline>{{ $t('Rotate the secret?') }}</template>
+    {{
+      $t(
+        'The current secret stops working at once, so the receiver needs the new one to verify signatures.',
+      )
+    }}
+    <template #actionText>{{ $t('Rotate secret') }}</template>
   </ConfirmationModal>
 
   <Modal
     v-if="issued"
-    headline="Signing secret"
+    :headline="$t('Signing secret')"
     size="2xl"
     hide-actions
     @close="issued = null"
   >
     <div class="space-y-3">
       <p class="text-sm text-gray-600 dark:text-gray-300">
-        Copy it now: the secret for {{ issued.webhook.url }} is not shown again.
+        {{
+          $t('Copy it now: the secret for :url is not shown again.', {
+            url: issued.webhook.url,
+          })
+        }}
       </p>
       <div class="flex items-center gap-2">
         <pre
@@ -362,7 +376,7 @@ function summary(webhook: Webhook): string {
         >
           <Check v-if="copied" class="size-3" aria-hidden="true" />
           <Copy v-else class="size-3" aria-hidden="true" />
-          {{ copied ? 'Copied' : 'Copy' }}
+          {{ copied ? $t('Copied') : $t('Copy') }}
         </AppButton>
       </div>
     </div>

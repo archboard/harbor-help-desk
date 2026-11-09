@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
@@ -20,7 +21,7 @@ import Th from '@/components/tables/Th.vue';
 import Thead from '@/components/tables/Thead.vue';
 import { destroy, store, update } from '@/routes/macros';
 
-defineOptions({ layout: { title: 'Macros' } });
+defineOptions({ layout: { title: trans('Macros') } });
 
 type Macro = App.Data.Macros.MacroData;
 
@@ -72,9 +73,9 @@ const form = useForm({
 });
 
 const scopeOptions = computed<Record<string, string>>(() => ({
-  personal: 'Personal',
-  ...(canCreateWorkspaceMacro ? { workspace: 'Workspace' } : {}),
-  ...(creatableDeskIds.length ? { desk: 'Desk' } : {}),
+  personal: trans('Personal'),
+  ...(canCreateWorkspaceMacro ? { workspace: trans('Workspace') } : {}),
+  ...(creatableDeskIds.length ? { desk: trans('Desk') } : {}),
 }));
 
 const deskOptions = computed<Record<string, string>>(() =>
@@ -88,12 +89,12 @@ const deskOptions = computed<Record<string, string>>(() =>
 const groups = computed(() => [
   {
     key: 'personal',
-    title: 'Personal',
+    title: trans('Personal'),
     macros: macros.filter((macro) => macro.scope === 'personal'),
   },
   {
     key: 'workspace',
-    title: 'Workspace',
+    title: trans('Workspace'),
     macros: macros.filter((macro) => macro.scope === 'workspace'),
   },
   ...desks.map((desk) => ({
@@ -104,7 +105,7 @@ const groups = computed(() => [
 ]);
 
 const noChange = (options: Record<string, string>) => ({
-  '': 'No change',
+  '': trans('No change'),
   ...options,
 });
 
@@ -194,18 +195,18 @@ function remove(close: () => void): void {
 </script>
 
 <template>
-  <Head title="Macros" />
+  <Head :title="$t('Macros')" />
 
   <SettingsNav />
 
   <div class="space-y-6">
     <div class="flex items-center justify-between gap-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
-        Canned responses that can also change a ticket.
+        {{ $t('Canned responses that can also change a ticket.') }}
       </p>
-      <AppButton type="button" class="shrink-0" @click="open('new')">
-        New macro
-      </AppButton>
+      <AppButton type="button" class="shrink-0" @click="open('new')">{{
+        $t('New macro')
+      }}</AppButton>
     </div>
 
     <template v-for="group in groups" :key="group.key">
@@ -216,10 +217,12 @@ function remove(close: () => void): void {
         <Table>
           <Thead>
             <tr>
-              <Th>Name</Th>
-              <Th>Reply</Th>
-              <Th>Actions</Th>
-              <Th right><span class="sr-only">Actions</span></Th>
+              <Th>{{ $t('Name') }}</Th>
+              <Th>{{ $t('Reply') }}</Th>
+              <Th>{{ $t('Actions') }}</Th>
+              <Th right
+                ><span class="sr-only">{{ $t('Actions') }}</span></Th
+              >
             </tr>
           </Thead>
           <Tbody>
@@ -227,7 +230,9 @@ function remove(close: () => void): void {
               <Td darker>{{ macro.name }}</Td>
               <Td>
                 <Pill v-if="macro.body" color="gray">
-                  {{ macro.body_is_internal ? 'Internal note' : 'Reply' }}
+                  {{
+                    macro.body_is_internal ? $t('Internal note') : $t('Reply')
+                  }}
                 </Pill>
                 <span v-else class="text-gray-400">—</span>
               </Td>
@@ -239,18 +244,17 @@ function remove(close: () => void): void {
                   <Pill v-if="macro.actions.priority" color="gray">
                     {{ priorities[macro.actions.priority] }}
                   </Pill>
-                  <Pill v-if="macro.actions.assign_to_me" color="gray">
-                    Assign to me
-                  </Pill>
+                  <Pill v-if="macro.actions.assign_to_me" color="gray">{{
+                    $t('Assign to me')
+                  }}</Pill>
                   <Pill
                     v-if="
                       macro.actions.add_tags.length ||
                       macro.actions.remove_tags.length
                     "
                     color="gray"
+                    >{{ $t('Tags') }}</Pill
                   >
-                    Tags
-                  </Pill>
                 </span>
               </Td>
               <Td class="space-x-2 text-end whitespace-nowrap">
@@ -260,17 +264,15 @@ function remove(close: () => void): void {
                     size="xs"
                     color="white"
                     @click="open(macro)"
+                    >{{ $t('Edit') }}</AppButton
                   >
-                    Edit
-                  </AppButton>
                   <AppButton
                     type="button"
                     size="xs"
                     color="red"
                     @click="deleting = macro"
+                    >{{ $t('Delete') }}</AppButton
                   >
-                    Delete
-                  </AppButton>
                 </template>
               </Td>
             </tr>
@@ -279,13 +281,13 @@ function remove(close: () => void): void {
       </section>
     </template>
     <p v-if="!macros.length" class="text-sm text-gray-500 dark:text-gray-400">
-      There are no macros yet.
+      {{ $t('There are no macros yet.') }}
     </p>
   </div>
 
   <Modal
     v-if="editing"
-    :headline="editing === 'new' ? 'New macro' : 'Edit macro'"
+    :headline="editing === 'new' ? $t('New macro') : $t('Edit macro')"
     :action-loading="form.processing"
     @close="editing = null"
     @action="save"
@@ -294,19 +296,19 @@ function remove(close: () => void): void {
       <AppFieldset>
         <InputField
           v-model="form.name"
-          label="Name"
+          :label="$t('Name')"
           :error="form.errors.name"
           required
         />
         <SelectField
           v-model="form.scope"
-          label="Scope"
+          :label="$t('Scope')"
           :options="scopeOptions"
           :error="form.errors.scope"
           :disabled="editing !== 'new'"
           :help-text="
             editing !== 'new'
-              ? 'The scope can’t be changed after a macro is created.'
+              ? $t('The scope can’t be changed after a macro is created.')
               : undefined
           "
           required
@@ -314,7 +316,7 @@ function remove(close: () => void): void {
         <SelectField
           v-if="form.scope === 'desk'"
           v-model="form.desk_id"
-          label="Desk"
+          :label="$t('Desk')"
           :options="
             editing === 'new'
               ? deskOptions
@@ -326,9 +328,11 @@ function remove(close: () => void): void {
         />
         <TextareaField
           v-model="form.body"
-          label="Body"
+          :label="$t('Body')"
           :error="form.errors.body"
-          help-text="Leave empty for a macro that only changes the ticket."
+          :help-text="
+            $t('Leave empty for a macro that only changes the ticket.')
+          "
         />
         <p class="flex flex-wrap gap-1 text-xs text-gray-500">
           <code
@@ -341,36 +345,36 @@ function remove(close: () => void): void {
         </p>
         <CheckboxField
           v-model="form.body_is_internal"
-          label="Add as an internal note instead of a reply"
+          :label="$t('Add as an internal note instead of a reply')"
           :error="form.errors.body_is_internal"
         />
         <SelectField
           v-model="form.status"
-          label="Set status"
+          :label="$t('Set status')"
           :options="noChange(statuses)"
           :error="actionError('status')"
         />
         <SelectField
           v-model="form.priority"
-          label="Set priority"
+          :label="$t('Set priority')"
           :options="noChange(priorities)"
           :error="actionError('priority')"
         />
         <InputField
           v-model="form.add_tags"
-          label="Add tags"
-          help-text="Separate tags with commas."
+          :label="$t('Add tags')"
+          :help-text="$t('Separate tags with commas.')"
           :error="actionError('add_tags')"
         />
         <InputField
           v-model="form.remove_tags"
-          label="Remove tags"
-          help-text="Separate tags with commas."
+          :label="$t('Remove tags')"
+          :help-text="$t('Separate tags with commas.')"
           :error="actionError('remove_tags')"
         />
         <CheckboxField
           v-model="form.assign_to_me"
-          label="Assign the ticket to me"
+          :label="$t('Assign the ticket to me')"
           :error="actionError('assign_to_me')"
         />
       </AppFieldset>
@@ -383,8 +387,10 @@ function remove(close: () => void): void {
     @close="deleting = null"
     @confirmed="remove"
   >
-    <template #headline>Delete “{{ deleting.name }}”?</template>
-    Agents can no longer apply it to tickets.
-    <template #actionText>Delete macro</template>
+    <template #headline>{{
+      $t('Delete “:name”?', { name: deleting.name })
+    }}</template
+    >{{ $t('Agents can no longer apply it to tickets.')
+    }}<template #actionText>{{ $t('Delete macro') }}</template>
   </ConfirmationModal>
 </template>

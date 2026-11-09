@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
@@ -16,7 +17,7 @@ import Th from '@/components/tables/Th.vue';
 import Thead from '@/components/tables/Thead.vue';
 import { destroy, store, update } from '@/routes/sla-policies';
 
-defineOptions({ layout: { title: 'SLA policies' } });
+defineOptions({ layout: { title: trans('SLA policies') } });
 
 type Policy = App.Data.SlaPolicies.SlaPolicyData;
 type Cells = Record<string, Record<string, { hours: string; minutes: string }>>;
@@ -148,34 +149,38 @@ function remove(close: () => void): void {
 </script>
 
 <template>
-  <Head title="SLA policies" />
+  <Head :title="$t('SLA policies')" />
 
   <SettingsNav />
 
   <div class="space-y-6">
     <div class="flex items-center justify-between gap-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
-        How quickly tickets must get a first response and a resolution, per
-        priority. Assign a policy to each desk.
+        {{
+          $t(
+            'How quickly tickets must get a first response and a resolution, per priority. Assign a policy to each desk.',
+          )
+        }}
       </p>
       <AppButton
         v-if="canManage"
         type="button"
         class="shrink-0"
         @click="open('new')"
+        >{{ $t('New policy') }}</AppButton
       >
-        New policy
-      </AppButton>
     </div>
 
     <Table v-if="policies.length">
       <Thead>
         <tr>
-          <Th>Name</Th>
-          <Th>Schedule</Th>
-          <Th>Warning</Th>
-          <Th>Targets</Th>
-          <Th right><span class="sr-only">Actions</span></Th>
+          <Th>{{ $t('Name') }}</Th>
+          <Th>{{ $t('Schedule') }}</Th>
+          <Th>{{ $t('Warning') }}</Th>
+          <Th>{{ $t('Targets') }}</Th>
+          <Th right
+            ><span class="sr-only">{{ $t('Actions') }}</span></Th
+          >
         </tr>
       </Thead>
       <Tbody>
@@ -183,7 +188,7 @@ function remove(close: () => void): void {
           <Td darker>{{ policy.name }}</Td>
           <Td>{{ policy.business_schedule?.name ?? '24/7' }}</Td>
           <Td>{{ policy.warning_percent }}%</Td>
-          <Td>{{ summary(policy) || 'Nothing tracked' }}</Td>
+          <Td>{{ summary(policy) || $t('Nothing tracked') }}</Td>
           <Td class="space-x-2 text-end whitespace-nowrap">
             <template v-if="canManage">
               <AppButton
@@ -191,30 +196,28 @@ function remove(close: () => void): void {
                 size="xs"
                 color="white"
                 @click="open(policy)"
+                >{{ $t('Edit') }}</AppButton
               >
-                Edit
-              </AppButton>
               <AppButton
                 type="button"
                 size="xs"
                 color="red"
                 @click="deleting = policy"
+                >{{ $t('Delete') }}</AppButton
               >
-                Delete
-              </AppButton>
             </template>
           </Td>
         </tr>
       </Tbody>
     </Table>
     <p v-else class="text-sm text-gray-500 dark:text-gray-400">
-      There are no SLA policies yet.
+      {{ $t('There are no SLA policies yet.') }}
     </p>
   </div>
 
   <Modal
     v-if="editing"
-    :headline="editing === 'new' ? 'New policy' : 'Edit policy'"
+    :headline="editing === 'new' ? $t('New policy') : $t('Edit policy')"
     :action-loading="form.processing"
     @close="editing = null"
     @action="save"
@@ -223,27 +226,27 @@ function remove(close: () => void): void {
       <AppFieldset>
         <InputField
           v-model="form.name"
-          label="Name"
+          :label="$t('Name')"
           :error="form.errors.name"
           required
         />
         <SelectField
           v-model="form.business_schedule_id"
-          label="Schedule"
+          :label="$t('Schedule')"
           :options="scheduleOptions"
           :error="form.errors.business_schedule_id"
         />
         <InputField
           v-model="form.warning_percent"
           type="number"
-          label="Warning at (% of target elapsed)"
+          :label="$t('Warning at (% of target elapsed)')"
           :error="form.errors.warning_percent"
           required
         />
 
         <div class="space-y-3">
           <p class="text-sm font-medium text-gray-900 dark:text-white">
-            Targets
+            {{ $t('Targets') }}
           </p>
           <FieldError v-if="form.errors.targets">
             {{ form.errors.targets }}
@@ -274,20 +277,20 @@ function remove(close: () => void): void {
                       ]
                     "
                   />
-                  <span class="text-sm text-gray-500">h</span>
+                  <span class="text-sm text-gray-500">{{ $t('h') }}</span>
                   <FormField
                     v-model="form.targets[priority][metric].minutes"
                     type="number"
                     :min="0"
                     :max="59"
                   />
-                  <span class="text-sm text-gray-500">m</span>
+                  <span class="text-sm text-gray-500">{{ $t('m') }}</span>
                 </div>
               </div>
             </div>
           </div>
           <p class="text-xs text-gray-500">
-            Leave a target empty to not track it.
+            {{ $t('Leave a target empty to not track it.') }}
           </p>
         </div>
       </AppFieldset>
@@ -300,8 +303,10 @@ function remove(close: () => void): void {
     @close="deleting = null"
     @confirmed="remove"
   >
-    <template #headline>Delete “{{ deleting.name }}”?</template>
-    Desks using this policy will no longer have an SLA.
-    <template #actionText>Delete policy</template>
+    <template #headline>{{
+      $t('Delete “:name”?', { name: deleting.name })
+    }}</template
+    >{{ $t('Desks using this policy will no longer have an SLA.')
+    }}<template #actionText>{{ $t('Delete policy') }}</template>
   </ConfirmationModal>
 </template>

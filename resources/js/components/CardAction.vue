@@ -15,7 +15,7 @@ const { negativeMargin = false, loading = false } = defineProps<{
   >
     <CardPadding class="flex justify-end gap-2">
       <slot>
-        <AppButton type="submit" :loading="loading">Save</AppButton>
+        <AppButton type="submit" :loading="loading">{{ $t('Save') }}</AppButton>
       </slot>
     </CardPadding>
   </div>

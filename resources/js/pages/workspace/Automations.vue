@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import CardAction from '@/components/CardAction.vue';
 import CardPadding from '@/components/CardPadding.vue';
@@ -7,7 +8,7 @@ import AppFieldset from '@/components/forms/AppFieldset.vue';
 import { CheckboxField } from '@/components/forms/fields';
 import { update as updateSettings } from '@/routes/workspace/settings';
 
-defineOptions({ layout: { title: 'Automations' } });
+defineOptions({ layout: { title: trans('Automations') } });
 
 const settings = usePage().props.workspace?.settings;
 
@@ -18,7 +19,7 @@ const form = useForm({
 </script>
 
 <template>
-  <Head title="Automations" />
+  <Head :title="$t('Automations')" />
 
   <CardWrapper>
     <form
@@ -28,8 +29,12 @@ const form = useForm({
         <AppFieldset>
           <CheckboxField
             v-model="form.automations_allow_private_urls"
-            label="Allow webhooks to private addresses"
-            help-text="Lets the “Send a webhook” action reach servers on your own network (localhost, 10.x, 192.168.x and similar). Leave it off unless you need it."
+            :label="$t('Allow webhooks to private addresses')"
+            :help-text="
+              $t(
+                'Lets the “Send a webhook” action reach servers on your own network (localhost, 10.x, 192.168.x and similar). Leave it off unless you need it.',
+              )
+            "
             :error="form.errors.automations_allow_private_urls"
           />
         </AppFieldset>

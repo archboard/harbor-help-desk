@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Head, InfiniteScroll, Link, router } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import CardWrapper from '@/components/CardWrapper.vue';
@@ -6,7 +7,7 @@ import RelativeTime from '@/components/RelativeTime.vue';
 import { show as showTicket } from '@/routes/tickets';
 import { index } from '@/routes/workspace/audit-log';
 
-defineOptions({ layout: { title: 'Audit log' } });
+defineOptions({ layout: { title: trans('Audit log') } });
 
 const props = defineProps<{
   tab: 'admin' | 'tickets';
@@ -31,10 +32,13 @@ watch(
   },
 );
 
-const tabs = [
-  { key: 'admin', label: 'Admin activity' },
-  { key: 'tickets', label: 'Ticket activity' },
-] as const;
+const tabs = computed(
+  () =>
+    [
+      { key: 'admin', label: trans('Admin activity') },
+      { key: 'tickets', label: trans('Ticket activity') },
+    ] as const,
+);
 
 const typeOptions = computed(() =>
   props.tab === 'admin'
@@ -77,11 +81,11 @@ const field =
 
 <template>
   <div class="space-y-6">
-    <Head title="Audit log" />
+    <Head :title="$t('Audit log')" />
 
     <nav
       class="flex gap-6 border-b border-gray-200 dark:border-gray-800"
-      aria-label="Audit log"
+      :aria-label="$t('Audit log')"
     >
       <Link
         v-for="item in tabs"
@@ -102,12 +106,12 @@ const field =
     <div class="flex flex-wrap items-center gap-3">
       <select
         v-model="type"
-        :aria-label="tab === 'admin' ? 'Action' : 'Event type'"
+        :aria-label="tab === 'admin' ? $t('Action') : $t('Event type')"
         :class="field"
         @change="apply"
       >
         <option value="">
-          {{ tab === 'admin' ? 'All actions' : 'All event types' }}
+          {{ tab === 'admin' ? $t('All actions') : $t('All event types') }}
         </option>
         <option
           v-for="option in typeOptions"
@@ -120,11 +124,11 @@ const field =
 
       <select
         v-model="actorId"
-        aria-label="Actor"
+        :aria-label="$t('Actor')"
         :class="field"
         @change="apply"
       >
-        <option value="">Everyone</option>
+        <option value="">{{ $t('Everyone') }}</option>
         <option v-for="member in members" :key="member.id" :value="member.id">
           {{ member.name }}
         </option>
@@ -134,16 +138,16 @@ const field =
         <input
           v-model="from"
           type="date"
-          aria-label="From"
+          :aria-label="$t('From')"
           :max="to || undefined"
           :class="field"
           @change="apply"
         />
-        <span class="text-gray-500">to</span>
+        <span class="text-gray-500">{{ $t('to') }}</span>
         <input
           v-model="to"
           type="date"
-          aria-label="To"
+          :aria-label="$t('To')"
           :min="from || undefined"
           :class="field"
           @change="apply"
@@ -156,7 +160,7 @@ const field =
         v-if="events.data.length === 0"
         class="p-6 text-sm text-gray-500 dark:text-gray-400"
       >
-        Nothing has happened yet.
+        {{ $t('Nothing has happened yet.') }}
       </p>
 
       <InfiniteScroll v-else data="events" as="ul" class="divide-y">

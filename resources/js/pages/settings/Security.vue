@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Head, useForm } from '@inertiajs/vue3';
 import CardAction from '@/components/CardAction.vue';
 import CardHeader from '@/components/CardHeader.vue';
@@ -9,7 +10,7 @@ import { PasswordField } from '@/components/forms/fields';
 import SettingsNav from '@/components/SettingsNav.vue';
 import { update } from '@/routes/user-password';
 
-defineOptions({ layout: { title: 'Security' } });
+defineOptions({ layout: { title: trans('Security') } });
 
 const form = useForm({
   current_password: '',
@@ -26,30 +27,30 @@ function submit(): void {
 </script>
 
 <template>
-  <Head title="Security" />
+  <Head :title="$t('Security')" />
 
   <SettingsNav />
 
   <CardWrapper>
     <form @submit.prevent="submit">
       <CardPadding>
-        <CardHeader class="mb-4">Change password</CardHeader>
+        <CardHeader class="mb-4">{{ $t('Change password') }}</CardHeader>
         <AppFieldset>
           <PasswordField
             v-model="form.current_password"
-            label="Current password"
+            :label="$t('Current password')"
             :error="form.errors.current_password"
             required
           />
           <PasswordField
             v-model="form.password"
-            label="New password"
+            :label="$t('New password')"
             :error="form.errors.password"
             required
           />
           <PasswordField
             v-model="form.password_confirmation"
-            label="Confirm new password"
+            :label="$t('Confirm new password')"
             :error="form.errors.password_confirmation"
             required
           />

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AppButton from '@/components/AppButton.vue';
 import SimpleAlert from '@/components/alerts/SimpleAlert.vue';
@@ -15,7 +16,7 @@ import Thead from '@/components/tables/Thead.vue';
 import { update } from '@/routes/notification-preferences';
 import { index as emailSettings } from '@/routes/workspace/email';
 
-defineOptions({ layout: { title: 'Notifications' } });
+defineOptions({ layout: { title: trans('Notifications') } });
 
 const { preferences, channels } = defineProps<{
   preferences: App.Data.Notifications.NotificationPreferenceData[];
@@ -34,17 +35,20 @@ const form = useForm({
 </script>
 
 <template>
-  <Head title="Notifications" />
+  <Head :title="$t('Notifications')" />
 
   <SettingsNav />
 
   <div class="space-y-6">
     <SimpleAlert v-if="!hasNotificationMailbox" level="warning">
-      This workspace has no mailbox to send email from, so email notifications
-      won't be delivered.
-      <Link :href="emailSettings().url" class="font-medium underline">
-        Set up email
-      </Link>
+      {{
+        $t(
+          "This workspace has no mailbox to send email from, so email notifications won't be delivered.",
+        )
+      }}
+      <Link :href="emailSettings().url" class="font-medium underline">{{
+        $t('Set up email')
+      }}</Link>
     </SimpleAlert>
 
     <CardWrapper>
@@ -52,7 +56,7 @@ const form = useForm({
         <Table>
           <Thead>
             <tr>
-              <Th>Notify me when</Th>
+              <Th>{{ $t('Notify me when') }}</Th>
               <Th v-for="(label, channel) in channels" :key="channel">
                 {{ label }}
               </Th>
@@ -80,7 +84,9 @@ const form = useForm({
         </Table>
         <FieldError :error="form.errors.preferences" class="px-4" />
         <CardAction>
-          <AppButton type="submit" :loading="form.processing">Save</AppButton>
+          <AppButton type="submit" :loading="form.processing">{{
+            $t('Save')
+          }}</AppButton>
         </CardAction>
       </form>
     </CardWrapper>

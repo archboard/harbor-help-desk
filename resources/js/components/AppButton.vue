@@ -92,7 +92,7 @@ watch(
         v-show="!loading"
         class="inline-flex items-center gap-1 whitespace-nowrap"
       >
-        <slot>Save</slot>
+        <slot>{{ $t('Save') }}</slot>
       </span>
     </Transition>
   </component>

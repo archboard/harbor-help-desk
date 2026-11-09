@@ -39,11 +39,11 @@ onMounted(() => {
 
       <div class="mt-3 w-full text-center sm:mt-5">
         <h3 class="text-lg leading-6">
-          <slot name="headline">Are you sure?</slot>
+          <slot name="headline">{{ $t('Are you sure?') }}</slot>
         </h3>
         <div class="mt-2">
           <p class="text-sm">
-            <slot>This action cannot be undone.</slot>
+            <slot>{{ $t('This action cannot be undone.') }}</slot>
           </p>
         </div>
       </div>
@@ -61,10 +61,10 @@ onMounted(() => {
           :loading="loading"
           @click.prevent="emit('confirmed', close)"
         >
-          <slot name="actionText">I'm sure</slot>
+          <slot name="actionText">{{ $t("I'm sure") }}</slot>
         </AppButton>
         <AppButton type="button" color="white" full @click.prevent="close">
-          Never mind
+          {{ $t('Never mind') }}
         </AppButton>
       </div>
     </template>
