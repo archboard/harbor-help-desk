@@ -8,9 +8,10 @@ import {
   PopoverPanel,
 } from '@headlessui/vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { ChevronDown, Menu as MenuIcon, Plus, X } from '@lucide/vue';
+import { ChevronDown, Menu as MenuIcon, Plus, Search, X } from '@lucide/vue';
 import { computed, watch } from 'vue';
 import AppButton from '@/components/AppButton.vue';
+import CommandPalette from '@/components/CommandPalette.vue';
 import Container from '@/components/Container.vue';
 import AppCheckbox from '@/components/forms/AppCheckbox.vue';
 import ArchboardLogo from '@/components/icons/ArchboardLogo.vue';
@@ -20,20 +21,13 @@ import QuickView from '@/components/tickets/QuickView.vue';
 import TimezonePrompt from '@/components/TimezonePrompt.vue';
 import ScaleIn from '@/components/transitions/ScaleIn.vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
+import { paletteOpen } from '@/lib/commandPalette';
 import { setDisplayTimezone } from '@/lib/dates';
+import { useNavigation } from '@/lib/navigation';
 import { initializeRealtime } from '@/lib/realtime';
 import { logout } from '@/routes';
 import { update as updateAvailability } from '@/routes/availability';
-import { edit as editApiTokens } from '@/routes/api-tokens';
-import { index as automations } from '@/routes/automations';
-import { index as contacts } from '@/routes/contacts';
-import { edit as editAppearance } from '@/routes/appearance';
-import { index as desks } from '@/routes/desks';
-import { edit as editProfile } from '@/routes/profile';
-import { index as reports } from '@/routes/reports';
-import { edit as editSecurity } from '@/routes/security';
 import { create as createTicket, index as tickets } from '@/routes/tickets';
-import { edit as workspaceSettings } from '@/routes/workspace/general';
 
 const { title = '' } = defineProps<{ title?: string }>();
 
@@ -48,31 +42,13 @@ watch(() => page.props.auth.user.timezone, setDisplayTimezone, {
   immediate: true,
 });
 
-const navigation = computed(() => [
-  { label: 'Tickets', href: tickets().url },
-  { label: 'Contacts', href: contacts().url },
-  { label: 'Desks', href: desks().url },
-  { label: 'Reports', href: reports().url },
-  ...(page.props.canViewAutomations
-    ? [{ label: 'Automations', href: automations().url }]
-    : []),
-  ...(page.props.workspace?.is_admin
-    ? [{ label: 'Workspace', href: workspaceSettings().url }]
-    : []),
-]);
+const { navigation, userNavigation } = useNavigation();
 
 const isAway = computed(() => page.props.workspace?.away_at != null);
 
 function setAway(away: boolean): void {
   router.put(updateAvailability().url, { away }, { preserveScroll: true });
 }
-
-const userNavigation = [
-  { label: 'Profile', href: editProfile().url },
-  { label: 'Security', href: editSecurity().url },
-  { label: 'API tokens', href: editApiTokens().url },
-  { label: 'Appearance', href: editAppearance().url },
-];
 </script>
 
 <template>
@@ -119,6 +95,15 @@ const userNavigation = [
               <Plus class="mr-1 -ml-1 size-4" aria-hidden="true" />
               New ticket
             </AppButton>
+            <button
+              type="button"
+              class="mr-1 inline-flex items-center gap-2 rounded-md p-2 text-gray-500 hover:bg-gray-100 focus:ring-2 focus:ring-primary-500 focus:outline-hidden dark:text-gray-300 dark:hover:bg-gray-800"
+              @click="paletteOpen = true"
+            >
+              <Search class="size-5" aria-hidden="true" />
+              <span class="sr-only">Search</span>
+              <kbd class="hidden text-xs lg:inline" aria-hidden="true">⌘K</kbd>
+            </button>
             <NotificationBell />
 
             <Popover v-slot="{ open }" class="relative hidden md:block">
@@ -258,5 +243,6 @@ const userNavigation = [
 
     <Notifications />
     <QuickView />
+    <CommandPalette />
   </div>
 </template>
