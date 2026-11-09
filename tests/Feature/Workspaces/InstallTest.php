@@ -34,7 +34,7 @@ describe('self-hosted', function () {
     test('the install page checks the services', function () {
         config(['reverb.servers.reverb.host' => '127.0.0.1', 'reverb.servers.reverb.port' => 1]);
 
-        $this->get(route('install'))->assertInertia(fn (Assert $page) => $page->has('checks', 4));
+        $this->get(route('install'))->assertInertia(fn (Assert $page) => $page->has('checks', 5));
 
         $checks = collect(app(CheckServices::class)->handle())->keyBy('name');
         expect($checks['Redis'])->toBeInstanceOf(ServiceCheckData::class)->ok->toBeTrue()

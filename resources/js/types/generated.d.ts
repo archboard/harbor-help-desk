@@ -537,6 +537,10 @@ declare namespace App {
         ok: boolean;
         detail: string;
       };
+      export type SystemStatusData = {
+        version: string;
+        checks: App.Data.Install.ServiceCheckData[];
+      };
     }
     namespace Macros {
       export type AppliedMacroData = {

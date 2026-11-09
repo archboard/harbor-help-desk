@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Workspace;
 
+use App\Actions\Install\CheckServices;
 use App\Actions\Workspaces\UpdateWorkspace;
+use App\Data\Install\SystemStatusData;
 use App\Http\Controllers\Controller;
 use App\Http\Flash;
 use App\Models\User;
@@ -24,7 +26,10 @@ class GeneralController extends Controller
         Gate::authorize('update', Workspace::current());
 
         // The page reads the workspace from the shared `workspace` prop.
-        return Inertia::render('workspace/General');
+        // Infrastructure is the operator's job in the cloud, so only self-hosted admins see the status.
+        return Inertia::render('workspace/General', config('harbor.multitenant') ? [] : [
+            'status' => Inertia::defer(fn (): SystemStatusData => new SystemStatusData(config('harbor.version'), app(CheckServices::class)->handle())),
+        ]);
     }
 
     public function update(Request $request, #[CurrentUser] User $user, UpdateWorkspace $updateWorkspace): RedirectResponse

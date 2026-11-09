@@ -2,6 +2,7 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
@@ -17,3 +18,4 @@ Schedule::command('mailboxes:renew-push')->daily()->withoutOverlapping();
 Schedule::command('tickets:apply-retention')->daily()->withoutOverlapping();
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
 Schedule::command('model:prune')->daily();
+Schedule::call(fn () => Cache::put('harbor:scheduler-heartbeat', now()->getTimestamp()))->everyMinute();
