@@ -11,6 +11,7 @@ import FieldError from '@/components/forms/FieldError.vue';
 import FilePicker from '@/components/forms/FilePicker.vue';
 import FadeIn from '@/components/transitions/FadeIn.vue';
 import { firstListError } from '@/lib/files';
+import { quickViewDraft } from '@/lib/quickView';
 import { apply } from '@/routes/tickets/macros';
 import { store } from '@/routes/tickets/comments';
 
@@ -48,6 +49,19 @@ const form = useForm({
   is_internal: false as boolean,
   attachments: [] as File[],
 } satisfies App.Data.Tickets.AddTicketCommentData);
+
+// A draft handed over by the quick view (a macro run from the command palette).
+watch(
+  quickViewDraft,
+  (draft) => {
+    if (draft?.ticketId === ticketId) {
+      form.body = draft.body;
+      form.is_internal = draft.isInternal;
+      quickViewDraft.value = null;
+    }
+  },
+  { immediate: true },
+);
 
 watch(
   () => form.body,

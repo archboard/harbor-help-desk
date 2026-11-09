@@ -9,31 +9,19 @@ import {
   TransitionChild,
   TransitionRoot,
 } from '@headlessui/vue';
-import { router, useHttp } from '@inertiajs/vue3';
+import { router, useHttp, usePage } from '@inertiajs/vue3';
 import { ChevronRight, Search } from '@lucide/vue';
 import { useMagicKeys, watchDebounced } from '@vueuse/core';
-import type { Component } from 'vue';
 import { computed, ref, shallowRef, watch } from 'vue';
 import Spinner from '@/components/Spinner.vue';
 import StatusPill from '@/components/tickets/StatusPill.vue';
-import { paletteOpen } from '@/lib/commandPalette';
+import { paletteOpen, paletteTarget } from '@/lib/commandPalette';
+import type { Command, PaletteTarget } from '@/lib/commandPalette';
 import { useNavigation } from '@/lib/navigation';
 import { openQuickView } from '@/lib/quickView';
+import { ticketCommands } from '@/lib/ticketCommands';
 import { create as createTicket, lookup, show } from '@/routes/tickets';
-
-/**
- * A command either runs, or opens a nested level of commands (`children`). The palette keeps a
- * stack of the commands that were opened, so Backspace on an empty query goes back one level.
- */
-type Command = {
-  id: string;
-  label: string;
-  group: string;
-  icon?: Component;
-  ticket?: App.Data.Tickets.TicketData;
-  run?: () => void;
-  children?: () => Command[];
-};
+import { apply as applyMacroRoute } from '@/routes/tickets/macros';
 
 const { navigation, userNavigation } = useNavigation();
 
@@ -41,6 +29,11 @@ const query = ref('');
 const stack = ref<Command[]>([]);
 const tickets = shallowRef<App.Data.Tickets.TicketData[]>([]);
 const http = useHttp({ search: '' });
+const macroHttp = useHttp({});
+const page = usePage();
+const palette = computed(() => page.props.palette);
+/** The tickets the page scoped this `Cmd+K` to, if any. */
+const target = ref<PaletteTarget | null>(null);
 
 const keys = useMagicKeys({
   passive: false,
@@ -55,6 +48,9 @@ watch(
   () => keys['Meta+K'].value || keys['Ctrl+K'].value,
   (pressed) => {
     if (pressed) {
+      target.value = paletteOpen.value
+        ? null
+        : (paletteTarget.value?.() ?? null);
       paletteOpen.value = !paletteOpen.value;
     }
   },
@@ -65,6 +61,9 @@ watch(paletteOpen, (open) => {
     query.value = '';
     stack.value = [];
     tickets.value = [];
+    target.value = null;
+  } else if (!palette.value) {
+    router.reload({ only: ['palette'] });
   }
 });
 
@@ -72,31 +71,62 @@ watch(stack, () => {
   query.value = '';
 });
 
+/** Applies the macro on the server, then opens the quick view with its text as the draft. */
+async function applyMacro(
+  ticketId: string,
+  macro: App.Data.Macros.MacroData,
+): Promise<void> {
+  try {
+    const applied = (await macroHttp.post(
+      applyMacroRoute.url({ ticket: ticketId, macro: macro.id }),
+    )) as App.Data.Macros.AppliedMacroData;
+
+    openQuickView(
+      ticketId,
+      applied.body
+        ? { body: applied.body, isInternal: applied.is_internal }
+        : undefined,
+    );
+  } catch {
+    router.reload();
+  }
+}
+
+function actionsFor(target: PaletteTarget): Command[] {
+  return ticketCommands({
+    target,
+    palette: palette.value,
+    userId: page.props.auth.user.id,
+    applyMacro,
+  });
+}
+
 function ticketCommand(ticket: App.Data.Tickets.TicketData): Command {
   return {
     id: ticket.id,
     label: `#${ticket.number} ${ticket.subject}`,
     group: 'Tickets',
     ticket,
-    // Step 7 adds the ticket's actions here.
     children: () => [
       {
         id: 'open',
         label: 'Open',
-        group: 'Ticket',
+        group: `Ticket #${ticket.number}`,
         run: () => router.visit(show(ticket.id)),
       },
       {
         id: 'quick-view',
         label: 'Quick view',
-        group: 'Ticket',
+        group: `Ticket #${ticket.number}`,
         run: () => openQuickView(ticket.id),
       },
+      ...actionsFor({ ticketIds: [ticket.id], ticket }),
     ],
   };
 }
 
 const rootCommands = computed<Command[]>(() => [
+  ...(target.value ? actionsFor(target.value) : []),
   ...[
     ...navigation.value,
     ...userNavigation.value,
@@ -114,7 +144,9 @@ const current = computed(() => stack.value.at(-1));
 
 const commands = computed(() => {
   const term = query.value.trim().toLowerCase();
-  const all = current.value ? current.value.children!() : rootCommands.value;
+  const all = current.value
+    ? current.value.children!(query.value)
+    : rootCommands.value;
 
   // Tickets are already filtered by the server.
   return all.filter(
@@ -125,6 +157,9 @@ const commands = computed(() => {
 const groups = computed(() =>
   Object.entries(Object.groupBy(commands.value, (command) => command.group)),
 );
+
+/** A nested level of ticket actions is empty until the `palette` prop arrives. */
+const loadingActions = computed(() => !!current.value && !palette.value);
 
 /** The query the ticket results belong to; differs from `query` while a search is pending. */
 const searchedTerm = ref('');
@@ -221,7 +256,7 @@ function goBack(event: KeyboardEvent): void {
                 class="flex items-center gap-2 border-b border-gray-200 px-4 dark:border-gray-700"
               >
                 <Spinner
-                  v-if="searching"
+                  v-if="searching || loadingActions"
                   class="size-5 shrink-0 text-gray-400"
                   aria-hidden="true"
                 />
@@ -235,7 +270,7 @@ function goBack(event: KeyboardEvent): void {
                   :key="command.id"
                   class="inline-flex shrink-0 items-center gap-1 rounded-md bg-gray-100 px-2 py-1 text-xs font-medium dark:bg-gray-700"
                 >
-                  {{ command.label.split(' ')[0] }}
+                  {{ command.chip ?? command.label.split(' ')[0] }}
                   <ChevronRight class="size-3" aria-hidden="true" />
                 </span>
                 <!-- ComboboxInput has no v-model; keyed by level so it remounts empty. -->
@@ -289,7 +324,10 @@ function goBack(event: KeyboardEvent): void {
                   </ComboboxOption>
                 </template>
               </ComboboxOptions>
-              <div v-else-if="searching" class="flex justify-center py-6">
+              <div
+                v-else-if="searching || loadingActions"
+                class="flex justify-center py-6"
+              >
                 <Spinner class="size-5 text-gray-400" aria-hidden="true" />
                 <span class="sr-only">Searching…</span>
               </div>

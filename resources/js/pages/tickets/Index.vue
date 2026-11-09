@@ -2,7 +2,7 @@
 import { Head, router } from '@inertiajs/vue3';
 import AppButton from '@/components/AppButton.vue';
 import { useLocalStorage } from '@vueuse/core';
-import { computed, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import SavedViews from '@/components/tickets/SavedViews.vue';
 import TicketBulkActions from '@/components/tickets/TicketBulkActions.vue';
 import TicketFilters from '@/components/tickets/TicketFilters.vue';
@@ -10,6 +10,7 @@ import TicketTable from '@/components/tickets/TicketTable.vue';
 import type { TicketQuery } from '@/components/tickets/TicketFilters.vue';
 import { useLiveReload } from '@/composables/useLiveReload';
 import { useRowNavigation } from '@/composables/useRowNavigation';
+import { paletteTarget } from '@/lib/commandPalette';
 import { openQuickView } from '@/lib/quickView';
 import { DEFAULT_COLUMNS } from '@/lib/ticketColumns';
 import { cleanQuery, sameQuery } from '@/lib/tickets';
@@ -72,6 +73,28 @@ useRowNavigation({
   canSelect: () => !filters.deleted,
   onPreview: openQuickView,
 });
+
+/** `Cmd+K` acts on the selection when the focused row is in it, otherwise on the focused row. */
+onMounted(() => {
+  paletteTarget.value = () => {
+    const ticket = tickets.data.find((row) => row.id === focusedId.value);
+
+    if (!ticket) {
+      return null;
+    }
+
+    const ticketIds = selected.value.includes(ticket.id)
+      ? selected.value
+      : [ticket.id];
+
+    return {
+      ticketIds,
+      ticket: ticketIds.length === 1 ? ticket : undefined,
+      done: () => (selected.value = []),
+    };
+  };
+});
+onBeforeUnmount(() => (paletteTarget.value = null));
 
 /** Mirrors `TicketPolicy@delete` for every selected ticket. */
 const canDeleteSelected = computed(() =>

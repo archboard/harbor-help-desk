@@ -653,6 +653,16 @@ declare namespace App {
         preferences: Record<string, Record<string, boolean>>;
       };
     }
+    namespace Palette {
+      export type PaletteData = {
+        statuses: Record<string, string>;
+        priorities: Record<string, string>;
+        agents: App.Data.Users.UserData[];
+        macros: App.Data.Macros.MacroData[];
+        desks: App.Data.Desks.DeskData[];
+        tags: App.Data.Tags.TagData[];
+      };
+    }
     namespace Portal {
       export type OpenPortalTicketData = {
         subject: string;

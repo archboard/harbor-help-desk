@@ -28,6 +28,7 @@ declare module '@inertiajs/core' {
       notifications?: { unread_count: number } | null;
       realtime?: App.Data.Realtime.RealtimeData;
       preview?: TicketPageProps | null;
+      palette?: App.Data.Palette.PaletteData;
       [key: string]: unknown;
     };
     flashDataType: {

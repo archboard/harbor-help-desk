@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Data\Contacts\ContactData;
+use App\Data\Palette\PaletteData;
 use App\Data\Realtime\RealtimeData;
 use App\Data\Users\CurrentUserData;
 use App\Data\Workspaces\WorkspaceData;
@@ -13,6 +14,7 @@ use App\Models\Workspace;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Inertia\Inertia;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -80,6 +82,8 @@ class HandleInertiaRequests extends Middleware
 
                 return TicketPageProps::handle($user, $ticket);
             }]),
+            // What the command palette's ticket actions offer. Only when requested: `only: ['palette']`.
+            ...($user === null ? [] : ['palette' => Inertia::optional(fn (): PaletteData => PaletteData::forUser($user))]),
             // Authenticated pages only, so guests never open a socket.
             ...($user === null ? [] : ['realtime' => fn (): RealtimeData => RealtimeData::fromConfig()]),
         ];
