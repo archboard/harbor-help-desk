@@ -45,3 +45,4 @@ yarn-error.log
 /opencode.jsonc
 /.phpstorm.meta.php
 /_ide_helper.php
+.env.docker
