@@ -88,7 +88,7 @@ const allSelected = computed({
         <tr>
           <Th v-if="selected" class="w-0 pr-0">
             <AppCheckbox v-model="allSelected">
-              <span class="sr-only">Select all loaded tickets</span>
+              <span class="sr-only">{{ $t('Select all loaded tickets') }}</span>
             </AppCheckbox>
           </Th>
           <Th v-for="column in shown" :key="column.id">{{ column.label }}</Th>
@@ -115,7 +115,9 @@ const allSelected = computed({
         >
           <Td v-if="selected" class="w-0 pr-0">
             <AppCheckbox v-model="selected" :value="ticket.id">
-              <span class="sr-only">Select #{{ ticket.number }}</span>
+              <span class="sr-only">{{
+                $t('Select #:number', { number: String(ticket.number) })
+              }}</span>
             </AppCheckbox>
           </Td>
           <template v-for="column in shown" :key="column.id">
@@ -180,7 +182,9 @@ const allSelected = computed({
               @click.stop="emit('preview', ticket.id)"
             >
               <Eye class="size-4" aria-hidden="true" />
-              <span class="sr-only">Quick view #{{ ticket.number }}</span>
+              <span class="sr-only">{{
+                $t('Quick view #:number', { number: String(ticket.number) })
+              }}</span>
             </button>
           </Td>
         </tr>

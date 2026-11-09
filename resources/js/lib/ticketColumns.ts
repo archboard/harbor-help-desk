@@ -1,20 +1,24 @@
+import { trans } from 'laravel-vue-i18n';
 import { formatDate } from '@/lib/dates';
 
 export type TicketColumn = { id: string; label: string };
 
-export const BUILT_IN_COLUMNS: TicketColumn[] = [
-  { id: 'number', label: '#' },
-  { id: 'subject', label: 'Subject' },
-  { id: 'requester', label: 'Requester' },
-  { id: 'desk', label: 'Desk' },
-  { id: 'status', label: 'Status' },
-  { id: 'priority', label: 'Priority' },
-  { id: 'assignees', label: 'Assignees' },
-  { id: 'tags', label: 'Tags' },
-  { id: 'due', label: 'Due' },
-  { id: 'created', label: 'Created' },
-  { id: 'updated', label: 'Updated' },
-];
+/** A function, not a constant, so the labels follow the locale. */
+export function builtInColumns(): TicketColumn[] {
+  return [
+    { id: 'number', label: '#' },
+    { id: 'subject', label: trans('Subject') },
+    { id: 'requester', label: trans('Requester') },
+    { id: 'desk', label: trans('Desk') },
+    { id: 'status', label: trans('Status') },
+    { id: 'priority', label: trans('Priority') },
+    { id: 'assignees', label: trans('Assignees') },
+    { id: 'tags', label: trans('Tags') },
+    { id: 'due', label: trans('Due') },
+    { id: 'created', label: trans('Created') },
+    { id: 'updated', label: trans('Updated') },
+  ];
+}
 
 export const DEFAULT_COLUMNS = [
   'number',
@@ -37,7 +41,7 @@ export function availableColumns(
   customFields: App.Data.CustomFields.CustomFieldData[],
 ): TicketColumn[] {
   return [
-    ...BUILT_IN_COLUMNS,
+    ...builtInColumns(),
     ...customFields.map((field) => ({
       id: customFieldColumnId(field),
       label: field.name,
@@ -55,7 +59,7 @@ export function formatCustomField(
   }
 
   if (field.type === 'checkbox') {
-    return value ? 'Yes' : 'No';
+    return value ? trans('Yes') : trans('No');
   }
 
   if (field.type === 'date') {

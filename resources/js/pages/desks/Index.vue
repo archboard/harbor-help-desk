@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
@@ -13,7 +14,7 @@ import Thead from '@/components/tables/Thead.vue';
 import { formatDate } from '@/lib/dates';
 import { restore, show, store } from '@/routes/desks';
 
-defineOptions({ layout: { title: 'Desks' } });
+defineOptions({ layout: { title: trans('Desks') } });
 
 defineProps<{
   desks: App.Data.Desks.DeskData[];
@@ -56,19 +57,21 @@ function restoreDesk(desk: App.Data.Desks.DeskData): void {
 </script>
 
 <template>
-  <Head title="Desks" />
+  <Head :title="$t('Desks')" />
 
   <div class="space-y-8">
     <div class="space-y-4">
       <div v-if="canManageDesks" class="flex justify-end">
-        <AppButton type="button" @click="openCreate">New desk</AppButton>
+        <AppButton type="button" @click="openCreate">{{
+          $t('New desk')
+        }}</AppButton>
       </div>
 
       <Table v-if="desks.length">
         <Thead>
           <tr>
-            <Th>Name</Th>
-            <Th>Slug</Th>
+            <Th>{{ $t('Name') }}</Th>
+            <Th>{{ $t('Slug') }}</Th>
           </tr>
         </Thead>
         <Tbody>
@@ -86,18 +89,20 @@ function restoreDesk(desk: App.Data.Desks.DeskData): void {
         </Tbody>
       </Table>
       <p v-else class="text-sm text-gray-500 dark:text-gray-400">
-        You aren't on any desks yet.
+        {{ $t("You aren't on any desks yet.") }}
       </p>
     </div>
 
     <div v-if="archivedDesks.length" class="space-y-4">
-      <h2 class="text-lg font-semibold">Archived desks</h2>
+      <h2 class="text-lg font-semibold">{{ $t('Archived desks') }}</h2>
       <Table>
         <Thead>
           <tr>
-            <Th>Name</Th>
-            <Th>Archived</Th>
-            <Th right><span class="sr-only">Actions</span></Th>
+            <Th>{{ $t('Name') }}</Th>
+            <Th>{{ $t('Archived') }}</Th>
+            <Th right
+              ><span class="sr-only">{{ $t('Actions') }}</span></Th
+            >
           </tr>
         </Thead>
         <Tbody>
@@ -113,9 +118,8 @@ function restoreDesk(desk: App.Data.Desks.DeskData): void {
                 color="white"
                 :loading="restoring === desk.id"
                 @click="restoreDesk(desk)"
+                >{{ $t('Restore') }}</AppButton
               >
-                Restore
-              </AppButton>
             </Td>
           </tr>
         </Tbody>
@@ -125,8 +129,8 @@ function restoreDesk(desk: App.Data.Desks.DeskData): void {
 
   <Modal
     v-if="creating"
-    headline="New desk"
-    action-text="Create desk"
+    :headline="$t('New desk')"
+    :action-text="$t('Create desk')"
     :action-loading="form.processing"
     @close="creating = false"
     @action="create"
@@ -135,14 +139,14 @@ function restoreDesk(desk: App.Data.Desks.DeskData): void {
       <AppFieldset>
         <InputField
           v-model="form.name"
-          label="Name"
+          :label="$t('Name')"
           :error="form.errors.name"
           required
         />
         <InputField
           v-model="form.slug"
-          label="Slug"
-          help-text="Leave blank to make one from the name."
+          :label="$t('Slug')"
+          :help-text="$t('Leave blank to make one from the name.')"
           :error="form.errors.slug"
         />
       </AppFieldset>

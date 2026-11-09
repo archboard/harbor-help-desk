@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue';
 import { router, useHttp, usePage } from '@inertiajs/vue3';
 import { useConnectionStatus, useEchoNotification } from '@laravel/echo-vue';
@@ -45,11 +46,11 @@ function sentence(notification: Notification): string {
 
   if (notification.type === 'reminder_due') {
     return typeof note === 'string' && note
-      ? `Reminder: ${note}`
-      : 'Reminder due';
+      ? trans('Reminder: :note', { note })
+      : trans('Reminder due');
   }
 
-  return 'New notification';
+  return trans('New notification');
 }
 
 async function open(
@@ -95,7 +96,7 @@ watch(status, (current) => {
       class="relative rounded-md p-2 text-gray-600 hover:bg-gray-100 focus:ring-2 focus:ring-primary-500 focus:outline-hidden dark:text-gray-300 dark:hover:bg-gray-800"
       @click="load()"
     >
-      <span class="sr-only">Notifications</span>
+      <span class="sr-only">{{ $t('Notifications') }}</span>
       <Bell class="size-5" aria-hidden="true" />
       <span
         v-if="unreadCount > 0"
@@ -113,14 +114,14 @@ watch(status, (current) => {
         <div
           class="flex items-center justify-between border-b border-gray-100 px-4 py-2 dark:border-gray-700"
         >
-          <h2 class="text-sm font-semibold">Notifications</h2>
+          <h2 class="text-sm font-semibold">{{ $t('Notifications') }}</h2>
           <button
             v-if="unreadCount > 0"
             type="button"
             class="text-xs font-medium text-primary-600 hover:underline dark:text-primary-400"
             @click="markAllRead()"
           >
-            Mark all read
+            {{ $t('Mark all read') }}
           </button>
         </div>
 
@@ -128,7 +129,7 @@ watch(status, (current) => {
           v-if="notifications.length === 0"
           class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400"
         >
-          Nothing yet.
+          {{ $t('Nothing yet.') }}
         </p>
 
         <ul

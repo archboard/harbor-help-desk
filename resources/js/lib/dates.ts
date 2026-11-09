@@ -9,6 +9,25 @@ dayjs.extend(relativeTime);
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+const dayjsLocales = import.meta.glob<unknown>(
+  '../../../node_modules/dayjs/locale/*.js',
+);
+
+/**
+ * Switch dayjs to the locale, falling back to English when it has none.
+ */
+export async function setDateLocale(locale: string): Promise<void> {
+  const load = dayjsLocales[
+    `../../../node_modules/dayjs/locale/${locale}.js`
+  ] as (() => Promise<unknown>) | undefined;
+
+  if (load) {
+    await load();
+  }
+
+  dayjs.locale(load ? locale : 'en');
+}
+
 /**
  * Whether the browser knows the IANA zone, so formatting in it won't throw.
  */

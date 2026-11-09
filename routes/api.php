@@ -58,17 +58,18 @@ use App\Http\Controllers\Api\V1\WorkspaceTicketEventController;
 use App\Http\Middleware\EnsurePlatformToken;
 use App\Http\Middleware\EnsureTokenCanAccessWorkspace;
 use App\Http\Middleware\ResolveWorkspace;
+use App\Http\Middleware\SetLocale;
 use Illuminate\Support\Facades\Route;
 
 // Landlord: the platform creates and removes workspaces, on any host and outside any workspace.
-Route::prefix('platform')->name('api.platform.')->middleware(EnsurePlatformToken::class)->group(function () {
+Route::prefix('platform')->name('api.platform.')->middleware(['throttle:platform', EnsurePlatformToken::class])->group(function () {
     Route::apiResource('workspaces', PlatformWorkspaceController::class)->only(['store', 'update', 'destroy']);
 });
 
 Route::get('v1/openapi.json', OpenApiController::class)->middleware('throttle:60,1')->name('api.v1.openapi');
 
 Route::prefix('v1')->name('api.v1.')
-    ->middleware([ResolveWorkspace::class, 'auth:api', EnsureTokenCanAccessWorkspace::class])
+    ->middleware([ResolveWorkspace::class, 'auth:api', EnsureTokenCanAccessWorkspace::class, 'throttle:api', SetLocale::class])
     ->group(function () {
         Route::get('user', [UserController::class, 'show'])->name('user');
         Route::patch('user', [UserController::class, 'update'])->name('user.update');

@@ -93,7 +93,7 @@ function setAway(away: boolean): void {
               class="mr-2 inline-flex"
             >
               <Plus class="mr-1 -ml-1 size-4" aria-hidden="true" />
-              New ticket
+              {{ $t('New ticket') }}
             </AppButton>
             <button
               type="button"
@@ -101,7 +101,7 @@ function setAway(away: boolean): void {
               @click="paletteOpen = true"
             >
               <Search class="size-5" aria-hidden="true" />
-              <span class="sr-only">Search</span>
+              <span class="sr-only">{{ $t('Search') }}</span>
               <kbd class="hidden text-xs lg:inline" aria-hidden="true">⌘K</kbd>
             </button>
             <NotificationBell />
@@ -113,7 +113,7 @@ function setAway(away: boolean): void {
                 <span
                   v-if="isAway"
                   class="size-2 rounded-full bg-amber-500"
-                  title="Away"
+                  :title="$t('Away')"
                 />
                 {{ page.props.auth.user.name }}
                 <ChevronDown
@@ -144,7 +144,7 @@ function setAway(away: boolean): void {
                       :model-value="isAway"
                       @update:model-value="setAway(Boolean($event))"
                     >
-                      Away
+                      {{ $t('Away') }}
                     </AppCheckbox>
                   </div>
                   <div class="p-1">
@@ -155,7 +155,7 @@ function setAway(away: boolean): void {
                       class="block w-full rounded-sm px-4 py-2 text-left text-sm text-black hover:bg-gray-100 focus:bg-gray-100 focus:outline-hidden dark:text-gray-100 dark:hover:bg-gray-700 dark:focus:bg-gray-700"
                       @click="close()"
                     >
-                      Log out
+                      {{ $t('Log out') }}
                     </Link>
                   </div>
                 </PopoverPanel>
@@ -165,7 +165,7 @@ function setAway(away: boolean): void {
             <DisclosureButton
               class="inline-flex items-center justify-center rounded-md p-2 text-gray-500 hover:bg-gray-100 focus:ring-2 focus:ring-primary-500 focus:outline-hidden md:hidden dark:text-gray-300 dark:hover:bg-gray-800"
             >
-              <span class="sr-only">Open main menu</span>
+              <span class="sr-only">{{ $t('Open main menu') }}</span>
               <X v-if="open" class="size-6" aria-hidden="true" />
               <MenuIcon v-else class="size-6" aria-hidden="true" />
             </DisclosureButton>
@@ -213,7 +213,7 @@ function setAway(away: boolean): void {
               :model-value="isAway"
               @update:model-value="setAway(Boolean($event))"
             >
-              Away
+              {{ $t('Away') }}
             </AppCheckbox>
           </div>
           <Link
@@ -223,7 +223,7 @@ function setAway(away: boolean): void {
             as="button"
             class="block w-full rounded-md px-3 py-2 text-left text-base font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
           >
-            Log out
+            {{ $t('Log out') }}
           </Link>
         </div>
       </DisclosurePanel>
@@ -233,8 +233,9 @@ function setAway(away: boolean): void {
       <Container>
         <TimezonePrompt />
 
+        <!-- Pages pass `trans('…')` titles, which can run before the locale loads; translate again here. -->
         <h1 v-if="title" class="mb-6 font-display text-3xl tracking-tight">
-          {{ title }}
+          {{ $t(title) }}
         </h1>
 
         <slot />

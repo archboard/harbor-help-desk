@@ -83,7 +83,7 @@ const segmentState = (active: boolean): string =>
     <div
       class="inline-flex rounded-lg shadow-sm ring-1 ring-gray-300 dark:ring-gray-700"
       role="group"
-      aria-label="Date range"
+      :aria-label="$t('Date range')"
     >
       <button
         v-for="days in presets"
@@ -93,7 +93,7 @@ const segmentState = (active: boolean): string =>
         :aria-pressed="isPreset(days)"
         @click="usePreset(days)"
       >
-        {{ days }} days
+        {{ $t(':count days', { count: String(days) }) }}
       </button>
     </div>
 
@@ -101,16 +101,16 @@ const segmentState = (active: boolean): string =>
       <input
         v-model="from"
         type="date"
-        aria-label="From"
+        :aria-label="$t('From')"
         :max="to"
         class="rounded-md border-gray-300 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-900"
         @change="applyDates"
       />
-      <span class="text-gray-500">to</span>
+      <span class="text-gray-500">{{ $t('to') }}</span>
       <input
         v-model="to"
         type="date"
-        aria-label="To"
+        :aria-label="$t('To')"
         :min="from"
         class="rounded-md border-gray-300 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-900"
         @change="applyDates"
@@ -123,8 +123,10 @@ const segmentState = (active: boolean): string =>
       >
         {{
           deskIds.length === 0
-            ? 'All desks'
-            : `${deskIds.length} desk${deskIds.length === 1 ? '' : 's'}`
+            ? $t('All desks')
+            : $tChoice('{1} :count desk|[2,*] :count desks', deskIds.length, {
+                count: String(deskIds.length),
+              })
         }}
         <ChevronDown class="size-4" aria-hidden="true" />
       </PopoverButton>
@@ -132,13 +134,13 @@ const segmentState = (active: boolean): string =>
         class="absolute z-20 mt-2 max-h-72 w-64 overflow-y-auto rounded-xl bg-white p-3 shadow-lg ring-1 ring-black/5 dark:bg-gray-900 dark:ring-white/10"
       >
         <fieldset class="space-y-2">
-          <legend class="sr-only">Desks</legend>
+          <legend class="sr-only">{{ $t('Desks') }}</legend>
           <div v-for="desk in desks" :key="desk.id">
             <AppCheckbox v-model="deskIds" :value="desk.id" @change="apply()">
               {{ desk.name }}
-              <span v-if="desk.archived_at" class="text-gray-500"
-                >(archived)</span
-              >
+              <span v-if="desk.archived_at" class="text-gray-500">{{
+                $t('(archived)')
+              }}</span>
             </AppCheckbox>
           </div>
         </fieldset>
@@ -148,7 +150,7 @@ const segmentState = (active: boolean): string =>
     <div
       class="inline-flex rounded-lg shadow-sm ring-1 ring-gray-300 dark:ring-gray-700"
       role="group"
-      aria-label="Count time in"
+      :aria-label="$t('Count time in')"
     >
       <button
         v-for="(label, basis) in bases"

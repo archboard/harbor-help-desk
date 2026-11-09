@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Deferred, Head, Link, router, setLayoutProps } from '@inertiajs/vue3';
+import { trans } from 'laravel-vue-i18n';
 import { computed, provide, ref, watchEffect } from 'vue';
 import { builderKey } from '@/components/automations/builder';
 import { availableGroups } from '@/components/automations/conditions';
@@ -36,7 +37,9 @@ const { run, event, desks, schedules, macros, slaPolicies, catalog } =
 
 defineOptions({ layout: { title: '' } });
 
-watchEffect(() => setLayoutProps({ title: run.automation_name ?? 'Run' }));
+watchEffect(() =>
+  setLayoutProps({ title: run.automation_name ?? trans('Run') }),
+);
 
 useLiveReload({
   channels: [`automations.${run.automation_id}`],
@@ -120,7 +123,7 @@ function cancelRun(close: () => void): void {
 </script>
 
 <template>
-  <Head :title="run.automation_name ?? 'Automation run'" />
+  <Head :title="run.automation_name ?? $t('Automation run')" />
 
   <div class="mx-auto max-w-3xl space-y-8">
     <div class="flex flex-wrap items-center gap-3">
@@ -128,7 +131,7 @@ function cancelRun(close: () => void): void {
         :href="history(run.automation_id).url"
         class="text-sm text-gray-500 hover:underline dark:text-gray-400"
       >
-        Back to history
+        {{ $t('Back to history') }}
       </Link>
       <Pill :color="statusColors[run.status]" size="lg">
         {{ statuses[run.status] }}
@@ -139,15 +142,15 @@ function cancelRun(close: () => void): void {
       class="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 [&_dd]:text-gray-900 dark:[&_dd]:text-gray-100 [&_dt]:text-gray-500 dark:[&_dt]:text-gray-400"
     >
       <div>
-        <dt>Started</dt>
+        <dt>{{ $t('Started') }}</dt>
         <dd>{{ formatDateTime(run.created_at) }}</dd>
       </div>
       <div>
-        <dt>Duration</dt>
+        <dt>{{ $t('Duration') }}</dt>
         <dd>{{ runDuration(run) }}</dd>
       </div>
       <div>
-        <dt>Ticket</dt>
+        <dt>{{ $t('Ticket') }}</dt>
         <dd>
           <Link
             v-if="run.ticket_id"
@@ -156,15 +159,15 @@ function cancelRun(close: () => void): void {
           >
             #{{ run.ticket_number }} {{ run.ticket_subject }}
           </Link>
-          <template v-else>None</template>
+          <template v-else>{{ $t('None') }}</template>
         </dd>
       </div>
       <div>
-        <dt>Chain depth</dt>
+        <dt>{{ $t('Chain depth') }}</dt>
         <dd>{{ run.depth }}</dd>
       </div>
       <div v-if="event" class="sm:col-span-2">
-        <dt>Triggered by</dt>
+        <dt>{{ $t('Triggered by') }}</dt>
         <dd>{{ event.description }}</dd>
       </div>
     </dl>
@@ -174,9 +177,12 @@ function cancelRun(close: () => void): void {
       class="flex flex-wrap items-center gap-3 rounded-lg border border-yellow-300 bg-yellow-50 p-4 text-sm text-yellow-900 dark:border-yellow-800 dark:bg-yellow-950 dark:text-yellow-100"
     >
       <span class="min-w-0 flex-1">
-        Resumes at {{ formatDateTime(run.resume_at) }} (<RelativeTime
-          :datetime="run.resume_at"
-        />).
+        <i18n-t keypath="Resumes at :time (:relative)." tag="span">
+          <template #time>{{ formatDateTime(run.resume_at) }}</template>
+          <template #relative>
+            <RelativeTime :datetime="run.resume_at" />
+          </template>
+        </i18n-t>
       </span>
       <AppButton
         v-if="canCancel"
@@ -185,7 +191,7 @@ function cancelRun(close: () => void): void {
         color="red"
         @click="cancelling = true"
       >
-        Cancel run
+        {{ $t('Cancel run') }}
       </AppButton>
     </div>
 
@@ -205,8 +211,13 @@ function cancelRun(close: () => void): void {
         {{ entry.reason }}
       </li>
       <li v-for="(entry, i) in webhooks" :key="`w${i}`">
-        Webhook answered {{ entry.status ?? 'nothing' }} in
-        {{ entry.duration_ms }} ms (attempt {{ entry.attempt }}).
+        {{
+          $t('Webhook answered :status in :duration ms (attempt :attempt).', {
+            status: String(entry.status ?? $t('nothing')),
+            duration: String(entry.duration_ms),
+            attempt: String(entry.attempt),
+          })
+        }}
         <span v-if="entry.error" class="text-red-600 dark:text-red-400">
           {{ entry.error }}
         </span>
@@ -215,7 +226,7 @@ function cancelRun(close: () => void): void {
 
     <section v-if="run.payload" class="space-y-2">
       <h2 class="text-sm font-medium text-gray-900 dark:text-white">
-        Webhook payload
+        {{ $t('Webhook payload') }}
       </h2>
       <pre
         class="max-h-80 overflow-auto rounded-lg bg-gray-100 p-3 text-xs text-gray-800 dark:bg-gray-800 dark:text-gray-100"
@@ -224,7 +235,10 @@ function cancelRun(close: () => void): void {
 
     <Deferred data="catalog">
       <template #fallback>
-        <div class="animate-pulse space-y-3" aria-label="Loading the run">
+        <div
+          class="animate-pulse space-y-3"
+          :aria-label="$t('Loading the run')"
+        >
           <div class="h-16 rounded-xl bg-gray-200 dark:bg-gray-800" />
           <div class="mx-auto h-10 w-px bg-gray-200 dark:bg-gray-800" />
           <div class="h-16 rounded-xl bg-gray-200 dark:bg-gray-800" />
@@ -251,8 +265,8 @@ function cancelRun(close: () => void): void {
     @close="cancelling = false"
     @confirmed="cancelRun"
   >
-    <template #headline>Cancel this run?</template>
-    The steps after the delay will not run.
-    <template #actionText>Cancel run</template>
+    <template #headline>{{ $t('Cancel this run?') }}</template>
+    {{ $t('The steps after the delay will not run.') }}
+    <template #actionText>{{ $t('Cancel run') }}</template>
   </ConfirmationModal>
 </template>

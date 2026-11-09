@@ -27,10 +27,10 @@ const columns = defineModel<string[]>({ required: true });
     >
       <PopoverButton
         class="rounded-md p-1 hover:bg-black/10 focus:ring-2 focus:ring-primary-500 focus:outline-hidden dark:hover:bg-white/10"
-        title="Columns"
+        :title="$t('Columns')"
       >
         <Columns3 class="size-4" aria-hidden="true" />
-        <span class="sr-only">Choose columns</span>
+        <span class="sr-only">{{ $t('Choose columns') }}</span>
       </PopoverButton>
       <PopoverPanel
         class="flex max-h-80 w-56 flex-col gap-2 overflow-auto rounded-md bg-white p-3 text-start font-normal tracking-normal shadow-lg ring-1 ring-black/5 focus:outline-hidden dark:bg-gray-800 dark:ring-white/10"

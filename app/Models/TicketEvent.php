@@ -9,8 +9,10 @@ use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
 use App\Models\Concerns\BelongsToWorkspace;
 use Carbon\CarbonImmutable;
+use Database\Factories\TicketEventFactory;
 use GrantHolle\Scru128Laravel\Concerns\HasScru128Ids;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -48,6 +50,7 @@ use LogicException;
  * @property string|null $automation_run_id
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TicketEvent whereAutomationRunId($value)
+ * @method static \Database\Factories\TicketEventFactory factory($count = null, $state = [])
  *
  * @mixin \Eloquent
  */
@@ -60,7 +63,8 @@ class TicketEvent extends Model
     |--------------------------------------------------------------------------
     */
 
-    use BelongsToWorkspace, HasScru128Ids;
+    /** @use HasFactory<TicketEventFactory> */
+    use BelongsToWorkspace, HasFactory, HasScru128Ids;
 
     public const null UPDATED_AT = null;
 

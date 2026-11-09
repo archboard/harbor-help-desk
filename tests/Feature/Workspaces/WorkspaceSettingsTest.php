@@ -61,3 +61,21 @@ test('workspace pages are forbidden to non-admin agents and the index redirects 
 
     $this->actingAs($this->admin)->get('/workspace')->assertRedirect('/workspace/general');
 });
+
+test('admins see the system status when self-hosted, but not in multitenant mode or as agents', function () {
+    config(['harbor.multitenant' => false, 'harbor.version' => '1.2.3']);
+
+    $this->actingAs($this->admin)
+        ->get(route('workspace.general.edit'))
+        ->assertInertia(fn (Assert $page) => $page->missing('status')->loadDeferredProps(fn (Assert $reload) => $reload
+            ->where('status.version', '1.2.3')
+            ->has('status.checks', 5)));
+
+    $this->actingAs($this->agent)->get(route('workspace.general.edit'))->assertForbidden();
+
+    config(['harbor.multitenant' => true, 'harbor.domain' => 'harbor.test']);
+
+    $this->actingAs($this->admin)
+        ->get('http://'.$this->workspace->subdomain.'.harbor.test'.route('workspace.general.edit', [], false))
+        ->assertInertia(fn (Assert $page) => $page->missing('status')->etc());
+});

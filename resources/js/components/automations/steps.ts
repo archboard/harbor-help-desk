@@ -6,6 +6,7 @@ import {
   OctagonX,
   Zap,
 } from '@lucide/vue';
+import { trans } from 'laravel-vue-i18n';
 import type { Component } from 'vue';
 
 export type Definition = App.Data.Automations.AutomationDefinitionData;
@@ -16,11 +17,41 @@ export const stepTypes: Record<
   StepType,
   { label: string; icon: Component; addable: boolean }
 > = {
-  condition: { label: 'Condition', icon: Filter, addable: true },
-  action: { label: 'Action', icon: Zap, addable: true },
-  delay: { label: 'Delay', icon: Hourglass, addable: true },
-  paths: { label: 'Paths', icon: GitBranch, addable: true },
-  stop: { label: 'Stop', icon: OctagonX, addable: true },
+  condition: {
+    get label() {
+      return trans('Condition');
+    },
+    icon: Filter,
+    addable: true,
+  },
+  action: {
+    get label() {
+      return trans('Action');
+    },
+    icon: Zap,
+    addable: true,
+  },
+  delay: {
+    get label() {
+      return trans('Delay');
+    },
+    icon: Hourglass,
+    addable: true,
+  },
+  paths: {
+    get label() {
+      return trans('Paths');
+    },
+    icon: GitBranch,
+    addable: true,
+  },
+  stop: {
+    get label() {
+      return trans('Stop');
+    },
+    icon: OctagonX,
+    addable: true,
+  },
 };
 
 /** What the "+" menu offers. A step type joins it by setting `addable` and handling it in `newStep`. */
@@ -42,7 +73,9 @@ export type Branch = App.Data.Automations.BranchData;
 
 /** A branch named after its position ("Path A"), that matches every ticket until its condition has rules. */
 export const newBranch = (index: number): Branch => ({
-  name: `Path ${String.fromCharCode(65 + (index % 26))}`,
+  name: trans('Path :letter', {
+    letter: String.fromCharCode(65 + (index % 26)),
+  }),
   condition: { type: 'group', match: 'all', rules: [] },
   steps: [],
 });

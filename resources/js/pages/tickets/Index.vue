@@ -2,6 +2,7 @@
 import { Head, router } from '@inertiajs/vue3';
 import AppButton from '@/components/AppButton.vue';
 import { useLocalStorage } from '@vueuse/core';
+import { trans } from 'laravel-vue-i18n';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import SavedViews from '@/components/tickets/SavedViews.vue';
 import TicketBulkActions from '@/components/tickets/TicketBulkActions.vue';
@@ -17,7 +18,7 @@ import { cleanQuery, sameQuery } from '@/lib/tickets';
 import { claim, index } from '@/routes/tickets';
 import type { Paginated } from '@/types';
 
-defineOptions({ layout: { title: 'Tickets' }, inheritAttrs: false });
+defineOptions({ layout: { title: trans('Tickets') }, inheritAttrs: false });
 
 const { tickets, filters, leadDeskIds, desks, customFields } = defineProps<{
   tickets: Paginated<App.Data.Tickets.TicketData>;
@@ -39,17 +40,20 @@ useLiveReload({
   reset: ['tickets'],
 });
 
-const quickFilters: Array<{ label: string; query: TicketQuery }> = [
-  { label: 'All', query: {} },
-  { label: 'My tickets', query: { assignee_id: 'me' } },
-  { label: 'Unassigned', query: { assignee_id: 'none' } },
-  { label: 'All open', query: { status: 'open' } },
-  { label: 'Deleted', query: { deleted: '1' } },
-];
+const quickFilters = computed<Array<{ label: string; query: TicketQuery }>>(
+  () => [
+    { label: trans('All'), query: {} },
+    { label: trans('My tickets'), query: { assignee_id: 'me' } },
+    { label: trans('Unassigned'), query: { assignee_id: 'none' } },
+    { label: trans('All open'), query: { status: 'open' } },
+    { label: trans('Deleted'), query: { deleted: '1' } },
+  ],
+);
 
 /** The quick filter that matches the current filters exactly, if any. */
 const activeQuickFilter = computed(
-  () => quickFilters.find((quick) => sameQuery(quick.query, filters))?.label,
+  () =>
+    quickFilters.value.find((quick) => sameQuery(quick.query, filters))?.label,
 );
 
 const storedColumns = useLocalStorage<string[]>(
@@ -118,10 +122,10 @@ function apply(query: TicketQuery): void {
 
 <template>
   <div class="space-y-4">
-    <Head title="Tickets" />
+    <Head :title="$t('Tickets')" />
 
     <div class="flex flex-wrap items-center justify-between gap-3">
-      <nav class="flex flex-wrap gap-1" aria-label="Quick filters">
+      <nav class="flex flex-wrap gap-1" :aria-label="$t('Quick filters')">
         <button
           v-for="quick in quickFilters"
           :key="quick.label"
@@ -145,7 +149,7 @@ function apply(query: TicketQuery): void {
           @apply="apply"
         />
         <AppButton color="white" @click="router.post(claim.url())">
-          Get next ticket
+          {{ $t('Get next ticket') }}
         </AppButton>
       </div>
     </div>
@@ -174,7 +178,7 @@ function apply(query: TicketQuery): void {
       @preview="openQuickView"
     />
     <p v-else class="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
-      No tickets match these filters.
+      {{ $t('No tickets match these filters.') }}
     </p>
 
     <TicketBulkActions

@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import FieldError from '@/components/forms/FieldError.vue';
 import AppFieldset from '@/components/forms/AppFieldset.vue';
@@ -17,7 +18,7 @@ import Thead from '@/components/tables/Thead.vue';
 import { guessTimezone } from '@/lib/dates';
 import { destroy, store, update } from '@/routes/business-hours';
 
-defineOptions({ layout: { title: 'Business hours' } });
+defineOptions({ layout: { title: trans('Business hours') } });
 
 type Schedule = App.Data.BusinessSchedules.BusinessScheduleData;
 
@@ -27,15 +28,15 @@ const { schedules, timezones, canManage } = defineProps<{
   canManage: boolean;
 }>();
 
-const days = {
-  mon: 'Monday',
-  tue: 'Tuesday',
-  wed: 'Wednesday',
-  thu: 'Thursday',
-  fri: 'Friday',
-  sat: 'Saturday',
-  sun: 'Sunday',
-};
+const days = computed(() => ({
+  mon: trans('Monday'),
+  tue: trans('Tuesday'),
+  wed: trans('Wednesday'),
+  thu: trans('Thursday'),
+  fri: trans('Friday'),
+  sat: trans('Saturday'),
+  sun: trans('Sunday'),
+}));
 
 /** The schedule being edited, `'new'` while creating one, or null when the modal is closed. */
 const editing = ref<Schedule | 'new' | null>(null);
@@ -55,7 +56,7 @@ const form = useForm({
  */
 const toInput = (hours: Record<string, string[][]>) =>
   Object.fromEntries(
-    Object.keys(days).map((day) => [
+    Object.keys(days.value).map((day) => [
       day,
       (hours[day] ?? []).map(([start, end]) => [
         start,
@@ -78,7 +79,7 @@ const toPayload = (hours: Record<string, string[][]>) =>
   );
 
 const summary = (schedule: Schedule): string =>
-  Object.entries(days)
+  Object.entries(days.value)
     .filter(([day]) => schedule.weekly_hours[day]?.length)
     .map(
       ([day, label]) =>
@@ -147,33 +148,37 @@ function remove(close: () => void): void {
 </script>
 
 <template>
-  <Head title="Business hours" />
+  <Head :title="$t('Business hours')" />
 
   <SettingsNav />
 
   <div class="space-y-6">
     <div class="flex items-center justify-between gap-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
-        Weekly working hours and holidays, used to measure SLAs in business
-        time.
+        {{
+          $t(
+            'Weekly working hours and holidays, used to measure SLAs in business time.',
+          )
+        }}
       </p>
       <AppButton
         v-if="canManage"
         type="button"
         class="shrink-0"
         @click="open('new')"
+        >{{ $t('New schedule') }}</AppButton
       >
-        New schedule
-      </AppButton>
     </div>
 
     <Table v-if="schedules.length">
       <Thead>
         <tr>
-          <Th>Name</Th>
-          <Th>Timezone</Th>
-          <Th>Hours</Th>
-          <Th right><span class="sr-only">Actions</span></Th>
+          <Th>{{ $t('Name') }}</Th>
+          <Th>{{ $t('Timezone') }}</Th>
+          <Th>{{ $t('Hours') }}</Th>
+          <Th right
+            ><span class="sr-only">{{ $t('Actions') }}</span></Th
+          >
         </tr>
       </Thead>
       <Tbody>
@@ -188,30 +193,28 @@ function remove(close: () => void): void {
                 size="xs"
                 color="white"
                 @click="open(schedule)"
+                >{{ $t('Edit') }}</AppButton
               >
-                Edit
-              </AppButton>
               <AppButton
                 type="button"
                 size="xs"
                 color="red"
                 @click="deleting = schedule"
+                >{{ $t('Delete') }}</AppButton
               >
-                Delete
-              </AppButton>
             </template>
           </Td>
         </tr>
       </Tbody>
     </Table>
     <p v-else class="text-sm text-gray-500 dark:text-gray-400">
-      There are no business hours yet.
+      {{ $t('There are no business hours yet.') }}
     </p>
   </div>
 
   <Modal
     v-if="editing"
-    :headline="editing === 'new' ? 'New schedule' : 'Edit schedule'"
+    :headline="editing === 'new' ? $t('New schedule') : $t('Edit schedule')"
     :action-loading="form.processing"
     @close="editing = null"
     @action="save"
@@ -220,13 +223,13 @@ function remove(close: () => void): void {
       <AppFieldset>
         <InputField
           v-model="form.name"
-          label="Name"
+          :label="$t('Name')"
           :error="form.errors.name"
           required
         />
         <SelectField
           v-model="form.timezone"
-          label="Timezone"
+          :label="$t('Timezone')"
           :options="timezones"
           :error="form.errors.timezone"
           required
@@ -234,7 +237,7 @@ function remove(close: () => void): void {
 
         <div class="space-y-3">
           <p class="text-sm font-medium text-gray-900 dark:text-white">
-            Weekly hours
+            {{ $t('Weekly hours') }}
           </p>
           <FieldError v-if="errorFor('weekly_hours', true)">
             {{ errorFor('weekly_hours', true) }}
@@ -253,7 +256,7 @@ function remove(close: () => void): void {
                   v-if="!form.weekly_hours[day]?.length"
                   class="pt-2 text-sm text-gray-400"
                 >
-                  Closed
+                  {{ $t('Closed') }}
                 </p>
                 <div
                   v-for="(interval, index) in form.weekly_hours[day]"
@@ -266,7 +269,7 @@ function remove(close: () => void): void {
                       type="time"
                       :error="errorFor(`weekly_hours.${day}.${index}`)"
                     />
-                    <span class="text-gray-500">to</span>
+                    <span class="text-gray-500">{{ $t('to') }}</span>
                     <FormField
                       v-model="interval[1]"
                       type="time"
@@ -276,11 +279,10 @@ function remove(close: () => void): void {
                       type="button"
                       size="xs"
                       color="white"
-                      :aria-label="`Remove ${label} interval`"
+                      :aria-label="$t('Remove :day interval', { day: label })"
                       @click="form.weekly_hours[day].splice(index, 1)"
+                      >{{ $t('Remove') }}</AppButton
                     >
-                      Remove
-                    </AppButton>
                   </div>
                 </div>
                 <FieldError v-if="errorFor(`weekly_hours.${day}`, true)">
@@ -294,19 +296,18 @@ function remove(close: () => void): void {
                 @click="
                   (form.weekly_hours[day] ??= []).push(['09:00', '17:00'])
                 "
+                >{{ $t('Add') }}</AppButton
               >
-                Add
-              </AppButton>
             </div>
           </div>
           <p class="text-xs text-gray-500">
-            An end of 00:00 means midnight, the end of that day.
+            {{ $t('An end of 00:00 means midnight, the end of that day.') }}
           </p>
         </div>
 
         <div class="space-y-2">
           <p class="text-sm font-medium text-gray-900 dark:text-white">
-            Holidays
+            {{ $t('Holidays') }}
           </p>
           <div
             v-for="(_, index) in form.holidays"
@@ -323,9 +324,8 @@ function remove(close: () => void): void {
               size="xs"
               color="white"
               @click="form.holidays.splice(index, 1)"
+              >{{ $t('Remove') }}</AppButton
             >
-              Remove
-            </AppButton>
           </div>
           <FieldError v-if="errorFor('holidays', true)">
             {{ errorFor('holidays', true) }}
@@ -335,9 +335,8 @@ function remove(close: () => void): void {
             size="xs"
             color="white"
             @click="form.holidays.push('')"
+            >{{ $t('Add holiday') }}</AppButton
           >
-            Add holiday
-          </AppButton>
         </div>
       </AppFieldset>
     </form>
@@ -349,8 +348,10 @@ function remove(close: () => void): void {
     @close="deleting = null"
     @confirmed="remove"
   >
-    <template #headline>Delete “{{ deleting.name }}”?</template>
-    Anything measured against this schedule can no longer use it.
-    <template #actionText>Delete schedule</template>
+    <template #headline>{{
+      $t('Delete “:name”?', { name: deleting.name })
+    }}</template
+    >{{ $t('Anything measured against this schedule can no longer use it.')
+    }}<template #actionText>{{ $t('Delete schedule') }}</template>
   </ConfirmationModal>
 </template>

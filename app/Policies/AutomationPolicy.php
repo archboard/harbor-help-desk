@@ -32,7 +32,7 @@ class AutomationPolicy
     public function update(User $user, Automation $automation): bool
     {
         return $this->isAdmin($user)
-            || ($automation->desk_id !== null && $user->deskRole($automation->desk) === DeskRole::LEAD);
+            || ($automation->desk_id !== null && $user->deskRole($automation->loadMissing('desk')->desk) === DeskRole::LEAD);
     }
 
     public function delete(User $user, Automation $automation): bool

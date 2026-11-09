@@ -11,19 +11,19 @@ const { data } = defineProps<{ data: App.Data.Reports.ResolutionReportData }>();
   <div class="space-y-6">
     <div class="grid gap-4 sm:grid-cols-3">
       <KpiTile
-        label="Median resolution"
+        :label="$t('Median resolution')"
         :kpi="data.median_resolution"
         kind="minutes"
         goodWhen="down"
       />
       <KpiTile
-        label="Average resolution"
+        :label="$t('Average resolution')"
         :kpi="data.average_resolution"
         kind="minutes"
         goodWhen="down"
       />
       <KpiTile
-        label="Reopened after resolving"
+        :label="$t('Reopened after resolving')"
         :kpi="data.reopen_rate"
         kind="percent"
         goodWhen="down"
@@ -31,22 +31,22 @@ const { data } = defineProps<{ data: App.Data.Reports.ResolutionReportData }>();
     </div>
 
     <div class="grid gap-6 lg:grid-cols-3">
-      <ReportCard title="Median resolution time" class="lg:col-span-2">
+      <ReportCard :title="$t('Median resolution time')" class="lg:col-span-2">
         <Chart
-          label="Median resolution time over time"
+          :label="$t('Median resolution time over time')"
           :option="
             lineChart(
               data.trend,
-              [{ key: 'resolution', label: 'Resolution' }],
+              [{ key: 'resolution', label: $t('Resolution') }],
               'minutes',
               data.period.bucket,
             )
           "
         />
       </ReportCard>
-      <ReportCard title="Resolution times">
+      <ReportCard :title="$t('Resolution times')">
         <Chart
-          label="Tickets by resolution time"
+          :label="$t('Tickets by resolution time')"
           :option="barChart(data.distribution)"
         />
       </ReportCard>

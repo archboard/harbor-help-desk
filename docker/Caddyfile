@@ -1,0 +1,21 @@
+# Used by the app service: serves Laravel and forwards realtime traffic to Reverb,
+# so one port (and one reverse-proxy rule) fronts the whole stack.
+{
+	frankenphp
+	admin off
+	auto_https off
+}
+
+:8000 {
+	root * public
+	encode zstd gzip
+
+	@reverb path /app /app/* /apps /apps/*
+	handle @reverb {
+		reverse_proxy {$REVERB_UPSTREAM:reverb:8080}
+	}
+
+	handle {
+		php_server
+	}
+}

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Head, useForm } from '@inertiajs/vue3';
 import AppButton from '@/components/AppButton.vue';
 import AppLink from '@/components/AppLink.vue';
@@ -11,8 +12,8 @@ import { email } from '@/routes/password';
 
 defineOptions({
   layout: {
-    title: 'Forgot password',
-    description: 'Enter your email to receive a password reset link',
+    title: trans('Forgot password'),
+    description: trans('Enter your email to receive a password reset link'),
   },
 });
 
@@ -24,7 +25,7 @@ const form = useForm({ email: '' });
 </script>
 
 <template>
-  <Head title="Forgot password" />
+  <Head :title="$t('Forgot password')" />
 
   <SimpleAlert v-if="status" level="success" class="mb-6">
     {{ status }}
@@ -33,7 +34,7 @@ const form = useForm({ email: '' });
   <form @submit.prevent="form.submit(email())">
     <AppFieldset>
       <FormField :error="form.errors.email">
-        Email address
+        {{ $t('Email address') }}
         <template #component="{ id, hasError }">
           <AppInput
             :id="id"
@@ -49,12 +50,15 @@ const form = useForm({ email: '' });
       </FormField>
 
       <AppButton type="submit" :loading="form.processing" full>
-        Email password reset link
+        {{ $t('Email password reset link') }}
       </AppButton>
 
       <p class="text-sm text-gray-600 dark:text-gray-400">
-        Or, return to
-        <AppLink :href="login()">log in</AppLink>
+        <i18n-t keypath="Or, return to :login" tag="span">
+          <template #login>
+            <AppLink :href="login()">{{ $t('log in') }}</AppLink>
+          </template>
+        </i18n-t>
       </p>
     </AppFieldset>
   </form>

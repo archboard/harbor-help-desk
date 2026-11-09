@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
@@ -17,18 +18,18 @@ const { isCurrentOrParentUrl } = useCurrentUrl();
 const page = usePage();
 
 const sections = computed(() => [
-  { label: 'General', href: general().url },
-  { label: 'Email', href: email().url },
-  { label: 'Attachments', href: attachments().url },
-  { label: 'Customer portal', href: portal().url },
+  { label: trans('General'), href: general().url },
+  { label: trans('Email'), href: email().url },
+  { label: trans('Attachments'), href: attachments().url },
+  { label: trans('Customer portal'), href: portal().url },
   // Self-hosted only: the settings in it don't exist in the cloud.
   ...(page.props.multitenant
     ? []
-    : [{ label: 'Automations', href: automations().url }]),
-  { label: 'Custom fields', href: customFields().url },
-  { label: 'Webhooks', href: webhooks().url },
-  { label: 'Data & privacy', href: dataPrivacy().url },
-  { label: 'Audit log', href: auditLog().url },
+    : [{ label: trans('Automations'), href: automations().url }]),
+  { label: trans('Custom fields'), href: customFields().url },
+  { label: trans('Webhooks'), href: webhooks().url },
+  { label: trans('Data & privacy'), href: dataPrivacy().url },
+  { label: trans('Audit log'), href: auditLog().url },
 ]);
 </script>
 
@@ -37,7 +38,7 @@ const sections = computed(() => [
     <aside class="mb-6 md:mb-0">
       <nav
         class="flex gap-1 overflow-x-auto md:flex-col"
-        aria-label="Workspace settings"
+        :aria-label="$t('Workspace settings')"
       >
         <Link
           v-for="section in sections"

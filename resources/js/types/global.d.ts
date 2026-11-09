@@ -20,6 +20,7 @@ declare module '@inertiajs/core' {
   export interface InertiaConfig {
     sharedPageProps: {
       name: string;
+      locale: string;
       multitenant: boolean;
       auth: Auth;
       workspace: App.Data.Workspaces.WorkspaceData | null;

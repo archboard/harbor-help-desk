@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { X } from '@lucide/vue';
 import { onMounted, onUnmounted, ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
@@ -11,7 +12,7 @@ type ModalSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl';
 
 const {
   headline,
-  actionText = 'Save',
+  actionText = trans('Save'),
   actionLoading = false,
   actionColor = 'primary',
   autoClose = false,
@@ -94,7 +95,7 @@ defineExpose({ close });
             class="rounded-full bg-white text-gray-400 transition ease-in-out hover:text-gray-500 focus:bg-gray-50 focus:ring-3 focus:ring-gray-300 focus:outline-hidden dark:bg-gray-800 dark:focus:ring-gray-500"
             @click.prevent="close"
           >
-            <span class="sr-only">Close</span>
+            <span class="sr-only">{{ $t('Close') }}</span>
             <X class="size-6" aria-hidden="true" />
           </button>
         </div>
@@ -120,7 +121,7 @@ defineExpose({ close });
               {{ actionText }}
             </AppButton>
             <AppButton type="button" color="white" @click.prevent="close">
-              Close
+              {{ $t('Close') }}
             </AppButton>
           </slot>
         </div>

@@ -68,7 +68,7 @@ function cancel(reminder: App.Data.Tickets.TicketReminderData): void {
   <CardWrapper>
     <CardPadding class="space-y-3 text-sm">
       <div class="flex items-center justify-between">
-        <h2 class="font-medium">Reminders</h2>
+        <h2 class="font-medium">{{ $t('Reminders') }}</h2>
         <AppButton
           v-if="editable && !adding"
           type="button"
@@ -76,7 +76,7 @@ function cancel(reminder: App.Data.Tickets.TicketReminderData): void {
           color="white"
           @click="adding = true"
         >
-          Add
+          {{ $t('Add') }}
         </AppButton>
       </div>
 
@@ -89,7 +89,7 @@ function cancel(reminder: App.Data.Tickets.TicketReminderData): void {
           <div class="flex-1">
             <p>{{ formatDateTime(reminder.remind_at) }}</p>
             <p class="text-gray-500 dark:text-gray-400">
-              {{ reminder.for_assignees ? 'For assignees' : 'For you' }}
+              {{ reminder.for_assignees ? $t('For assignees') : $t('For you') }}
               <template v-if="reminder.note">· {{ reminder.note }}</template>
             </p>
           </div>
@@ -100,35 +100,35 @@ function cancel(reminder: App.Data.Tickets.TicketReminderData): void {
             :disabled="cancelling === reminder.id"
             @click="cancel(reminder)"
           >
-            <span class="sr-only">Cancel reminder</span>
+            <span class="sr-only">{{ $t('Cancel reminder') }}</span>
             <X class="size-4" aria-hidden="true" />
           </button>
         </li>
       </ul>
-      <p v-else-if="!adding" class="text-gray-400">None</p>
+      <p v-else-if="!adding" class="text-gray-400">{{ $t('None') }}</p>
 
       <form v-if="adding" class="pt-1" @submit.prevent="add">
         <AppFieldset>
           <DatePickerField
             v-model="form.remind_at"
             mode="datetime"
-            label="Remind at"
+            :label="$t('Remind at')"
             :error="form.errors.remind_at"
             required
           />
           <InputField
             v-model="form.note"
-            label="Note"
+            :label="$t('Note')"
             :error="form.errors.note"
           />
           <CheckboxField
             v-model="form.for_assignees"
-            label="Remind the assignees, not just me"
+            :label="$t('Remind the assignees, not just me')"
             :error="form.errors.for_assignees"
           />
           <div class="flex gap-2">
             <AppButton type="submit" size="sm" :loading="form.processing">
-              Set reminder
+              {{ $t('Set reminder') }}
             </AppButton>
             <AppButton
               type="button"
@@ -136,7 +136,7 @@ function cancel(reminder: App.Data.Tickets.TicketReminderData): void {
               color="white"
               @click="adding = false"
             >
-              Cancel
+              {{ $t('Cancel') }}
             </AppButton>
           </div>
         </AppFieldset>

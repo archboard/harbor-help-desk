@@ -6,7 +6,7 @@ import type { OptionsInput } from '@/types';
 const {
   hasError = false,
   options = [],
-  nullOption = 'Select an option',
+  nullOption,
   hideNull = false,
   clearable = false,
 } = defineProps<{
@@ -33,7 +33,7 @@ const normalizedOptions = computed(() => normalizeOptions(options));
     "
   >
     <option v-if="!hideNull" :value="null" :disabled="!clearable">
-      {{ nullOption }}
+      {{ nullOption ?? $t('Select an option') }}
     </option>
     <slot>
       <option

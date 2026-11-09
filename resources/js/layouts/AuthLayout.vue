@@ -17,12 +17,12 @@ const { title = '', description = '' } = defineProps<{
     >
       <div class="mx-auto w-full max-w-sm">
         <div v-if="title" class="mb-8 space-y-2">
-          <h1 class="font-display text-3xl tracking-tight">{{ title }}</h1>
+          <h1 class="font-display text-3xl tracking-tight">{{ $t(title) }}</h1>
           <p
             v-if="description"
             class="text-sm text-gray-600 dark:text-gray-400"
           >
-            {{ description }}
+            {{ $t(description) }}
           </p>
         </div>
 

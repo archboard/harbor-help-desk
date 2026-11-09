@@ -16,6 +16,7 @@ use Tests\Concerns\InWorkspace;
 uses(InWorkspace::class);
 
 test('personal reminders are private and ticket-level ones are logged', function () {
+    $this->travelTo('2026-11-01 12:00:00');
     $ticket = Ticket::factory()->create();
     $agent = deskMember($this->workspace, $ticket->desk);
 
@@ -24,7 +25,7 @@ test('personal reminders are private and ticket-level ones are logged', function
 
     expect($personal->user_id)->toBe($agent->id);
     expect($shared->isTicketLevel())->toBeTrue();
-    expect($ticket->events()->sole()->description())->toBe('Jane Doe set a reminder for Mon, Nov 2, 2026 3:00 PM.');
+    expect($ticket->events()->with('actor')->sole()->description())->toBe('Jane Doe set a reminder for Mon, Nov 2, 2026 3:00 PM.');
 });
 
 test('reminders must be in the future', function () {

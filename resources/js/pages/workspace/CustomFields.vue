@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
@@ -20,7 +21,7 @@ import Th from '@/components/tables/Th.vue';
 import Thead from '@/components/tables/Thead.vue';
 import { destroy, store, update } from '@/routes/workspace/custom-fields';
 
-defineOptions({ layout: { title: 'Custom fields' } });
+defineOptions({ layout: { title: trans('Custom fields') } });
 
 const { fields } = defineProps<{
   fields: App.Data.CustomFields.CustomFieldData[];
@@ -100,27 +101,29 @@ function remove(close: () => void): void {
 </script>
 
 <template>
-  <Head title="Custom fields" />
+  <Head :title="$t('Custom fields')" />
 
   <div class="space-y-6">
     <div class="flex items-center justify-between gap-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
-        Define fields here, then enable them on each desk.
+        {{ $t('Define fields here, then enable them on each desk.') }}
       </p>
-      <AppButton type="button" class="shrink-0" @click="open('new')">
-        New field
-      </AppButton>
+      <AppButton type="button" class="shrink-0" @click="open('new')">{{
+        $t('New field')
+      }}</AppButton>
     </div>
 
     <Table v-if="fields.length">
       <Thead>
         <tr>
-          <Th>Name</Th>
-          <Th>Type</Th>
-          <Th>Required</Th>
-          <Th>Position</Th>
-          <Th>Desks</Th>
-          <Th right><span class="sr-only">Actions</span></Th>
+          <Th>{{ $t('Name') }}</Th>
+          <Th>{{ $t('Type') }}</Th>
+          <Th>{{ $t('Required') }}</Th>
+          <Th>{{ $t('Position') }}</Th>
+          <Th>{{ $t('Desks') }}</Th>
+          <Th right
+            ><span class="sr-only">{{ $t('Actions') }}</span></Th
+          >
         </tr>
       </Thead>
       <Tbody>
@@ -128,7 +131,9 @@ function remove(close: () => void): void {
           <Td darker>{{ field.name }}</Td>
           <Td>{{ field.type_label }}</Td>
           <Td>
-            <Pill v-if="field.is_required" color="primary">Required</Pill>
+            <Pill v-if="field.is_required" color="primary">{{
+              $t('Required')
+            }}</Pill>
             <span v-else class="text-gray-400">—</span>
           </Td>
           <Td>{{ field.position }}</Td>
@@ -136,7 +141,7 @@ function remove(close: () => void): void {
             <span v-if="field.desks?.length">
               {{ field.desks.map((desk) => desk.name).join(', ') }}
             </span>
-            <span v-else class="text-gray-400">None</span>
+            <span v-else class="text-gray-400">{{ $t('None') }}</span>
           </Td>
           <Td class="space-x-2 text-end whitespace-nowrap">
             <AppButton
@@ -144,29 +149,29 @@ function remove(close: () => void): void {
               size="xs"
               color="white"
               @click="open(field)"
+              >{{ $t('Edit') }}</AppButton
             >
-              Edit
-            </AppButton>
             <AppButton
               type="button"
               size="xs"
               color="red"
               @click="deleting = field"
+              >{{ $t('Delete') }}</AppButton
             >
-              Delete
-            </AppButton>
           </Td>
         </tr>
       </Tbody>
     </Table>
     <p v-else class="text-sm text-gray-500 dark:text-gray-400">
-      There are no custom fields yet.
+      {{ $t('There are no custom fields yet.') }}
     </p>
   </div>
 
   <Modal
     v-if="editing"
-    :headline="editing === 'new' ? 'New custom field' : 'Edit custom field'"
+    :headline="
+      editing === 'new' ? $t('New custom field') : $t('Edit custom field')
+    "
     :action-loading="form.processing"
     @close="editing = null"
     @action="save"
@@ -175,19 +180,19 @@ function remove(close: () => void): void {
       <AppFieldset>
         <InputField
           v-model="form.name"
-          label="Name"
+          :label="$t('Name')"
           :error="form.errors.name"
           required
         />
         <SelectField
           v-model="form.type"
-          label="Type"
+          :label="$t('Type')"
           :options="types"
           :error="form.errors.type"
           :disabled="editing !== 'new'"
           :help-text="
             editing !== 'new'
-              ? 'The type can’t be changed after a field is created.'
+              ? $t('The type can’t be changed after a field is created.')
               : undefined
           "
           required
@@ -195,19 +200,19 @@ function remove(close: () => void): void {
         <TextareaField
           v-if="hasOptions"
           v-model="form.options"
-          label="Options"
-          help-text="One per line."
+          :label="$t('Options')"
+          :help-text="$t('One per line.')"
           :error="optionsError"
           required
         />
         <NumberField
           v-model="form.position"
-          label="Position"
+          :label="$t('Position')"
           :error="form.errors.position"
         />
         <CheckboxField
           v-model="form.is_required"
-          label="Required on tickets"
+          :label="$t('Required on tickets')"
           :error="form.errors.is_required"
         />
       </AppFieldset>
@@ -220,9 +225,14 @@ function remove(close: () => void): void {
     @close="deleting = null"
     @confirmed="remove"
   >
-    <template #headline>Delete “{{ deleting.name }}”?</template>
-    Its values are removed from every ticket. Ticket history keeps what they
-    were.
-    <template #actionText>Delete field</template>
+    <template #headline>{{
+      $t('Delete “:name”?', { name: deleting.name })
+    }}</template>
+    {{
+      $t(
+        'Its values are removed from every ticket. Ticket history keeps what they were.',
+      )
+    }}
+    <template #actionText>{{ $t('Delete field') }}</template>
   </ConfirmationModal>
 </template>

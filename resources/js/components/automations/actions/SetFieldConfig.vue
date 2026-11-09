@@ -50,7 +50,7 @@ function setField(key: unknown): void {
   <div class="space-y-4">
     <SelectField
       :model-value="(config.field as string | undefined) ?? null"
-      label="Field"
+      :label="$t('Field')"
       required
       :options="
         fields.map((item) => ({ value: item.field.key, label: item.label }))
@@ -62,7 +62,7 @@ function setField(key: unknown): void {
       v-if="selected"
       v-model="config.value"
       :field="selected"
-      label="Value"
+      :label="$t('Value')"
       required
       :relative="selected.key === 'ticket.due_at'"
       future

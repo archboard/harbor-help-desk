@@ -537,6 +537,10 @@ declare namespace App {
         ok: boolean;
         detail: string;
       };
+      export type SystemStatusData = {
+        version: string;
+        checks: App.Data.Install.ServiceCheckData[];
+      };
     }
     namespace Macros {
       export type AppliedMacroData = {
@@ -931,6 +935,9 @@ declare namespace App {
       export type LookupTicketsData = {
         search?: string | null;
       };
+      export type PageTicketThreadData = {
+        before?: string | null;
+      };
       export type RateTicketData = {
         rating: App.Enums.SatisfactionScore;
         comment?: string | null;
@@ -1039,6 +1046,11 @@ declare namespace App {
         breached_at: string | null;
         achieved_at: string | null;
       };
+      export type TicketThreadData = {
+        comments: App.Data.Tickets.TicketCommentData[];
+        events: App.Data.Tickets.TicketEventData[];
+        earlier_before: string | null;
+      };
       export type UpdateTicketCommentData = {
         body: string;
       };
@@ -1058,11 +1070,13 @@ declare namespace App {
         email: string;
         email_verified_at: string | null;
         timezone: string | null;
+        locale: string | null;
       };
       export type UpdateProfileData = {
         name?: string;
         email?: string;
         timezone?: string;
+        locale?: string | null;
       };
       export type UserData = {
         id: string;

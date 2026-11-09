@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ArrowDown, ArrowUp } from '@lucide/vue';
+import { trans } from 'laravel-vue-i18n';
 import { computed, ref } from 'vue';
 import Table from '@/components/tables/Table.vue';
 import Tbody from '@/components/tables/Tbody.vue';
@@ -17,19 +18,19 @@ type Column = {
 
 const { data } = defineProps<{ data: App.Data.Reports.AgentsReportData }>();
 
-const columns: Column[] = [
-  { key: 'name', label: 'Agent' },
-  { key: 'public_replies', label: 'Public replies', kind: 'count' },
-  { key: 'internal_notes', label: 'Internal notes', kind: 'count' },
-  { key: 'tickets_solved', label: 'Solved', kind: 'count' },
-  { key: 'open_assigned', label: 'Open assigned', kind: 'count' },
-  { key: 'median_reply', label: 'Median reply', kind: 'minutes' },
+const columns = computed<Column[]>(() => [
+  { key: 'name', label: trans('Agent') },
+  { key: 'public_replies', label: trans('Public replies'), kind: 'count' },
+  { key: 'internal_notes', label: trans('Internal notes'), kind: 'count' },
+  { key: 'tickets_solved', label: trans('Solved'), kind: 'count' },
+  { key: 'open_assigned', label: trans('Open assigned'), kind: 'count' },
+  { key: 'median_reply', label: trans('Median reply'), kind: 'minutes' },
   {
     key: 'median_first_response',
-    label: 'Median first response',
+    label: trans('Median first response'),
     kind: 'minutes',
   },
-];
+]);
 
 const sortKey = ref<Column['key']>('name');
 const ascending = ref(true);
@@ -107,7 +108,7 @@ function sortBy(key: Column['key']): void {
         </Td>
       </tr>
       <tr v-if="rows.length === 0">
-        <Td :colspan="columns.length">No agents on these desks.</Td>
+        <Td :colspan="columns.length">{{ $t('No agents on these desks.') }}</Td>
       </tr>
     </Tbody>
   </Table>

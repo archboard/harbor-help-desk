@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { EChartsOption } from 'echarts';
+import { trans } from 'laravel-vue-i18n';
 import { computed } from 'vue';
 import Chart from '@/components/charts/Chart.vue';
 import ReportCard from '@/components/reports/ReportCard.vue';
@@ -79,7 +80,9 @@ const breaches = computed(() =>
       >
         <div class="grid items-center gap-4 sm:grid-cols-2">
           <Chart
-            :label="`${metrics[metric.metric]} targets met`"
+            :label="
+              $t(':metric targets met', { metric: metrics[metric.metric] })
+            "
             :option="gauge(metric.percent_met.value)"
             height="10rem"
           />
@@ -91,7 +94,7 @@ const breaches = computed(() =>
                   :style="{ backgroundColor: statusColors.good }"
                   aria-hidden="true"
                 />
-                Met
+                {{ $t('Met') }}
               </dt>
               <dd class="font-medium tabular-nums">{{ metric.met }}</dd>
             </div>
@@ -102,7 +105,7 @@ const breaches = computed(() =>
                   :style="{ backgroundColor: statusColors.critical }"
                   aria-hidden="true"
                 />
-                Breached
+                {{ $t('Breached') }}
               </dt>
               <dd class="font-medium tabular-nums">{{ metric.breached }}</dd>
             </div>
@@ -112,7 +115,7 @@ const breaches = computed(() =>
                   class="size-2.5 rounded-full bg-gray-300 dark:bg-gray-600"
                   aria-hidden="true"
                 />
-                In progress
+                {{ $t('In progress') }}
               </dt>
               <dd class="font-medium tabular-nums">
                 {{ metric.in_progress }}
@@ -122,19 +125,22 @@ const breaches = computed(() =>
         </div>
 
         <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-          Share met of targets met or breached;
-          {{ formatValue(metric.percent_met.previous, 'percent') }} in the
-          previous period.
+          {{
+            $t(
+              'Share met of targets met or breached; :percent in the previous period.',
+              { percent: formatValue(metric.percent_met.previous, 'percent') },
+            )
+          }}
         </p>
 
         <div class="mt-4">
           <Table hide-shadow>
             <Thead>
               <tr>
-                <Th>Priority</Th>
-                <Th right>Met</Th>
-                <Th right>Breached</Th>
-                <Th right>% met</Th>
+                <Th>{{ $t('Priority') }}</Th>
+                <Th right>{{ $t('Met') }}</Th>
+                <Th right>{{ $t('Breached') }}</Th>
+                <Th right>{{ $t('% met') }}</Th>
               </tr>
             </Thead>
             <Tbody>
@@ -152,8 +158,8 @@ const breaches = computed(() =>
       </ReportCard>
     </div>
 
-    <ReportCard title="Breaches">
-      <Chart label="SLA breaches over time" :option="breaches" />
+    <ReportCard :title="$t('Breaches')">
+      <Chart :label="$t('SLA breaches over time')" :option="breaches" />
     </ReportCard>
   </div>
 </template>

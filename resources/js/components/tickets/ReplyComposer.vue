@@ -2,6 +2,7 @@
 import { router, useForm, useHttp } from '@inertiajs/vue3';
 import { Upload } from '@lucide/vue';
 import { useDropZone, useTimeoutFn } from '@vueuse/core';
+import { trans } from 'laravel-vue-i18n';
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue';
 import SimpleAlert from '@/components/alerts/SimpleAlert.vue';
 import AppButton from '@/components/AppButton.vue';
@@ -115,7 +116,7 @@ async function applyMacro(
   } catch {
     macroError.value =
       Object.values<string>(http.errors)[0] ??
-      'The macro could not be applied.';
+      trans('The macro could not be applied.');
   }
 }
 
@@ -246,11 +247,15 @@ function send(skipStaleCheck = false): void {
     @submit.prevent="send()"
   >
     <div class="flex items-center gap-1">
-      <div class="flex gap-1" role="radiogroup" aria-label="Message type">
+      <div
+        class="flex gap-1"
+        role="radiogroup"
+        :aria-label="$t('Message type')"
+      >
         <button
           v-for="option in [
-            { internal: false, label: 'Reply' },
-            { internal: true, label: 'Internal note' },
+            { internal: false, label: $t('Reply') },
+            { internal: true, label: $t('Internal note') },
           ]"
           :key="option.label"
           type="button"
@@ -273,7 +278,7 @@ function send(skipStaleCheck = false): void {
         :disabled="macros === undefined || http.processing"
         @click="toggleMacroPicker"
       >
-        Macros
+        {{ $t('Macros') }}
       </button>
     </div>
 
@@ -297,11 +302,11 @@ function send(skipStaleCheck = false): void {
     >
       <AppTextarea
         v-model="form.body"
-        :aria-label="form.is_internal ? 'Internal note' : 'Reply'"
+        :aria-label="form.is_internal ? $t('Internal note') : $t('Reply')"
         :placeholder="
           form.is_internal
-            ? 'Only agents can see internal notes'
-            : 'Write a reply'
+            ? $t('Only agents can see internal notes')
+            : $t('Write a reply')
         "
         :has-error="!!form.errors.body"
       />
@@ -309,7 +314,7 @@ function send(skipStaleCheck = false): void {
         v-if="suggestions.length > 0"
         class="absolute z-10 w-64 rounded-md bg-white py-1 text-sm shadow-lg ring-1 ring-black/5 dark:bg-gray-900"
         role="listbox"
-        aria-label="Mention an agent"
+        :aria-label="$t('Mention an agent')"
       >
         <li
           v-for="(member, index) in suggestions"
@@ -349,17 +354,17 @@ function send(skipStaleCheck = false): void {
           })
         "
       >
-        Show it
+        {{ $t('Show it') }}
       </button>
       <button type="button" class="ml-2 underline" @click="send(true)">
-        Send anyway
+        {{ $t('Send anyway') }}
       </button>
     </SimpleAlert>
 
     <div class="flex items-end justify-between gap-3">
       <FilePicker v-model="form.attachments" />
       <AppButton type="submit" :loading="form.processing">
-        {{ form.is_internal ? 'Add note' : 'Send reply' }}
+        {{ form.is_internal ? $t('Add note') : $t('Send reply') }}
       </AppButton>
     </div>
 
@@ -374,7 +379,7 @@ function send(skipStaleCheck = false): void {
         ]"
       >
         <Upload class="size-6" aria-hidden="true" />
-        Drop files to attach them
+        {{ $t('Drop files to attach them') }}
       </div>
     </FadeIn>
   </form>

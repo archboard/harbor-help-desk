@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { trans } from 'laravel-vue-i18n';
 import { computed, ref, watch } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import CardPadding from '@/components/CardPadding.vue';
@@ -26,7 +27,7 @@ import { store } from '@/routes/desks/tickets';
 import { index } from '@/routes/tickets';
 import type { CustomFieldValue } from '@/types';
 
-defineOptions({ layout: { title: 'New ticket' } });
+defineOptions({ layout: { title: trans('New ticket') } });
 
 const { desks } = defineProps<{
   desks: App.Data.Desks.DeskData[];
@@ -107,10 +108,10 @@ function submit(): void {
 </script>
 
 <template>
-  <Head title="New ticket" />
+  <Head :title="$t('New ticket')" />
 
   <p v-if="!desks.length" class="text-sm text-gray-500 dark:text-gray-400">
-    You need to be on a desk to open tickets.
+    {{ $t('You need to be on a desk to open tickets.') }}
   </p>
 
   <form v-else class="grid gap-6 lg:grid-cols-3" @submit.prevent="submit">
@@ -119,7 +120,7 @@ function submit(): void {
         <AppFieldset>
           <InputField
             v-model="form.subject"
-            label="Subject"
+            :label="$t('Subject')"
             :error="form.errors.subject"
             required
           />
@@ -128,13 +129,13 @@ function submit(): void {
             <div class="grid gap-4 sm:grid-cols-2">
               <InputField
                 v-model="form.requester.name"
-                label="Requester name"
+                :label="$t('Requester name')"
                 :error="errors['requester.name']"
                 required
               />
               <EmailField
                 v-model="form.requester.email"
-                label="Requester email"
+                :label="$t('Requester email')"
                 :error="errors['requester.email']"
                 required
               />
@@ -144,12 +145,12 @@ function submit(): void {
               class="text-sm text-primary-600 hover:underline dark:text-primary-400"
               @click="newRequester = false"
             >
-              Choose an existing contact instead
+              {{ $t('Choose an existing contact instead') }}
             </button>
           </div>
           <div v-else class="space-y-1">
             <FormField :error="errors.requester_id" required>
-              Requester
+              {{ $t('Requester') }}
               <template #component="{ id, hasError }">
                 <ModelCombobox
                   :id="id"
@@ -168,16 +169,16 @@ function submit(): void {
               class="text-sm text-primary-600 hover:underline dark:text-primary-400"
               @click="newRequester = true"
             >
-              New contact
+              {{ $t('New contact') }}
             </button>
           </div>
 
           <div class="space-y-1">
-            <AppLabel for="ticket-body">First message</AppLabel>
+            <AppLabel for="ticket-body">{{ $t('First message') }}</AppLabel>
             <AppTextarea
               id="ticket-body"
               v-model="form.body"
-              placeholder="What's the request? Optional."
+              :placeholder="$t('What\'s the request? Optional.')"
               :has-error="!!form.errors.body"
               class="min-h-32"
             />
@@ -201,31 +202,31 @@ function submit(): void {
           <AppFieldset>
             <SelectField
               v-model="form.desk_id"
-              label="Desk"
+              :label="$t('Desk')"
               :options="desks"
               :error="form.errors.desk_id"
               required
             />
             <SelectField
               v-model="form.status"
-              label="Status"
+              :label="$t('Status')"
               :options="statuses"
               :error="form.errors.status"
             />
             <SelectField
               v-model="form.priority"
-              label="Priority"
+              :label="$t('Priority')"
               :options="priorities"
               :error="form.errors.priority"
             />
             <DatePickerField
               v-model="form.due_at"
               mode="datetime"
-              label="Due"
+              :label="$t('Due')"
               :error="form.errors.due_at"
             />
             <div class="space-y-1">
-              <AppLabel>Assignees</AppLabel>
+              <AppLabel>{{ $t('Assignees') }}</AppLabel>
               <AssigneePicker v-model="form.assignee_ids" :members="members" />
               <FieldError v-if="errors.assignee_ids ?? errors.user_ids">
                 {{ errors.assignee_ids ?? errors.user_ids }}
@@ -244,10 +245,10 @@ function submit(): void {
 
       <div class="flex justify-end gap-2">
         <AppButton :component="Link" :href="index()" color="white">
-          Cancel
+          {{ $t('Cancel') }}
         </AppButton>
         <AppButton type="submit" :loading="form.processing">
-          Create ticket
+          {{ $t('Create ticket') }}
         </AppButton>
       </div>
     </div>

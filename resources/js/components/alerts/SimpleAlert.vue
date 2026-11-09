@@ -75,7 +75,7 @@ const colors: Record<
               :class="colors[level].dismiss"
               @click.prevent="show = false"
             >
-              <span class="sr-only">Dismiss</span>
+              <span class="sr-only">{{ $t('Dismiss') }}</span>
               <X class="size-5" aria-hidden="true" />
             </button>
           </div>

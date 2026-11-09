@@ -60,19 +60,29 @@ function remove(close: () => void): void {
   >
     <header class="flex flex-wrap items-center gap-x-2 gap-y-1">
       <p class="flex-auto py-0.5 text-xs/5 text-gray-500 dark:text-gray-400">
-        <span class="font-medium text-gray-900 dark:text-gray-100">
-          {{ comment.author_name ?? 'Unknown' }}
-        </span>
-        {{ comment.is_internal ? 'added an internal note' : 'commented' }}
+        <i18n-t
+          :keypath="
+            comment.is_internal
+              ? ':name added an internal note'
+              : ':name commented'
+          "
+          tag="span"
+        >
+          <template #name>
+            <span class="font-medium text-gray-900 dark:text-gray-100">
+              {{ comment.author_name ?? $t('Unknown') }}
+            </span>
+          </template>
+        </i18n-t>
         <Pill v-if="comment.is_internal" color="yellow" class="ml-1">
-          Internal
+          {{ $t('Internal') }}
         </Pill>
         <span
           v-if="comment.edited_at"
           class="text-gray-400 dark:text-gray-500"
           :title="formatDateTime(comment.edited_at)"
         >
-          (edited)
+          {{ $t('(edited)') }}
         </span>
       </p>
       <RelativeTime
@@ -87,7 +97,7 @@ function remove(close: () => void): void {
           color="white"
           @click="startEditing"
         >
-          Edit
+          {{ $t('Edit') }}
         </AppButton>
         <AppButton
           v-if="canDelete"
@@ -96,7 +106,7 @@ function remove(close: () => void): void {
           color="white"
           @click="deleting = true"
         >
-          Delete
+          {{ $t('Delete') }}
         </AppButton>
       </span>
     </header>
@@ -105,13 +115,13 @@ function remove(close: () => void): void {
       <AppTextarea
         v-model="form.body"
         autofocus
-        aria-label="Comment"
+        :aria-label="$t('Comment')"
         :has-error="!!form.errors.body"
       />
       <FieldError v-if="form.errors.body">{{ form.errors.body }}</FieldError>
       <div class="flex gap-2">
         <AppButton type="submit" size="sm" :loading="form.processing">
-          Save
+          {{ $t('Save') }}
         </AppButton>
         <AppButton
           type="button"
@@ -119,7 +129,7 @@ function remove(close: () => void): void {
           color="white"
           @click="editing = false"
         >
-          Cancel
+          {{ $t('Cancel') }}
         </AppButton>
       </div>
     </form>
@@ -142,9 +152,9 @@ function remove(close: () => void): void {
       @close="deleting = false"
       @confirmed="remove"
     >
-      <template #headline>Delete this comment?</template>
-      The comment and its files will no longer show on this ticket.
-      <template #actionText>Delete comment</template>
+      <template #headline>{{ $t('Delete this comment?') }}</template>
+      {{ $t('The comment and its files will no longer show on this ticket.') }}
+      <template #actionText>{{ $t('Delete comment') }}</template>
     </ConfirmationModal>
   </article>
 </template>

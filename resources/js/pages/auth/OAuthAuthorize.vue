@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Head } from '@inertiajs/vue3';
 import { Check, KeyRound } from '@lucide/vue';
 import { ref } from 'vue';
@@ -8,7 +9,7 @@ import FieldError from '@/components/forms/FieldError.vue';
 import { approve, deny } from '@/routes/passport/authorizations';
 
 defineOptions({
-  layout: { title: 'Authorize application' },
+  layout: { title: trans('Authorize application') },
 });
 
 const { workspaces } = defineProps<{
@@ -27,7 +28,7 @@ const selected = ref<string[]>(
 </script>
 
 <template>
-  <Head title="Authorize application" />
+  <Head :title="$t('Authorize application')" />
 
   <div class="space-y-6">
     <div
@@ -39,16 +40,19 @@ const selected = ref<string[]>(
         <KeyRound class="size-5" aria-hidden="true" />
       </div>
       <p class="text-sm text-gray-700 dark:text-gray-300">
-        <span class="font-semibold text-gray-900 dark:text-white">{{
-          client.name
-        }}</span>
-        wants to access your account.
+        <i18n-t keypath=":client wants to access your account." tag="span">
+          <template #client>
+            <span class="font-semibold text-gray-900 dark:text-white">{{
+              client.name
+            }}</span>
+          </template>
+        </i18n-t>
       </p>
     </div>
 
     <div v-if="scopes.length" class="space-y-2">
       <h2 class="text-sm font-medium text-gray-900 dark:text-white">
-        It will be able to
+        {{ $t('It will be able to') }}
       </h2>
       <ul class="space-y-1.5">
         <li
@@ -69,7 +73,7 @@ const selected = ref<string[]>(
     <form v-bind="approve.form()" class="space-y-6">
       <fieldset class="space-y-2">
         <legend class="text-sm font-medium text-gray-900 dark:text-white">
-          Workspaces it can use
+          {{ $t('Workspaces it can use') }}
         </legend>
         <div
           class="divide-y divide-gray-200 rounded-xl border border-gray-200 bg-white dark:divide-gray-800 dark:border-gray-800 dark:bg-gray-900"
@@ -102,7 +106,7 @@ const selected = ref<string[]>(
       <input type="hidden" name="auth_token" :value="authToken" />
 
       <AppButton type="submit" full :disabled="selected.length === 0">
-        Authorize
+        {{ $t('Authorize') }}
       </AppButton>
     </form>
 
@@ -111,7 +115,7 @@ const selected = ref<string[]>(
       <input type="hidden" name="state" :value="state ?? ''" />
       <input type="hidden" name="client_id" :value="client.id" />
       <input type="hidden" name="auth_token" :value="authToken" />
-      <AppButton type="submit" color="white" full>Deny</AppButton>
+      <AppButton type="submit" color="white" full>{{ $t('Deny') }}</AppButton>
     </form>
   </div>
 </template>

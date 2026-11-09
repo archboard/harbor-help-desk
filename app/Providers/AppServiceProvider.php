@@ -50,14 +50,20 @@ use App\OAuth\WorkspaceScopeRepository;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Auth\StatefulGuard;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\LazyLoadingViolationException;
+use Illuminate\Foundation\Console\AboutCommand;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use InvalidArgumentException;
@@ -97,6 +103,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+
+        AboutCommand::add('Harbor Help', fn (): array => ['Version' => config('harbor.version')]);
     }
 
     /**
@@ -105,6 +113,10 @@ class AppServiceProvider extends ServiceProvider
     protected function configureDefaults(): void
     {
         Date::use(CarbonImmutable::class);
+
+        if (str_starts_with((string) config('app.url'), 'https://')) {
+            URL::forceScheme('https');
+        }
 
         Mail::extend('workspace', function (): WorkspaceTransport {
             // The platform mailer is the transport's fallback, so pointing it back here would recurse.
@@ -144,6 +156,13 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('api', fn (Request $request): Limit => Limit::perMinute(120)->by($request->user('api')?->getAuthIdentifier() ?: $request->ip()));
 
+        // Fortify has no limiter slot for these, so the limiter rides on every Fortify route and only counts these two.
+        RateLimiter::for('password-reset', fn (Request $request): Limit => $request->routeIs('password.email', 'password.update')
+            ? Limit::perMinute(5)->by($request->ip().'|'.Str::lower((string) $request->input('email')))
+            : Limit::none());
+        RateLimiter::for('webhooks', fn (Request $request): Limit => Limit::perMinute(600)->by($request->ip()));
+        RateLimiter::for('platform', fn (Request $request): Limit => Limit::perMinute(60)->by($request->ip()));
+
         Passport::tokensExpireIn(CarbonImmutable::now()->addHour());
         Passport::refreshTokensExpireIn(CarbonImmutable::now()->addDays(30));
 
@@ -156,6 +175,17 @@ class AppServiceProvider extends ServiceProvider
             'authToken' => $parameters['authToken'],
             'csrfToken' => csrf_token(),
         ])->toResponse($parameters['request']));
+
+        Model::preventLazyLoading();
+        Model::handleLazyLoadingViolationUsing(function (Model $model, string $relation): void {
+            if (app()->isProduction()) {
+                Log::warning('Lazy loading violation: '.$model::class.'::'.$relation);
+
+                return;
+            }
+
+            throw new LazyLoadingViolationException($model, $relation);
+        });
 
         DB::prohibitDestructiveCommands(
             app()->isProduction(),

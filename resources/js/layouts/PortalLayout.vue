@@ -35,7 +35,7 @@ const page = usePage();
             as="button"
             class="shrink-0 font-medium text-primary-600 hover:underline dark:text-primary-400"
           >
-            Sign out
+            {{ $t('Sign out') }}
           </Link>
         </div>
       </Container>
@@ -43,9 +43,9 @@ const page = usePage();
 
     <Container class="max-w-3xl py-10">
       <div v-if="title" class="mb-8 space-y-2">
-        <h1 class="font-display text-3xl tracking-tight">{{ title }}</h1>
+        <h1 class="font-display text-3xl tracking-tight">{{ $t(title) }}</h1>
         <p v-if="description" class="text-sm text-gray-600 dark:text-gray-400">
-          {{ description }}
+          {{ $t(description) }}
         </p>
       </div>
 

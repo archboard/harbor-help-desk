@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Flash;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Models\User;
+use App\Support\Locales;
 use DateTimeZone;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
@@ -26,6 +27,7 @@ class ProfileController extends Controller
             'mustVerifyEmail' => true,
             'status' => $request->session()->get('status'),
             'timezones' => DateTimeZone::listIdentifiers(),
+            'locales' => Locales::available(),
         ]);
     }
 
@@ -34,7 +36,7 @@ class ProfileController extends Controller
      */
     public function update(Request $request, #[CurrentUser] User $user, UpdateProfile $updateProfile): RedirectResponse
     {
-        $updateProfile->handle($user, $request->only(['name', 'email', 'timezone']));
+        $updateProfile->handle($user, $request->only(['name', 'email', 'timezone', 'locale']));
 
         Flash::success(__('Profile updated.'));
 

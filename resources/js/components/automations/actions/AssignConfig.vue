@@ -60,14 +60,14 @@ function setMode(mode: unknown): void {
   <div class="space-y-4">
     <SelectField
       :model-value="config.mode ?? null"
-      label="Mode"
+      :label="$t('Mode')"
       required
       :options="optionsOf(catalog, 'assign', 'mode')"
       :error="errors.mode"
       @update:model-value="setMode"
     />
     <div v-if="usesUsers" class="space-y-1">
-      <AppLabel :has-error="!!userError">People</AppLabel>
+      <AppLabel :has-error="!!userError">{{ $t('People') }}</AppLabel>
       <AssigneePicker
         :model-value="config.user_ids ?? []"
         :members="members"
@@ -78,7 +78,7 @@ function setMode(mode: unknown): void {
     <SelectField
       v-if="usesRotation"
       :model-value="config.desk_id ?? null"
-      label="Desk"
+      :label="$t('Desk')"
       required
       :options="
         desks

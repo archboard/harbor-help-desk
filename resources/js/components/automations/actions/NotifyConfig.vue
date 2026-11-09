@@ -47,14 +47,14 @@ function setRecipients(recipients: unknown): void {
   <div class="space-y-4">
     <SelectField
       :model-value="config.recipients ?? null"
-      label="Notify"
+      :label="$t('Notify')"
       required
       :options="optionsOf(catalog, 'notify', 'recipients')"
       :error="errors.recipients"
       @update:model-value="setRecipients"
     />
     <div v-if="config.recipients === 'users'" class="space-y-1">
-      <AppLabel :has-error="!!userError">People</AppLabel>
+      <AppLabel :has-error="!!userError">{{ $t('People') }}</AppLabel>
       <AssigneePicker
         :model-value="config.user_ids ?? []"
         :members="members"
@@ -64,7 +64,7 @@ function setRecipients(recipients: unknown): void {
     </div>
     <InputField
       v-model="config.subject"
-      label="Subject"
+      :label="$t('Subject')"
       required
       :error="errors.subject"
     />
@@ -72,7 +72,7 @@ function setRecipients(recipients: unknown): void {
       v-model="config.body"
       :catalog="catalog"
       :trigger="trigger"
-      label="Message"
+      :label="$t('Message')"
       required
       :error="errors.body"
     />

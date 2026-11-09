@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Head, useForm } from '@inertiajs/vue3';
 import AppButton from '@/components/AppButton.vue';
 import AppFieldset from '@/components/forms/AppFieldset.vue';
@@ -8,9 +9,10 @@ import { store } from '@/routes/password/confirm';
 
 defineOptions({
   layout: {
-    title: 'Confirm password',
-    description:
+    title: trans('Confirm password'),
+    description: trans(
       'This is a secure area of the application. Please confirm your password before continuing.',
+    ),
   },
 });
 
@@ -24,12 +26,12 @@ function submit(): void {
 </script>
 
 <template>
-  <Head title="Confirm password" />
+  <Head :title="$t('Confirm password')" />
 
   <form @submit.prevent="submit">
     <AppFieldset>
       <FormField :error="form.errors.password">
-        Password
+        {{ $t('Password') }}
         <template #component="{ id, hasError }">
           <AppInput
             :id="id"
@@ -44,7 +46,7 @@ function submit(): void {
       </FormField>
 
       <AppButton type="submit" :loading="form.processing" full>
-        Confirm password
+        {{ $t('Confirm password') }}
       </AppButton>
     </AppFieldset>
   </form>

@@ -2,6 +2,7 @@
 import { Float } from '@headlessui-float/vue';
 import { Menu, MenuButton, MenuItem } from '@headlessui/vue';
 import { Braces } from '@lucide/vue';
+import { trans } from 'laravel-vue-i18n';
 import { computed, nextTick, useTemplateRef } from 'vue';
 import AppMenuItems from '@/components/AppMenuItems.vue';
 import FormField from '@/components/forms/FormField.vue';
@@ -33,8 +34,8 @@ const triggerOnly = computed(
 
 const groups = computed(() =>
   [
-    { label: 'Ticket', items: catalog.placeholders },
-    { label: 'This trigger', items: triggerOnly.value },
+    { label: trans('Ticket'), items: catalog.placeholders },
+    { label: trans('This trigger'), items: triggerOnly.value },
   ].filter((group) => group.items.length),
 );
 
@@ -84,7 +85,7 @@ async function insert(key: string): Promise<void> {
                 class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 focus:ring-2 focus:ring-primary-500 focus:outline-hidden dark:text-gray-300 dark:hover:bg-gray-800"
               >
                 <Braces class="size-3.5" aria-hidden="true" />
-                Insert placeholder
+                {{ $t('Insert placeholder') }}
               </MenuButton>
               <AppMenuItems>
                 <div v-for="group in groups" :key="group.label" class="py-1">

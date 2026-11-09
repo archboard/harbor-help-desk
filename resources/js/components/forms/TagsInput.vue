@@ -50,7 +50,9 @@ function add(): void {
               class="-mr-1 ml-1 rounded-full hover:text-red-600"
               @click="model = model.filter((other) => other !== item)"
             >
-              <span class="sr-only">Remove {{ item }}</span>
+              <span class="sr-only">{{
+                $t('Remove :name', { name: item })
+              }}</span>
               <X class="size-3" aria-hidden="true" />
             </button>
           </Pill>
@@ -59,8 +61,8 @@ function add(): void {
           v-model="draft"
           :list="listId"
           :has-error="!!error"
-          placeholder="Type a value and press Enter"
-          :aria-label="label ?? 'Add a value'"
+          :placeholder="$t('Type a value and press Enter')"
+          :aria-label="label ?? $t('Add a value')"
           @keydown.enter.prevent="add"
           @change="add"
         />

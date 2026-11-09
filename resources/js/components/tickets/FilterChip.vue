@@ -7,6 +7,7 @@ import {
   ListboxOptions,
 } from '@headlessui/vue';
 import { Check, ChevronDown, X } from '@lucide/vue';
+import { transChoice } from 'laravel-vue-i18n';
 import { computed, onMounted, useTemplateRef } from 'vue';
 
 /**
@@ -34,7 +35,11 @@ const summary = computed(() => {
     (value) => options.find((option) => option.value === value)?.label ?? value,
   );
 
-  return names.length > 2 ? `${names.length} selected` : names.join(', ');
+  return names.length > 2
+    ? transChoice(':count selected', names.length, {
+        count: String(names.length),
+      })
+    : names.join(', ');
 });
 
 onMounted(() => {
@@ -102,7 +107,9 @@ onMounted(() => {
       class="rounded-r-lg border-l border-gray-300 px-2 py-2 hover:text-red-600 focus:ring-2 focus:ring-primary-500 focus:outline-hidden dark:border-gray-600"
       @click="emit('remove')"
     >
-      <span class="sr-only">Remove the {{ label }} filter</span>
+      <span class="sr-only">{{
+        $t('Remove the :label filter', { label })
+      }}</span>
       <X class="size-3.5" aria-hidden="true" />
     </button>
   </div>

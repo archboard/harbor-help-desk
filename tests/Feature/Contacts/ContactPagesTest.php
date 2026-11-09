@@ -46,6 +46,17 @@ test('the search endpoint returns matching contacts for pickers', function () {
         ->assertJsonPath('0.name', 'Pat Lee');
 });
 
+test('contact search matches a substring of an email', function () {
+    Contact::factory()->create(['name' => 'Pat Lee', 'email' => 'pat.lee@example.test']);
+    Contact::factory()->create(['name' => 'Sam Rivera', 'email' => 'sam@other.test']);
+
+    $this->actingAs($this->agent)
+        ->getJson(route('contacts.search', ['search' => 't.lee@exam']))
+        ->assertOk()
+        ->assertJsonCount(1)
+        ->assertJsonPath('0.name', 'Pat Lee');
+});
+
 test('contacts are created and updated, and emails stay unique ignoring case', function () {
     Contact::factory()->create(['email' => 'taken@acme.test']);
     $this->actingAs($this->agent);

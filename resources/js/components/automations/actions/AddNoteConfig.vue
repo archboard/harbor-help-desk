@@ -13,7 +13,7 @@ const config = defineModel<{ body?: string }>({ required: true });
     v-model="config.body"
     :catalog="catalog"
     :trigger="trigger"
-    label="Note"
+    :label="$t('Note')"
     required
     :error="errors.body"
   />

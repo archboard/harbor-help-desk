@@ -3,6 +3,8 @@ export interface TicketPageProps {
   ticket: App.Data.Tickets.TicketData;
   comments: App.Data.Tickets.TicketCommentData[];
   events: App.Data.Tickets.TicketEventData[];
+  /** The `before` cursor for the thread's earlier page, null when the thread is complete. */
+  earlier_before: string | null;
   attachments: App.Data.Tickets.AttachmentData[];
   reminders: App.Data.Tickets.TicketReminderData[];
   deskMembers: App.Data.Desks.DeskMemberData[];

@@ -8,6 +8,7 @@ import {
 } from '@headlessui/vue';
 import { useHttp } from '@inertiajs/vue3';
 import { X } from '@lucide/vue';
+import { trans } from 'laravel-vue-i18n';
 import { computed, ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import AppTextarea from '@/components/forms/AppTextarea.vue';
@@ -89,7 +90,7 @@ async function run(): Promise<void> {
     emit('result', result);
     open.value = false;
   } catch {
-    failure.value = http.hasErrors ? '' : 'The test could not be run.';
+    failure.value = http.hasErrors ? '' : trans('The test could not be run.');
   }
 }
 </script>
@@ -128,14 +129,14 @@ async function run(): Promise<void> {
               <DialogTitle
                 class="text-lg font-medium text-gray-900 dark:text-white"
               >
-                Test this automation
+                {{ $t('Test this automation') }}
               </DialogTitle>
               <button
                 type="button"
                 class="rounded-full text-gray-400 hover:text-gray-500 focus:ring-3 focus:ring-gray-300 focus:outline-hidden dark:focus:ring-gray-500"
                 @click="open = false"
               >
-                <span class="sr-only">Close</span>
+                <span class="sr-only">{{ $t('Close') }}</span>
                 <X class="size-6" aria-hidden="true" />
               </button>
             </div>
@@ -145,13 +146,15 @@ async function run(): Promise<void> {
               @submit.prevent="canRun && !http.processing && run()"
             >
               <p class="text-sm text-gray-600 dark:text-gray-300">
-                Runs the automation as you see it, saved or not, against a
-                ticket. Nothing is changed: each action only says what it would
-                do.
+                {{
+                  $t(
+                    'Runs the automation as you see it, saved or not, against a ticket. Nothing is changed: each action only says what it would do.',
+                  )
+                }}
               </p>
 
               <FormField :error="http.errors.ticket_id" required>
-                Ticket
+                {{ $t('Ticket') }}
                 <template #component="{ id, hasError }">
                   <ModelCombobox
                     :id="id"
@@ -168,11 +171,11 @@ async function run(): Promise<void> {
                 </template>
               </FormField>
               <p class="-mt-3 text-xs text-gray-500 dark:text-gray-400">
-                Search by number or subject.
+                {{ $t('Search by number or subject.') }}
               </p>
 
               <FormField v-if="webhook" :error="http.errors.sample_payload">
-                Sample payload
+                {{ $t('Sample payload') }}
                 <template #component="{ id }">
                   <AppTextarea
                     :id="id"
@@ -193,10 +196,12 @@ async function run(): Promise<void> {
               >
                 {{
                   parsedPayload === null
-                    ? 'This is not a JSON object.'
+                    ? $t('This is not a JSON object.')
                     : parsedPayload === undefined
-                      ? 'Paste a JSON object that a caller would send, or leave it empty.'
-                      : 'Valid JSON.'
+                      ? $t(
+                          'Paste a JSON object that a caller would send, or leave it empty.',
+                        )
+                      : $t('Valid JSON.')
                 }}
               </p>
 
@@ -217,7 +222,7 @@ async function run(): Promise<void> {
                 :disabled="!canRun"
                 :loading="http.processing"
               >
-                Run test
+                {{ $t('Run test') }}
               </AppButton>
             </form>
           </DialogPanel>

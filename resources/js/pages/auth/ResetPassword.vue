@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Head, useForm } from '@inertiajs/vue3';
 import AppButton from '@/components/AppButton.vue';
 import AppFieldset from '@/components/forms/AppFieldset.vue';
@@ -8,8 +9,8 @@ import { update } from '@/routes/password';
 
 defineOptions({
   layout: {
-    title: 'Reset password',
-    description: 'Please enter your new password below',
+    title: trans('Reset password'),
+    description: trans('Please enter your new password below'),
   },
 });
 
@@ -34,12 +35,12 @@ function submit(): void {
 </script>
 
 <template>
-  <Head title="Reset password" />
+  <Head :title="$t('Reset password')" />
 
   <form @submit.prevent="submit">
     <AppFieldset>
       <FormField :error="form.errors.email">
-        Email
+        {{ $t('Email') }}
         <template #component="{ id, hasError }">
           <AppInput
             :id="id"
@@ -53,7 +54,7 @@ function submit(): void {
       </FormField>
 
       <FormField :error="form.errors.password">
-        Password
+        {{ $t('Password') }}
         <template #component="{ id, hasError }">
           <AppInput
             :id="id"
@@ -69,7 +70,7 @@ function submit(): void {
       </FormField>
 
       <FormField :error="form.errors.password_confirmation">
-        Confirm password
+        {{ $t('Confirm password') }}
         <template #component="{ id, hasError }">
           <AppInput
             :id="id"
@@ -84,7 +85,7 @@ function submit(): void {
       </FormField>
 
       <AppButton type="submit" :loading="form.processing" full>
-        Reset password
+        {{ $t('Reset password') }}
       </AppButton>
     </AppFieldset>
   </form>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { computed, inject } from 'vue';
 import { SelectField } from '@/components/forms/fields';
 import SortableList from '@/components/SortableList.vue';
@@ -139,10 +140,10 @@ function removeStep(index: number): void {
   notify(
     {
       level: 'neutral',
-      title: 'Step deleted',
+      title: trans('Step deleted'),
       text: summarizeStep(step, catalog.value, names.value),
       action: {
-        label: 'Undo',
+        label: trans('Undo'),
         onClick: () =>
           steps.value.splice(Math.min(index, steps.value.length), 0, step),
       },
@@ -183,7 +184,7 @@ function setAction(
         <StepCard
           :open="isOpen(step)"
           :icon="stepTypes[step.type]?.icon ?? unknownStepIcon"
-          :kind="stepTypes[step.type]?.label ?? 'Step'"
+          :kind="stepTypes[step.type]?.label ?? $t('Step')"
           :summary="summarizeStep(step, catalog, names)"
           :details="detailsFor(step)"
           :invalid="invalidCards.includes(step.id)"
@@ -205,7 +206,7 @@ function setAction(
             <div v-if="step.type === 'action'" class="space-y-4">
               <SelectField
                 :model-value="step.action || null"
-                label="Action"
+                :label="$t('Action')"
                 required
                 :options="actionOptions"
                 :error="errors[`definition.steps.${step.id}.action`]"
@@ -273,11 +274,18 @@ function setAction(
               v-else-if="step.type === 'stop'"
               class="text-sm text-gray-500 dark:text-gray-400"
             >
-              Ends this run and skips any later automations for this event.
+              {{
+                $t(
+                  'Ends this run and skips any later automations for this event.',
+                )
+              }}
             </p>
             <p v-else class="text-sm text-gray-500 dark:text-gray-400">
-              This step can't be edited here yet. It is kept as it is when you
-              save, and you can move or delete it.
+              {{
+                $t(
+                  "This step can't be edited here yet. It is kept as it is when you save, and you can move or delete it.",
+                )
+              }}
             </p>
           </fieldset>
         </StepCard>

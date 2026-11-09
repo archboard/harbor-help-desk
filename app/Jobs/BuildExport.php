@@ -151,21 +151,25 @@ class BuildExport implements ShouldQueue
         'automation_runs' => ['id'],
         'automation_ticket_matches' => ['id'],
         'audit_events' => ['id'],
+        'webhooks' => ['id'],
     ];
 
     /**
      * Tables with a `workspace_id` column that a workspace export leaves out on purpose:
-     * exports are this feature's own bookkeeping and notifications are per-user and transient.
+     * exports are this feature's own bookkeeping, notifications are per-user and transient, and
+     * webhook deliveries are a short-lived delivery log.
      */
-    public const array EXCLUDED_WORKSPACE_TABLES = ['exports', 'notifications'];
+    public const array EXCLUDED_WORKSPACE_TABLES = ['exports', 'notifications', 'webhook_deliveries'];
 
     /**
      * Columns written as null: mailbox credentials (`settings` holds the encrypted IMAP/SMTP/OAuth
-     * secrets) and the push subscription, and the automation webhook token hash.
+     * secrets) and the push subscription, the automation webhook token hash, and the outgoing
+     * webhook signing secret.
      */
     public const array SECRET_COLUMNS = [
         'mailboxes' => ['settings', 'push_secret', 'push_subscription_id', 'push_expires_at'],
         'automations' => ['webhook_token_hash'],
+        'webhooks' => ['secret'],
     ];
 
     /**
@@ -196,7 +200,7 @@ class BuildExport implements ShouldQueue
 
             $rows = $keys === ['id']
                 ? $query->lazyById(1000)
-                : $query->orderBy($keys[0])->when(isset($keys[1]), fn ($q) => $q->orderBy($keys[1]))->lazy(1000);
+                : $query->orderBy($keys[0])->when($keys[1] ?? null, fn ($q, string $secondKey) => $q->orderBy($secondKey))->lazy(1000);
 
             $secrets = array_flip(self::SECRET_COLUMNS[$table] ?? []);
 
@@ -218,7 +222,7 @@ class BuildExport implements ShouldQueue
     /**
      * Copy each attachment's file into the zip under `attachments/{id}/{filename}`. Missing files are skipped.
      *
-     * @param  iterable<int, Model|object{id: string, disk: string, path: string, filename: string}>  $attachments
+     * @param  iterable<int, Attachment|\stdClass>  $attachments
      * @param  list<string>  $tempFiles
      */
     protected function addAttachmentFiles(ZipArchive $zip, iterable $attachments, array &$tempFiles): void
@@ -252,7 +256,7 @@ class BuildExport implements ShouldQueue
     {
         $tempFile = $this->tempFile();
         $tempFiles[] = $tempFile;
-        $handle = fopen($tempFile, 'w');
+        $handle = fopen($tempFile, 'w') ?: throw new \RuntimeException('Could not open a temporary file.');
         $count = 0;
 
         foreach ($rows as $row) {

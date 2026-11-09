@@ -11,7 +11,14 @@ Both modes run the same codebase.
 | **Cloud**       | Many workspaces share one Postgres database. Each workspace is reached at its own subdomain (`acme.harbor.help`). | `HARBOR_MULTITENANT=true`  |
 | **Self-hosted** | One workspace. Subdomains are ignored.                                                                            | `HARBOR_MULTITENANT=false` |
 
-Self-hosting needs only PHP and Postgres. Cache, queues and sessions use the database by default. Redis, S3 and websockets are optional.
+Self-hosting needs PHP, Postgres, Redis and Reverb. Redis holds the cache, sessions and queues (run by Horizon), and Reverb serves realtime updates. S3 for attachments and external mail providers are optional. The Docker stack and the install scripts set up all of it.
+
+## Installing
+
+- [INSTALLATION.md](INSTALLATION.md): Docker, with a setup script that also configures HTTPS.
+- [INSTALLATION-VM.md](INSTALLATION-VM.md): directly on a Debian or Ubuntu server, without Docker.
+- [docs/operations.md](docs/operations.md): health checks, alerts, backups and upgrades.
+- [CHANGELOG.md](CHANGELOG.md): what changed in each release, with upgrade notes.
 
 ## Stack
 
@@ -45,7 +52,7 @@ Set these in `.env`:
 - `REVERB_HOST`, `REVERB_PORT`, `REVERB_SCHEME`: the public-facing address browsers connect to, not the address the server binds to.
 - `REVERB_SERVER_HOST`, `REVERB_SERVER_PORT`: where `reverb:start` binds (defaults `0.0.0.0:8080`).
 
-The install command (a later phase) will generate the keys, and the Docker images will run Reverb.
+The Docker stack runs Reverb as its own service, and the install scripts generate the keys (see [INSTALLATION.md](INSTALLATION.md)).
 
 ## Testing and quality
 

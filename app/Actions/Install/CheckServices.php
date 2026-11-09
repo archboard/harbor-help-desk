@@ -4,6 +4,7 @@ namespace App\Actions\Install;
 
 use App\Data\Install\ServiceCheckData;
 use Closure;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 use Laravel\Horizon\Contracts\MasterSupervisorRepository;
@@ -30,6 +31,15 @@ class CheckServices
             $this->check('Horizon', function (): string {
                 if (app(MasterSupervisorRepository::class)->all() === []) {
                     throw new RuntimeException(__('Not running. Start it with `php artisan horizon`.'));
+                }
+
+                return __('Running');
+            }),
+            $this->check('Scheduler', function (): string {
+                $beat = Cache::get('harbor:scheduler-heartbeat');
+
+                if ($beat === null || now()->getTimestamp() - (int) $beat > 180) {
+                    throw new RuntimeException(__('No heartbeat in the last 3 minutes. Run `php artisan schedule:work`, or call `php artisan schedule:run` every minute.'));
                 }
 
                 return __('Running');

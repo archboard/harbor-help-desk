@@ -84,16 +84,16 @@ const triggerOptions = computed(() =>
   <div class="space-y-4">
     <SelectField
       :model-value="mode"
-      label="Wait"
+      :label="$t('Wait')"
       :options="[
-        { value: 'for', label: 'For a duration' },
-        { value: 'until', label: 'Until a ticket date' },
+        { value: 'for', label: $t('For a duration') },
+        { value: 'until', label: $t('Until a ticket date') },
       ]"
       @update:model-value="setMode"
     />
 
     <div v-if="step.for" class="space-y-1">
-      <AppLabel :has-error="!!errors.for">Duration</AppLabel>
+      <AppLabel :has-error="!!errors.for">{{ $t('Duration') }}</AppLabel>
       <DurationInput
         v-model="step.for as Interval"
         :schedules="schedules"
@@ -105,18 +105,20 @@ const triggerOptions = computed(() =>
     <div v-else-if="step.until" class="space-y-4">
       <div class="space-y-1">
         <AppLabel :has-error="!!errors['until.offset']">
-          Time before or after
+          {{ $t('Time before or after') }}
         </AppLabel>
         <DurationInput
           :model-value="offset"
           relative
-          :directions="['before', 'after']"
+          :directions="[$t('before'), $t('after')]"
           :errors="{ amount: errors['until.offset'] }"
           @update:model-value="setOffset"
         />
       </div>
       <div class="space-y-1">
-        <AppLabel :has-error="!!errors['until.field']">Ticket date</AppLabel>
+        <AppLabel :has-error="!!errors['until.field']">{{
+          $t('Ticket date')
+        }}</AppLabel>
         <FieldPicker
           v-model="step.until.field"
           :catalog="catalog"
@@ -133,8 +135,12 @@ const triggerOptions = computed(() =>
 
     <CheckboxListField
       v-model="step.cancel_on as (string | number | boolean)[]"
-      label="Cancel if…"
-      help-text="Ends the wait, and the rest of the automation, when one of these happens first."
+      :label="$t('Cancel if…')"
+      :help-text="
+        $t(
+          'Ends the wait, and the rest of the automation, when one of these happens first.',
+        )
+      "
       :options="triggerOptions"
       :error="errors.cancel_on"
     />

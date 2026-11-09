@@ -2,21 +2,26 @@
 import { Link, usePage } from '@inertiajs/vue3';
 import { CircleCheck } from '@lucide/vue';
 import { computed } from 'vue';
+import { useEarlierThread } from '@/composables/useEarlierThread';
+import AppButton from '@/components/AppButton.vue';
 import Avatar from '@/components/Avatar.vue';
 import ReplyComposer from '@/components/tickets/ReplyComposer.vue';
 import TicketCommentCard from '@/components/tickets/TicketCommentCard.vue';
 import RelativeTime from '@/components/RelativeTime.vue';
 import { show as showRun } from '@/routes/automation-runs';
+import { thread } from '@/routes/tickets';
 
 const typing = defineModel<boolean>('typing', { default: false });
 
-const { comments, events, canWork } = defineProps<{
+const { ticketId, comments, events, earlierBefore, canWork } = defineProps<{
   ticketId: string;
   deskMembers: App.Data.Desks.DeskMemberData[];
   /** Undefined while the deferred prop loads. */
   macros?: App.Data.Macros.MacroData[];
   comments: App.Data.Tickets.TicketCommentData[];
   events: App.Data.Tickets.TicketEventData[];
+  /** Where the newest page of the thread ends, null when it's complete. */
+  earlierBefore: string | null;
   /** Can reply and edit their own comments: may update and the ticket isn't deleted. */
   canWork: boolean;
   /** Can delete anyone's comment, like the ticket itself. */
@@ -27,17 +32,37 @@ const { comments, events, canWork } = defineProps<{
 
 const page = usePage();
 
+const earlier = useEarlierThread(
+  () => ticketId,
+  () => earlierBefore,
+  (before) => thread(ticketId, { query: { before } }).url,
+);
+
 /** Comments and history in the order they happened. */
-const items = computed(() =>
-  [
+const items = computed(() => {
+  const seen = new Set<string>();
+
+  return [
+    ...earlier.comments.value.map((comment) => ({
+      key: comment.id,
+      at: comment.created_at ?? '',
+      comment,
+    })),
     ...comments.map((comment) => ({
       key: comment.id,
       at: comment.created_at ?? '',
       comment,
     })),
+    ...earlier.events.value.map((event) => ({
+      key: event.id,
+      at: event.created_at,
+      event,
+    })),
     ...events.map((event) => ({ key: event.id, at: event.created_at, event })),
-  ].sort((a, b) => a.at.localeCompare(b.at)),
-);
+  ]
+    .filter(({ key }) => !seen.has(key) && !!seen.add(key))
+    .sort((a, b) => a.at.localeCompare(b.at));
+});
 
 /** Mirrors `TicketCommentPolicy`: authors edit their own comments on tickets they can work. */
 function isOwnComment(comment: App.Data.Tickets.TicketCommentData): boolean {
@@ -72,6 +97,21 @@ function isResolution(event: App.Data.Tickets.TicketEventData): boolean {
 
 <template>
   <div>
+    <div v-if="earlier.hasEarlier.value" class="mb-4 text-center">
+      <AppButton
+        type="button"
+        size="sm"
+        color="gray"
+        :loading="earlier.loading.value"
+        @click="earlier.loadEarlier()"
+      >
+        {{ $t('Load earlier') }}
+      </AppButton>
+      <p v-if="earlier.failed.value" class="mt-2 text-xs text-red-600">
+        {{ $t('The earlier activity could not be loaded.') }}
+      </p>
+    </div>
+
     <ul role="list" class="space-y-6">
       <li
         v-for="(item, index) in items"

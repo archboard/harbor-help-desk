@@ -324,12 +324,12 @@ test('apply_macro runs the macro actions and posts its body as the macro says', 
 
     $run = runActions([['apply_macro', ['macro_id' => $note->id]], ['apply_macro', ['macro_id' => $reply->id]]]);
 
-    $comments = $this->ticket->comments()->orderBy('id')->get();
+    $comments = $this->ticket->comments()->with('author')->orderBy('id')->get();
     expect($run->status)->toBe(AutomationRunStatus::COMPLETED)
         ->and($this->ticket->refresh()->priority)->toBe(TicketPriority::HIGH)
         ->and($this->ticket->tags()->pluck('name')->all())->toBe(['macro'])
         ->and($comments->pluck('is_internal')->all())->toBe([true, false])
-        ->and($comments[0]->body)->toBe('Hi '.Str::before($this->ticket->requester->name, ' '))
+        ->and($comments[0]->body)->toBe('Hi '.Str::before($this->ticket->load('requester')->requester->name, ' '))
         ->and($comments[1]->author)->toBeInstanceOf(Automation::class);
     Mail::assertSent(TicketReplyMail::class, 1);
 });

@@ -1,0 +1,110 @@
+# Self-hosted stack. Put your TLS reverse proxy in front of the app service's
+# port (HARBOR_PORT): it serves Laravel and forwards /app and /apps to Reverb.
+# Settings come from .env (or the file named by HARBOR_ENV_FILE); see .env.example.
+# `docker compose pull` uses the published image; `docker compose build` builds from source.
+# Mailbox watching (IMAP IDLE) is opt-in: `docker compose --profile mail-watch up -d`.
+x-app: &app
+  image: ghcr.io/archboard/harbor-help:${HARBOR_VERSION:-latest}
+  build:
+    context: .
+    target: app
+    args:
+      HARBOR_VERSION: ${HARBOR_VERSION:-dev}
+  restart: unless-stopped
+  env_file: ${HARBOR_ENV_FILE:-.env}
+  environment:
+    LOG_CHANNEL: stderr
+    TRUSTED_PROXIES: '*'
+    HARBOR_MULTITENANT: 'false'
+    DB_CONNECTION: pgsql
+    DB_HOST: postgres
+    DB_PORT: 5432
+    REDIS_HOST: redis
+    CACHE_STORE: redis
+    SESSION_DRIVER: redis
+    QUEUE_CONNECTION: redis
+    BROADCAST_CONNECTION: reverb
+    # Where the install checklist looks for Reverb; the reverb service binds 0.0.0.0 itself
+    REVERB_SERVER_HOST: reverb
+    REVERB_SERVER_PORT: 8080
+  volumes:
+    - storage:/app/storage/app
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+# Background services start once the app is healthy, i.e. after migrations have
+# run, and drop the image's healthcheck since they don't serve HTTP
+x-worker: &worker
+  <<: *app
+  healthcheck:
+    disable: true
+  depends_on:
+    app:
+      condition: service_healthy
+
+services:
+  app:
+    <<: *app
+    command: sh -c "php artisan migrate --force && frankenphp run --config docker/Caddyfile"
+    ports:
+      - '${HARBOR_PORT:-8000}:8000'
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8000/up']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  horizon:
+    <<: *worker
+    command: php artisan horizon
+    stop_grace_period: 60s
+
+  scheduler:
+    <<: *worker
+    command: php artisan schedule:work
+
+  reverb:
+    <<: *worker
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+
+  mail-watch:
+    <<: *worker
+    command: php artisan mailboxes:watch
+    profiles: [mail-watch]
+
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-harbor}
+      POSTGRES_USER: ${DB_USERNAME:-harbor}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    volumes:
+      # Postgres 18+ keeps data in /var/lib/postgresql/18/docker, so mount the parent
+      - postgres:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres:
+  redis:
+  storage:

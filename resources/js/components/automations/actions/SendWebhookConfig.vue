@@ -71,23 +71,27 @@ const jsonState = computed<'empty' | 'valid' | 'invalid'>(() => {
     <div class="grid gap-4 sm:grid-cols-[8rem_1fr]">
       <SelectField
         v-model="config.method"
-        label="Method"
+        :label="$t('Method')"
         required
         :options="optionsOf(catalog, 'send_webhook', 'method')"
         :error="errors.method"
       />
       <InputField
         v-model="config.url"
-        label="URL"
+        :label="$t('URL')"
         required
         placeholder="https://example.com/hook"
-        help-text="http or https. Placeholders such as {{ ticket.number }} are filled in, URL-encoded."
+        :help-text="
+          $t(
+            'http or https. Placeholders such as {{ ticket.number }} are filled in, URL-encoded.',
+          )
+        "
         :error="errors.url"
       />
     </div>
 
     <div class="space-y-2">
-      <AppLabel :has-error="!!headersError">Headers</AppLabel>
+      <AppLabel :has-error="!!headersError">{{ $t('Headers') }}</AppLabel>
       <div
         v-for="(header, index) in headers"
         :key="index"
@@ -95,7 +99,7 @@ const jsonState = computed<'empty' | 'valid' | 'invalid'>(() => {
       >
         <AppInput
           class="w-40"
-          aria-label="Header name"
+          :aria-label="$t('Header name')"
           placeholder="X-Api-Key"
           :has-error="!!errors[`headers.${index}.name`]"
           :model-value="header.name"
@@ -103,8 +107,8 @@ const jsonState = computed<'empty' | 'valid' | 'invalid'>(() => {
         />
         <AppInput
           class="flex-1"
-          aria-label="Header value"
-          placeholder="Value"
+          :aria-label="$t('Header value')"
+          :placeholder="$t('Value')"
           :has-error="!!errors[`headers.${index}.value`]"
           :model-value="header.value"
           @update:model-value="
@@ -118,7 +122,7 @@ const jsonState = computed<'empty' | 'valid' | 'invalid'>(() => {
           @click="setHeaders(headers.filter((_, i) => i !== index))"
         >
           <Trash2 class="size-3" aria-hidden="true" />
-          <span class="sr-only">Remove header</span>
+          <span class="sr-only">{{ $t('Remove header') }}</span>
         </AppButton>
       </div>
       <FieldError v-if="headersError">{{ headersError }}</FieldError>
@@ -130,7 +134,7 @@ const jsonState = computed<'empty' | 'valid' | 'invalid'>(() => {
         @click="setHeaders([...headers, { name: '', value: '' }])"
       >
         <Plus class="size-3" aria-hidden="true" />
-        Add header
+        {{ $t('Add header') }}
       </AppButton>
     </div>
 
@@ -140,8 +144,12 @@ const jsonState = computed<'empty' | 'valid' | 'invalid'>(() => {
         mono
         :catalog="catalog"
         :trigger="trigger"
-        label="Body"
-        help-text="JSON. A placeholder is filled in as text, so put it inside quotes."
+        :label="$t('Body')"
+        :help-text="
+          $t(
+            'JSON. A placeholder is filled in as text, so put it inside quotes.',
+          )
+        "
         :error="errors.body"
       />
       <p
@@ -153,7 +161,7 @@ const jsonState = computed<'empty' | 'valid' | 'invalid'>(() => {
             : 'text-red-600 dark:text-red-400'
         "
       >
-        {{ jsonState === 'valid' ? 'Valid JSON' : 'Not valid JSON' }}
+        {{ jsonState === 'valid' ? $t('Valid JSON') : $t('Not valid JSON') }}
       </p>
     </div>
   </div>

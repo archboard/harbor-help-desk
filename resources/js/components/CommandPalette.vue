@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import {
   Combobox,
   ComboboxInput,
@@ -105,19 +106,19 @@ function ticketCommand(ticket: App.Data.Tickets.TicketData): Command {
   return {
     id: ticket.id,
     label: `#${ticket.number} ${ticket.subject}`,
-    group: 'Tickets',
+    group: trans('Tickets'),
     ticket,
     children: () => [
       {
         id: 'open',
-        label: 'Open',
-        group: `Ticket #${ticket.number}`,
+        label: trans('Open'),
+        group: trans('Ticket #:number', { number: String(ticket.number) }),
         run: () => router.visit(show(ticket.id)),
       },
       {
         id: 'quick-view',
-        label: 'Quick view',
-        group: `Ticket #${ticket.number}`,
+        label: trans('Quick view'),
+        group: trans('Ticket #:number', { number: String(ticket.number) }),
         run: () => openQuickView(ticket.id),
       },
       ...actionsFor({ ticketIds: [ticket.id], ticket }),
@@ -130,11 +131,11 @@ const rootCommands = computed<Command[]>(() => [
   ...[
     ...navigation.value,
     ...userNavigation.value,
-    { label: 'New ticket', href: createTicket().url },
+    { label: trans('New ticket'), href: createTicket().url },
   ].map((item) => ({
     id: item.href,
     label: item.label,
-    group: 'Pages',
+    group: trans('Pages'),
     run: () => router.visit(item.href),
   })),
   ...tickets.value.map(ticketCommand),
@@ -279,9 +280,11 @@ function goBack(event: KeyboardEvent): void {
                   v-focus
                   class="h-12 w-full border-0 bg-transparent px-0 text-sm text-black placeholder:text-gray-400 focus:ring-0 focus:outline-hidden dark:text-gray-100"
                   :placeholder="
-                    current ? 'Choose an action…' : 'Search pages and tickets…'
+                    current
+                      ? $t('Choose an action…')
+                      : $t('Search pages and tickets…')
                   "
-                  aria-label="Command palette"
+                  :aria-label="$t('Command palette')"
                   @change="query = ($event.target as HTMLInputElement).value"
                   @keydown.backspace="goBack"
                 />
@@ -329,13 +332,13 @@ function goBack(event: KeyboardEvent): void {
                 class="flex justify-center py-6"
               >
                 <Spinner class="size-5 text-gray-400" aria-hidden="true" />
-                <span class="sr-only">Searching…</span>
+                <span class="sr-only">{{ $t('Searching…') }}</span>
               </div>
               <p
                 v-else
                 class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400"
               >
-                Nothing found.
+                {{ $t('Nothing found.') }}
               </p>
             </Combobox>
           </DialogPanel>

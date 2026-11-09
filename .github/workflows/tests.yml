@@ -28,7 +28,21 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+      redis:
+        image: redis:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     env:
+      # .env comes from .env.example without Reverb keys, and booting the app builds the broadcaster
+      BROADCAST_CONNECTION: log
+      REDIS_HOST: 127.0.0.1
+      REDIS_PORT: 6379
       DB_CONNECTION: pgsql
       DB_HOST: 127.0.0.1
       DB_PORT: 5432
@@ -56,6 +70,12 @@ jobs:
 
       - name: Setup Application
         run: composer setup
+
+      - name: Audit Composer dependencies
+        run: composer audit
+
+      - name: Audit npm dependencies
+        run: npm audit --omit=dev --audit-level=high
 
       - name: Run CI Checks
         run: composer ci:check

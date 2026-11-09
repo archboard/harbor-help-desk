@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
+import { computed } from 'vue';
 import {
   Head,
   InfiniteScroll,
@@ -18,7 +20,7 @@ import { store as importWorkspace } from '@/routes/workspace/import';
 import { store as requestWorkspaceExport } from '@/routes/workspace/exports';
 import { update as updateSettings } from '@/routes/workspace/settings';
 
-defineOptions({ layout: { title: 'Data & privacy' } });
+defineOptions({ layout: { title: trans('Data & privacy') } });
 
 defineProps<{
   exports: { data: App.Data.Exports.ExportData[] };
@@ -42,16 +44,16 @@ function submitImport(): void {
   });
 }
 
-const typeLabels: Record<App.Enums.ExportType, string> = {
-  contact: 'Contact data',
-  workspace: 'Workspace',
-};
+const typeLabels = computed<Record<App.Enums.ExportType, string>>(() => ({
+  contact: trans('Contact data'),
+  workspace: trans('Workspace'),
+}));
 
-const statusLabels: Record<App.Enums.ExportStatus, string> = {
-  pending: 'Preparing',
-  completed: 'Ready',
-  failed: 'Failed',
-};
+const statusLabels = computed<Record<App.Enums.ExportStatus, string>>(() => ({
+  pending: trans('Preparing'),
+  completed: trans('Ready'),
+  failed: trans('Failed'),
+}));
 
 function formatSize(bytes: number | null): string {
   if (bytes === null) {
@@ -66,7 +68,7 @@ function formatSize(bytes: number | null): string {
 
 <template>
   <div class="space-y-6">
-    <Head title="Data & privacy" />
+    <Head :title="$t('Data & privacy')" />
 
     <CardWrapper>
       <form
@@ -78,16 +80,24 @@ function formatSize(bytes: number | null): string {
           <AppFieldset>
             <NumberField
               v-model="form.retention_resolved_ticket_days"
-              label="Delete resolved tickets after (days)"
-              help-text="Solved and closed tickets move to the trash this many days after they were resolved. Leave empty to keep them forever."
+              :label="$t('Delete resolved tickets after (days)')"
+              :help-text="
+                $t(
+                  'Solved and closed tickets move to the trash this many days after they were resolved. Leave empty to keep them forever.',
+                )
+              "
               :error="form.errors.retention_resolved_ticket_days"
               :min="1"
               :max="3650"
             />
             <NumberField
               v-model="form.retention_trash_days"
-              label="Keep deleted tickets for (days)"
-              help-text="After this many days in the trash, a ticket and its files are removed permanently."
+              :label="$t('Keep deleted tickets for (days)')"
+              :help-text="
+                $t(
+                  'After this many days in the trash, a ticket and its files are removed permanently.',
+                )
+              "
               :error="form.errors.retention_trash_days"
               :min="1"
               :max="365"
@@ -101,9 +111,11 @@ function formatSize(bytes: number | null): string {
 
     <div class="flex items-center justify-between gap-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
-        A contact's data is exported from their page. Export the whole workspace
-        here, with its files but without mailbox passwords or tokens. Exports
-        expire after seven days.
+        {{
+          $t(
+            "A contact's data is exported from their page. Export the whole workspace here, with its files but without mailbox passwords or tokens. Exports expire after seven days.",
+          )
+        }}
       </p>
       <AppButton
         type="button"
@@ -111,9 +123,8 @@ function formatSize(bytes: number | null): string {
         @click="
           router.post(requestWorkspaceExport(), {}, { preserveScroll: true })
         "
+        >{{ $t('Export workspace') }}</AppButton
       >
-        Export workspace
-      </AppButton>
     </div>
 
     <CardWrapper>
@@ -121,7 +132,7 @@ function formatSize(bytes: number | null): string {
         v-if="exports.data.length === 0"
         class="p-6 text-sm text-gray-500 dark:text-gray-400"
       >
-        No exports yet.
+        {{ $t('No exports yet.') }}
       </p>
 
       <InfiniteScroll v-else data="exports" as="ul" class="divide-y">
@@ -142,7 +153,9 @@ function formatSize(bytes: number | null): string {
                 >
                   {{ item.subject_name }}
                 </a>
-                <span v-else class="text-gray-500">Deleted contact</span>
+                <span v-else class="text-gray-500">{{
+                  $t('Deleted contact')
+                }}</span>
               </template>
             </p>
             <p class="text-xs text-gray-500 dark:text-gray-400">
@@ -151,9 +164,10 @@ function formatSize(bytes: number | null): string {
                 &middot; {{ formatSize(item.size) }}
               </template>
               <template v-if="item.requested_by_name">
-                &middot; requested by {{ item.requested_by_name }}
+                &middot;
+                {{ $t('requested by :name', { name: item.requested_by_name }) }}
               </template>
-              &middot; expires
+              &middot; {{ $t('expires') }}
               <RelativeTime :datetime="item.expires_at" />
             </p>
           </div>
@@ -161,9 +175,8 @@ function formatSize(bytes: number | null): string {
             v-if="item.download_url"
             :href="item.download_url"
             class="shrink-0 font-medium text-primary-600 dark:text-primary-400"
+            >{{ $t('Download') }}</a
           >
-            Download
-          </a>
         </li>
       </InfiniteScroll>
     </CardWrapper>
@@ -172,11 +185,11 @@ function formatSize(bytes: number | null): string {
       <form @submit.prevent="submitImport">
         <CardPadding>
           <p class="text-sm text-gray-500 dark:text-gray-400">
-            Import a workspace export (a .zip from "Export workspace") into this
-            workspace. It only works while the workspace has no tickets or
-            contacts. Mailboxes come in disconnected and automation webhook URLs
-            must be generated again. Members are matched by email; new ones sign
-            in with a magic link.
+            {{
+              $t(
+                'Import a workspace export (a .zip from "Export workspace") into this workspace. It only works while the workspace has no tickets or contacts. Mailboxes come in disconnected and automation webhook URLs must be generated again. Members are matched by email; new ones sign in with a magic link.',
+              )
+            }}
           </p>
           <input
             type="file"
@@ -196,9 +209,8 @@ function formatSize(bytes: number | null): string {
             type="submit"
             :loading="importForm.processing"
             :disabled="!importForm.file"
+            >{{ $t('Import workspace') }}</AppButton
           >
-            Import workspace
-          </AppButton>
         </CardAction>
       </form>
     </CardWrapper>

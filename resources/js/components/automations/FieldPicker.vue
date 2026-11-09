@@ -75,8 +75,8 @@ const display = (key: string): string =>
     @update:model-value="query = ''"
   >
     <ComboboxInput
-      aria-label="Field"
-      placeholder="Choose a field…"
+      :aria-label="$t('Field')"
+      :placeholder="$t('Choose a field…')"
       class="block w-full truncate rounded-lg bg-white pr-8 text-sm shadow-xs focus:ring-2 focus:outline-hidden dark:bg-gray-900"
       :class="
         hasError
@@ -101,7 +101,7 @@ const display = (key: string): string =>
         v-if="!filtered.length"
         class="px-4 py-2 text-gray-700 select-none dark:text-gray-400"
       >
-        No fields found.
+        {{ $t('No fields found.') }}
       </p>
       <template v-for="group in filtered" :key="group.group">
         <li

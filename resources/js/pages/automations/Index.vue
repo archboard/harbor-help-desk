@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
+import { trans } from 'laravel-vue-i18n';
 import { ArrowDown, ArrowUp, GripVertical, Workflow } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { statusColors } from '@/components/automations/runStatus';
@@ -23,7 +24,7 @@ import {
 } from '@/routes/automations';
 import { update as setEnabled } from '@/routes/automations/enabled';
 
-defineOptions({ layout: { title: 'Automations' } });
+defineOptions({ layout: { title: trans('Automations') } });
 
 type Automation = App.Data.Automations.AutomationData;
 
@@ -102,20 +103,23 @@ function remove(close: () => void): void {
 </script>
 
 <template>
-  <Head title="Automations" />
+  <Head :title="$t('Automations')" />
 
   <div class="space-y-8">
     <div class="flex items-start justify-between gap-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
-        Automations run their steps when something happens to a ticket, in the
-        order shown for each trigger.
+        {{
+          $t(
+            'Automations run their steps when something happens to a ticket, in the order shown for each trigger.',
+          )
+        }}
       </p>
       <div class="flex shrink-0 gap-2">
         <AppButton :component="Link" :href="allRuns().url" color="white">
-          Run history
+          {{ $t('Run history') }}
         </AppButton>
         <AppButton :component="Link" :href="templates().url">
-          New automation
+          {{ $t('New automation') }}
         </AppButton>
       </div>
     </div>
@@ -128,12 +132,14 @@ function remove(close: () => void): void {
       <Table>
         <Thead>
           <tr>
-            <Th>Name</Th>
-            <Th>Scope</Th>
-            <Th>Enabled</Th>
-            <Th>Last run</Th>
-            <Th>Runs (24h)</Th>
-            <Th right><span class="sr-only">Actions</span></Th>
+            <Th>{{ $t('Name') }}</Th>
+            <Th>{{ $t('Scope') }}</Th>
+            <Th>{{ $t('Enabled') }}</Th>
+            <Th>{{ $t('Last run') }}</Th>
+            <Th>{{ $t('Runs (24h)') }}</Th>
+            <Th right
+              ><span class="sr-only">{{ $t('Actions') }}</span></Th
+            >
           </tr>
         </Thead>
         <SortableList
@@ -161,8 +167,8 @@ function remove(close: () => void): void {
               <Pill :color="automation.desk_id ? 'blue' : 'gray'">
                 {{
                   automation.desk_id
-                    ? (deskNames.get(automation.desk_id) ?? 'Desk')
-                    : 'Workspace'
+                    ? (deskNames.get(automation.desk_id) ?? $t('Desk'))
+                    : $t('Workspace')
                 }}
               </Pill>
             </Td>
@@ -171,7 +177,7 @@ function remove(close: () => void): void {
                 :model-value="automation.enabled"
                 @update:model-value="toggle(automation, $event)"
               >
-                Enabled
+                {{ $t('Enabled') }}
               </AppToggle>
             </Td>
             <Td>
@@ -184,7 +190,7 @@ function remove(close: () => void): void {
                   class="ms-2 text-xs text-gray-500"
                 />
               </template>
-              <span v-else class="text-gray-500">Never</span>
+              <span v-else class="text-gray-500">{{ $t('Never') }}</span>
             </Td>
             <Td>{{ automation.runs_last24h ?? 0 }}</Td>
             <Td class="space-x-2 text-end whitespace-nowrap">
@@ -196,7 +202,7 @@ function remove(close: () => void): void {
                 @click="move(group.automations, index, -1)"
               >
                 <ArrowUp class="size-3" aria-hidden="true" />
-                <span class="sr-only">Move up</span>
+                <span class="sr-only">{{ $t('Move up') }}</span>
               </AppButton>
               <AppButton
                 type="button"
@@ -206,7 +212,7 @@ function remove(close: () => void): void {
                 @click="move(group.automations, index, 1)"
               >
                 <ArrowDown class="size-3" aria-hidden="true" />
-                <span class="sr-only">Move down</span>
+                <span class="sr-only">{{ $t('Move down') }}</span>
               </AppButton>
               <AppButton
                 type="button"
@@ -214,7 +220,7 @@ function remove(close: () => void): void {
                 color="white"
                 @click="copy(automation)"
               >
-                Duplicate
+                {{ $t('Duplicate') }}
               </AppButton>
               <AppButton
                 type="button"
@@ -222,7 +228,7 @@ function remove(close: () => void): void {
                 color="red"
                 @click="deleting = automation"
               >
-                Delete
+                {{ $t('Delete') }}
               </AppButton>
             </Td>
           </tr>
@@ -239,14 +245,17 @@ function remove(close: () => void): void {
         aria-hidden="true"
       />
       <h2 class="mt-4 text-lg font-semibold text-gray-900 dark:text-white">
-        No automations yet
+        {{ $t('No automations yet') }}
       </h2>
       <p class="mt-2 text-base text-gray-500 dark:text-gray-400">
-        Automations set fields, reply, assign and notify for you when tickets
-        arrive, change or sit idle.
+        {{
+          $t(
+            'Automations set fields, reply, assign and notify for you when tickets arrive, change or sit idle.',
+          )
+        }}
       </p>
       <AppButton :component="Link" :href="templates().url" class="mt-6">
-        New automation
+        {{ $t('New automation') }}
       </AppButton>
     </div>
   </div>
@@ -257,8 +266,10 @@ function remove(close: () => void): void {
     @close="deleting = null"
     @confirmed="remove"
   >
-    <template #headline>Delete “{{ deleting.name }}”?</template>
-    It will stop running, and its run history is deleted with it.
-    <template #actionText>Delete automation</template>
+    <template #headline>{{
+      $t('Delete “:name”?', { name: deleting.name })
+    }}</template>
+    {{ $t('It will stop running, and its run history is deleted with it.') }}
+    <template #actionText>{{ $t('Delete automation') }}</template>
   </ConfirmationModal>
 </template>

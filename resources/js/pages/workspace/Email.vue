@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trans } from 'laravel-vue-i18n';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { ArrowDown, ArrowUp, Copy, Check, X } from '@lucide/vue';
 import { useClipboard } from '@vueuse/core';
@@ -32,7 +33,7 @@ import { destroy, store, update } from '@/routes/workspace/email';
 import { update as updateSettings } from '@/routes/workspace/settings';
 import { redirect as connect } from '@/routes/mailboxes/oauth';
 
-defineOptions({ layout: { title: 'Email' } });
+defineOptions({ layout: { title: trans('Email') } });
 
 const { desks, mailboxes } = defineProps<{
   mailboxes: App.Data.Mailboxes.MailboxData[];
@@ -40,15 +41,14 @@ const { desks, mailboxes } = defineProps<{
   oauthProviders: { google: boolean; microsoft: boolean };
 }>();
 
-const receivesBy: Record<
-  App.Data.Mailboxes.MailboxData['receives_by'],
-  string
-> = {
-  webhook: 'Forwarded',
-  push: 'Push',
-  watch: 'Watching',
-  poll: 'Polling',
-};
+const receivesBy = computed<
+  Record<App.Data.Mailboxes.MailboxData['receives_by'], string>
+>(() => ({
+  webhook: trans('Forwarded'),
+  push: trans('Push'),
+  watch: trans('Watching'),
+  poll: trans('Polling'),
+}));
 
 const page = usePage();
 
@@ -60,7 +60,7 @@ const settingsForm = useForm({
 });
 
 const notificationMailboxes = computed(() => [
-  { value: '', label: 'Default (oldest mailbox)' },
+  { value: '', label: trans('Default (oldest mailbox)') },
   ...mailboxes.map((mailbox) => ({
     value: mailbox.id,
     label: `${mailbox.name} (${mailbox.address})`,
@@ -107,7 +107,7 @@ function error(key: string): string | undefined {
 }
 
 function deskName(id: string): string {
-  return desks.find((desk) => desk.id === id)?.name ?? 'Archived desk';
+  return desks.find((desk) => desk.id === id)?.name ?? trans('Archived desk');
 }
 
 function open(mailbox: App.Data.Mailboxes.MailboxData | 'new'): void {
@@ -167,13 +167,16 @@ function remove(close: () => void): void {
 </script>
 
 <template>
-  <Head title="Email" />
+  <Head :title="$t('Email')" />
 
   <div class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-4">
       <p class="text-sm text-gray-500 dark:text-gray-400">
-        Mail to these mailboxes becomes tickets, and replies go out through
-        them.
+        {{
+          $t(
+            'Mail to these mailboxes becomes tickets, and replies go out through them.',
+          )
+        }}
       </p>
       <div class="flex shrink-0 flex-wrap gap-2">
         <AppButton
@@ -181,29 +184,31 @@ function remove(close: () => void): void {
           component="a"
           color="white"
           :href="connect('google').url"
+          >{{ $t('Connect Google') }}</AppButton
         >
-          Connect Google
-        </AppButton>
         <AppButton
           v-if="oauthProviders.microsoft"
           component="a"
           color="white"
           :href="connect('microsoft').url"
+          >{{ $t('Connect Microsoft') }}</AppButton
         >
-          Connect Microsoft
-        </AppButton>
-        <AppButton type="button" @click="open('new')">IMAP/SMTP</AppButton>
+        <AppButton type="button" @click="open('new')">{{
+          $t('IMAP/SMTP')
+        }}</AppButton>
       </div>
     </div>
 
     <Table v-if="mailboxes.length">
       <Thead>
         <tr>
-          <Th>Mailbox</Th>
-          <Th>Default desk</Th>
-          <Th>Rules</Th>
-          <Th>New mail</Th>
-          <Th right><span class="sr-only">Actions</span></Th>
+          <Th>{{ $t('Mailbox') }}</Th>
+          <Th>{{ $t('Default desk') }}</Th>
+          <Th>{{ $t('Rules') }}</Th>
+          <Th>{{ $t('New mail') }}</Th>
+          <Th right
+            ><span class="sr-only">{{ $t('Actions') }}</span></Th
+          >
         </tr>
       </Thead>
       <Tbody>
@@ -217,11 +222,13 @@ function remove(close: () => void): void {
               v-if="mailbox.driver === 'hosted' && mailbox.inbound_address"
               class="mt-1 flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400"
             >
-              Forward your own addresses here
-              <button
+              {{ $t('Forward your own addresses here')
+              }}<button
                 type="button"
                 class="inline-flex items-center gap-1 rounded-sm font-mono text-gray-700 hover:text-gray-900 dark:text-gray-200 dark:hover:text-white"
-                :aria-label="`Copy ${mailbox.inbound_address}`"
+                :aria-label="
+                  $t('Copy :address', { address: mailbox.inbound_address })
+                "
                 @click="copy(mailbox.inbound_address)"
               >
                 {{ mailbox.inbound_address }}
@@ -246,7 +253,8 @@ function remove(close: () => void): void {
               v-if="mailbox.polled_at"
               class="mt-1 text-xs text-gray-500 dark:text-gray-400"
             >
-              Checked <RelativeTime :datetime="mailbox.polled_at" />
+              {{ $t('Checked') }}
+              <RelativeTime :datetime="mailbox.polled_at" />
             </div>
           </Td>
           <Td class="space-x-2 text-end whitespace-nowrap">
@@ -255,24 +263,22 @@ function remove(close: () => void): void {
               size="xs"
               color="white"
               @click="open(mailbox)"
+              >{{ $t('Edit') }}</AppButton
             >
-              Edit
-            </AppButton>
             <AppButton
               v-if="mailbox.driver !== 'hosted'"
               type="button"
               size="xs"
               color="red"
               @click="deleting = mailbox"
+              >{{ $t('Delete') }}</AppButton
             >
-              Delete
-            </AppButton>
           </Td>
         </tr>
       </Tbody>
     </Table>
     <p v-else class="text-sm text-gray-500 dark:text-gray-400">
-      There are no mailboxes yet.
+      {{ $t('There are no mailboxes yet.') }}
     </p>
 
     <CardWrapper>
@@ -296,14 +302,18 @@ function remove(close: () => void): void {
           <AppFieldset>
             <SelectField
               v-model="settingsForm.mail_notification_mailbox_id"
-              label="Send app email (notifications, sign-in links) from"
+              :label="$t('Send app email (notifications, sign-in links) from')"
               :options="notificationMailboxes"
               :error="settingsForm.errors.mail_notification_mailbox_id"
             />
             <NumberField
               v-model="settingsForm.mail_new_tickets_per_sender_per_hour"
-              label="New tickets per sender per hour"
-              help-text="Email beyond this is dropped. Replies to existing tickets don't count."
+              :label="$t('New tickets per sender per hour')"
+              :help-text="
+                $t(
+                  'Email beyond this is dropped. Replies to existing tickets don\'t count.',
+                )
+              "
               :error="settingsForm.errors.mail_new_tickets_per_sender_per_hour"
               :min="1"
               :max="1000"
@@ -318,7 +328,9 @@ function remove(close: () => void): void {
 
   <Modal
     v-if="editing"
-    :headline="editing === 'new' ? 'Add IMAP/SMTP mailbox' : 'Edit mailbox'"
+    :headline="
+      editing === 'new' ? $t('Add IMAP/SMTP mailbox') : $t('Edit mailbox')
+    "
     :action-loading="form.processing"
     size="2xl"
     @close="editing = null"
@@ -328,21 +340,21 @@ function remove(close: () => void): void {
       <AppFieldset>
         <InputField
           v-model="form.name"
-          label="Name"
-          help-text="Shown as the sender of replies."
+          :label="$t('Name')"
+          :help-text="$t('Shown as the sender of replies.')"
           :error="form.errors.name"
           required
         />
         <EmailField
           v-if="editing === 'new'"
           v-model="form.address"
-          label="Address"
+          :label="$t('Address')"
           :error="form.errors.address"
           required
         />
         <SelectField
           v-model="form.default_desk_id"
-          label="Default desk"
+          :label="$t('Default desk')"
           :options="desks"
           :error="form.errors.default_desk_id"
           required
@@ -356,47 +368,51 @@ function remove(close: () => void): void {
             <h3
               class="pt-2 text-sm font-semibold text-gray-900 dark:text-white"
             >
-              {{ protocol === 'imap' ? 'Incoming (IMAP)' : 'Outgoing (SMTP)' }}
+              {{
+                protocol === 'imap'
+                  ? $t('Incoming (IMAP)')
+                  : $t('Outgoing (SMTP)')
+              }}
             </h3>
             <div class="grid gap-4 sm:grid-cols-3">
               <div class="sm:col-span-2">
                 <InputField
                   v-model="form.settings[protocol].host"
-                  label="Host"
+                  :label="$t('Host')"
                   :error="error(`settings.${protocol}.host`)"
                   required
                 />
               </div>
               <NumberField
                 v-model="form.settings[protocol].port"
-                label="Port"
+                :label="$t('Port')"
                 :error="error(`settings.${protocol}.port`)"
                 required
               />
             </div>
             <SelectField
               v-model="form.settings[protocol].encryption"
-              label="Encryption"
+              :label="$t('Encryption')"
               :options="encryptions"
               :error="error(`settings.${protocol}.encryption`)"
               required
             />
             <InputField
               v-model="form.settings[protocol].username"
-              label="Username"
+              :label="$t('Username')"
               :error="error(`settings.${protocol}.username`)"
               required
             />
             <PasswordField
               v-model="form.settings[protocol].password"
-              label="Password"
+              :label="$t('Password')"
               :error="error(`settings.${protocol}.password`)"
               required
             />
           </template>
           <InputField
             v-model="form.settings.imap.folder"
-            label="Folder"
+            :label="$t('Folder')"
             :error="error('settings.imap.folder')"
           />
         </template>
@@ -404,18 +420,21 @@ function remove(close: () => void): void {
         <template v-else>
           <TextareaField
             v-model="form.signature"
-            label="Signature"
-            help-text="Added below every reply sent from this mailbox."
+            :label="$t('Signature')"
+            :help-text="$t('Added below every reply sent from this mailbox.')"
             :error="form.errors.signature"
           />
 
           <div class="space-y-2">
             <h3 class="text-sm font-semibold text-gray-900 dark:text-white">
-              Routing rules
+              {{ $t('Routing rules') }}
             </h3>
             <p class="text-sm text-gray-500 dark:text-gray-400">
-              New mail sent to an address goes to its desk. The first matching
-              rule wins; anything else goes to the default desk.
+              {{
+                $t(
+                  'New mail sent to an address goes to its desk. The first matching rule wins; anything else goes to the default desk.',
+                )
+              }}
             </p>
             <div
               v-for="(rule, index) in form.routing"
@@ -426,14 +445,18 @@ function remove(close: () => void): void {
                 <AppInput
                   v-model="rule.address"
                   type="email"
-                  placeholder="billing@example.com"
-                  :aria-label="`Rule ${index + 1} address`"
+                  :placeholder="$t('billing@example.com')"
+                  :aria-label="
+                    $t('Rule :number address', { number: String(index + 1) })
+                  "
                   :has-error="!!error(`routing.${index}.address`)"
                 />
                 <AppSelect
                   v-model="rule.desk_id"
                   :options="desks"
-                  :aria-label="`Rule ${index + 1} desk`"
+                  :aria-label="
+                    $t('Rule :number desk', { number: String(index + 1) })
+                  "
                   :has-error="!!error(`routing.${index}.desk_id`)"
                 />
                 <AppButton
@@ -441,7 +464,7 @@ function remove(close: () => void): void {
                   size="xs"
                   color="white"
                   :disabled="index === 0"
-                  aria-label="Move up"
+                  :aria-label="$t('Move up')"
                   @click="move(index, -1)"
                 >
                   <ArrowUp class="size-4" aria-hidden="true" />
@@ -451,7 +474,7 @@ function remove(close: () => void): void {
                   size="xs"
                   color="white"
                   :disabled="index === form.routing.length - 1"
-                  aria-label="Move down"
+                  :aria-label="$t('Move down')"
                   @click="move(index, 1)"
                 >
                   <ArrowDown class="size-4" aria-hidden="true" />
@@ -460,7 +483,7 @@ function remove(close: () => void): void {
                   type="button"
                   size="xs"
                   color="white"
-                  aria-label="Remove rule"
+                  :aria-label="$t('Remove rule')"
                   @click="form.routing.splice(index, 1)"
                 >
                   <X class="size-4" aria-hidden="true" />
@@ -483,9 +506,8 @@ function remove(close: () => void): void {
               size="sm"
               color="white"
               @click="form.routing.push({ address: '', desk_id: '' })"
+              >{{ $t('Add rule') }}</AppButton
             >
-              Add rule
-            </AppButton>
             <FieldError v-if="form.errors.routing">
               {{ form.errors.routing }}
             </FieldError>
@@ -501,9 +523,15 @@ function remove(close: () => void): void {
     @close="deleting = null"
     @confirmed="remove"
   >
-    <template #headline>Delete “{{ deleting.name }}”?</template>
-    Harbor stops receiving and sending mail through {{ deleting.address }}. Its
-    tickets stay, and their replies go out through another mailbox.
-    <template #actionText>Delete mailbox</template>
+    <template #headline>{{
+      $t('Delete “:name”?', { name: deleting.name })
+    }}</template>
+    {{
+      $t(
+        'Harbor stops receiving and sending mail through :address. Its tickets stay, and their replies go out through another mailbox.',
+        { address: deleting.address },
+      )
+    }}
+    <template #actionText>{{ $t('Delete mailbox') }}</template>
   </ConfirmationModal>
 </template>

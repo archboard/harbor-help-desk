@@ -160,10 +160,10 @@ const empty = (value: unknown): unknown => (value === '' ? null : value);
     <div class="w-48">
       <AppSelect
         hide-null
-        aria-label="Kind of date"
+        :aria-label="$t('Kind of date')"
         :options="[
-          { value: 'absolute', label: 'A date and time' },
-          { value: 'relative', label: 'Relative to now' },
+          { value: 'absolute', label: $t('A date and time') },
+          { value: 'relative', label: $t('Relative to now') },
         ]"
         :model-value="relativeValue ? 'relative' : 'absolute'"
         @update:model-value="setDateMode"
@@ -177,9 +177,9 @@ const empty = (value: unknown): unknown => (value === '' ? null : value);
         :errors="errors"
         @update:model-value="model = { relative: $event }"
       />
-      <span v-if="future" class="text-sm text-gray-500 dark:text-gray-400"
-        >from now</span
-      >
+      <span v-if="future" class="text-sm text-gray-500 dark:text-gray-400">{{
+        $t('from now')
+      }}</span>
     </div>
     <FormField
       v-else
@@ -239,7 +239,11 @@ const empty = (value: unknown): unknown => (value === '' ? null : value);
     :label="label"
     :required="required"
     :error="error"
-    help-text="A regular expression, matched without regard to case. For example ^refund|chargeback"
+    :help-text="
+      $t(
+        'A regular expression, matched without regard to case. For example ^refund|chargeback',
+      )
+    "
     @update:model-value="model = empty($event)"
   />
   <TextareaField

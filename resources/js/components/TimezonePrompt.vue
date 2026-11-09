@@ -72,12 +72,24 @@ function dismiss(): void {
     >
       <p class="flex-1">
         <template v-if="savedTimezone">
-          Your device is set to <strong>{{ browserTimezone }}</strong
-          >, but your account uses <strong>{{ savedTimezone }}</strong
-          >. Switch to your device's timezone?
+          <i18n-t
+            keypath="Your device is set to :device, but your account uses :account. Switch to your device's timezone?"
+            tag="span"
+          >
+            <template #device
+              ><strong>{{ browserTimezone }}</strong></template
+            >
+            <template #account
+              ><strong>{{ savedTimezone }}</strong></template
+            >
+          </i18n-t>
         </template>
         <template v-else>
-          Use <strong>{{ browserTimezone }}</strong> as your timezone?
+          <i18n-t keypath="Use :timezone as your timezone?" tag="span">
+            <template #timezone
+              ><strong>{{ browserTimezone }}</strong></template
+            >
+          </i18n-t>
         </template>
       </p>
       <div class="flex shrink-0 gap-2">
@@ -87,10 +99,14 @@ function dismiss(): void {
           :loading="saving"
           @click="useBrowserTimezone"
         >
-          Use {{ browserTimezone }}
+          {{ $t('Use :timezone', { timezone: browserTimezone }) }}
         </AppButton>
         <AppButton type="button" size="sm" color="white" @click="dismiss">
-          {{ savedTimezone ? `Keep ${savedTimezone}` : 'Not now' }}
+          {{
+            savedTimezone
+              ? $t('Keep :timezone', { timezone: savedTimezone })
+              : $t('Not now')
+          }}
         </AppButton>
       </div>
     </div>
