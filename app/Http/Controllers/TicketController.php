@@ -20,7 +20,6 @@ use App\Data\Tickets\TicketData;
 use App\Data\Tickets\TicketEventData;
 use App\Data\Tickets\TicketReminderData;
 use App\Data\Users\UserData;
-use App\Enums\CustomFieldType;
 use App\Enums\TicketEventType;
 use App\Enums\TicketPriority;
 use App\Enums\TicketSource;
@@ -63,10 +62,7 @@ class TicketController extends Controller
             'leadDeskIds' => $desks->filter(fn (Desk $desk): bool => $user->can('update', $desk))->values()->modelKeys(),
             'agents' => UserData::collect(Workspace::current()->users()->orderBy('name')->get()),
             'tags' => TagData::collect(Tag::query()->orderBy('name')->get()),
-            'customFields' => CustomFieldData::collect(CustomField::query()
-                ->whereIn('type', [CustomFieldType::SELECT, CustomFieldType::MULTI_SELECT, CustomFieldType::CHECKBOX])
-                ->orderBy('position')
-                ->get()),
+            'customFields' => CustomFieldData::collect(CustomField::query()->orderBy('position')->get()),
             'statuses' => TicketStatus::options(),
             'priorities' => TicketPriority::options(),
         ]);

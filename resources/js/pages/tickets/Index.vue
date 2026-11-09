@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import AppButton from '@/components/AppButton.vue';
+import { useLocalStorage } from '@vueuse/core';
 import { computed, ref } from 'vue';
 import SavedViews from '@/components/tickets/SavedViews.vue';
 import TicketBulkActions from '@/components/tickets/TicketBulkActions.vue';
@@ -8,13 +9,14 @@ import TicketFilters from '@/components/tickets/TicketFilters.vue';
 import TicketTable from '@/components/tickets/TicketTable.vue';
 import type { TicketQuery } from '@/components/tickets/TicketFilters.vue';
 import { useLiveReload } from '@/composables/useLiveReload';
+import { DEFAULT_COLUMNS } from '@/lib/ticketColumns';
 import { cleanQuery, sameQuery } from '@/lib/tickets';
 import { claim, index } from '@/routes/tickets';
 import type { Paginated } from '@/types';
 
-defineOptions({ layout: { title: 'Tickets' } });
+defineOptions({ layout: { title: 'Tickets' }, inheritAttrs: false });
 
-const { tickets, filters, leadDeskIds, desks } = defineProps<{
+const { tickets, filters, leadDeskIds, desks, customFields } = defineProps<{
   tickets: Paginated<App.Data.Tickets.TicketData>;
   /** Desks whose tickets the user may delete. */
   leadDeskIds: string[];
@@ -47,6 +49,17 @@ const activeQuickFilter = computed(
   () => quickFilters.find((quick) => sameQuery(quick.query, filters))?.label,
 );
 
+const storedColumns = useLocalStorage<string[]>(
+  'harbor.ticket-columns',
+  DEFAULT_COLUMNS,
+);
+/** Falls back to the defaults when storage holds something other than a list. */
+const columns = computed({
+  get: () =>
+    Array.isArray(storedColumns.value) ? storedColumns.value : DEFAULT_COLUMNS,
+  set: (value: string[]) => (storedColumns.value = value),
+});
+
 const selected = ref<string[]>([]);
 
 /** Mirrors `TicketPolicy@delete` for every selected ticket. */
@@ -70,9 +83,9 @@ function apply(query: TicketQuery): void {
 </script>
 
 <template>
-  <Head title="Tickets" />
-
   <div class="space-y-4">
+    <Head title="Tickets" />
+
     <div class="flex flex-wrap items-center justify-between gap-3">
       <nav class="flex flex-wrap gap-1" aria-label="Quick filters">
         <button
@@ -119,6 +132,8 @@ function apply(query: TicketQuery): void {
       :selected="filters.deleted ? undefined : selected"
       prop="tickets"
       :tickets="tickets.data"
+      v-model:columns="columns"
+      :custom-fields="customFields"
       @update:selected="selected = $event ?? []"
     />
     <p v-else class="py-8 text-center text-sm text-gray-500 dark:text-gray-400">

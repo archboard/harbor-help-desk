@@ -8,20 +8,58 @@ import Tbody from '@/components/tables/Tbody.vue';
 import Td from '@/components/tables/Td.vue';
 import Th from '@/components/tables/Th.vue';
 import Thead from '@/components/tables/Thead.vue';
+import ColumnPicker from '@/components/tickets/ColumnPicker.vue';
 import PriorityPill from '@/components/tickets/PriorityPill.vue';
 import StatusPill from '@/components/tickets/StatusPill.vue';
 import RelativeTime from '@/components/RelativeTime.vue';
+import { formatDate } from '@/lib/dates';
+import {
+  availableColumns,
+  customFieldColumnId,
+  DEFAULT_COLUMNS,
+  formatCustomField,
+} from '@/lib/ticketColumns';
 import { show } from '@/routes/tickets';
 
 /**
  * A page of tickets that loads more as it scrolls. `prop` is the name of the
- * `Inertia::scroll()` prop holding them. Binding `v-model:selected` adds checkboxes.
+ * `Inertia::scroll()` prop holding them. Binding `v-model:selected` adds checkboxes, and
+ * binding `v-model:columns` adds a column picker to the header.
  */
-const { tickets, hideRequester = false } = defineProps<{
+const {
+  tickets,
+  hideRequester = false,
+  customFields = [],
+} = defineProps<{
   prop: string;
   tickets: App.Data.Tickets.TicketData[];
   hideRequester?: boolean;
+  customFields?: App.Data.CustomFields.CustomFieldData[];
 }>();
+
+/** Ids of the columns to show; unknown ids (e.g. deleted custom fields) are dropped. */
+const columns = defineModel<string[]>('columns');
+
+const shown = computed(() =>
+  availableColumns(customFields).filter(
+    (column) =>
+      (columns.value ?? DEFAULT_COLUMNS).includes(column.id) &&
+      !(hideRequester && column.id === 'requester'),
+  ),
+);
+
+function customFieldText(
+  columnId: string,
+  ticket: App.Data.Tickets.TicketData,
+): string {
+  const field = customFields.find(
+    (candidate) => customFieldColumnId(candidate) === columnId,
+  );
+
+  return field
+    ? formatCustomField(field, ticket.custom_fields?.[field.id])
+    : '';
+}
 
 const selected = defineModel<string[]>('selected');
 
@@ -45,14 +83,13 @@ const allSelected = computed({
               <span class="sr-only">Select all loaded tickets</span>
             </AppCheckbox>
           </Th>
-          <Th>#</Th>
-          <Th>Subject</Th>
-          <Th v-if="!hideRequester">Requester</Th>
-          <Th>Desk</Th>
-          <Th>Status</Th>
-          <Th>Priority</Th>
-          <Th>Assignees</Th>
-          <Th>Updated</Th>
+          <Th v-for="column in shown" :key="column.id">{{ column.label }}</Th>
+          <Th v-if="columns" class="w-0" right>
+            <ColumnPicker
+              v-model="columns"
+              :available="availableColumns(customFields)"
+            />
+          </Th>
         </tr>
       </Thead>
       <Tbody>
@@ -62,36 +99,61 @@ const allSelected = computed({
               <span class="sr-only">Select #{{ ticket.number }}</span>
             </AppCheckbox>
           </Td>
-          <Td class="whitespace-nowrap text-gray-500 dark:text-gray-400">
-            {{ ticket.number }}
-          </Td>
-          <Td darker class="max-w-md">
-            <Link
-              :href="show(ticket.id)"
-              class="line-clamp-2 hover:text-primary-600 hover:underline dark:hover:text-primary-400"
+          <template v-for="column in shown" :key="column.id">
+            <Td
+              v-if="column.id === 'number'"
+              class="whitespace-nowrap text-gray-500 dark:text-gray-400"
             >
-              {{ ticket.subject }}
-            </Link>
-          </Td>
-          <Td v-if="!hideRequester" class="whitespace-nowrap">
-            {{ ticket.requester?.name }}
-          </Td>
-          <Td class="whitespace-nowrap">{{ ticket.desk?.name }}</Td>
-          <Td>
-            <StatusPill :status="ticket.status" :label="ticket.status_label" />
-          </Td>
-          <Td>
-            <PriorityPill
-              :priority="ticket.priority"
-              :label="ticket.priority_label"
-            />
-          </Td>
-          <Td>
-            {{ ticket.assignees?.map((agent) => agent.name).join(', ') || '—' }}
-          </Td>
-          <Td class="whitespace-nowrap">
-            <RelativeTime :datetime="ticket.updated_at" />
-          </Td>
+              {{ ticket.number }}
+            </Td>
+            <Td v-else-if="column.id === 'subject'" darker class="max-w-md">
+              <Link
+                :href="show(ticket.id)"
+                class="line-clamp-2 hover:text-primary-600 hover:underline dark:hover:text-primary-400"
+              >
+                {{ ticket.subject }}
+              </Link>
+            </Td>
+            <Td v-else-if="column.id === 'requester'" class="whitespace-nowrap">
+              {{ ticket.requester?.name }}
+            </Td>
+            <Td v-else-if="column.id === 'desk'" class="whitespace-nowrap">
+              {{ ticket.desk?.name }}
+            </Td>
+            <Td v-else-if="column.id === 'status'">
+              <StatusPill
+                :status="ticket.status"
+                :label="ticket.status_label"
+              />
+            </Td>
+            <Td v-else-if="column.id === 'priority'">
+              <PriorityPill
+                :priority="ticket.priority"
+                :label="ticket.priority_label"
+              />
+            </Td>
+            <Td v-else-if="column.id === 'assignees'">
+              {{
+                ticket.assignees?.map((agent) => agent.name).join(', ') || '—'
+              }}
+            </Td>
+            <Td v-else-if="column.id === 'tags'">
+              {{ ticket.tags?.map((tag) => tag.name).join(', ') || '—' }}
+            </Td>
+            <Td v-else-if="column.id === 'due'" class="whitespace-nowrap">
+              {{ formatDate(ticket.due_at) }}
+            </Td>
+            <Td v-else-if="column.id === 'created'" class="whitespace-nowrap">
+              <RelativeTime :datetime="ticket.created_at" />
+            </Td>
+            <Td v-else-if="column.id === 'updated'" class="whitespace-nowrap">
+              <RelativeTime :datetime="ticket.updated_at" />
+            </Td>
+            <Td v-else>
+              {{ customFieldText(column.id, ticket) }}
+            </Td>
+          </template>
+          <Td v-if="columns" />
         </tr>
       </Tbody>
     </Table>

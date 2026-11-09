@@ -18,6 +18,13 @@ export type TicketQuery = Record<
   QueryValue | Record<string, QueryValue>
 >;
 
+/** Custom fields with a fixed set of values to filter by. */
+const CHOICE_TYPES: App.Enums.CustomFieldType[] = [
+  'select',
+  'multi_select',
+  'checkbox',
+];
+
 type FilterOption = { value: string; label: string };
 /** A filter chip: a top-level query key, or a custom field when `fieldId` is set. */
 type FilterDefinition = {
@@ -96,22 +103,24 @@ const definitions = computed<FilterDefinition[]>(() => [
         },
       ]
     : []),
-  ...customFields.map((field) => ({
-    id: `custom_fields.${field.id}`,
-    label: field.name,
-    key: 'custom_fields',
-    fieldId: field.id,
-    options:
-      field.type === 'checkbox'
-        ? [
-            { value: '1', label: 'Yes' },
-            { value: '0', label: 'No' },
-          ]
-        : (field.options ?? []).map((option) => ({
-            value: option,
-            label: option,
-          })),
-  })),
+  ...customFields
+    .filter((field) => CHOICE_TYPES.includes(field.type))
+    .map((field) => ({
+      id: `custom_fields.${field.id}`,
+      label: field.name,
+      key: 'custom_fields',
+      fieldId: field.id,
+      options:
+        field.type === 'checkbox'
+          ? [
+              { value: '1', label: 'Yes' },
+              { value: '0', label: 'No' },
+            ]
+          : (field.options ?? []).map((option) => ({
+              value: option,
+              label: option,
+            })),
+    })),
 ]);
 
 function customFieldQuery(): Record<string, QueryValue> {

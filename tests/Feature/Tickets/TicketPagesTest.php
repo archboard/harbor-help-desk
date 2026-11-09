@@ -159,18 +159,19 @@ test('only desk leads delete and restore tickets', function () {
     expect($ticket->fresh()->trashed())->toBeFalse();
 });
 
-test("the list offers only this workspace's choice custom fields", function () {
+test("the list offers only this workspace's custom fields", function () {
     config(['harbor.multitenant' => true, 'harbor.domain' => 'harbor.test']);
 
     Workspace::factory()->create()->execute(fn () => CustomField::factory()->select()->create(['name' => 'Foreign']));
     $this->workspace->makeCurrent();
     $size = CustomField::factory()->select()->create(['name' => 'Size', 'position' => 1]);
-    CustomField::factory()->create(['name' => 'Notes', 'type' => CustomFieldType::TEXT]);
+    $notes = CustomField::factory()->create(['name' => 'Notes', 'type' => CustomFieldType::TEXT, 'position' => 2]);
 
     $this->actingAs($this->agent)
         ->get(route('tickets.index', ['preview' => 'tkt_x']))
         ->assertInertia(fn (Assert $page) => $page
-            ->has('customFields', 1)
+            ->has('customFields', 2)
             ->where('customFields.0.id', $size->id)
+            ->where('customFields.1.id', $notes->id)
             ->missing('filters.preview'));
 });
