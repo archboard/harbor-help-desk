@@ -233,8 +233,9 @@ function setAway(away: boolean): void {
       <Container>
         <TimezonePrompt />
 
+        <!-- Pages pass `trans('…')` titles, which can run before the locale loads; translate again here. -->
         <h1 v-if="title" class="mb-6 font-display text-3xl tracking-tight">
-          {{ title }}
+          {{ $t(title) }}
         </h1>
 
         <slot />

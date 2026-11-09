@@ -3,7 +3,6 @@
   lang="ts"
   generic="T extends Record<string, unknown> = Record<string, unknown>"
 >
-import { trans } from 'laravel-vue-i18n';
 import {
   Combobox,
   ComboboxButton,
@@ -20,7 +19,7 @@ const {
   hasError = false,
   id,
   optionKey = 'id',
-  placeholder = trans('Type for options…'),
+  placeholder,
   loading = false,
   disabled = false,
 } = defineProps<{
@@ -60,7 +59,7 @@ const display = (item: unknown): string => {
             : 'border-gray-300 focus:border-primary-500 focus:ring-primary-500 dark:border-gray-600'
         "
         :display-value="display"
-        :placeholder="placeholder"
+        :placeholder="placeholder ?? $t('Type for options…')"
         @change="query = ($event.target as HTMLInputElement).value"
       />
 

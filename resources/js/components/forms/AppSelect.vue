@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { trans } from 'laravel-vue-i18n';
 import { computed } from 'vue';
 import { normalizeOptions } from '@/lib/options';
 import type { OptionsInput } from '@/types';
@@ -7,7 +6,7 @@ import type { OptionsInput } from '@/types';
 const {
   hasError = false,
   options = [],
-  nullOption = trans('Select an option'),
+  nullOption,
   hideNull = false,
   clearable = false,
 } = defineProps<{
@@ -34,7 +33,7 @@ const normalizedOptions = computed(() => normalizeOptions(options));
     "
   >
     <option v-if="!hideNull" :value="null" :disabled="!clearable">
-      {{ nullOption }}
+      {{ nullOption ?? $t('Select an option') }}
     </option>
     <slot>
       <option
