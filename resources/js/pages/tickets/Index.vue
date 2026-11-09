@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import AppButton from '@/components/AppButton.vue';
 import { computed, ref } from 'vue';
 import SavedViews from '@/components/tickets/SavedViews.vue';
@@ -9,7 +9,7 @@ import TicketTable from '@/components/tickets/TicketTable.vue';
 import type { TicketQuery } from '@/components/tickets/TicketFilters.vue';
 import { useLiveReload } from '@/composables/useLiveReload';
 import { cleanQuery, sameQuery } from '@/lib/tickets';
-import { claim, create, index } from '@/routes/tickets';
+import { claim, index } from '@/routes/tickets';
 import type { Paginated } from '@/types';
 
 defineOptions({ layout: { title: 'Tickets' } });
@@ -23,6 +23,7 @@ const { tickets, filters, leadDeskIds, desks } = defineProps<{
   desks: App.Data.Desks.DeskData[];
   agents: App.Data.Users.UserData[];
   tags: App.Data.Tags.TagData[];
+  customFields: App.Data.CustomFields.CustomFieldData[];
   statuses: Record<string, string>;
   priorities: Record<string, string>;
 }>();
@@ -99,7 +100,6 @@ function apply(query: TicketQuery): void {
         <AppButton color="white" @click="router.post(claim.url())">
           Get next ticket
         </AppButton>
-        <AppButton :component="Link" :href="create()">New ticket</AppButton>
       </div>
     </div>
 
@@ -108,6 +108,7 @@ function apply(query: TicketQuery): void {
       :desks="desks"
       :agents="agents"
       :tags="tags"
+      :custom-fields="customFields"
       :statuses="statuses"
       :priorities="priorities"
       @change="apply"

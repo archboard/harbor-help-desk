@@ -8,8 +8,9 @@ import {
   PopoverPanel,
 } from '@headlessui/vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { ChevronDown, Menu as MenuIcon, X } from '@lucide/vue';
+import { ChevronDown, Menu as MenuIcon, Plus, X } from '@lucide/vue';
 import { computed, watch } from 'vue';
+import AppButton from '@/components/AppButton.vue';
 import Container from '@/components/Container.vue';
 import AppCheckbox from '@/components/forms/AppCheckbox.vue';
 import ArchboardLogo from '@/components/icons/ArchboardLogo.vue';
@@ -30,7 +31,7 @@ import { index as desks } from '@/routes/desks';
 import { edit as editProfile } from '@/routes/profile';
 import { index as reports } from '@/routes/reports';
 import { edit as editSecurity } from '@/routes/security';
-import { index as tickets } from '@/routes/tickets';
+import { create as createTicket, index as tickets } from '@/routes/tickets';
 import { edit as workspaceSettings } from '@/routes/workspace/general';
 
 const { title = '' } = defineProps<{ title?: string }>();
@@ -108,6 +109,15 @@ const userNavigation = [
           </div>
 
           <div class="flex items-center gap-1">
+            <AppButton
+              :component="Link"
+              :href="createTicket()"
+              size="sm"
+              class="mr-2 inline-flex"
+            >
+              <Plus class="mr-1 -ml-1 size-4" aria-hidden="true" />
+              New ticket
+            </AppButton>
             <NotificationBell />
 
             <Popover v-slot="{ open }" class="relative hidden md:block">

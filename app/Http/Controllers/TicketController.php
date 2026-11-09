@@ -8,6 +8,7 @@ use App\Actions\Tickets\DeleteTicket;
 use App\Actions\Tickets\RestoreTicket;
 use App\Actions\Tickets\SearchTickets;
 use App\Actions\Tickets\UpdateTicket;
+use App\Data\CustomFields\CustomFieldData;
 use App\Data\Desks\DeskData;
 use App\Data\Desks\DeskMemberData;
 use App\Data\Macros\MacroData;
@@ -19,11 +20,13 @@ use App\Data\Tickets\TicketData;
 use App\Data\Tickets\TicketEventData;
 use App\Data\Tickets\TicketReminderData;
 use App\Data\Users\UserData;
+use App\Enums\CustomFieldType;
 use App\Enums\TicketEventType;
 use App\Enums\TicketPriority;
 use App\Enums\TicketSource;
 use App\Enums\TicketStatus;
 use App\Http\Flash;
+use App\Models\CustomField;
 use App\Models\Desk;
 use App\Models\Macro;
 use App\Models\SavedView;
@@ -46,7 +49,7 @@ class TicketController extends Controller
      */
     public function index(Request $request, #[CurrentUser] User $user, SearchTickets $searchTickets): Response
     {
-        $filters = $request->except('page');
+        $filters = $request->except(['page', 'preview']);
         $desks = Desk::visibleTo($user)->orderBy('name')->get();
         $tickets = $searchTickets->handle($user, $filters)
             ->with(['desk', 'requester', 'assignees', 'tags'])
@@ -60,6 +63,10 @@ class TicketController extends Controller
             'leadDeskIds' => $desks->filter(fn (Desk $desk): bool => $user->can('update', $desk))->values()->modelKeys(),
             'agents' => UserData::collect(Workspace::current()->users()->orderBy('name')->get()),
             'tags' => TagData::collect(Tag::query()->orderBy('name')->get()),
+            'customFields' => CustomFieldData::collect(CustomField::query()
+                ->whereIn('type', [CustomFieldType::SELECT, CustomFieldType::MULTI_SELECT, CustomFieldType::CHECKBOX])
+                ->orderBy('position')
+                ->get()),
             'statuses' => TicketStatus::options(),
             'priorities' => TicketPriority::options(),
         ]);
