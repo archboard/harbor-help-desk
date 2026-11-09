@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import { RadioField, TextareaField } from '@/components/forms/fields';
 import FieldError from '@/components/forms/FieldError.vue';
@@ -9,19 +9,38 @@ import Pill from '@/components/Pill.vue';
 import RelativeTime from '@/components/RelativeTime.vue';
 import AttachmentLink from '@/components/tickets/AttachmentLink.vue';
 import StatusPill from '@/components/tickets/StatusPill.vue';
+import { useEarlierThread } from '@/composables/useEarlierThread';
 import { firstListError } from '@/lib/files';
 import { index } from '@/routes/portal/tickets';
+import { thread } from '@/routes/portal/tickets';
 import { store } from '@/routes/portal/tickets/comments';
 import { store as storeRating } from '@/routes/portal/tickets/rating';
 
 defineOptions({ layout: { title: '' } });
 
-const { ticket } = defineProps<{
+const { ticket, comments, earlier_before } = defineProps<{
   ticket: App.Data.Portal.PortalTicketData;
   comments: App.Data.Tickets.TicketCommentData[];
+  earlier_before: string | null;
   canRate: boolean;
   options: Record<string, string>;
 }>();
+
+const earlier = useEarlierThread(
+  () => ticket.id,
+  () => earlier_before,
+  (before) => thread(ticket.id, { query: { before } }).url,
+);
+
+/** Earlier pages first, without any comment that a reload also carries. */
+const threadComments = computed(() => {
+  const ids = new Set(comments.map(({ id }) => id));
+
+  return [
+    ...earlier.comments.value.filter(({ id }) => !ids.has(id)),
+    ...comments,
+  ];
+});
 
 const changing = ref(false);
 const ratingForm = useForm({
@@ -74,9 +93,24 @@ function send(): void {
       </div>
     </div>
 
+    <div v-if="earlier.hasEarlier.value" class="text-center">
+      <AppButton
+        type="button"
+        size="sm"
+        color="gray"
+        :loading="earlier.loading.value"
+        @click="earlier.loadEarlier()"
+      >
+        Load earlier
+      </AppButton>
+      <p v-if="earlier.failed.value" class="mt-2 text-xs text-red-600">
+        The earlier messages could not be loaded.
+      </p>
+    </div>
+
     <ul class="space-y-4">
       <li
-        v-for="comment in comments"
+        v-for="comment in threadComments"
         :key="comment.id"
         class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900"
       >

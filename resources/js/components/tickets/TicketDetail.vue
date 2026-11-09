@@ -34,6 +34,7 @@ const {
   ticket,
   comments,
   events,
+  earlier_before,
   can,
   compact = false,
   reloadOnly,
@@ -252,6 +253,7 @@ function restoreTicket(): void {
           :macros="macros"
           :comments="comments"
           :events="events"
+          :earlier-before="earlier_before"
           :can-work="can.update && canEdit"
           :can-delete-any="can.delete"
           :reload-only="reloadOnly"

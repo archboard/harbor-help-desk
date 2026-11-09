@@ -50,6 +50,7 @@ use LogicException;
  * @property string|null $automation_run_id
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TicketEvent whereAutomationRunId($value)
+ * @method static \Database\Factories\TicketEventFactory factory($count = null, $state = [])
  *
  * @mixin \Eloquent
  */

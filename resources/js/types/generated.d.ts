@@ -931,6 +931,9 @@ declare namespace App {
       export type LookupTicketsData = {
         search?: string | null;
       };
+      export type PageTicketThreadData = {
+        before?: string | null;
+      };
       export type RateTicketData = {
         rating: App.Enums.SatisfactionScore;
         comment?: string | null;
@@ -1038,6 +1041,11 @@ declare namespace App {
         warned_at: string | null;
         breached_at: string | null;
         achieved_at: string | null;
+      };
+      export type TicketThreadData = {
+        comments: App.Data.Tickets.TicketCommentData[];
+        events: App.Data.Tickets.TicketEventData[];
+        earlier_before: string | null;
       };
       export type UpdateTicketCommentData = {
         body: string;

@@ -37,6 +37,7 @@ use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TicketDeskController;
 use App\Http\Controllers\TicketReminderController;
 use App\Http\Controllers\TicketTagController;
+use App\Http\Controllers\TicketThreadController;
 use App\Http\Controllers\Webhooks\AutomationWebhookController;
 use App\Http\Controllers\Webhooks\MailboxPushController;
 use App\Http\Controllers\Webhooks\PostmarkWebhookController;
@@ -92,6 +93,7 @@ Route::middleware('workspace')->group(function () {
         Route::get('tickets/create', [TicketController::class, 'create'])->name('tickets.create');
         Route::post('desks/{desk}/tickets', [TicketController::class, 'store'])->name('desks.tickets.store');
         Route::get('tickets/{ticket}', [TicketController::class, 'show'])->withTrashed()->name('tickets.show');
+        Route::get('tickets/{ticket}/thread', TicketThreadController::class)->withTrashed()->name('tickets.thread');
         Route::patch('tickets/{ticket}', [TicketController::class, 'update'])->name('tickets.update');
         Route::delete('tickets/{ticket}', [TicketController::class, 'destroy'])->name('tickets.destroy');
         Route::post('tickets/{ticket}/restore', [TicketController::class, 'restore'])->withTrashed()->name('tickets.restore');

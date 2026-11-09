@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Actions\Portal\OpenPortalTicket;
+use App\Actions\Tickets\PageTicketThread;
 use App\Data\Portal\PortalDeskData;
 use App\Data\Portal\PortalTicketData;
-use App\Data\Tickets\TicketCommentData;
 use App\Enums\SatisfactionScore;
 use App\Enums\TicketStatus;
 use App\Http\Controllers\Controller;
@@ -46,18 +46,18 @@ class TicketController extends Controller
     /**
      * The ticket with its public comments, their files and authors. Internal notes and events are never shown.
      */
-    public function show(string $ticket): Response
+    public function show(string $ticket, PageTicketThread $pageTicketThread): Response
     {
         $ticket = Auth::guard('contact')->user()->tickets()->with(['desk', 'satisfactionRating'])->findOrFail($ticket);
+
+        $thread = $pageTicketThread->handle($ticket, [], publicOnly: true, limit: 25);
 
         return Inertia::render('portal/tickets/Show', [
             'ticket' => PortalTicketData::from($ticket),
             'canRate' => Workspace::current()->settings->surveysEnabled && $ticket->status->isResolved(),
             'options' => SatisfactionScore::options(),
-            'comments' => TicketCommentData::collect($ticket->comments()
-                ->where('is_internal', false)
-                ->with(['author', 'attachments'])
-                ->get()),
+            'comments' => $thread->comments,
+            'earlier_before' => $thread->earlierBefore,
         ]);
     }
 
