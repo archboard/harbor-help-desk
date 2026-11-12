@@ -24,6 +24,7 @@ use App\Automations\Triggers\TicketCreated;
 use App\Automations\Triggers\Webhook;
 use App\Http\Controllers\OAuth\ApproveAuthorizationController;
 use App\Http\Controllers\OAuth\AuthorizationController;
+use App\Mail\GraphTransport;
 use App\Mail\WorkspaceTransport;
 use App\Models\Attachment;
 use App\Models\AuditEvent;
@@ -126,6 +127,8 @@ class AppServiceProvider extends ServiceProvider
 
             return new WorkspaceTransport;
         });
+
+        Mail::extend('graph', fn (array $config): GraphTransport => new GraphTransport($config['mailbox']));
 
         Passkeys::usePasskeyModel(Passkey::class);
 
