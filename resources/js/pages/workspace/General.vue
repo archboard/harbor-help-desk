@@ -26,7 +26,7 @@ const form = useForm({
 <template>
   <Head :title="$t('Workspace')" />
 
-  <CardWrapper>
+  <CardWrapper class="mb-6">
     <form @submit.prevent="form.submit(update(), { preserveScroll: true })">
       <CardPadding>
         <AppFieldset>
