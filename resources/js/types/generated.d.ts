@@ -1136,6 +1136,10 @@ declare namespace App {
       };
     }
     namespace Workspaces {
+      export type AcceptInvitationData = {
+        name: string;
+        password: string;
+      };
       export type CreateWorkspaceData = {
         name: string;
         subdomain: string;
@@ -1186,6 +1190,14 @@ declare namespace App {
         away_at: string | null;
         settings?: App.Data.Workspaces.WorkspaceSettings;
       };
+      export type WorkspaceInvitationData = {
+        id: string;
+        email: string;
+        role: App.Enums.WorkspaceRole;
+        desk?: App.Data.Desks.DeskData | null;
+        invited_by?: App.Data.Users.UserData | null;
+        created_at: string | null;
+      };
       export type WorkspaceSettings = {
         mail_notification_mailbox_id: string | null;
         mail_new_tickets_per_sender_per_hour: number;
@@ -1232,6 +1244,7 @@ declare namespace App {
       | 'webhook_deleted'
       | 'webhook_secret_rotated'
       | 'webhook_disabled'
+      | 'invitation_accepted'
       | 'sla_policy_created'
       | 'sla_policy_updated'
       | 'sla_policy_deleted'

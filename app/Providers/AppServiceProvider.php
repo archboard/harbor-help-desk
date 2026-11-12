@@ -46,6 +46,7 @@ use App\Models\TicketReminder;
 use App\Models\User;
 use App\Models\WebhookDelivery;
 use App\Models\Workspace;
+use App\Models\WorkspaceInvitation;
 use App\OAuth\WorkspaceScopeRepository;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -152,6 +153,7 @@ class AppServiceProvider extends ServiceProvider
             'webhook' => \App\Models\Webhook::class,
             'webhook_delivery' => WebhookDelivery::class,
             'business_schedule' => BusinessSchedule::class,
+            'workspace_invitation' => WorkspaceInvitation::class,
         ]);
 
         RateLimiter::for('api', fn (Request $request): Limit => Limit::perMinute(120)->by($request->user('api')?->getAuthIdentifier() ?: $request->ip()));
