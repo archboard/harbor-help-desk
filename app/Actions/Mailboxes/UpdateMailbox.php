@@ -21,7 +21,7 @@ class UpdateMailbox
     {
         Gate::forUser($actor)->authorize('update', $mailbox);
 
-        $validated = UpdateMailboxData::validateAndCreateWith($input, MailboxRules::connection($mailbox->driver, creating: false))->filled();
+        $validated = UpdateMailboxData::validateAndCreateWith($input, MailboxRules::connection($mailbox->driver, $mailbox))->filled();
 
         if (isset($validated['settings'])) {
             $validated['settings'] = array_replace_recursive($mailbox->settings ?? [], $validated['settings']);

@@ -86,6 +86,39 @@ test('admins connect, list, update and delete IMAP mailboxes without exposing pa
     expect(Mailbox::withoutGlobalScopes()->count())->toBe(0);
 });
 
+test('an update may drop one server, but not both, and a new server needs every field', function () {
+    $mailbox = $this->acme->execute(fn () => Mailbox::factory()->create());
+    $url = "http://acme.harbor.test/api/v1/mailboxes/{$mailbox->id}";
+    actAs($this->admin, $this->acme);
+
+    $this->patchJson($url, ['settings' => ['imap' => null, 'smtp' => null]])
+        ->assertJsonValidationErrors(['settings' => 'A mailbox needs an IMAP or SMTP server.']);
+
+    $this->patchJson($url, ['settings' => ['imap' => null]])->assertOk()->assertJsonPath('receives_by', 'never');
+
+    $this->patchJson($url, ['settings' => ['smtp' => null]])->assertJsonValidationErrors('settings');
+
+    $this->patchJson($url, ['settings' => ['imap' => ['host' => '1.1.1.1']]])
+        ->assertJsonValidationErrors(['settings.imap.port', 'settings.imap.encryption', 'settings.imap.username', 'settings.imap.password']);
+
+    $this->patchJson($url, ['settings' => ['imap' => ['host' => '1.1.1.1', 'port' => 993, 'encryption' => 'ssl', 'username' => 'help@acme.com', 'password' => 'hunter2']]])
+        ->assertOk()
+        ->assertJsonPath('settings.imap.host', '1.1.1.1');
+});
+
+test('in multitenant mode, mail servers must be public unless the operator allows private ones', function () {
+    actAs($this->admin, $this->acme);
+    $input = imapMailboxInput($this->acme->execute(fn () => Desk::sole()), [
+        'settings' => ['imap' => null, 'smtp' => ['host' => '127.0.0.1', 'port' => 2525, 'encryption' => 'starttls']],
+    ]);
+
+    config(['harbor.mail.private_hosts' => false]);
+    $this->postJson('http://acme.harbor.test/api/v1/mailboxes', $input)->assertJsonValidationErrors('settings.smtp.host');
+
+    config(['harbor.mail.private_hosts' => true]);
+    $this->postJson('http://acme.harbor.test/api/v1/mailboxes', $input)->assertCreated();
+});
+
 test('OAuth mailboxes never expose their tokens or push secret', function () {
     $google = $this->acme->execute(fn () => Mailbox::factory()->create([
         'driver' => MailboxDriver::GOOGLE,
