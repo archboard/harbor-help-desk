@@ -32,5 +32,6 @@ class UpdateWorkspaceSettingsData extends InputData
         public int|Optional|null $retentionResolvedTicketDays,
         #[Between(1, 365)]
         public int|Optional|null $retentionTrashDays,
+        public bool|Optional|null $onboardingDismissed,
     ) {}
 }

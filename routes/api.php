@@ -56,6 +56,7 @@ use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\WebhookController;
 use App\Http\Controllers\Api\V1\WebhookDeliveryController;
 use App\Http\Controllers\Api\V1\WorkspaceController;
+use App\Http\Controllers\Api\V1\WorkspaceOnboardingController;
 use App\Http\Controllers\Api\V1\WorkspaceSettingsController;
 use App\Http\Controllers\Api\V1\WorkspaceTicketEventController;
 use App\Http\Middleware\EnsurePlatformToken;
@@ -79,6 +80,7 @@ Route::prefix('v1')->name('api.v1.')
 
         Route::get('workspace', [WorkspaceController::class, 'show'])->name('workspace.show');
         Route::patch('workspace', [WorkspaceController::class, 'update'])->name('workspace.update');
+        Route::get('workspace/onboarding', [WorkspaceOnboardingController::class, 'show'])->name('workspace.onboarding.show');
         Route::patch('workspace/settings', [WorkspaceSettingsController::class, 'update'])->name('workspace.settings.update');
 
         Route::apiResource('members', MemberController::class)->only(['index', 'update', 'destroy']);

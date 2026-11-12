@@ -38,6 +38,8 @@ class WorkspaceSettings extends Data
         public ?int $retentionResolvedTicketDays = null,
         /** How many days a deleted ticket stays in the trash before it and its files are removed for good. */
         public int $retentionTrashDays = 30,
+        /** Hides the "Get set up" checklist from the tickets page. */
+        public bool $onboardingDismissed = false,
     ) {}
 
     /**

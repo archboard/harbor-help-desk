@@ -1157,6 +1157,16 @@ declare namespace App {
         role: App.Enums.WorkspaceRole;
         desk_id: string | null;
       };
+      export type OnboardingData = {
+        steps: App.Data.Workspaces.OnboardingStepData[];
+        inbound_address: string | null;
+        default_desk_id: string | null;
+        complete: boolean;
+      };
+      export type OnboardingStepData = {
+        key: string;
+        complete: boolean;
+      };
       export type ProvisionedWorkspaceData = {
         id: string;
         name: string;
@@ -1189,6 +1199,7 @@ declare namespace App {
         surveys_enabled?: boolean | null;
         retention_resolved_ticket_days?: number | null;
         retention_trash_days?: number | null;
+        onboarding_dismissed?: boolean | null;
       };
       export type WorkspaceData = {
         id: string;
@@ -1226,6 +1237,7 @@ declare namespace App {
         surveys_enabled: boolean;
         retention_resolved_ticket_days: number | null;
         retention_trash_days: number;
+        onboarding_dismissed: boolean;
       };
     }
   }
