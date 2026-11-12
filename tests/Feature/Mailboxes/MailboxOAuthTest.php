@@ -99,3 +99,43 @@ test('an expiring access token is refreshed before connecting', function () {
     expect($mailbox->connection('smtp')['password'])->toBe('access-2');
     Http::assertSentCount(1);
 });
+
+test('reconnecting starts on the mailbox account', function () {
+    $location = $this->actingAs($this->admin)->get('http://acme.harbor.test/mailboxes/oauth/google?login_hint=help%40acme.com')->headers->get('Location');
+
+    parse_str((string) parse_url((string) $location, PHP_URL_QUERY), $query);
+    expect($query['login_hint'])->toBe('help@acme.com');
+});
+
+test('connecting an address the workspace already has reconnects that mailbox', function () {
+    $mailbox = $this->acme->execute(fn () => Mailbox::factory()->create([
+        'driver' => MailboxDriver::GOOGLE,
+        'address' => 'Help@Acme.com',
+        'settings' => ['access_token' => 'revoked', 'refresh_token' => 'revoked', 'expires_at' => 0],
+        'last_error' => 'invalid_grant',
+    ]));
+    fakeGoogleTokens();
+
+    $this->get('http://harbor.test/mailboxes/oauth/callback?code=abc&state='.urlencode(startGoogleConsent($this->admin)))
+        ->assertRedirect('http://acme.harbor.test/workspace/email');
+
+    expect(Mailbox::withoutGlobalScopes()->sole()->is($mailbox))->toBeTrue()
+        ->and($mailbox->fresh())
+        ->last_error->toBeNull()
+        ->settings->toMatchArray(['access_token' => 'access-1', 'refresh_token' => 'refresh-1']);
+});
+
+test('connecting an address another workspace has creates a new mailbox and leaves theirs alone', function () {
+    $other = Workspace::factory()->create(['subdomain' => 'other']);
+    $foreign = $other->execute(fn () => Mailbox::factory()->create([
+        'driver' => MailboxDriver::GOOGLE,
+        'address' => 'help@acme.com',
+        'settings' => ['access_token' => 'theirs', 'refresh_token' => 'theirs', 'expires_at' => 0],
+    ]));
+    fakeGoogleTokens();
+
+    $this->get('http://harbor.test/mailboxes/oauth/callback?code=abc&state='.urlencode(startGoogleConsent($this->admin)));
+
+    expect($foreign->fresh()->settings['refresh_token'])->toBe('theirs')
+        ->and(Mailbox::withoutGlobalScopes()->where('workspace_id', $this->acme->id)->sole()->settings['refresh_token'])->toBe('refresh-1');
+});

@@ -260,6 +260,22 @@ function remove(close: () => void): void {
           </Td>
           <Td class="space-x-2 text-end whitespace-nowrap">
             <AppButton
+              v-if="
+                (mailbox.driver === 'google' ||
+                  mailbox.driver === 'microsoft') &&
+                oauthProviders[mailbox.driver]
+              "
+              component="a"
+              size="xs"
+              color="white"
+              :href="
+                connect(mailbox.driver, {
+                  query: { login_hint: mailbox.address },
+                }).url
+              "
+              >{{ $t('Reconnect') }}</AppButton
+            >
+            <AppButton
               type="button"
               size="xs"
               color="white"
