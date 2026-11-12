@@ -45,6 +45,9 @@ enum AuditAction: string
     case INVITATION_REVOKED = 'invitation_revoked';
     case INVITATION_RESENT = 'invitation_resent';
     case INVITATION_ACCEPTED = 'invitation_accepted';
+    case MEMBER_ROLE_CHANGED = 'member_role_changed';
+    case MEMBER_REMOVED = 'member_removed';
+    case MEMBER_LEFT = 'member_left';
     case SLA_POLICY_CREATED = 'sla_policy_created';
     case SLA_POLICY_UPDATED = 'sla_policy_updated';
     case SLA_POLICY_DELETED = 'sla_policy_deleted';
@@ -97,6 +100,9 @@ enum AuditAction: string
             self::INVITATION_REVOKED => __('Invitation revoked'),
             self::INVITATION_RESENT => __('Invitation resent'),
             self::INVITATION_ACCEPTED => __('Invitation accepted'),
+            self::MEMBER_ROLE_CHANGED => __('Member role changed'),
+            self::MEMBER_REMOVED => __('Member removed'),
+            self::MEMBER_LEFT => __('Member left'),
             self::SLA_POLICY_CREATED => __('SLA policy created'),
             self::SLA_POLICY_UPDATED => __('SLA policy updated'),
             self::SLA_POLICY_DELETED => __('SLA policy deleted'),

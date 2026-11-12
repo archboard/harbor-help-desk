@@ -1168,6 +1168,9 @@ declare namespace App {
       export type SetAwayData = {
         away: boolean;
       };
+      export type UpdateMemberRoleData = {
+        role: App.Enums.WorkspaceRole;
+      };
       export type UpdateProvisionedWorkspaceData = {
         name?: string;
         subdomain?: string;
@@ -1253,6 +1256,9 @@ declare namespace App {
       | 'invitation_revoked'
       | 'invitation_resent'
       | 'invitation_accepted'
+      | 'member_role_changed'
+      | 'member_removed'
+      | 'member_left'
       | 'sla_policy_created'
       | 'sla_policy_updated'
       | 'sla_policy_deleted'
