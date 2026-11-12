@@ -216,7 +216,7 @@ return [
         'supervisor-mail-poll' => [
             'connection' => 'redis',
             'queue' => ['mail-poll'],
-            'balance' => 'simple',
+            'balance' => 'auto',
             'maxProcesses' => 1,
             'maxTime' => 0,
             'maxJobs' => 0,
@@ -229,7 +229,7 @@ return [
         'supervisor-broadcasts' => [
             'connection' => 'redis',
             'queue' => ['broadcasts'],
-            'balance' => 'simple',
+            'balance' => 'auto',
             'maxProcesses' => 1,
             'maxTime' => 0,
             'maxJobs' => 0,
@@ -244,7 +244,7 @@ return [
         'supervisor-automations' => [
             'connection' => 'redis',
             'queue' => ['automations'],
-            'balance' => 'simple',
+            'balance' => 'auto',
             'maxProcesses' => 1,
             'maxTime' => 0,
             'maxJobs' => 0,
@@ -259,7 +259,7 @@ return [
         'supervisor-automations-http' => [
             'connection' => 'redis',
             'queue' => ['automations-http'],
-            'balance' => 'simple',
+            'balance' => 'auto',
             'maxProcesses' => 1,
             'maxTime' => 0,
             'maxJobs' => 0,
