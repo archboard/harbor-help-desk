@@ -53,6 +53,10 @@ use Spatie\Multitenancy\Models\Concerns\ImplementsTenant;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereSubdomain($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereUpdatedAt($value)
  *
+ * @property string|null $microsoft_client_secret
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Workspace whereMicrosoftClientSecret($value)
+ *
  * @mixin \Eloquent
  */
 #[Unguarded]
@@ -101,7 +105,10 @@ class Workspace extends Model implements IsTenant
      */
     protected function casts(): array
     {
-        return ['settings' => WorkspaceSettingsCast::class];
+        return [
+            'settings' => WorkspaceSettingsCast::class,
+            'microsoft_client_secret' => 'encrypted',
+        ];
     }
 
     /*

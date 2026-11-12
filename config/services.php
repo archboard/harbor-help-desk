@@ -35,12 +35,6 @@ return [
         'pubsub_topic' => env('GOOGLE_MAIL_PUBSUB_TOPIC'),
     ],
 
-    'microsoft_mail' => [
-        'client_id' => env('MICROSOFT_MAIL_CLIENT_ID'),
-        'client_secret' => env('MICROSOFT_MAIL_CLIENT_SECRET'),
-        'tenant' => env('MICROSOFT_MAIL_TENANT', 'common'),
-    ],
-
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

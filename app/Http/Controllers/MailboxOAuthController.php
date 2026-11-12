@@ -34,9 +34,9 @@ class MailboxOAuthController extends Controller
         Gate::authorize('create', Mailbox::class);
 
         $driver = MailboxDriver::from($provider);
-        $oauth = $driver->oauth();
+        $oauth = $driver->oauth(Workspace::current());
 
-        abort_if(blank($oauth['client_id']), Response::HTTP_NOT_FOUND);
+        abort_if(blank($oauth['client_id']) || blank($oauth['client_secret']), Response::HTTP_NOT_FOUND);
 
         $validated = Validator::make($request->query(), [
             'default_desk_id' => ['sometimes', 'string', Rule::exists('desks', 'id')->where('workspace_id', Workspace::current()?->getKey())->whereNull('archived_at')],
@@ -53,7 +53,7 @@ class MailboxOAuthController extends Controller
 
         return Inertia::location($oauth['authorize_url'].'?'.Arr::query([
             'client_id' => $oauth['client_id'],
-            'redirect_uri' => $this->callbackUrl(),
+            'redirect_uri' => self::callbackUrl(),
             'response_type' => 'code',
             'scope' => $oauth['scopes'],
             'state' => $state,
@@ -81,12 +81,12 @@ class MailboxOAuthController extends Controller
         }
 
         $driver = MailboxDriver::from($state['provider']);
-        $oauth = $driver->oauth();
+        $oauth = $driver->oauth($workspace);
 
         $tokens = Http::asForm()->post($oauth['token_url'], [
             'grant_type' => 'authorization_code',
             'code' => $request->query('code'),
-            'redirect_uri' => $this->callbackUrl(),
+            'redirect_uri' => self::callbackUrl(),
             'client_id' => $oauth['client_id'],
             'client_secret' => $oauth['client_secret'],
         ])->throw()->json();
@@ -122,7 +122,10 @@ class MailboxOAuthController extends Controller
         return $back;
     }
 
-    protected function callbackUrl(): string
+    /**
+     * The redirect URI to register on the provider's OAuth app.
+     */
+    public static function callbackUrl(): string
     {
         return rtrim((string) config('app.url'), '/').route('mailboxes.oauth.callback', absolute: false);
     }

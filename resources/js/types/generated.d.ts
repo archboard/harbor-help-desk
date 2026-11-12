@@ -1199,6 +1199,9 @@ declare namespace App {
       };
       export type UpdateWorkspaceSettingsData = {
         mail_notification_mailbox_id?: string | null;
+        microsoft_client_id?: string | null;
+        microsoft_tenant?: string | null;
+        microsoft_client_secret?: string | null;
         mail_new_tickets_per_sender_per_hour?: number | null;
         attachments_max_size_kb?: number | null;
         attachments_blocked_extensions?: string[] | null;
@@ -1238,6 +1241,8 @@ declare namespace App {
       };
       export type WorkspaceSettings = {
         mail_notification_mailbox_id: string | null;
+        microsoft_client_id: string | null;
+        microsoft_tenant: string;
         mail_new_tickets_per_sender_per_hour: number;
         attachments_max_size_kb: number;
         attachments_blocked_extensions: string[];

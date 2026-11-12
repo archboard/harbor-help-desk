@@ -41,6 +41,9 @@ const { desks, mailboxes } = defineProps<{
   mailboxes: App.Data.Mailboxes.MailboxData[];
   desks: App.Data.Desks.DeskData[];
   oauthProviders: { google: boolean; microsoft: boolean };
+  microsoftHasSecret: boolean;
+  /** The redirect URI to register on the Microsoft app. */
+  oauthRedirectUri: string;
 }>();
 
 const receivesBy = computed<
@@ -61,6 +64,28 @@ const settingsForm = useForm({
   mail_new_tickets_per_sender_per_hour:
     page.props.workspace?.settings?.mail_new_tickets_per_sender_per_hour ?? 20,
 });
+
+const microsoftForm = useForm({
+  microsoft_client_id:
+    page.props.workspace?.settings?.microsoft_client_id ?? '',
+  microsoft_tenant:
+    page.props.workspace?.settings?.microsoft_tenant ?? 'common',
+  microsoft_client_secret: '',
+});
+
+/** A blank secret keeps the saved one, so it's only sent when typed. */
+function saveMicrosoftApp(): void {
+  microsoftForm
+    .transform(({ microsoft_client_secret, ...app }) => ({
+      ...app,
+      microsoft_client_id: app.microsoft_client_id || null,
+      ...(microsoft_client_secret ? { microsoft_client_secret } : {}),
+    }))
+    .submit(updateSettings(), {
+      preserveScroll: true,
+      onSuccess: () => microsoftForm.reset('microsoft_client_secret'),
+    });
+}
 
 const notificationMailboxes = computed(() => [
   { value: '', label: trans('Default (oldest mailbox)') },
@@ -379,6 +404,69 @@ function remove(close: () => void): void {
           </AppFieldset>
         </CardPadding>
         <CardAction :loading="settingsForm.processing" />
+      </form>
+    </CardWrapper>
+
+    <CardWrapper>
+      <form @submit.prevent="saveMicrosoftApp">
+        <CardPadding>
+          <AppFieldset>
+            <div class="space-y-1">
+              <h3 class="text-sm font-medium text-gray-900 dark:text-white">
+                {{ $t('Microsoft 365 app') }}
+              </h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400">
+                {{
+                  $t(
+                    'Register an app in Microsoft Entra with the delegated Microsoft Graph permissions Mail.Read, Mail.Send and offline_access, and this redirect URI:',
+                  )
+                }}
+              </p>
+              <div class="flex items-center gap-2">
+                <code
+                  class="truncate text-sm text-gray-700 dark:text-gray-300"
+                  >{{ oauthRedirectUri }}</code
+                >
+                <button
+                  type="button"
+                  class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                  @click="copy(oauthRedirectUri)"
+                >
+                  <span class="sr-only">{{ $t('Copy redirect URI') }}</span>
+                  <Check v-if="copied" class="size-4" aria-hidden="true" />
+                  <Copy v-else class="size-4" aria-hidden="true" />
+                </button>
+              </div>
+            </div>
+            <InputField
+              v-model="microsoftForm.microsoft_client_id"
+              :label="$t('Application (client) ID')"
+              :error="microsoftForm.errors.microsoft_client_id"
+            />
+            <InputField
+              v-model="microsoftForm.microsoft_tenant"
+              :label="$t('Tenant')"
+              :help-text="
+                $t(
+                  'Your directory (tenant) ID or domain to allow only your organization, or common for any Microsoft account.',
+                )
+              "
+              :error="microsoftForm.errors.microsoft_tenant"
+              required
+            />
+            <PasswordField
+              v-model="microsoftForm.microsoft_client_secret"
+              :label="$t('Client secret')"
+              :placeholder="
+                microsoftHasSecret
+                  ? $t('Saved. Enter a new one to replace it.')
+                  : ''
+              "
+              :error="microsoftForm.errors.microsoft_client_secret"
+            />
+          </AppFieldset>
+        </CardPadding>
+        <CardAction :loading="microsoftForm.processing" />
       </form>
     </CardWrapper>
   </div>

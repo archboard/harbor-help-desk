@@ -21,6 +21,10 @@ class WorkspaceSettings extends Data
     public function __construct(
         /** The mailbox app email (notifications, sign-in links) is sent from; null means the oldest mailbox. */
         public ?string $mailNotificationMailboxId = null,
+        /** The application (client) ID of the workspace's Microsoft Entra app, for connecting Microsoft 365 mailboxes. Its secret is stored encrypted on the workspace, never here. */
+        public ?string $microsoftClientId = null,
+        /** The Entra tenant that signs mailboxes in: a tenant ID or domain, `organizations` or `common`. */
+        public string $microsoftTenant = 'common',
         /** How many new tickets one sender can open per hour by email; replies don't count. */
         public int $mailNewTicketsPerSenderPerHour = 20,
         /** The largest file that can be attached, in kilobytes; the platform cap and the server's PHP limits still apply. */

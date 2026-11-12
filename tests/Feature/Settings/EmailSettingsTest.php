@@ -23,7 +23,8 @@ beforeEach(function () {
 });
 
 test('admins see the mailboxes, desks and configured providers, never secrets', function () {
-    config(['services.google_mail.client_id' => 'google-client', 'services.microsoft_mail.client_id' => null]);
+    config(['services.google_mail.client_id' => 'google-client']);
+    $this->workspace->update(['settings' => ['microsoft_client_id' => '00000000-0000-0000-0000-000000000001']]);
     Mailbox::factory()->create(['default_desk_id' => $this->desk->id, 'polled_at' => now()]);
     Mailbox::factory()->create([
         'driver' => MailboxDriver::GOOGLE,
@@ -44,7 +45,8 @@ test('admins see the mailboxes, desks and configured providers, never secrets', 
         ->where('mailboxes.1.receives_by', 'push')
         ->missing('mailboxes.1.settings')
         ->where('desks.0.id', $this->desk->id)
-        ->where('oauthProviders', ['google' => true, 'microsoft' => false]));
+        ->where('oauthProviders', ['google' => true, 'microsoft' => false])
+        ->where('microsoftHasSecret', false));
 
     expect($response->getContent())->not->toContain('secret');
 });
@@ -142,4 +144,44 @@ test('testing a mailbox from the settings page reports the result as a toast', f
         ->post(route('workspace.email.test', $mailbox))
         ->assertRedirect()
         ->assertInertiaFlash('toast', ['type' => 'success', 'message' => "Sending: Sent a test email to {$this->admin->email}. Receiving: Connected. The inbox has 1 message."]);
+});
+
+test('admins save the workspace Microsoft app, and its secret is encrypted and never shown', function () {
+    $app = ['microsoft_client_id' => '6f0c1d2e-3b4a-4c5d-8e9f-0a1b2c3d4e5f', 'microsoft_tenant' => 'acme.onmicrosoft.com'];
+    $this->actingAs($this->admin);
+
+    $this->patch(route('workspace.settings.update'), [...$app, 'microsoft_client_secret' => 'entra-secret'])->assertSessionHasNoErrors();
+
+    $workspace = $this->workspace->fresh();
+    expect($workspace->microsoft_client_secret)->toBe('entra-secret')
+        ->and($workspace->getRawOriginal('microsoft_client_secret'))->not->toContain('entra-secret')
+        ->and($workspace->getRawOriginal('settings'))->not->toContain('entra-secret');
+
+    // Leaving the secret out keeps it.
+    $this->patch(route('workspace.settings.update'), $app)->assertSessionHasNoErrors();
+    expect($this->workspace->fresh()->microsoft_client_secret)->toBe('entra-secret');
+
+    $response = $this->get(route('workspace.email.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('oauthProviders.microsoft', true)
+        ->where('microsoftHasSecret', true)
+        ->where('workspace.settings.microsoft_client_id', $app['microsoft_client_id'])
+        ->where('workspace.settings.microsoft_tenant', 'acme.onmicrosoft.com'));
+    expect($response->getContent())->not->toContain('entra-secret');
+
+    $this->patch(route('workspace.settings.update'), ['microsoft_client_secret' => null])->assertSessionHasNoErrors();
+    expect($this->workspace->fresh()->microsoft_client_secret)->toBeNull();
+});
+
+test('the Microsoft app ID must be a GUID and the tenant a plain name', function () {
+    $this->actingAs($this->admin)
+        ->patch(route('workspace.settings.update'), ['microsoft_client_id' => 'nope', 'microsoft_tenant' => 'evil.com/x?'])
+        ->assertSessionHasErrors(['microsoft_client_id', 'microsoft_tenant']);
+});
+
+test('agents cannot set the Microsoft app', function () {
+    $this->actingAs($this->agent)
+        ->patch(route('workspace.settings.update'), ['microsoft_client_secret' => 'stolen'])
+        ->assertForbidden();
+
+    expect($this->workspace->fresh()->microsoft_client_secret)->toBeNull();
 });

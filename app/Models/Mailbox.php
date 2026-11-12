@@ -310,7 +310,7 @@ class Mailbox extends Model
     {
         if ($this->driver->usesOAuth()) {
             return [
-                ...$this->driver->oauth()[$protocol] ?? throw new LogicException("The {$this->driver->value} driver has no {$protocol} server."),
+                ...$this->driver->oauth($this->workspace)[$protocol] ?? throw new LogicException("The {$this->driver->value} driver has no {$protocol} server."),
                 'username' => $this->address,
                 'password' => app(RefreshMailboxToken::class)->handle($this),
             ];

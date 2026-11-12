@@ -21,7 +21,7 @@ class RefreshMailboxToken
 
         // ponytail: no lock, so the watcher and a send can refresh at once; both providers keep
         // the previous refresh token valid long enough. Add a cache lock if that stops holding.
-        $oauth = $mailbox->driver->oauth();
+        $oauth = $mailbox->driver->oauth($mailbox->workspace);
         $tokens = Http::asForm()->post($oauth['token_url'], [
             'grant_type' => 'refresh_token',
             'refresh_token' => $settings['refresh_token'] ?? '',

@@ -3,6 +3,7 @@
 namespace App\Enums;
 
 use App\Enums\Concerns\HasLabels;
+use App\Models\Workspace;
 use LogicException;
 
 enum MailboxDriver: string
@@ -31,11 +32,12 @@ enum MailboxDriver: string
 
     /**
      * The provider's OAuth app and endpoints. Google mailboxes connect to its IMAP and SMTP
-     * servers with XOAUTH2; Microsoft ones use Microsoft Graph for everything.
+     * servers with XOAUTH2 through the platform's app; Microsoft ones use Microsoft Graph for
+     * everything, through the workspace's own Entra app.
      *
      * @return array{client_id: ?string, client_secret: ?string, authorize_url: string, token_url: string, scopes: string, imap?: array{host: string, port: int, encryption: string}, smtp?: array{host: string, port: int, encryption: string}}
      */
-    public function oauth(): array
+    public function oauth(Workspace $workspace): array
     {
         return match ($this) {
             self::GOOGLE => [
@@ -49,10 +51,10 @@ enum MailboxDriver: string
                 'smtp' => ['host' => 'smtp.gmail.com', 'port' => 465, 'encryption' => 'ssl'],
             ],
             self::MICROSOFT => [
-                'client_id' => config('services.microsoft_mail.client_id'),
-                'client_secret' => config('services.microsoft_mail.client_secret'),
-                'authorize_url' => 'https://login.microsoftonline.com/'.config('services.microsoft_mail.tenant').'/oauth2/v2.0/authorize',
-                'token_url' => 'https://login.microsoftonline.com/'.config('services.microsoft_mail.tenant').'/oauth2/v2.0/token',
+                'client_id' => $workspace->settings->microsoftClientId,
+                'client_secret' => $workspace->microsoft_client_secret,
+                'authorize_url' => "https://login.microsoftonline.com/{$workspace->settings->microsoftTenant}/oauth2/v2.0/authorize",
+                'token_url' => "https://login.microsoftonline.com/{$workspace->settings->microsoftTenant}/oauth2/v2.0/token",
                 // Every scope is Graph's, so one access token covers receiving, sending and push.
                 'scopes' => 'openid email offline_access https://graph.microsoft.com/Mail.Read https://graph.microsoft.com/Mail.Send',
             ],
