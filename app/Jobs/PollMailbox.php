@@ -3,13 +3,17 @@
 namespace App\Jobs;
 
 use App\Actions\Email\ReceiveInboundEmail;
+use App\Enums\MailboxDriver;
+use App\Mail\Inbound\GraphMailboxClient;
 use App\Mail\Inbound\ImapMailboxClient;
 use App\Mail\Inbound\InboundEmail;
 use App\Models\Mailbox;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 /**
@@ -34,11 +38,25 @@ class PollMailbox implements ShouldBeUnique, ShouldQueue
         return $this->mailbox->id;
     }
 
+    public function handle(ReceiveInboundEmail $receiveInboundEmail): void
+    {
+        try {
+            match ($this->mailbox->driver) {
+                MailboxDriver::MICROSOFT => $this->pollGraph($receiveInboundEmail),
+                default => $this->pollImap($receiveInboundEmail),
+            };
+
+            $this->mailbox->forceFill(['polled_at' => now(), 'last_error' => null])->save();
+        } catch (Throwable $exception) {
+            $this->mailbox->forceFill(['polled_at' => now(), 'last_error' => $exception->getMessage()])->save();
+        }
+    }
+
     /**
      * A first poll, or one after UIDVALIDITY changed, starts at the newest message instead of
      * importing the whole folder. After that, an unchanged UIDNEXT means one STATUS and done.
      */
-    public function handle(ReceiveInboundEmail $receiveInboundEmail): void
+    protected function pollImap(ReceiveInboundEmail $receiveInboundEmail): void
     {
         $mailbox = $this->mailbox;
         $client = app()->makeWith(ImapMailboxClient::class, ['mailbox' => $mailbox]);
@@ -54,19 +72,56 @@ class PollMailbox implements ShouldBeUnique, ShouldQueue
                     $mailbox->forceFill(['imap_last_uid' => $uid])->save();
                 }
             }
-
-            $mailbox->forceFill(['polled_at' => now(), 'last_error' => null])->save();
-        } catch (Throwable $exception) {
-            $mailbox->forceFill(['polled_at' => now(), 'last_error' => $exception->getMessage()])->save();
         } finally {
             $client->disconnect();
         }
     }
 
     /**
+     * Microsoft 365 mailboxes follow a Graph delta query instead. The first poll, or one after
+     * the delta link expired, starts from now. The cursor is saved after every page (a next
+     * link mid-way, the delta link at the end), so a failed poll resumes where it stopped.
+     *
+     * ponytail: delta also reports read, flagged and moved messages, which are fetched again and
+     * skipped as duplicates by their Message-ID. Select `internetMessageId` and skip known ones
+     * before fetching if those extra requests start to matter.
+     */
+    protected function pollGraph(ReceiveInboundEmail $receiveInboundEmail): void
+    {
+        $mailbox = $this->mailbox;
+        $client = app()->makeWith(GraphMailboxClient::class, ['mailbox' => $mailbox]);
+
+        if ($mailbox->graph_delta_link !== null) {
+            try {
+                $url = $mailbox->graph_delta_link;
+
+                do {
+                    $page = $client->page($url);
+
+                    // A message that can't be downloaded fails the poll before the cursor moves past it.
+                    foreach ($page['ids'] as $id) {
+                        $this->receive($receiveInboundEmail, $client->raw($id), $id);
+                    }
+
+                    $mailbox->forceFill(['graph_delta_link' => $page['next_link'] ?? $page['delta_link']])->save();
+                } while ($url = $page['next_link']);
+
+                return;
+            } catch (RequestException $exception) {
+                // 410 Gone: the delta link expired, so start again from now.
+                if ($exception->response->status() !== Response::HTTP_GONE) {
+                    throw $exception;
+                }
+            }
+        }
+
+        $mailbox->forceFill(['graph_delta_link' => $client->start()])->save();
+    }
+
+    /**
      * One bad message is logged and skipped, so it can't block the mailbox forever.
      */
-    protected function receive(ReceiveInboundEmail $receiveInboundEmail, string $raw, int $uid): void
+    protected function receive(ReceiveInboundEmail $receiveInboundEmail, string $raw, int|string $uid): void
     {
         try {
             $receiveInboundEmail->handle($this->mailbox, InboundEmail::fromMime($raw));

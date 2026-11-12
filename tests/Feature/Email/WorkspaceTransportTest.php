@@ -5,7 +5,10 @@ use App\Models\Mailbox;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Notifications\MagicLinkNotification;
+use Illuminate\Http\Client\Request;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Mail\Transport\ArrayTransport;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Symfony\Component\Mailer\SentMessage;
 
@@ -135,3 +138,47 @@ test('the platform mailer cannot be the workspace mailer', function () {
 
     Mail::mailer('workspace');
 })->throws(InvalidArgumentException::class);
+
+/**
+ * The MIME that a Graph `sendMail` request carried.
+ */
+function graphMime(Request $request): string
+{
+    return (string) base64_decode($request->body());
+}
+
+test('a Microsoft 365 mailbox sends through Graph as base64 MIME, without SMTP', function () {
+    Http::fake(['graph.microsoft.com/*' => Http::response(status: 202)]);
+    $smtp = captureMailboxMail();
+    $microsoft = Mailbox::factory()->microsoft()->create(['address' => 'help@acme.test', 'name' => 'Acme Support']);
+
+    $microsoft->mailer()->raw('Hello', fn ($message) => $message->from($microsoft->fromAddress()->address)->to('jane@example.com')->subject('Hi'));
+
+    Http::assertSent(fn ($request) => $request->url() === 'https://graph.microsoft.com/v1.0/me/sendMail'
+        && $request->hasHeader('Authorization', 'Bearer access-1')
+        && $request->hasHeader('Content-Type', 'text/plain')
+        && str_contains(graphMime($request), 'Subject: Hi')
+        && str_contains(graphMime($request), 'To: jane@example.com'));
+    expect($smtp->messages())->toBeEmpty();
+});
+
+test('a Graph error fails the send', function () {
+    Http::fake(['graph.microsoft.com/*' => Http::response(['error' => ['code' => 'ErrorAccessDenied']], 403)]);
+    $microsoft = Mailbox::factory()->microsoft()->create();
+
+    $microsoft->mailer()->raw('Hello', fn ($message) => $message->from($microsoft->address)->to('jane@example.com'));
+})->throws(RequestException::class);
+
+test('app email goes out through the current workspace Microsoft mailbox and its token only', function () {
+    Http::fake(['graph.microsoft.com/*' => Http::response(status: 202)]);
+    Workspace::factory()->create()->execute(fn () => Mailbox::factory()->microsoft()->create([
+        'settings' => ['access_token' => 'other-token', 'refresh_token' => 'x', 'expires_at' => now()->addHour()->getTimestamp()],
+    ]));
+    Mailbox::factory()->microsoft()->create(['address' => 'help@acme.test', 'name' => 'Acme Support']);
+
+    sendMagicLinkTo($this->user);
+
+    Http::assertSentCount(1);
+    Http::assertSent(fn ($request) => $request->hasHeader('Authorization', 'Bearer access-1')
+        && str_contains(graphMime($request), 'From: Acme Support <help@acme.test>'));
+});

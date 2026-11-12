@@ -2,6 +2,7 @@
 
 namespace App\Actions\Mailboxes;
 
+use App\Enums\MailboxDriver;
 use App\Models\Mailbox;
 use Illuminate\Support\Facades\Http;
 
@@ -26,6 +27,8 @@ class RefreshMailboxToken
             'refresh_token' => $settings['refresh_token'] ?? '',
             'client_id' => $oauth['client_id'],
             'client_secret' => $oauth['client_secret'],
+            // Microsoft's v2 endpoint asks for the scopes again; Google keeps the granted ones.
+            'scope' => $mailbox->driver === MailboxDriver::MICROSOFT ? $oauth['scopes'] : null,
         ])->throw()->json();
 
         $mailbox->forceFill(['settings' => [

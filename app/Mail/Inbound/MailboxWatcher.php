@@ -10,9 +10,10 @@ use Illuminate\Support\Collection;
 use Throwable;
 
 /**
- * Landlord code behind `mailboxes:watch`: holds one IMAP connection open per mailbox in its
- * shard and sends STATUS on each every tick. When a folder's UIDNEXT or UIDVALIDITY moves, it
- * queues a PollMailbox with that mailbox's workspace current, so importing stays on one path.
+ * Landlord code behind `mailboxes:watch`: holds one IMAP connection open per IMAP or Google
+ * mailbox in its shard and sends STATUS on each every tick. When a folder's UIDNEXT or
+ * UIDVALIDITY moves, it queues a PollMailbox with that mailbox's workspace current, so
+ * importing stays on one path. Microsoft mailboxes have no IMAP; they rely on push or polling.
  *
  * Full IMAP IDLE isn't used because a blocking IDLE needs one process per mailbox; held
  * connections let one process cycle through ~100 mailboxes every 5–10 seconds.
@@ -80,7 +81,7 @@ class MailboxWatcher
     protected function reload(): void
     {
         $this->mailboxes = Mailbox::withoutGlobalScope('workspace')
-            ->where('driver', '!=', MailboxDriver::HOSTED)
+            ->whereNotIn('driver', [MailboxDriver::HOSTED, MailboxDriver::MICROSOFT])
             ->whereNotNull('settings')
             ->withoutPush()
             ->with('workspace')

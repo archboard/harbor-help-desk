@@ -87,10 +87,7 @@ function fakeGraph(string $subscriptionId = 'sub-1'): void
 
 test('subscribing a Microsoft mailbox stores the subscription id, expiry and secret', function () {
     fakeGraph();
-    $mailbox = $this->acme->execute(fn () => Mailbox::factory()->create([
-        'driver' => MailboxDriver::MICROSOFT,
-        'settings' => ['access_token' => 'access-1', 'refresh_token' => 'refresh-1', 'expires_at' => now()->addHour()->getTimestamp()],
-    ]));
+    $mailbox = $this->acme->execute(fn () => Mailbox::factory()->microsoft()->create());
 
     app(SubscribeMailboxPush::class)->handle($mailbox);
 
@@ -98,10 +95,8 @@ test('subscribing a Microsoft mailbox stores the subscription id, expiry and sec
         ->push_subscription_id->toBe('sub-1')
         ->push_expires_at->not->toBeNull()
         ->push_secret->not->toBeNull();
-    Http::assertSent(fn ($request) => str_contains($request->url(), 'login.microsoftonline.com')
-        && $request['grant_type'] === 'refresh_token'
-        && str_contains($request['scope'], 'https://graph.microsoft.com/Mail.Read'));
-    Http::assertSent(fn ($request) => $request->hasHeader('Authorization', 'Bearer graph-token')
+    Http::assertNotSent(fn ($request) => str_contains($request->url(), 'login.microsoftonline.com'));
+    Http::assertSent(fn ($request) => $request->hasHeader('Authorization', 'Bearer access-1')
         && $request['notificationUrl'] === 'https://harbor.test/webhooks/microsoft/graph'
         && $request['lifecycleNotificationUrl'] === 'https://harbor.test/webhooks/microsoft/graph'
         && $request['clientState'] === $mailbox->id.'.'.hash_hmac('sha256', $mailbox->id, (string) $mailbox->fresh()->push_secret)

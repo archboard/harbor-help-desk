@@ -100,6 +100,25 @@ test('OAuth mailboxes never expose their tokens or push secret', function () {
         ->assertDontSee('secret');
 });
 
+test('OAuth mailboxes are reconnected with new tokens, and nothing else in their settings', function () {
+    $google = $this->acme->execute(fn () => Mailbox::factory()->create([
+        'driver' => MailboxDriver::GOOGLE,
+        'settings' => ['access_token' => 'old', 'refresh_token' => 'old', 'expires_at' => 0],
+        'last_error' => 'invalid_grant',
+    ]));
+    actAs($this->admin, $this->acme);
+
+    $this->patchJson("http://acme.harbor.test/api/v1/mailboxes/{$google->id}", ['settings' => ['access_token' => 'new', 'imap' => ['host' => 'evil.test']]])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['settings', 'settings.refresh_token', 'settings.expires_at']);
+
+    $this->patchJson("http://acme.harbor.test/api/v1/mailboxes/{$google->id}", ['settings' => ['access_token' => 'new', 'refresh_token' => 'new', 'expires_at' => 123]])
+        ->assertOk()
+        ->assertJsonPath('last_error', null);
+
+    expect($google->fresh()->settings)->toBe(['access_token' => 'new', 'refresh_token' => 'new', 'expires_at' => 123]);
+});
+
 test('mailboxes are validated', function () {
     $archived = $this->acme->execute(fn () => Desk::factory()->create(['archived_at' => now()]));
     $foreignDesk = $this->other->execute(fn () => Desk::sole());

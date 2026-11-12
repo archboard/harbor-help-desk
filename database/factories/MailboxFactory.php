@@ -34,4 +34,15 @@ class MailboxFactory extends Factory
             ],
         ];
     }
+
+    /**
+     * A Microsoft 365 mailbox whose access token is fresh for another hour.
+     */
+    public function microsoft(): static
+    {
+        return $this->state(fn (): array => [
+            'driver' => MailboxDriver::MICROSOFT,
+            'settings' => ['access_token' => 'access-1', 'refresh_token' => 'refresh-1', 'expires_at' => now()->addHour()->getTimestamp()],
+        ]);
+    }
 }

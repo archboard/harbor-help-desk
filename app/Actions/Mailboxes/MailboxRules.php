@@ -10,7 +10,7 @@ use Illuminate\Validation\Rule;
 
 /**
  * Validation rules for creating or updating a mailbox. Hosted and OAuth mailboxes can only
- * change their name, signature, default desk and routing.
+ * change their name, signature, default desk and routing, and OAuth ones their tokens.
  */
 class MailboxRules
 {
@@ -45,10 +45,11 @@ class MailboxRules
     {
         $required = $creating ? 'required' : 'sometimes';
         $ownServer = $driver === MailboxDriver::IMAP;
+        $oauth = (bool) $driver?->usesOAuth();
 
         $rules = [
             'address' => [$creating || $ownServer ? $required : 'missing', 'string', 'email', 'max:255'],
-            'settings' => [$creating || $ownServer ? $required : 'missing', 'array'],
+            'settings' => [$creating || $ownServer || $oauth ? $required : 'missing', 'array'],
         ];
 
         if ($creating) {
@@ -69,10 +70,12 @@ class MailboxRules
             $rules['settings.imap.folder'] = ['sometimes', 'string', 'max:255'];
         }
 
-        if ($creating && $driver?->usesOAuth()) {
-            $rules['settings.access_token'] = ['required', 'string'];
-            $rules['settings.refresh_token'] = ['required', 'string'];
-            $rules['settings.expires_at'] = ['required', 'integer'];
+        // Updating an OAuth mailbox's settings means reconnecting it: all three tokens, nothing else.
+        if ($oauth) {
+            $rules['settings'][] = 'array:access_token,refresh_token,expires_at';
+            $rules['settings.access_token'] = ['required_with:settings', 'string'];
+            $rules['settings.refresh_token'] = ['required_with:settings', 'string'];
+            $rules['settings.expires_at'] = ['required_with:settings', 'integer'];
         }
 
         return $rules;

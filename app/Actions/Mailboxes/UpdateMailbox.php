@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\Gate;
 class UpdateMailbox
 {
     /**
-     * Update the mailbox. Changed IMAP settings restart polling from the newest message.
+     * Update the mailbox. Changed IMAP settings restart polling from the newest message. New
+     * OAuth tokens reconnect a Google or Microsoft mailbox.
      *
      * @param  array<string, mixed>  $input
      */
@@ -26,7 +27,7 @@ class UpdateMailbox
             $validated['settings'] = array_replace_recursive($mailbox->settings ?? [], $validated['settings']);
             $validated['last_error'] = null;
 
-            if ($validated['settings']['imap'] != ($mailbox->settings['imap'] ?? null)) {
+            if (($validated['settings']['imap'] ?? null) != ($mailbox->settings['imap'] ?? null)) {
                 $validated['imap_uid_validity'] = null;
                 $validated['imap_last_uid'] = null;
             }

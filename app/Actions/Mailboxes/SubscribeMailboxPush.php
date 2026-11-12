@@ -3,6 +3,7 @@
 namespace App\Actions\Mailboxes;
 
 use App\Enums\MailboxDriver;
+use App\Mail\Inbound\GraphMailboxClient;
 use App\Models\Mailbox;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Http;
@@ -76,21 +77,11 @@ class SubscribeMailboxPush
      */
     protected function graph(Mailbox $mailbox): array
     {
-        $oauth = $mailbox->driver->oauth();
         $secret = $mailbox->push_secret ?? Str::random(40);
         $url = rtrim((string) config('app.url'), '/').route('webhooks.microsoft.graph', absolute: false);
 
-        // The Graph token comes from the same refresh token, with the Graph scope.
-        $token = Http::asForm()->post($oauth['token_url'], [
-            'grant_type' => 'refresh_token',
-            'refresh_token' => $mailbox->settings['refresh_token'] ?? '',
-            'client_id' => $oauth['client_id'],
-            'client_secret' => $oauth['client_secret'],
-            'scope' => 'https://graph.microsoft.com/Mail.Read offline_access',
-        ])->throw()->json('access_token');
-
         $expires = now()->addDays(2);
-        $subscription = Http::withToken($token)->post('https://graph.microsoft.com/v1.0/subscriptions', [
+        $subscription = Http::withToken(app(RefreshMailboxToken::class)->handle($mailbox))->post(GraphMailboxClient::BASE_URL.'/subscriptions', [
             'changeType' => 'created',
             'resource' => "me/mailFolders('Inbox')/messages",
             'notificationUrl' => $url,

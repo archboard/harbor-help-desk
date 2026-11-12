@@ -30,10 +30,10 @@ enum MailboxDriver: string
     }
 
     /**
-     * The provider's OAuth app and endpoints, and the IMAP and SMTP servers its mailboxes
-     * connect to with XOAUTH2.
+     * The provider's OAuth app and endpoints. Google mailboxes connect to its IMAP and SMTP
+     * servers with XOAUTH2; Microsoft ones use Microsoft Graph for everything.
      *
-     * @return array{client_id: ?string, client_secret: ?string, authorize_url: string, token_url: string, scopes: string, imap: array{host: string, port: int, encryption: string}, smtp: array{host: string, port: int, encryption: string}}
+     * @return array{client_id: ?string, client_secret: ?string, authorize_url: string, token_url: string, scopes: string, imap?: array{host: string, port: int, encryption: string}, smtp?: array{host: string, port: int, encryption: string}}
      */
     public function oauth(): array
     {
@@ -53,11 +53,8 @@ enum MailboxDriver: string
                 'client_secret' => config('services.microsoft_mail.client_secret'),
                 'authorize_url' => 'https://login.microsoftonline.com/'.config('services.microsoft_mail.tenant').'/oauth2/v2.0/authorize',
                 'token_url' => 'https://login.microsoftonline.com/'.config('services.microsoft_mail.tenant').'/oauth2/v2.0/token',
-                // SMTP AUTH must be enabled on the Microsoft 365 tenant for sending. Mail.Read is
-                // for Microsoft Graph push subscriptions.
-                'scopes' => 'openid email offline_access https://outlook.office.com/IMAP.AccessAsUser.All https://outlook.office.com/SMTP.Send https://graph.microsoft.com/Mail.Read',
-                'imap' => ['host' => 'outlook.office365.com', 'port' => 993, 'encryption' => 'ssl'],
-                'smtp' => ['host' => 'smtp.office365.com', 'port' => 587, 'encryption' => 'starttls'],
+                // Every scope is Graph's, so one access token covers receiving, sending and push.
+                'scopes' => 'openid email offline_access https://graph.microsoft.com/Mail.Read https://graph.microsoft.com/Mail.Send',
             ],
             default => throw new LogicException("The {$this->value} driver doesn't use OAuth."),
         };
