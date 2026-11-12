@@ -1152,6 +1152,11 @@ declare namespace App {
       export type ImportWorkspaceData = {
         file: File;
       };
+      export type InviteMemberData = {
+        email: string;
+        role: App.Enums.WorkspaceRole;
+        desk_id: string | null;
+      };
       export type ProvisionedWorkspaceData = {
         id: string;
         name: string;
@@ -1244,6 +1249,9 @@ declare namespace App {
       | 'webhook_deleted'
       | 'webhook_secret_rotated'
       | 'webhook_disabled'
+      | 'member_invited'
+      | 'invitation_revoked'
+      | 'invitation_resent'
       | 'invitation_accepted'
       | 'sla_policy_created'
       | 'sla_policy_updated'

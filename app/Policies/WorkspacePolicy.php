@@ -22,4 +22,12 @@ class WorkspacePolicy
     {
         return $this->update($user, $workspace);
     }
+
+    /**
+     * Inviting people to the workspace and managing their invitations is limited to admins.
+     */
+    public function manageMembers(User $user, Workspace $workspace): bool
+    {
+        return $this->update($user, $workspace);
+    }
 }

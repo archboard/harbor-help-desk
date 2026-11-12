@@ -41,6 +41,9 @@ enum AuditAction: string
     case WEBHOOK_DELETED = 'webhook_deleted';
     case WEBHOOK_SECRET_ROTATED = 'webhook_secret_rotated';
     case WEBHOOK_DISABLED = 'webhook_disabled';
+    case MEMBER_INVITED = 'member_invited';
+    case INVITATION_REVOKED = 'invitation_revoked';
+    case INVITATION_RESENT = 'invitation_resent';
     case INVITATION_ACCEPTED = 'invitation_accepted';
     case SLA_POLICY_CREATED = 'sla_policy_created';
     case SLA_POLICY_UPDATED = 'sla_policy_updated';
@@ -90,6 +93,9 @@ enum AuditAction: string
             self::WEBHOOK_DELETED => __('Webhook deleted'),
             self::WEBHOOK_SECRET_ROTATED => __('Webhook secret rotated'),
             self::WEBHOOK_DISABLED => __('Webhook disabled after repeated failures'),
+            self::MEMBER_INVITED => __('Member invited'),
+            self::INVITATION_REVOKED => __('Invitation revoked'),
+            self::INVITATION_RESENT => __('Invitation resent'),
             self::INVITATION_ACCEPTED => __('Invitation accepted'),
             self::SLA_POLICY_CREATED => __('SLA policy created'),
             self::SLA_POLICY_UPDATED => __('SLA policy updated'),
