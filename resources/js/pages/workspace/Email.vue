@@ -6,6 +6,7 @@ import { useClipboard } from '@vueuse/core';
 import { computed, ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import CardAction from '@/components/CardAction.vue';
+import CardHeader from '@/components/CardHeader.vue';
 import CardPadding from '@/components/CardPadding.vue';
 import CardWrapper from '@/components/CardWrapper.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -97,7 +98,7 @@ const notificationMailboxes = computed(() => [
 
 const encryptions = { ssl: 'SSL/TLS', starttls: 'STARTTLS', tls: 'TLS' };
 
-const { copy, copied } = useClipboard();
+const { copy, copied } = useClipboard({ legacy: true });
 
 /** The mailbox being edited, `'new'` while adding an IMAP/SMTP one, or null when closed. */
 const editing = ref<App.Data.Mailboxes.MailboxData | 'new' | null>(null);
@@ -410,34 +411,61 @@ function remove(close: () => void): void {
     <CardWrapper>
       <form @submit.prevent="saveMicrosoftApp">
         <CardPadding>
-          <AppFieldset>
-            <div class="space-y-1">
-              <h3 class="text-sm font-medium text-gray-900 dark:text-white">
-                {{ $t('Microsoft 365 app') }}
-              </h3>
-              <p class="text-sm text-gray-500 dark:text-gray-400">
+          <CardHeader class="mb-2">{{ $t('Microsoft 365 app') }}</CardHeader>
+          <div class="mb-6 space-y-2 text-sm text-gray-500 dark:text-gray-400">
+            <p>
+              {{
+                $t(
+                  'To connect Microsoft 365 mailboxes, register an app for Harbor Help in the Microsoft Entra admin center:',
+                )
+              }}
+            </p>
+            <ol class="list-decimal space-y-1 pl-5">
+              <li>
                 {{
                   $t(
-                    'Register an app in Microsoft Entra with the delegated Microsoft Graph permissions Mail.Read, Mail.Send and offline_access, and this redirect URI:',
+                    'Go to App registrations and choose New registration. Pick who can sign in, and add a Web redirect URI:',
                   )
                 }}
-              </p>
-              <div class="flex items-center gap-2">
-                <code
-                  class="truncate text-sm text-gray-700 dark:text-gray-300"
-                  >{{ oauthRedirectUri }}</code
-                >
-                <button
-                  type="button"
-                  class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                  @click="copy(oauthRedirectUri)"
-                >
-                  <span class="sr-only">{{ $t('Copy redirect URI') }}</span>
-                  <Check v-if="copied" class="size-4" aria-hidden="true" />
-                  <Copy v-else class="size-4" aria-hidden="true" />
-                </button>
-              </div>
-            </div>
+                <span class="mt-1 flex items-center gap-2">
+                  <code class="truncate text-gray-700 dark:text-gray-300">{{
+                    oauthRedirectUri
+                  }}</code>
+                  <button
+                    type="button"
+                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                    @click="copy(oauthRedirectUri)"
+                  >
+                    <span class="sr-only">{{ $t('Copy redirect URI') }}</span>
+                    <Check v-if="copied" class="size-4" aria-hidden="true" />
+                    <Copy v-else class="size-4" aria-hidden="true" />
+                  </button>
+                </span>
+              </li>
+              <li>
+                {{
+                  $t(
+                    'Under API permissions, add the delegated Microsoft Graph permissions Mail.Read, Mail.Send and offline_access.',
+                  )
+                }}
+              </li>
+              <li>
+                {{
+                  $t(
+                    'Under Certificates & secrets, create a client secret and copy its value.',
+                  )
+                }}
+              </li>
+              <li>
+                {{
+                  $t(
+                    'Enter the application (client) ID, tenant and secret below, then use Connect Microsoft 365 above.',
+                  )
+                }}
+              </li>
+            </ol>
+          </div>
+          <AppFieldset>
             <InputField
               v-model="microsoftForm.microsoft_client_id"
               :label="$t('Application (client) ID')"

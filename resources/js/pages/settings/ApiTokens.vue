@@ -39,7 +39,7 @@ const form = useForm({
   workspaces: workspaces.length === 1 ? [workspaces[0].id] : ([] as string[]),
 } satisfies App.Data.ApiTokens.CreatePersonalAccessTokenData);
 
-const { copy } = useClipboard();
+const { copy } = useClipboard({ legacy: true });
 const copied = ref('');
 
 const snippets = computed(() => [
@@ -74,7 +74,7 @@ const revoking = ref<App.Data.ApiTokens.ApiTokenData | null>(null);
 const revokeLoading = ref(false);
 
 async function copyToken(token: string): Promise<void> {
-  await navigator.clipboard.writeText(token);
+  await copy(token);
   notify({ level: 'success', text: trans('Token copied.') });
 }
 
