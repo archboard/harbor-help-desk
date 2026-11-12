@@ -58,7 +58,7 @@ class MailboxData extends Data
             receivesBy: match (true) {
                 $mailbox->driver === MailboxDriver::HOSTED => 'webhook',
                 (bool) $mailbox->push_expires_at?->isFuture() => 'push',
-                (bool) config('harbor.mail.watch') => 'watch',
+                config('harbor.mail.watch') && $mailbox->driver !== MailboxDriver::MICROSOFT => 'watch',
                 default => 'poll',
             },
             polledAt: $mailbox->polled_at,

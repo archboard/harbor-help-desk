@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Mail\Mailables\Address;
 use Illuminate\Support\Facades\Mail;
+use LogicException;
 use Symfony\Component\Mailer\Transport\Smtp\Auth\XOAuth2Authenticator;
 use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
 use Symfony\Component\Mailer\Transport\TransportInterface;
@@ -75,6 +76,10 @@ use Symfony\Component\Mailer\Transport\TransportInterface;
  * @method static Builder<static>|Mailbox wherePushSecret($value)
  * @method static Builder<static>|Mailbox wherePushSubscriptionId($value)
  *
+ * @property string|null $graph_delta_link
+ *
+ * @method static Builder<static>|Mailbox whereGraphDeltaLink($value)
+ *
  * @mixin \Eloquent
  */
 #[Unguarded]
@@ -127,9 +132,10 @@ class Mailbox extends Model
 
     /**
      * Limit to the mailboxes `mailboxes:poll` should queue a poll for this minute. Hosted
-     * mailboxes receive by webhook, so only the workspace's own mailboxes are polled, and not those without credentials (imported ones). While
-     * `mailboxes:watch` runs, or for a mailbox with an unexpired push subscription, only those
-     * not polled for 5 minutes are, as a backstop.
+     * mailboxes receive by webhook, so only the workspace's own mailboxes are polled, and not
+     * those without credentials (imported ones). A mailbox with an unexpired push subscription,
+     * or one `mailboxes:watch` covers (any but Microsoft, which has no IMAP), is only polled
+     * after 5 minutes, as a backstop.
      *
      * @param  Builder<self>  $query
      */
@@ -141,9 +147,9 @@ class Mailbox extends Model
             ->where(fn (Builder $query) => $query
                 ->whereNull('polled_at')
                 ->orWhere('polled_at', '<', now()->subMinutes(5))
-                ->unless(config('harbor.mail.watch'), fn (Builder $query) => $query->orWhere(
-                    fn (Builder $query) => $query->withoutPush(),
-                )));
+                ->orWhere(fn (Builder $query) => $query
+                    ->withoutPush()
+                    ->when(config('harbor.mail.watch'), fn (Builder $query) => $query->where('driver', MailboxDriver::MICROSOFT))));
     }
 
     /**
@@ -256,8 +262,8 @@ class Mailbox extends Model
     }
 
     /**
-     * The IMAP or SMTP server settings to connect with. OAuth mailboxes use their provider's
-     * servers, with a fresh access token as the password.
+     * The IMAP or SMTP server settings to connect with. Google mailboxes use Google's servers,
+     * with a fresh access token as the password. Microsoft ones have none: they use Graph.
      *
      * @param  'imap'|'smtp'  $protocol
      * @return array<string, mixed>
@@ -266,7 +272,7 @@ class Mailbox extends Model
     {
         if ($this->driver->usesOAuth()) {
             return [
-                ...$this->driver->oauth()[$protocol],
+                ...$this->driver->oauth()[$protocol] ?? throw new LogicException("The {$this->driver->value} driver has no {$protocol} server."),
                 'username' => $this->address,
                 'password' => app(RefreshMailboxToken::class)->handle($this),
             ];

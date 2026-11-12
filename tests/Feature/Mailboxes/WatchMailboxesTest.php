@@ -1,5 +1,6 @@
 <?php
 
+use App\Data\Mailboxes\MailboxData;
 use App\Mail\Inbound\ImapMailboxClient;
 use App\Mail\Inbound\MailboxWatcher;
 use App\Models\Desk;
@@ -102,4 +103,24 @@ test('the watch command refuses to run unless watching is turned on', function (
     config(['harbor.mail.watch' => false]);
 
     $this->artisan('mailboxes:watch')->assertFailed();
+});
+
+test('Microsoft mailboxes are not watched, and still polled every minute without push', function () {
+    $microsoft = Mailbox::factory()->microsoft()->create(['default_desk_id' => Desk::sole()->id, 'polled_at' => now()->subMinute()]);
+    $watched = [];
+    app()->bind(ImapMailboxClient::class, function ($app, array $parameters) use (&$watched) {
+        $watched[] = $parameters['mailbox']->id;
+
+        return mockImapClient(uidValidity: 7, uidNext: 101);
+    });
+    $this->mailbox->update(['polled_at' => now()->subMinute()]);
+
+    (new MailboxWatcher)->tick();
+
+    expect($watched)->toBe([$this->mailbox->id])
+        ->and(Mailbox::needsScheduledPoll()->pluck('id')->all())->toBe([$microsoft->id])
+        ->and(MailboxData::from($microsoft)->receivesBy)->toBe('poll');
+
+    $microsoft->update(['push_expires_at' => now()->addDay()]);
+    expect(Mailbox::needsScheduledPoll()->exists())->toBeFalse();
 });

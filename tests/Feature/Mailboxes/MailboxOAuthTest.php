@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\Mailboxes\RefreshMailboxToken;
 use App\Enums\MailboxDriver;
 use App\Enums\WorkspaceRole;
 use App\Models\Desk;
@@ -93,7 +94,7 @@ test('an expiring access token is refreshed before connecting', function () {
 
     expect($mailbox->connection('imap'))->toMatchArray(['host' => 'imap.gmail.com', 'username' => 'help@acme.com', 'password' => 'access-2'])
         ->and($mailbox->fresh()->settings)->toMatchArray(['access_token' => 'access-2', 'refresh_token' => 'refresh-1']);
-    Http::assertSent(fn ($request) => $request['grant_type'] === 'refresh_token' && $request['refresh_token'] === 'refresh-1');
+    Http::assertSent(fn ($request) => $request['grant_type'] === 'refresh_token' && $request['refresh_token'] === 'refresh-1' && ! isset($request['scope']));
 
     // Now fresh for an hour, so the next connection reuses it.
     expect($mailbox->connection('smtp')['password'])->toBe('access-2');
@@ -138,4 +139,12 @@ test('connecting an address another workspace has creates a new mailbox and leav
 
     expect($foreign->fresh()->settings['refresh_token'])->toBe('theirs')
         ->and(Mailbox::withoutGlobalScopes()->where('workspace_id', $this->acme->id)->sole()->settings['refresh_token'])->toBe('refresh-1');
+});
+
+test('Microsoft token refreshes ask for the Graph scopes again', function () {
+    Http::fake(['login.microsoftonline.com/*' => Http::response(['access_token' => 'access-2', 'expires_in' => 3600])]);
+    $mailbox = $this->acme->execute(fn () => Mailbox::factory()->microsoft()->create(['settings' => ['access_token' => 'access-1', 'refresh_token' => 'refresh-1', 'expires_at' => 0]]));
+
+    expect(app(RefreshMailboxToken::class)->handle($mailbox))->toBe('access-2');
+    Http::assertSent(fn ($request) => str_contains($request['scope'], 'https://graph.microsoft.com/Mail.Send'));
 });

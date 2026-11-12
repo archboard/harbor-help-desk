@@ -3,13 +3,18 @@
 use App\Actions\Email\ReceiveInboundEmail;
 use App\Enums\MailboxDriver;
 use App\Jobs\PollMailbox;
+use App\Mail\Inbound\GraphMailboxClient;
 use App\Mail\Inbound\ImapMailboxClient;
 use App\Models\Desk;
 use App\Models\Mailbox;
 use App\Models\Ticket;
 use App\Models\Workspace;
+use GuzzleHttp\Psr7\Response as Psr7Response;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
+use Mockery\MockInterface;
 use Tests\Concerns\InWorkspace;
 
 uses(InWorkspace::class);
@@ -124,3 +129,74 @@ test('the command queues each poll with its workspace attached', function () {
 
     expect(DB::table('jobs')->sole()->payload)->toContain($this->workspace->id);
 });
+
+function mockGraphClient(): MockInterface
+{
+    $client = Mockery::mock(GraphMailboxClient::class);
+    app()->bind(GraphMailboxClient::class, fn () => $client);
+
+    return $client;
+}
+
+test('the first Microsoft poll starts a delta query from now without importing old mail', function () {
+    $mailbox = Mailbox::factory()->microsoft()->create(['default_desk_id' => Desk::sole()->id]);
+    $client = mockGraphClient();
+    $client->shouldReceive('start')->once()->andReturn('delta-1');
+    $client->shouldNotReceive('page');
+
+    PollMailbox::dispatchSync($mailbox);
+
+    expect($mailbox->fresh())
+        ->graph_delta_link->toBe('delta-1')
+        ->polled_at->not->toBeNull();
+});
+
+test('new Microsoft mail is imported page by page into its own workspace only', function () {
+    $other = Workspace::factory()->create();
+    $other->execute(fn () => Mailbox::factory()->microsoft()->create(['graph_delta_link' => 'theirs']));
+    $mailbox = Mailbox::factory()->microsoft()->create(['default_desk_id' => Desk::sole()->id, 'graph_delta_link' => 'delta-1']);
+    $client = mockGraphClient();
+    $client->shouldReceive('page')->with('delta-1')->andReturn(['ids' => ['msg-1'], 'next_link' => 'next-2', 'delta_link' => null]);
+    $client->shouldReceive('page')->with('next-2')->andReturn(['ids' => ['msg-2'], 'next_link' => null, 'delta_link' => 'delta-2']);
+    $client->shouldReceive('raw')->with('msg-1')->andReturn(rawFixtureEmail('html-only'));
+    $client->shouldReceive('raw')->with('msg-2')->andReturn(rawFixtureEmail('outlook-reply'));
+
+    PollMailbox::dispatchSync($mailbox);
+
+    expect(Ticket::oldest('id')->pluck('subject')->all())->toBe(['Broken link', 'RE: Printer jam'])
+        ->and(Ticket::pluck('mailbox_id')->unique()->all())->toBe([$mailbox->id])
+        ->and(Ticket::withoutGlobalScopes()->where('workspace_id', $other->id)->exists())->toBeFalse()
+        ->and($mailbox->fresh())->graph_delta_link->toBe('delta-2')->last_error->toBeNull();
+});
+
+test('a Microsoft message that fails to download fails the poll before the cursor passes it', function () {
+    $mailbox = Mailbox::factory()->microsoft()->create(['default_desk_id' => Desk::sole()->id, 'graph_delta_link' => 'delta-1']);
+    $client = mockGraphClient();
+    $client->shouldReceive('page')->with('delta-1')->andReturn(['ids' => ['msg-1'], 'next_link' => 'next-2', 'delta_link' => null]);
+    $client->shouldReceive('page')->with('next-2')->andReturn(['ids' => ['msg-2'], 'next_link' => null, 'delta_link' => 'delta-2']);
+    $client->shouldReceive('raw')->with('msg-1')->andReturn(rawFixtureEmail('html-only'));
+    $client->shouldReceive('raw')->with('msg-2')->andThrow(new RuntimeException('Timed out'));
+
+    PollMailbox::dispatchSync($mailbox);
+
+    expect($mailbox->fresh())
+        ->graph_delta_link->toBe('next-2')
+        ->last_error->toBe('Timed out')
+        ->and(Ticket::count())->toBe(1);
+});
+
+test('an expired delta link restarts from now, and other Graph errors are saved', function (int $status, string $link, bool $hasError) {
+    $mailbox = Mailbox::factory()->microsoft()->create(['default_desk_id' => Desk::sole()->id, 'graph_delta_link' => 'delta-1']);
+    $client = mockGraphClient();
+    $client->shouldReceive('page')->andThrow(new RequestException(new Response(new Psr7Response($status))));
+    $client->shouldReceive('start')->andReturn('delta-fresh');
+
+    PollMailbox::dispatchSync($mailbox);
+
+    expect($mailbox->fresh())
+        ->graph_delta_link->toBe($link)
+        ->and($mailbox->fresh()->last_error !== null)->toBe($hasError);
+})->with([
+    'expired' => [410, 'delta-fresh', false],
+    'server error' => [500, 'delta-1', true],
+]);
