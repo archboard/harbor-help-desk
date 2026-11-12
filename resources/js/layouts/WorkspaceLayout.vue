@@ -10,6 +10,7 @@ import { edit as portal } from '@/routes/workspace/portal';
 import { index as customFields } from '@/routes/workspace/custom-fields';
 import { index as dataPrivacy } from '@/routes/workspace/data-privacy';
 import { index as email } from '@/routes/workspace/email';
+import { index as members } from '@/routes/workspace/members';
 import { index as webhooks } from '@/routes/workspace/webhooks';
 import { edit as general } from '@/routes/workspace/general';
 
@@ -19,6 +20,7 @@ const page = usePage();
 
 const sections = computed(() => [
   { label: trans('General'), href: general().url },
+  { label: trans('Members'), href: members().url },
   { label: trans('Email'), href: email().url },
   { label: trans('Attachments'), href: attachments().url },
   { label: trans('Customer portal'), href: portal().url },

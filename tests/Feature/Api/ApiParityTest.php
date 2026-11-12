@@ -93,6 +93,12 @@ function webToApiRoutes(): array
 function webOnlyRoutes(): array
 {
     return [
+        // API in the next step
+        'workspace.members.update',
+        'workspace.members.destroy',
+        'workspace.invitations.store',
+        'workspace.invitations.destroy',
+        'workspace.invitations.resend',
         'install.store',
         'invitations.store',
         'magic-link.store',

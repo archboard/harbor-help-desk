@@ -8,8 +8,11 @@ use App\Http\Controllers\Workspace\DataPrivacyController;
 use App\Http\Controllers\Workspace\EmailController;
 use App\Http\Controllers\Workspace\GeneralController;
 use App\Http\Controllers\Workspace\ImportWorkspaceController;
+use App\Http\Controllers\Workspace\InvitationController;
+use App\Http\Controllers\Workspace\MemberController;
 use App\Http\Controllers\Workspace\PortalController;
 use App\Http\Controllers\Workspace\RequestWorkspaceExportController;
+use App\Http\Controllers\Workspace\ResendInvitationController;
 use App\Http\Controllers\Workspace\RotateWebhookSecretController;
 use App\Http\Controllers\Workspace\SendWebhookPingController;
 use App\Http\Controllers\Workspace\SettingsController;
@@ -21,6 +24,12 @@ Route::middleware(['auth', 'verified'])->prefix('workspace')->name('workspace.')
 
     Route::get('general', [GeneralController::class, 'edit'])->name('general.edit');
     Route::patch('general', [GeneralController::class, 'update'])->name('general.update');
+
+    Route::resource('members', MemberController::class)
+        ->only(['index', 'update', 'destroy']);
+    Route::resource('invitations', InvitationController::class)
+        ->only(['store', 'destroy']);
+    Route::post('invitations/{invitation}/resend', ResendInvitationController::class)->middleware('throttle:6,1')->name('invitations.resend');
 
     Route::patch('settings', [SettingsController::class, 'update'])->name('settings.update');
 

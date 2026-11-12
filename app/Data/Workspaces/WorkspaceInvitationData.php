@@ -19,6 +19,7 @@ class WorkspaceInvitationData extends Data
         public DeskData|Lazy|null $desk,
         public UserData|Lazy|null $invitedBy,
         public ?CarbonImmutable $createdAt,
+        public CarbonImmutable $expiresAt,
     ) {}
 
     public static function fromModel(WorkspaceInvitation $invitation): self
@@ -30,6 +31,7 @@ class WorkspaceInvitationData extends Data
             desk: Lazy::whenLoaded('desk', $invitation, fn (): ?DeskData => $invitation->desk ? DeskData::from($invitation->desk) : null),
             invitedBy: Lazy::whenLoaded('invitedBy', $invitation, fn (): ?UserData => $invitation->invitedBy ? UserData::from($invitation->invitedBy) : null),
             createdAt: $invitation->created_at,
+            expiresAt: $invitation->acceptExpiresAt(),
         );
     }
 }

@@ -1205,6 +1205,15 @@ declare namespace App {
         desk?: App.Data.Desks.DeskData | null;
         invited_by?: App.Data.Users.UserData | null;
         created_at: string | null;
+        expires_at: string;
+      };
+      export type WorkspaceMemberData = {
+        id: string;
+        name: string;
+        email: string;
+        role: App.Enums.WorkspaceRole;
+        desk_count: number;
+        joined_at: string | null;
       };
       export type WorkspaceSettings = {
         mail_notification_mailbox_id: string | null;
