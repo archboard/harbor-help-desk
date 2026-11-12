@@ -73,7 +73,8 @@ ask() {
     local prompt="$1" var="$2"
     if [[ -z "${!var}" && -r /dev/tty ]]; then
         # shellcheck disable=SC2229 # reads into the variable named by $var
-        { read -rp "$prompt" "$var" < /dev/tty; } 2> /dev/null || true
+        # read -p prompts on stderr, which is silenced here, so write the prompt to the tty
+        { printf '%s' "$prompt" > /dev/tty && read -r "$var" < /dev/tty; } 2> /dev/null || true
     fi
 }
 
