@@ -19,7 +19,7 @@ class MailboxServerData extends Data
         public int $port,
         #[LiteralTypeScriptType("'ssl' | 'tls' | 'starttls'")]
         public string $encryption,
-        public string $username,
+        public ?string $username,
         public string|Optional $folder,
     ) {}
 }

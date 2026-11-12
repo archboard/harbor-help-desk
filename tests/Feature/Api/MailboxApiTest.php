@@ -126,7 +126,7 @@ test('mailboxes are validated', function () {
 
     $this->postJson('http://acme.harbor.test/api/v1/mailboxes', ['driver' => 'imap'])
         ->assertUnprocessable()
-        ->assertJsonValidationErrors(['name', 'address', 'default_desk_id', 'settings.imap.host', 'settings.imap.password', 'settings.smtp.port']);
+        ->assertJsonValidationErrors(['name', 'address', 'default_desk_id', 'settings.imap', 'settings.smtp']);
 
     $this->postJson('http://acme.harbor.test/api/v1/mailboxes', imapMailboxInput($archived, [
         'routing' => [['address' => 'not-an-email', 'desk_id' => $foreignDesk->id]],

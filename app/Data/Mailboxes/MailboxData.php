@@ -19,7 +19,7 @@ class MailboxData extends Data
     /**
      * @param  string|null  $inboundAddress  Hosted only: the address tenants forward their own mail to.
      * @param  Collection<int, MailboxRoutingRuleData>  $routing
-     * @param  array{imap: MailboxServerData, smtp: MailboxServerData}|Lazy  $settings  IMAP only.
+     * @param  array{imap: ?MailboxServerData, smtp: ?MailboxServerData}|Lazy  $settings  IMAP only; either may be null.
      */
     public function __construct(
         public string $id,
@@ -32,7 +32,7 @@ class MailboxData extends Data
         public Collection $routing,
         public ?string $signature,
         public array|Lazy $settings,
-        #[LiteralTypeScriptType("'webhook' | 'push' | 'watch' | 'poll'")]
+        #[LiteralTypeScriptType("'webhook' | 'push' | 'watch' | 'poll' | 'never'")]
         public string $receivesBy,
         public ?CarbonImmutable $polledAt,
         public ?string $lastError,
@@ -52,11 +52,12 @@ class MailboxData extends Data
             routing: MailboxRoutingRuleData::collect(collect($mailbox->routing)),
             signature: $mailbox->signature,
             settings: Lazy::when(fn (): bool => $mailbox->driver === MailboxDriver::IMAP, fn (): array => [
-                'imap' => MailboxServerData::from($mailbox->settings['imap']),
-                'smtp' => MailboxServerData::from($mailbox->settings['smtp']),
+                'imap' => isset($mailbox->settings['imap']) ? MailboxServerData::from($mailbox->settings['imap']) : null,
+                'smtp' => isset($mailbox->settings['smtp']) ? MailboxServerData::from($mailbox->settings['smtp']) : null,
             ]),
             receivesBy: match (true) {
                 $mailbox->driver === MailboxDriver::HOSTED => 'webhook',
+                ! $mailbox->receivesMail() => 'never',
                 (bool) $mailbox->push_expires_at?->isFuture() => 'push',
                 config('harbor.mail.watch') && $mailbox->driver !== MailboxDriver::MICROSOFT => 'watch',
                 default => 'poll',

@@ -211,7 +211,9 @@ class Workspace extends Model implements IsTenant
         return $this->execute(function (): ?Mailbox {
             $id = $this->settings->mailNotificationMailboxId;
 
-            return ($id ? Mailbox::query()->find($id) : null) ?? Mailbox::query()->oldest('id')->first();
+            $chosen = $id ? Mailbox::query()->find($id) : null;
+
+            return ($chosen?->sendsMail() ? $chosen : null) ?? Mailbox::firstSending();
         });
     }
 }

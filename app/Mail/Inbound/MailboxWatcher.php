@@ -86,7 +86,7 @@ class MailboxWatcher
             ->withoutPush()
             ->with('workspace')
             ->get()
-            ->filter(fn (Mailbox $mailbox): bool => crc32($mailbox->id) % $this->shards === $this->shard)
+            ->filter(fn (Mailbox $mailbox): bool => $mailbox->receivesMail() && crc32($mailbox->id) % $this->shards === $this->shard)
             ->keyBy('id');
 
         foreach (array_diff_key($this->clients, $this->mailboxes->all()) as $id => $client) {

@@ -194,9 +194,38 @@ class Mailbox extends Model
      */
     public static function forTicket(Ticket $ticket): ?self
     {
-        return $ticket->mailbox
-            ?? self::query()->where('default_desk_id', $ticket->desk_id)->oldest('id')->first()
-            ?? self::query()->oldest('id')->first();
+        return ($ticket->mailbox?->sendsMail() ? $ticket->mailbox : null)
+            ?? self::firstSending($ticket->desk_id)
+            ?? self::firstSending();
+    }
+
+    /**
+     * The oldest mailbox that can send, optionally of one desk. Filtered in PHP because
+     * `settings` is encrypted.
+     */
+    public static function firstSending(?string $deskId = null): ?self
+    {
+        return self::query()
+            ->when($deskId, fn (Builder $query) => $query->where('default_desk_id', $deskId))
+            ->oldest('id')
+            ->cursor()
+            ->first(fn (self $mailbox): bool => $mailbox->sendsMail());
+    }
+
+    /**
+     * Whether new mail is fetched from this mailbox. An IMAP/SMTP mailbox may be send-only.
+     */
+    public function receivesMail(): bool
+    {
+        return $this->driver !== MailboxDriver::IMAP || isset($this->settings['imap']);
+    }
+
+    /**
+     * Whether replies can go out through this mailbox. An IMAP/SMTP mailbox may be receive-only.
+     */
+    public function sendsMail(): bool
+    {
+        return $this->driver !== MailboxDriver::IMAP || isset($this->settings['smtp']);
     }
 
     /**

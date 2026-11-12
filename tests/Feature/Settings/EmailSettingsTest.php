@@ -77,6 +77,27 @@ test('admins add, update and delete an IMAP mailbox through the web routes', fun
     expect(Mailbox::count())->toBe(0);
 });
 
+test('a mailbox may be send-only, with an SMTP server that needs no login, but not without either server', function () {
+    $mailbox = ['name' => 'Acme Support', 'address' => 'help@acme.com', 'default_desk_id' => $this->desk->id];
+    $this->actingAs($this->admin);
+
+    $this->post(route('workspace.email.store'), [...$mailbox, 'settings' => ['imap' => null, 'smtp' => null]])
+        ->assertSessionHasErrors(['settings.imap', 'settings.smtp']);
+
+    $this->post(route('workspace.email.store'), [...$mailbox, 'settings' => ['imap' => ['host' => '1.1.1.1'], 'smtp' => null]])
+        ->assertSessionHasErrors(['settings.imap.port', 'settings.imap.username', 'settings.imap.password'])
+        ->assertSessionDoesntHaveErrors(['settings.smtp']);
+
+    $this->post(route('workspace.email.store'), [...$mailbox, 'settings' => ['imap' => null, 'smtp' => ['host' => '1.1.1.1', 'port' => 25, 'encryption' => 'starttls', 'username' => '', 'password' => '']]])
+        ->assertSessionHasNoErrors();
+
+    expect(Mailbox::sole())->receivesMail()->toBeFalse()->sendsMail()->toBeTrue();
+    $this->get(route('workspace.email.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('mailboxes.0.receives_by', 'never')
+        ->where('mailboxes.0.settings.imap', null)
+        ->where('mailboxes.0.settings.smtp.username', null));
+});
+
 test('a routing rule must point at a desk in this workspace', function () {
     $mailbox = Mailbox::factory()->create();
     $foreignDesk = Workspace::factory()->create()->execute(fn () => Desk::sole());

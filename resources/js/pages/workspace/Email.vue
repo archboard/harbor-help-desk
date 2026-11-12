@@ -14,6 +14,7 @@ import AppInput from '@/components/forms/AppInput.vue';
 import AppSelect from '@/components/forms/AppSelect.vue';
 import FieldError from '@/components/forms/FieldError.vue';
 import {
+  CheckboxField,
   EmailField,
   InputField,
   NumberField,
@@ -49,6 +50,7 @@ const receivesBy = computed<
   push: trans('Instantly'),
   watch: trans('Every few seconds'),
   poll: trans('Every minute'),
+  never: trans('Send only'),
 }));
 
 const page = usePage();
@@ -83,6 +85,8 @@ const form = useForm({
   default_desk_id: '',
   signature: '',
   routing: [] as App.Data.Mailboxes.MailboxRoutingRuleData[],
+  receives: true,
+  sends: true,
   settings: {
     imap: {
       host: '',
@@ -143,12 +147,22 @@ function save(close: () => void): void {
         default_desk_id,
         signature,
         routing,
+        receives,
+        sends,
         settings,
       }):
         | Omit<App.Data.Mailboxes.CreateMailboxData, 'driver'>
         | App.Data.Mailboxes.UpdateMailboxData =>
         mailbox === 'new'
-          ? { name, address, default_desk_id, settings }
+          ? {
+              name,
+              address,
+              default_desk_id,
+              settings: {
+                imap: receives ? settings.imap : null,
+                smtp: sends ? settings.smtp : null,
+              },
+            }
           : { name, default_desk_id, signature: signature || null, routing },
     )
     .submit(
@@ -390,62 +404,78 @@ function remove(close: () => void): void {
             v-for="protocol in ['imap', 'smtp'] as const"
             :key="protocol"
           >
-            <h3
-              class="pt-2 text-sm font-semibold text-gray-900 dark:text-white"
-            >
-              {{
-                protocol === 'imap'
-                  ? $t('Incoming (IMAP)')
-                  : $t('Outgoing (SMTP)')
-              }}
-            </h3>
-            <div class="grid gap-4 sm:grid-cols-3">
-              <div class="sm:col-span-2">
-                <InputField
-                  v-model="form.settings[protocol].host"
-                  :label="$t('Host')"
-                  :error="error(`settings.${protocol}.host`)"
+            <CheckboxField
+              v-if="protocol === 'imap'"
+              v-model="form.receives"
+              :label="$t('Receive mail over IMAP')"
+              :help-text="$t('New mail in this mailbox becomes tickets.')"
+              :error="error('settings.imap')"
+            />
+            <CheckboxField
+              v-else
+              v-model="form.sends"
+              :label="$t('Send mail over SMTP')"
+              :help-text="
+                $t('Replies and notifications go out from this address.')
+              "
+              :error="error('settings.smtp')"
+            />
+            <template v-if="protocol === 'imap' ? form.receives : form.sends">
+              <div class="grid gap-4 sm:grid-cols-3">
+                <div class="sm:col-span-2">
+                  <InputField
+                    v-model="form.settings[protocol].host"
+                    :label="$t('Host')"
+                    :error="error(`settings.${protocol}.host`)"
+                    required
+                  />
+                </div>
+                <NumberField
+                  v-model="form.settings[protocol].port"
+                  :label="$t('Port')"
+                  :error="error(`settings.${protocol}.port`)"
                   required
                 />
               </div>
-              <NumberField
-                v-model="form.settings[protocol].port"
-                :label="$t('Port')"
-                :error="error(`settings.${protocol}.port`)"
+              <SelectField
+                v-model="form.settings[protocol].encryption"
+                :label="$t('Encryption')"
+                :options="encryptions"
+                :error="error(`settings.${protocol}.encryption`)"
                 required
               />
-            </div>
-            <SelectField
-              v-model="form.settings[protocol].encryption"
-              :label="$t('Encryption')"
-              :options="encryptions"
-              :error="error(`settings.${protocol}.encryption`)"
-              required
-            />
-            <InputField
-              v-model="form.settings[protocol].username"
-              :label="$t('Username')"
-              :help-text="$t('Usually the full email address.')"
-              :error="error(`settings.${protocol}.username`)"
-              required
-            />
-            <PasswordField
-              v-model="form.settings[protocol].password"
-              :label="$t('Password')"
-              :error="error(`settings.${protocol}.password`)"
-              required
-            />
-            <InputField
-              v-if="protocol === 'imap'"
-              v-model="form.settings.imap.folder"
-              :label="$t('Folder to check')"
-              :help-text="
-                $t(
-                  'Only mail arriving in this folder becomes tickets. Usually INBOX.',
-                )
-              "
-              :error="error('settings.imap.folder')"
-            />
+              <InputField
+                v-model="form.settings[protocol].username"
+                :label="$t('Username')"
+                :help-text="$t('Usually the full email address.')"
+                :error="error(`settings.${protocol}.username`)"
+                :required="protocol === 'imap'"
+              />
+              <PasswordField
+                v-model="form.settings[protocol].password"
+                :label="$t('Password')"
+                :help-text="
+                  protocol === 'smtp'
+                    ? $t(
+                        'Leave blank if your server accepts mail without logging in.',
+                      )
+                    : undefined
+                "
+                :error="error(`settings.${protocol}.password`)"
+                :required="protocol === 'imap'"
+              />
+              <InputField
+                v-if="protocol === 'imap'"
+                v-model="form.settings.imap.folder"
+                :label="$t('Folder to check')"
+                :help-text="
+                  $t(
+                    'Only mail arriving in this folder becomes tickets. Usually INBOX.',
+                  )
+                "
+                :error="error('settings.imap.folder')"
+              />
+            </template>
           </template>
         </template>
 

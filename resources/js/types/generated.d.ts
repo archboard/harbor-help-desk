@@ -605,10 +605,10 @@ declare namespace App {
         routing: App.Data.Mailboxes.MailboxRoutingRuleData[];
         signature: string | null;
         settings?: {
-          imap: App.Data.Mailboxes.MailboxServerData;
-          smtp: App.Data.Mailboxes.MailboxServerData;
+          imap: App.Data.Mailboxes.MailboxServerData | null;
+          smtp: App.Data.Mailboxes.MailboxServerData | null;
         };
-        receives_by: 'webhook' | 'push' | 'watch' | 'poll';
+        receives_by: 'webhook' | 'push' | 'watch' | 'poll' | 'never';
         polled_at: string | null;
         last_error: string | null;
         created_at: string | null;
@@ -621,7 +621,7 @@ declare namespace App {
         host: string;
         port: number;
         encryption: 'ssl' | 'tls' | 'starttls';
-        username: string;
+        username: string | null;
         folder?: string;
       };
       export type UpdateMailboxData = {

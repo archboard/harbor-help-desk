@@ -57,14 +57,18 @@ class MailboxRules
         }
 
         if ($ownServer) {
-            foreach (['imap', 'smtp'] as $protocol) {
-                $rules["settings.{$protocol}"] = [$required, 'array'];
-                $rules["settings.{$protocol}.host"] = [$required, 'string', 'max:255', self::publicHost(...)];
-                $rules["settings.{$protocol}.port"] = [$required, 'integer', 'between:1,65535'];
-                $rules["settings.{$protocol}.encryption"] = [$required, 'in:ssl,tls,starttls'];
-                $rules["settings.{$protocol}.username"] = [$required, 'string', 'max:255'];
+            // A mailbox may only receive (IMAP) or only send (SMTP), but not neither.
+            foreach (['imap' => 'smtp', 'smtp' => 'imap'] as $protocol => $other) {
+                $field = $creating ? "required_with:settings.{$protocol}" : 'sometimes';
+                $rules["settings.{$protocol}"] = $creating ? ['nullable', "required_without:settings.{$other}", 'array'] : ['sometimes', 'nullable', 'array'];
+                $rules["settings.{$protocol}.host"] = [$field, 'string', 'max:255', self::publicHost(...)];
+                $rules["settings.{$protocol}.port"] = [$field, 'integer', 'between:1,65535'];
+                $rules["settings.{$protocol}.encryption"] = [$field, 'in:ssl,tls,starttls'];
+                // Some SMTP relays accept mail without logging in, trusting the network instead.
+                $credentials = $protocol === 'smtp' ? ['sometimes', 'nullable'] : [$field];
+                $rules["settings.{$protocol}.username"] = [...$credentials, 'string', 'max:255'];
                 // Passwords are never sent back to clients, so an update may leave them out.
-                $rules["settings.{$protocol}.password"] = [$required, 'string', 'max:1000'];
+                $rules["settings.{$protocol}.password"] = [...$credentials, 'string', 'max:1000'];
             }
 
             $rules['settings.imap.folder'] = ['sometimes', 'string', 'max:255'];
