@@ -217,7 +217,8 @@ class Mailbox extends Model
 
     /**
      * The transport that sends as this mailbox: the platform mailer's (Postmark in the cloud)
-     * for the hosted mailbox, otherwise the workspace's own SMTP server (XOAUTH2 for OAuth ones).
+     * for the hosted mailbox, Graph for Microsoft 365, otherwise the workspace's own SMTP server
+     * (XOAUTH2 for Google).
      */
     public function transport(): TransportInterface
     {
@@ -235,6 +236,14 @@ class Mailbox extends Model
         }
 
         $name = "mailbox-{$this->id}";
+
+        if ($this->driver === MailboxDriver::MICROSOFT) {
+            config(["mail.mailers.{$name}" => ['transport' => 'graph', 'mailbox' => $this]]);
+            Mail::purge($name);
+
+            return $name;
+        }
+
         $smtp = $this->connection('smtp');
 
         config(["mail.mailers.{$name}" => [
@@ -250,7 +259,7 @@ class Mailbox extends Model
         // Long-running workers cache mailers by name; drop it so changed settings apply.
         Mail::purge($name);
 
-        if ($this->driver->usesOAuth()) {
+        if ($this->driver === MailboxDriver::GOOGLE) {
             $transport = Mail::mailer($name)->getSymfonyTransport();
 
             if ($transport instanceof EsmtpTransport) {
