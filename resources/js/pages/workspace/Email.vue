@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { trans } from 'laravel-vue-i18n';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { ArrowDown, ArrowUp, Copy, Check, X } from '@lucide/vue';
+import { ArrowDown, ArrowUp, Copy, Check, Inbox, X } from '@lucide/vue';
 import { useClipboard } from '@vueuse/core';
 import { computed, ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import CardAction from '@/components/CardAction.vue';
 import CardPadding from '@/components/CardPadding.vue';
 import CardWrapper from '@/components/CardWrapper.vue';
+import EmptyState from '@/components/EmptyState.vue';
 import AppFieldset from '@/components/forms/AppFieldset.vue';
 import AppInput from '@/components/forms/AppInput.vue';
 import AppSelect from '@/components/forms/AppSelect.vue';
@@ -277,9 +278,13 @@ function remove(close: () => void): void {
         </tr>
       </Tbody>
     </Table>
-    <p v-else class="text-sm text-gray-500 dark:text-gray-400">
-      {{ $t('There are no mailboxes yet.') }}
-    </p>
+    <EmptyState v-else :icon="Inbox" :title="$t('There are no mailboxes yet.')">
+      {{
+        $t(
+          'Connect a mailbox above to turn incoming mail into tickets and send replies from it.',
+        )
+      }}
+    </EmptyState>
 
     <CardWrapper>
       <form

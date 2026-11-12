@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import EmptyState from '@/components/EmptyState.vue';
 import { trans } from 'laravel-vue-i18n';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { Check, Copy } from '@lucide/vue';
+import { Check, Copy, Send, Webhook } from '@lucide/vue';
 import { useClipboard } from '@vueuse/core';
 import { computed, ref, watch } from 'vue';
 import AppButton from '@/components/AppButton.vue';
@@ -225,9 +226,11 @@ function summary(webhook: Webhook): string {
         </tr>
       </Tbody>
     </Table>
-    <p v-else class="text-sm text-gray-500 dark:text-gray-400">
-      {{ $t('There are no webhooks yet.') }}
-    </p>
+    <EmptyState
+      v-else
+      :icon="Webhook"
+      :title="$t('There are no webhooks yet.')"
+    />
 
     <section v-if="viewed" class="space-y-3">
       <h2 class="text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -277,9 +280,11 @@ function summary(webhook: Webhook): string {
           </tr>
         </Tbody>
       </Table>
-      <p v-else class="text-sm text-gray-500 dark:text-gray-400">
-        {{ $t('Nothing has been delivered to this webhook yet.') }}
-      </p>
+      <EmptyState
+        v-else
+        :icon="Send"
+        :title="$t('Nothing has been delivered to this webhook yet.')"
+      />
     </section>
   </div>
 

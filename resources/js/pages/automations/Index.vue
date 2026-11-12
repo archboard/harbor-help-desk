@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import EmptyState from '@/components/EmptyState.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { trans } from 'laravel-vue-i18n';
 import { ArrowDown, ArrowUp, GripVertical, Workflow } from '@lucide/vue';
@@ -236,28 +237,22 @@ function remove(close: () => void): void {
       </Table>
     </section>
 
-    <div
+    <EmptyState
       v-if="!groups.length"
-      class="rounded-xl border-2 border-dashed border-gray-300 px-6 py-16 text-center dark:border-gray-700"
+      :icon="Workflow"
+      :title="$t('No automations yet')"
     >
-      <Workflow
-        class="mx-auto size-12 text-gray-400 dark:text-gray-500"
-        aria-hidden="true"
-      />
-      <h2 class="mt-4 text-lg font-semibold text-gray-900 dark:text-white">
-        {{ $t('No automations yet') }}
-      </h2>
-      <p class="mt-2 text-base text-gray-500 dark:text-gray-400">
-        {{
-          $t(
-            'Automations set fields, reply, assign and notify for you when tickets arrive, change or sit idle.',
-          )
-        }}
-      </p>
-      <AppButton :component="Link" :href="templates().url" class="mt-6">
-        {{ $t('New automation') }}
-      </AppButton>
-    </div>
+      {{
+        $t(
+          'Automations set fields, reply, assign and notify for you when tickets arrive, change or sit idle.',
+        )
+      }}
+      <template #actions>
+        <AppButton :component="Link" :href="templates().url">
+          {{ $t('New automation') }}
+        </AppButton>
+      </template>
+    </EmptyState>
   </div>
 
   <ConfirmationModal

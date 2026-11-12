@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { WandSparkles } from '@lucide/vue';
+import EmptyState from '@/components/EmptyState.vue';
 import { trans } from 'laravel-vue-i18n';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
@@ -280,9 +282,11 @@ function remove(close: () => void): void {
         </Table>
       </section>
     </template>
-    <p v-if="!macros.length" class="text-sm text-gray-500 dark:text-gray-400">
-      {{ $t('There are no macros yet.') }}
-    </p>
+    <EmptyState
+      v-if="!macros.length"
+      :icon="WandSparkles"
+      :title="$t('There are no macros yet.')"
+    />
   </div>
 
   <Modal

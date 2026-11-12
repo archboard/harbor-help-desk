@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Layers } from '@lucide/vue';
+import EmptyState from '@/components/EmptyState.vue';
 import { trans } from 'laravel-vue-i18n';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
@@ -88,9 +90,9 @@ function restoreDesk(desk: App.Data.Desks.DeskData): void {
           </tr>
         </Tbody>
       </Table>
-      <p v-else class="text-sm text-gray-500 dark:text-gray-400">
-        {{ $t("You aren't on any desks yet.") }}
-      </p>
+      <EmptyState v-else :icon="Layers">
+        <template #title>{{ $t("You aren't on any desks yet.") }}</template>
+      </EmptyState>
     </div>
 
     <div v-if="archivedDesks.length" class="space-y-4">

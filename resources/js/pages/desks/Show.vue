@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Users } from '@lucide/vue';
+import EmptyState from '@/components/EmptyState.vue';
 import { trans } from 'laravel-vue-i18n';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
@@ -254,9 +256,11 @@ function archive(close: () => void): void {
           </tr>
         </Tbody>
       </Table>
-      <p v-else class="text-sm text-gray-500 dark:text-gray-400">
-        {{ $t('Nobody is on this desk yet.') }}
-      </p>
+      <EmptyState
+        v-else
+        :icon="Users"
+        :title="$t('Nobody is on this desk yet.')"
+      />
 
       <CardWrapper v-if="can.manageMembers && candidates.length">
         <form @submit.prevent="addMember">

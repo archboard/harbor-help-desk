@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Download } from '@lucide/vue';
+import EmptyState from '@/components/EmptyState.vue';
 import { trans } from 'laravel-vue-i18n';
 import { computed } from 'vue';
 import {
@@ -127,15 +129,14 @@ function formatSize(bytes: number | null): string {
       >
     </div>
 
-    <CardWrapper>
-      <p
-        v-if="exports.data.length === 0"
-        class="p-6 text-sm text-gray-500 dark:text-gray-400"
-      >
-        {{ $t('No exports yet.') }}
-      </p>
+    <EmptyState
+      v-if="exports.data.length === 0"
+      :icon="Download"
+      :title="$t('No exports yet.')"
+    />
 
-      <InfiniteScroll v-else data="exports" as="ul" class="divide-y">
+    <CardWrapper v-else>
+      <InfiniteScroll data="exports" as="ul" class="divide-y">
         <li
           v-for="item in exports.data"
           :key="item.id"

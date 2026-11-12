@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import EmptyState from '@/components/EmptyState.vue';
 import { trans } from 'laravel-vue-i18n';
 import { Head, InfiniteScroll, Link, router, useForm } from '@inertiajs/vue3';
-import { Search } from '@lucide/vue';
+import { Search, SearchX, Users } from '@lucide/vue';
 import { watchDebounced } from '@vueuse/core';
 import { ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
@@ -107,11 +108,13 @@ function openCreate(): void {
         </div>
       </template>
     </InfiniteScroll>
-    <p v-else class="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
-      {{
+    <EmptyState
+      v-else
+      :icon="search ? SearchX : Users"
+      :title="
         search ? $t('No contacts match your search.') : $t('No contacts yet.')
-      }}
-    </p>
+      "
+    />
   </div>
 
   <Modal

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Ticket } from '@lucide/vue';
+import EmptyState from '@/components/EmptyState.vue';
 import { trans } from 'laravel-vue-i18n';
 import { Head, InfiniteScroll, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
@@ -76,7 +78,5 @@ const tabs = computed(
       </li>
     </ul>
   </InfiniteScroll>
-  <p v-else class="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
-    {{ $t('No tickets yet.') }}
-  </p>
+  <EmptyState v-else :icon="Ticket" :title="$t('No tickets yet.')" />
 </template>

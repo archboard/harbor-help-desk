@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Clock } from '@lucide/vue';
+import EmptyState from '@/components/EmptyState.vue';
 import { trans } from 'laravel-vue-i18n';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
@@ -207,9 +209,11 @@ function remove(close: () => void): void {
         </tr>
       </Tbody>
     </Table>
-    <p v-else class="text-sm text-gray-500 dark:text-gray-400">
-      {{ $t('There are no business hours yet.') }}
-    </p>
+    <EmptyState
+      v-else
+      :icon="Clock"
+      :title="$t('There are no business hours yet.')"
+    />
   </div>
 
   <Modal

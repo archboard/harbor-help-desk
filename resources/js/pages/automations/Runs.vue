@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { SearchX, Activity } from '@lucide/vue';
+import EmptyState from '@/components/EmptyState.vue';
 import {
   Head,
   InfiniteScroll,
@@ -162,12 +164,13 @@ if (automation) {
         </div>
       </template>
     </InfiniteScroll>
-    <p v-else class="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
-      {{
-        status || ticketNumber
-          ? $t('No runs match these filters.')
-          : $t('No runs yet. Runs are kept for 30 days.')
-      }}
-    </p>
+    <EmptyState
+      v-else-if="status || ticketNumber"
+      :icon="SearchX"
+      :title="$t('No runs match these filters.')"
+    />
+    <EmptyState v-else :icon="Activity" :title="$t('No runs yet.')">
+      {{ $t('Runs are kept for 30 days.') }}
+    </EmptyState>
   </div>
 </template>

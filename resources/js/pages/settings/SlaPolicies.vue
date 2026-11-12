@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Timer } from '@lucide/vue';
+import EmptyState from '@/components/EmptyState.vue';
 import { trans } from 'laravel-vue-i18n';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
@@ -210,9 +212,11 @@ function remove(close: () => void): void {
         </tr>
       </Tbody>
     </Table>
-    <p v-else class="text-sm text-gray-500 dark:text-gray-400">
-      {{ $t('There are no SLA policies yet.') }}
-    </p>
+    <EmptyState
+      v-else
+      :icon="Timer"
+      :title="$t('There are no SLA policies yet.')"
+    />
   </div>
 
   <Modal

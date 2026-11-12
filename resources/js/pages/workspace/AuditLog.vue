@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { History } from '@lucide/vue';
+import EmptyState from '@/components/EmptyState.vue';
 import { trans } from 'laravel-vue-i18n';
 import { Head, InfiniteScroll, Link, router } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
@@ -155,15 +157,14 @@ const field =
       </div>
     </div>
 
-    <CardWrapper>
-      <p
-        v-if="events.data.length === 0"
-        class="p-6 text-sm text-gray-500 dark:text-gray-400"
-      >
-        {{ $t('Nothing has happened yet.') }}
-      </p>
+    <EmptyState
+      v-if="events.data.length === 0"
+      :icon="History"
+      :title="$t('Nothing has happened yet.')"
+    />
 
-      <InfiniteScroll v-else data="events" as="ul" class="divide-y">
+    <CardWrapper v-else>
+      <InfiniteScroll data="events" as="ul" class="divide-y">
         <li
           v-for="event in events.data"
           :key="event.id"

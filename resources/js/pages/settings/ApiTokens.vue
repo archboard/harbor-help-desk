@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import EmptyState from '@/components/EmptyState.vue';
 import { trans } from 'laravel-vue-i18n';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { Check, Copy } from '@lucide/vue';
+import { Check, Copy, KeyRound } from '@lucide/vue';
 import { useClipboard } from '@vueuse/core';
 import { computed, ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
@@ -226,9 +227,9 @@ function revoke(close: () => void): void {
         </tr>
       </Tbody>
     </Table>
-    <p v-else class="text-sm text-gray-500 dark:text-gray-400">
-      {{ $t("You don't have any API tokens yet.") }}
-    </p>
+    <EmptyState v-else :icon="KeyRound">
+      <template #title>{{ $t("You don't have any API tokens yet.") }}</template>
+    </EmptyState>
   </div>
 
   <ConfirmationModal
