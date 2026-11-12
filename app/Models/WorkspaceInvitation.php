@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\URL;
 
 /**
  * An offer to join the workspace as `role`, and optionally a desk, sent to an email address.
@@ -103,5 +104,21 @@ class WorkspaceInvitation extends Model
     public function idPrefix(): string
     {
         return 'inv_';
+    }
+
+    /**
+     * When the emailed link stops working: 7 days after the invitation was created or last resent.
+     */
+    public function acceptExpiresAt(): CarbonImmutable
+    {
+        return $this->created_at->addDays(7);
+    }
+
+    /**
+     * A signed link to accept the invitation. Relative, so it works on the workspace's own host.
+     */
+    public function acceptUrl(): string
+    {
+        return $this->workspace->url(URL::temporarySignedRoute('invitations.show', $this->acceptExpiresAt(), ['invitation' => $this->getKey()], absolute: false));
     }
 }

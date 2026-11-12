@@ -15,6 +15,7 @@ use App\Http\Controllers\DownloadExportController;
 use App\Http\Controllers\DuplicateAutomationController;
 use App\Http\Controllers\EraseContactController;
 use App\Http\Controllers\InstallController;
+use App\Http\Controllers\InvitationAcceptanceController;
 use App\Http\Controllers\LookupTicketsController;
 use App\Http\Controllers\MailboxOAuthController;
 use App\Http\Controllers\MarkAllNotificationsReadController;
@@ -72,6 +73,10 @@ Route::middleware(['guest', EnsureInstallOpen::class])->group(function () {
 
 Route::middleware('workspace')->group(function () {
     Route::get('setup', StartSetupController::class)->middleware(['guest', 'signed:relative'])->name('setup.start');
+
+    // The page posts back to its own signed URL, query string included.
+    Route::get('invitations/{invitation}', [InvitationAcceptanceController::class, 'show'])->middleware('signed:relative')->name('invitations.show');
+    Route::post('invitations/{invitation}', [InvitationAcceptanceController::class, 'store'])->middleware(['signed:relative', 'throttle:6,1'])->name('invitations.store');
 
     Route::middleware(['auth', 'verified'])->group(function () {
         Route::redirect('dashboard', '/tickets')->name('dashboard');

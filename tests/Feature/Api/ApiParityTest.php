@@ -94,6 +94,7 @@ function webOnlyRoutes(): array
 {
     return [
         'install.store',
+        'invitations.store',
         'magic-link.store',
         'user-password.update',
         'profile.destroy',
