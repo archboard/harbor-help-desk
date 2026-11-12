@@ -14,6 +14,9 @@ use Spatie\LaravelData\Data;
  */
 class OnboardingData extends Data
 {
+    /** The step keys, in order. */
+    public const array STEPS = ['email', 'team', 'desk', 'first_ticket'];
+
     /**
      * @param  list<OnboardingStepData>  $steps
      */
@@ -31,13 +34,17 @@ class OnboardingData extends Data
         return $workspace->execute(function () use ($workspace): self {
             $defaultDesk = Desk::query()->oldest()->orderBy('id')->first();
 
-            $steps = [
-                new OnboardingStepData('email', Mailbox::query()->exists()),
-                new OnboardingStepData('team', $workspace->users()->count() > 1 || WorkspaceInvitation::query()->exists()),
+            $done = [
+                'email' => Mailbox::query()->exists(),
+                'team' => $workspace->users()->count() > 1 || WorkspaceInvitation::query()->exists(),
                 // ponytail: proxy for "the desk was reviewed"; add an explicit flag if it misfires
-                new OnboardingStepData('desk', Desk::query()->count() > 1 || Desk::query()->whereColumn('updated_at', '>', 'created_at')->exists()),
-                new OnboardingStepData('first_ticket', Ticket::withTrashed()->exists()),
+                'desk' => Desk::query()->count() > 1 || Desk::query()->whereColumn('updated_at', '>', 'created_at')->exists(),
+                'first_ticket' => Ticket::withTrashed()->exists(),
             ];
+
+            // An admin can mark a step done themselves, e.g. when the desk's defaults are fine.
+            $skipped = $workspace->settings->onboardingSkippedSteps;
+            $steps = array_map(fn (string $key): OnboardingStepData => new OnboardingStepData($key, $done[$key] || in_array($key, $skipped, true), in_array($key, $skipped, true)), self::STEPS);
 
             return new self(
                 steps: $steps,

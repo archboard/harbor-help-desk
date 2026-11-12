@@ -112,6 +112,31 @@ test('dismissing is stored through the settings API', function () {
     expect($workspace->fresh()->settings->onboardingDismissed)->toBeTrue();
 });
 
+test('a step an admin marks done counts as done', function () {
+    $this->workspace->update(['settings' => [...$this->workspace->settings->toArray(), 'onboarding_skipped_steps' => ['desk']]]);
+
+    $desk = collect(OnboardingData::forWorkspace($this->workspace->fresh())->steps)->firstWhere('key', 'desk');
+
+    expect($desk)->complete->toBeTrue()->skipped->toBeTrue()
+        ->and(onboardingSteps($this->workspace->fresh()))->toBe(['email' => false, 'team' => false, 'desk' => true, 'first_ticket' => false]);
+});
+
+test('marking steps done is stored through the settings API, and only known steps are accepted', function () {
+    config(['harbor.multitenant' => true, 'harbor.domain' => 'harbor.test']);
+    $workspace = Workspace::factory()->create(['subdomain' => 'acme']);
+    $admin = User::factory()->create();
+    $workspace->users()->attach($admin, ['role' => WorkspaceRole::OWNER]);
+    actAs($admin, $workspace);
+
+    $this->patchJson('http://acme.harbor.test/api/v1/workspace/settings', ['onboarding_skipped_steps' => ['desk', 'billing']])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('onboarding_skipped_steps.1');
+
+    $this->patchJson('http://acme.harbor.test/api/v1/workspace/settings', ['onboarding_skipped_steps' => ['desk']])
+        ->assertOk()
+        ->assertJsonPath('settings.onboarding_skipped_steps', ['desk']);
+});
+
 describe('api', function () {
     beforeEach(function () {
         config(['harbor.multitenant' => true, 'harbor.domain' => 'harbor.test']);
@@ -132,8 +157,8 @@ describe('api', function () {
 
         $this->getJson($this->url)
             ->assertOk()
-            ->assertJsonPath('steps.0', ['key' => 'email', 'complete' => false])
-            ->assertJsonPath('steps.1', ['key' => 'team', 'complete' => true])
+            ->assertJsonPath('steps.0', ['key' => 'email', 'complete' => false, 'skipped' => false])
+            ->assertJsonPath('steps.1', ['key' => 'team', 'complete' => true, 'skipped' => false])
             ->assertJsonPath('complete', false)
             ->assertJsonStructure(['steps', 'inbound_address', 'default_desk_id', 'complete']);
     });

@@ -2,6 +2,7 @@
 
 namespace App\Actions\Workspaces;
 
+use App\Data\Workspaces\OnboardingData;
 use App\Data\Workspaces\UpdateWorkspaceSettingsData;
 use App\Data\Workspaces\WorkspaceSettings;
 use App\Enums\AuditAction;
@@ -38,6 +39,7 @@ class UpdateWorkspaceSettings
             ],
             'attachments_max_size_kb' => ['nullable', 'integer', 'max:'.config('harbor.attachments.max_size_kb')],
             'attachments_blocked_extensions.*' => ['string', 'regex:/^[a-z0-9]+$/', 'distinct'],
+            'onboarding_skipped_steps.*' => ['string', Rule::in(OnboardingData::STEPS), 'distinct'],
             // Private targets are a self-hosted option: the cloud can never switch them on.
             'automations_allow_private_urls' => ['sometimes', 'nullable', 'boolean', ...(config('harbor.multitenant') ? ['declined'] : [])],
         ]);

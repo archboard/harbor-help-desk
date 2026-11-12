@@ -16,6 +16,7 @@ class WorkspaceSettings extends Data
 {
     /**
      * @param  list<string>  $attachmentsBlockedExtensions
+     * @param  list<string>  $onboardingSkippedSteps
      */
     public function __construct(
         /** The mailbox app email (notifications, sign-in links) is sent from; null means the oldest mailbox. */
@@ -40,6 +41,8 @@ class WorkspaceSettings extends Data
         public int $retentionTrashDays = 30,
         /** Hides the "Get set up" checklist from the tickets page. */
         public bool $onboardingDismissed = false,
+        /** Checklist steps an admin marked done themselves (`OnboardingData::STEPS`). */
+        public array $onboardingSkippedSteps = [],
     ) {}
 
     /**

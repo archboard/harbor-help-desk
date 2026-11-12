@@ -1166,6 +1166,7 @@ declare namespace App {
       export type OnboardingStepData = {
         key: string;
         complete: boolean;
+        skipped: boolean;
       };
       export type ProvisionedWorkspaceData = {
         id: string;
@@ -1200,6 +1201,7 @@ declare namespace App {
         retention_resolved_ticket_days?: number | null;
         retention_trash_days?: number | null;
         onboarding_dismissed?: boolean | null;
+        onboarding_skipped_steps?: string[] | null;
       };
       export type WorkspaceData = {
         id: string;
@@ -1238,6 +1240,7 @@ declare namespace App {
         retention_resolved_ticket_days: number | null;
         retention_trash_days: number;
         onboarding_dismissed: boolean;
+        onboarding_skipped_steps: string[];
       };
     }
   }

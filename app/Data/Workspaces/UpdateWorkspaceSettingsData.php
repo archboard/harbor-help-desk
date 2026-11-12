@@ -16,6 +16,7 @@ class UpdateWorkspaceSettingsData extends InputData
 {
     /**
      * @param  list<string>|Optional|null  $attachmentsBlockedExtensions
+     * @param  list<string>|Optional|null  $onboardingSkippedSteps
      */
     public function __construct(
         public string|Optional|null $mailNotificationMailboxId,
@@ -33,5 +34,6 @@ class UpdateWorkspaceSettingsData extends InputData
         #[Between(1, 365)]
         public int|Optional|null $retentionTrashDays,
         public bool|Optional|null $onboardingDismissed,
+        public array|Optional|null $onboardingSkippedSteps,
     ) {}
 }

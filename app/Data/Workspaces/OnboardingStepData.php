@@ -12,5 +12,7 @@ class OnboardingStepData extends Data
     public function __construct(
         public string $key,
         public bool $complete,
+        /** Marked done by an admin rather than by the workspace's state. */
+        public bool $skipped = false,
     ) {}
 }

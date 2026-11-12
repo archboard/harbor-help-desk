@@ -4,6 +4,7 @@ import AppButton from '@/components/AppButton.vue';
 import { useLocalStorage } from '@vueuse/core';
 import { trans } from 'laravel-vue-i18n';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import OnboardingChecklist from '@/components/OnboardingChecklist.vue';
 import SavedViews from '@/components/tickets/SavedViews.vue';
 import TicketBulkActions from '@/components/tickets/TicketBulkActions.vue';
 import TicketFilters from '@/components/tickets/TicketFilters.vue';
@@ -26,6 +27,7 @@ import type { Paginated } from '@/types';
 defineOptions({ layout: { title: trans('Tickets') }, inheritAttrs: false });
 
 const { tickets, filters, leadDeskIds, desks, customFields } = defineProps<{
+  onboarding: App.Data.Workspaces.OnboardingData | null;
   tickets: Paginated<App.Data.Tickets.TicketData>;
   /** Desks whose tickets the user may delete. */
   leadDeskIds: string[];
@@ -210,6 +212,8 @@ function apply(
 <template>
   <div class="space-y-4">
     <Head :title="$t('Tickets')" />
+
+    <OnboardingChecklist v-if="onboarding" :onboarding="onboarding" />
 
     <div class="flex flex-wrap items-center justify-between gap-3">
       <nav class="flex flex-wrap gap-1" :aria-label="$t('Quick filters')">
