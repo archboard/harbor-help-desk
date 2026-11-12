@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Actions\Workspaces\ListWorkspaceMembers;
 use App\Actions\Workspaces\RemoveMember;
 use App\Actions\Workspaces\UpdateMemberRole;
 use App\Data\Workspaces\UpdateMemberRoleData;
@@ -13,7 +14,6 @@ use App\Models\Workspace;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Gate;
 use Spatie\LaravelData\PaginatedDataCollection;
 
 class MemberController extends Controller
@@ -23,13 +23,9 @@ class MemberController extends Controller
      *
      * @return PaginatedDataCollection<int, WorkspaceMemberData>
      */
-    public function index(): PaginatedDataCollection
+    public function index(#[CurrentUser] User $actor, ListWorkspaceMembers $listWorkspaceMembers): PaginatedDataCollection
     {
-        $workspace = Workspace::current();
-
-        Gate::authorize('manageMembers', $workspace);
-
-        return WorkspaceMemberData::collect($workspace->users()->withCount('desks')->orderBy('name')->orderBy('users.id')->paginate(), PaginatedDataCollection::class);
+        return WorkspaceMemberData::collect($listWorkspaceMembers->handle($actor)->paginate(), PaginatedDataCollection::class);
     }
 
     /**

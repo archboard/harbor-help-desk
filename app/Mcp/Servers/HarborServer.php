@@ -13,13 +13,20 @@ use App\Mcp\Tools\DescribeWorkspaceTool;
 use App\Mcp\Tools\GetContactTool;
 use App\Mcp\Tools\GetTicketStatsTool;
 use App\Mcp\Tools\GetTicketTool;
+use App\Mcp\Tools\InviteMemberTool;
+use App\Mcp\Tools\ListInvitationsTool;
+use App\Mcp\Tools\ListMembersTool;
 use App\Mcp\Tools\MoveTicketTool;
+use App\Mcp\Tools\RemoveMemberTool;
 use App\Mcp\Tools\ReplyToTicketTool;
+use App\Mcp\Tools\ResendInvitationTool;
+use App\Mcp\Tools\RevokeInvitationTool;
 use App\Mcp\Tools\SearchContactsTool;
 use App\Mcp\Tools\SearchTicketsTool;
 use App\Mcp\Tools\SetReminderTool;
 use App\Mcp\Tools\SetTicketAssigneesTool;
 use App\Mcp\Tools\SetTicketTagsTool;
+use App\Mcp\Tools\UpdateMemberRoleTool;
 use App\Mcp\Tools\UpdateTicketTool;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Instructions;
@@ -64,5 +71,12 @@ class HarborServer extends Server
         SetReminderTool::class,
         ClaimNextTicketTool::class,
         BulkUpdateTicketsTool::class,
+        ListMembersTool::class,
+        ListInvitationsTool::class,
+        InviteMemberTool::class,
+        RevokeInvitationTool::class,
+        ResendInvitationTool::class,
+        UpdateMemberRoleTool::class,
+        RemoveMemberTool::class,
     ];
 }

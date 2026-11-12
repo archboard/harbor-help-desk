@@ -3,18 +3,17 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Actions\Workspaces\InviteMember;
+use App\Actions\Workspaces\ListWorkspaceInvitations;
 use App\Actions\Workspaces\RevokeInvitation;
 use App\Data\Workspaces\InviteMemberData;
 use App\Data\Workspaces\WorkspaceInvitationData;
 use App\Http\Attributes\ApiBody;
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\Workspace;
 use App\Models\WorkspaceInvitation;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Gate;
 use Spatie\LaravelData\PaginatedDataCollection;
 
 class InvitationController extends Controller
@@ -24,11 +23,9 @@ class InvitationController extends Controller
      *
      * @return PaginatedDataCollection<int, WorkspaceInvitationData>
      */
-    public function index(): PaginatedDataCollection
+    public function index(#[CurrentUser] User $actor, ListWorkspaceInvitations $listWorkspaceInvitations): PaginatedDataCollection
     {
-        Gate::authorize('manageMembers', Workspace::current());
-
-        return WorkspaceInvitationData::collect(WorkspaceInvitation::query()->with(['desk', 'invitedBy'])->oldest()->orderBy('id')->paginate(), PaginatedDataCollection::class);
+        return WorkspaceInvitationData::collect($listWorkspaceInvitations->handle($actor)->paginate(), PaginatedDataCollection::class);
     }
 
     /**
