@@ -2,7 +2,9 @@
 
 use App\Actions\Install\CheckServices;
 use App\Data\Install\ServiceCheckData;
+use App\Enums\DeskRole;
 use App\Enums\WorkspaceRole;
+use App\Models\Desk;
 use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Support\Str;
@@ -50,7 +52,11 @@ describe('self-hosted', function () {
         $user = User::sole();
         expect($workspace)->name->toBe('Acme')->subdomain->toBe('default')
             ->and($user->hasVerifiedEmail())->toBeTrue()
-            ->and($workspace->users()->sole()->pivot->role)->toBe(WorkspaceRole::OWNER);
+            ->and($workspace->users()->sole()->pivot->role)->toBe(WorkspaceRole::OWNER)
+            ->and($workspace->execute(fn () => Desk::sole()->users()->sole()))
+            ->id->toBe($user->id)
+            ->pivot->role->toBe(DeskRole::LEAD)
+            ->pivot->in_rotation->toBeTrue();
         $this->assertAuthenticatedAs($user);
     });
 
@@ -96,7 +102,10 @@ describe('cloud', function () {
         expect($this->acme->users()->sole())
             ->email->toBe('jane@example.com')
             ->pivot->role->toBe(WorkspaceRole::OWNER)
-            ->and(Workspace::count())->toBe(1);
+            ->and(Workspace::count())->toBe(1)
+            ->and($this->acme->execute(fn () => Desk::sole()->users()->sole()))
+            ->email->toBe('jane@example.com')
+            ->pivot->role->toBe(DeskRole::LEAD);
     });
 
     test('the install page needs the setup link', function () {
