@@ -6,19 +6,13 @@ use App\Actions\Desks\ArchiveDesk;
 use App\Actions\Desks\CreateDesk;
 use App\Actions\Desks\RestoreDesk;
 use App\Actions\Desks\UpdateDesk;
-use App\Data\CustomFields\CustomFieldData;
 use App\Data\Desks\DeskData;
-use App\Data\Desks\DeskMemberData;
 use App\Data\SlaPolicies\SlaPolicyData;
-use App\Data\Users\UserData;
 use App\Enums\AssignmentStrategy;
-use App\Enums\DeskRole;
 use App\Http\Flash;
-use App\Models\CustomField;
 use App\Models\Desk;
 use App\Models\SlaPolicy;
 use App\Models\User;
-use App\Models\Workspace;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -54,22 +48,12 @@ class DeskController extends Controller
     {
         Gate::authorize('view', $desk);
 
-        $members = $desk->users()->orderBy('name')->get();
-        $canManageMembers = $user->can('manageMembers', $desk);
-
         return Inertia::render('desks/Show', [
-            'desk' => DeskData::from($desk->load('customFields')),
-            'members' => DeskMemberData::collect($members),
-            'candidates' => UserData::collect($canManageMembers
-                ? Workspace::current()->users()->whereKeyNot($members->modelKeys())->orderBy('name')->get()
-                : []),
-            'roles' => DeskRole::options(),
+            'desk' => DeskData::from($desk),
             'strategies' => AssignmentStrategy::options(),
-            'customFields' => CustomFieldData::collect(CustomField::query()->orderBy('position')->orderBy('id')->get()),
             'slaPolicies' => SlaPolicyData::collect(SlaPolicy::query()->orderBy('name')->get()),
             'can' => [
                 'update' => $user->can('update', $desk),
-                'manageMembers' => $canManageMembers,
                 'archive' => $user->can('delete', $desk),
             ],
         ]);

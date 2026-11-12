@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { Users } from '@lucide/vue';
-import EmptyState from '@/components/EmptyState.vue';
 import { trans } from 'laravel-vue-i18n';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import CardAction from '@/components/CardAction.vue';
@@ -10,43 +8,19 @@ import CardHeader from '@/components/CardHeader.vue';
 import CardPadding from '@/components/CardPadding.vue';
 import CardWrapper from '@/components/CardWrapper.vue';
 import AppFieldset from '@/components/forms/AppFieldset.vue';
-import AppCheckbox from '@/components/forms/AppCheckbox.vue';
-import AppSelect from '@/components/forms/AppSelect.vue';
-import {
-  CheckboxListField,
-  InputField,
-  ObjectComboboxField,
-  SelectField,
-} from '@/components/forms/fields';
+import { InputField, SelectField } from '@/components/forms/fields';
 import ConfirmationModal from '@/components/modals/ConfirmationModal.vue';
-import Table from '@/components/tables/Table.vue';
-import Tbody from '@/components/tables/Tbody.vue';
-import Td from '@/components/tables/Td.vue';
-import Th from '@/components/tables/Th.vue';
-import Thead from '@/components/tables/Thead.vue';
 import { notify } from '@/lib/notifications';
-import { index as customFieldSettings } from '@/routes/workspace/custom-fields';
 import { destroy, update } from '@/routes/desks';
-import { update as syncCustomFields } from '@/routes/desks/custom-fields';
-import {
-  destroy as removeMember,
-  update as setMember,
-} from '@/routes/desks/members';
 
 const { desk, slaPolicies } = defineProps<{
   desk: App.Data.Desks.DeskData;
-  members: App.Data.Desks.DeskMemberData[];
-  candidates: App.Data.Users.UserData[];
-  roles: Record<App.Enums.DeskRole, string>;
   strategies: Record<App.Enums.AssignmentStrategy, string>;
   slaPolicies: App.Data.SlaPolicies.SlaPolicyData[];
-  customFields: App.Data.CustomFields.CustomFieldData[];
-  can: { update: boolean; manageMembers: boolean; archive: boolean };
+  can: { update: boolean; archive: boolean };
 }>();
 
 defineOptions({ layout: { title: trans('Desk') } });
-
-const page = usePage();
 
 const form = useForm({
   name: desk.name,
@@ -60,71 +34,8 @@ const policyOptions = computed(() => ({
   ...Object.fromEntries(slaPolicies.map(({ id, name }) => [id, name])),
 }));
 
-const fieldsForm = useForm({
-  field_ids: (desk.custom_fields ?? []).map((field) => field.id),
-} satisfies App.Data.Desks.SyncDeskCustomFieldsData);
-
-const addForm = useForm({
-  user_id: null as string | null,
-  role: 'agent' as App.Enums.DeskRole,
-});
-
-/** Bumped after adding someone, to clear the combobox's selection. */
-const addFormKey = ref(0);
-
-const removing = ref<App.Data.Desks.DeskMemberData | null>(null);
-const removeLoading = ref(false);
 const archiving = ref(false);
 const archiveLoading = ref(false);
-
-function addMember(): void {
-  if (!addForm.user_id) {
-    addForm.setError('user_id', trans('Choose someone to add.'));
-
-    return;
-  }
-
-  addForm
-    .transform(({ role }): App.Data.Desks.SetDeskMemberData => ({ role }))
-    .submit(setMember({ desk: desk.id, user: addForm.user_id }), {
-      preserveScroll: true,
-      onSuccess: () => {
-        addForm.reset();
-        addFormKey.value++;
-      },
-    });
-}
-
-function changeRole(
-  member: App.Data.Desks.DeskMemberData,
-  role: App.Enums.DeskRole,
-): void {
-  router.put(
-    setMember({ desk: desk.id, user: member.id }).url,
-    { role },
-    { preserveScroll: true },
-  );
-}
-
-function setInRotation(
-  member: App.Data.Desks.DeskMemberData,
-  inRotation: boolean,
-): void {
-  router.put(
-    setMember({ desk: desk.id, user: member.id }).url,
-    { role: member.role, in_rotation: inRotation },
-    { preserveScroll: true },
-  );
-}
-
-function remove(close: () => void): void {
-  router.delete(removeMember({ desk: desk.id, user: removing.value!.id }).url, {
-    preserveScroll: true,
-    onStart: () => (removeLoading.value = true),
-    onFinish: () => (removeLoading.value = false),
-    onSuccess: close,
-  });
-}
 
 function archive(close: () => void): void {
   router.delete(destroy(desk.id).url, {
@@ -198,163 +109,26 @@ function archive(close: () => void): void {
       </CardPadding>
     </CardWrapper>
 
-    <div class="space-y-4">
-      <h2 class="text-lg font-semibold">{{ $t('Members') }}</h2>
-
-      <Table v-if="members.length">
-        <Thead>
-          <tr>
-            <Th>{{ $t('Name') }}</Th>
-            <Th>{{ $t('Email') }}</Th>
-            <Th>{{ $t('Role') }}</Th>
-            <Th>{{ $t('In rotation') }}</Th>
-            <Th v-if="can.manageMembers" right>
-              <span class="sr-only">{{ $t('Actions') }}</span>
-            </Th>
-          </tr>
-        </Thead>
-        <Tbody>
-          <tr v-for="member in members" :key="member.id">
-            <Td darker>{{ member.name }}</Td>
-            <Td>{{ member.email }}</Td>
-            <Td>
-              <AppSelect
-                v-if="can.manageMembers && member.role"
-                :model-value="member.role"
-                :options="roles"
-                hide-null
-                :aria-label="$t('Role for :name', { name: member.name })"
-                class="max-w-40"
-                @update:model-value="
-                  changeRole(member, $event as App.Enums.DeskRole)
-                "
-              />
-              <template v-else>
-                {{ member.role ? roles[member.role] : '—' }}
-              </template>
-            </Td>
-            <Td>
-              <AppCheckbox
-                v-if="can.manageMembers"
-                :model-value="member.in_rotation"
-                :aria-label="$t('In rotation: :name', { name: member.name })"
-                @update:model-value="setInRotation(member, Boolean($event))"
-              />
-              <template v-else>{{
-                member.in_rotation ? $t('Yes') : $t('No')
-              }}</template>
-            </Td>
-            <Td v-if="can.manageMembers" class="text-end">
-              <AppButton
-                type="button"
-                size="xs"
-                color="red"
-                @click="removing = member"
-                >{{ $t('Remove') }}</AppButton
-              >
-            </Td>
-          </tr>
-        </Tbody>
-      </Table>
-      <EmptyState
-        v-else
-        :icon="Users"
-        :title="$t('Nobody is on this desk yet.')"
-      />
-
-      <CardWrapper v-if="can.manageMembers && candidates.length">
-        <form @submit.prevent="addMember">
-          <CardPadding
-            class="grid items-start gap-4 sm:grid-cols-[1fr_12rem_auto]"
-          >
-            <ObjectComboboxField
-              :key="addFormKey"
-              v-model="addForm.user_id"
-              :label="$t('Add a member')"
-              :options="candidates"
-              :error="addForm.errors.user_id"
-            />
-            <SelectField
-              v-model="addForm.role"
-              :label="$t('Role')"
-              :options="roles"
-              :error="addForm.errors.role"
-            />
-            <AppButton
-              type="submit"
-              class="sm:mt-6"
-              :loading="addForm.processing"
-              >{{ $t('Add') }}</AppButton
-            >
-          </CardPadding>
-        </form>
-      </CardWrapper>
-    </div>
-
-    <div class="space-y-4">
-      <div class="flex items-center justify-between gap-4">
-        <h2 class="text-lg font-semibold">{{ $t('Custom fields') }}</h2>
-        <Link
-          v-if="page.props.workspace?.is_admin"
-          :href="customFieldSettings()"
-          class="text-sm text-primary-600 hover:underline dark:text-primary-400"
-          >{{ $t('Manage fields') }}</Link
-        >
-      </div>
-
-      <CardWrapper v-if="can.update && customFields.length">
-        <form
-          @submit.prevent="
-            fieldsForm.submit(syncCustomFields(desk.id), {
-              preserveScroll: true,
-            })
-          "
-        >
-          <CardPadding>
-            <CheckboxListField
-              v-model="fieldsForm.field_ids"
-              :label="$t('Fields on this desk\'s tickets')"
-              :options="customFields"
-              :error="fieldsForm.errors.field_ids"
-            />
-          </CardPadding>
-          <CardAction :loading="fieldsForm.processing" />
-        </form>
-      </CardWrapper>
-      <p
-        v-else-if="desk.custom_fields?.length"
-        class="text-sm text-gray-700 dark:text-gray-300"
-      >
-        {{ desk.custom_fields.map((field) => field.name).join(', ') }}
-      </p>
-      <p v-else class="text-sm text-gray-500 dark:text-gray-400">
+    <section
+      v-if="can.archive"
+      class="space-y-3 rounded-2xl border border-red-300 p-4 dark:border-red-900"
+      :aria-label="$t('Danger zone')"
+    >
+      <h2 class="text-lg font-semibold text-red-700 dark:text-red-400">
+        {{ $t('Danger zone') }}
+      </h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
         {{
-          customFields.length
-            ? $t('No custom fields are enabled on this desk.')
-            : $t('The workspace has no custom fields yet.')
+          $t(
+            'Archiving removes this desk from the workspace. Its tickets stay as they are, and an admin can restore it later.',
+          )
         }}
       </p>
-    </div>
-
-    <div v-if="can.archive" class="flex justify-end">
       <AppButton type="button" color="red" @click="archiving = true">{{
         $t('Archive desk')
       }}</AppButton>
-    </div>
+    </section>
   </div>
-
-  <ConfirmationModal
-    v-if="removing"
-    :loading="removeLoading"
-    @close="removing = null"
-    @confirmed="remove"
-  >
-    <template #headline>{{
-      $t('Remove :name?', { name: removing.name })
-    }}</template
-    >{{ $t("They'll lose access to this desk's tickets.")
-    }}<template #actionText>{{ $t('Remove') }}</template>
-  </ConfirmationModal>
 
   <ConfirmationModal
     v-if="archiving"

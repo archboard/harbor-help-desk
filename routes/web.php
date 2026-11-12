@@ -127,6 +127,8 @@ Route::middleware('workspace')->group(function () {
 
         Route::resource('desks', DeskController::class)->except(['create', 'edit']);
         Route::post('desks/{desk}/restore', [DeskController::class, 'restore'])->withTrashed()->name('desks.restore');
+        Route::get('desks/{desk}/members', [DeskMemberController::class, 'index'])->name('desks.members.index');
+        Route::get('desks/{desk}/custom-fields', [DeskCustomFieldController::class, 'edit'])->name('desks.custom-fields.edit');
         Route::put('desks/{desk}/members/{user}', [DeskMemberController::class, 'update'])->name('desks.members.update');
         Route::delete('desks/{desk}/members/{user}', [DeskMemberController::class, 'destroy'])->name('desks.members.destroy');
         Route::put('desks/{desk}/custom-fields', [DeskCustomFieldController::class, 'update'])->name('desks.custom-fields.update');

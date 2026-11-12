@@ -3,6 +3,7 @@ import { i18nVue, loadLanguageAsync } from 'laravel-vue-i18n';
 import I18nT from '@/components/I18nT';
 import { initializeTheme } from '@/composables/useAppearance';
 import AppLayout from '@/layouts/AppLayout.vue';
+import DeskLayout from '@/layouts/DeskLayout.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import PortalLayout from '@/layouts/PortalLayout.vue';
 import WorkspaceLayout from '@/layouts/WorkspaceLayout.vue';
@@ -38,6 +39,10 @@ void createInertiaApp({
 
     if (name.startsWith('portal/')) {
       return PortalLayout;
+    }
+
+    if (name.startsWith('desks/') && name !== 'desks/Index') {
+      return [AppLayout, DeskLayout];
     }
 
     return name.startsWith('workspace/')

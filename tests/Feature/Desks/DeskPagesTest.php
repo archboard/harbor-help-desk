@@ -6,6 +6,8 @@ use App\Models\CustomField;
 use App\Models\Desk;
 use App\Models\SlaPolicy;
 use App\Models\User;
+use App\Models\Workspace;
+use Illuminate\Support\Facades\URL;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Concerns\InWorkspace;
 
@@ -45,29 +47,30 @@ test('agents only see their own desks', function () {
             ->where('archivedDesks', [])
             ->where('canManageDesks', false));
 
-    $this->actingAs($this->agent)->get(route('desks.show', $this->desk))->assertForbidden();
+    foreach (['desks.show', 'desks.members.index', 'desks.custom-fields.edit'] as $name) {
+        $this->actingAs($this->agent)->get(route($name, $this->desk))->assertForbidden();
+    }
 });
 
-test('the desk page lists members, candidates and abilities', function () {
+test('the members page lists members, candidates and abilities', function () {
     $this->desk->users()->attach($this->agent, ['role' => DeskRole::LEAD, 'workspace_id' => $this->workspace->id]);
 
     $this->actingAs($this->admin)
-        ->get(route('desks.show', $this->desk))
+        ->get(route('desks.members.index', $this->desk))
         ->assertInertia(fn (Assert $page) => $page
-            ->component('desks/Show')
+            ->component('desks/Members')
             ->where('desk', [
                 'id' => $this->desk->id,
                 'name' => $this->desk->name,
                 'slug' => $this->desk->slug,
                 'assignment_strategy' => 'manual',
                 'sla_policy_id' => null,
-                'custom_fields' => [],
                 'archived_at' => null,
             ])
             ->where('members', [['id' => $this->agent->id, 'name' => $this->agent->name, 'email' => $this->agent->email, 'role' => 'lead', 'in_rotation' => true]])
             ->where('roles', ['lead' => 'Lead', 'agent' => 'Agent'])
             ->where('candidates', [['id' => $this->admin->id, 'name' => $this->admin->name, 'email' => $this->admin->email]])
-            ->where('can', ['update' => true, 'manageMembers' => true, 'archive' => true]));
+            ->where('can', ['manageMembers' => true]));
 });
 
 test('desks and members are managed through the web routes', function () {
@@ -85,14 +88,16 @@ test('desks and members are managed through the web routes', function () {
     $this->delete(route('desks.destroy', $this->desk))->assertSessionHasErrors('desk');
 });
 
-test('the desk page lists every field and the ones the desk uses', function () {
+test('the custom fields page lists every field and the ones the desk uses', function () {
     $enabled = CustomField::factory()->create(['position' => 0]);
     $other = CustomField::factory()->create(['position' => 1]);
     $this->desk->customFields()->attach($enabled, ['workspace_id' => $this->workspace->id]);
 
     $this->actingAs($this->admin)
-        ->get(route('desks.show', $this->desk))
+        ->get(route('desks.custom-fields.edit', $this->desk))
         ->assertInertia(fn (Assert $page) => $page
+            ->component('desks/CustomFields')
+            ->where('can.update', true)
             ->has('customFields', 2)
             ->where('customFields.0.id', $enabled->id)
             ->where('customFields.1.id', $other->id)
@@ -129,11 +134,50 @@ test('the desk page offers the workspace\'s SLA policies and the policy can be s
 
     $this->actingAs($this->admin)
         ->get(route('desks.show', $this->desk))
-        ->assertInertia(fn (Assert $page) => $page->has('slaPolicies', 1)->where('slaPolicies.0.id', $policy->id));
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('desks/Show')
+            ->has('slaPolicies', 1)
+            ->where('slaPolicies.0.id', $policy->id)
+            ->where('can', ['update' => true, 'archive' => true]));
 
     $this->put(route('desks.update', $this->desk), ['sla_policy_id' => $policy->id])->assertSessionHasNoErrors();
     expect($this->desk->fresh()->sla_policy_id)->toBe($policy->id);
 
     $this->put(route('desks.update', $this->desk), ['sla_policy_id' => null])->assertSessionHasNoErrors();
     expect($this->desk->fresh()->sla_policy_id)->toBeNull();
+});
+
+test('another workspace\'s admin cannot open this desk\'s pages and sees none of its data', function () {
+    config(['harbor.multitenant' => true, 'harbor.domain' => 'harbor.test']);
+    URL::forceRootUrl(rtrim($this->workspace->url(), '/'));
+
+    $outsider = User::factory()->create();
+    $other = Workspace::factory()->create();
+    $other->users()->attach($outsider, ['role' => WorkspaceRole::OWNER]);
+    $routes = ['desks.show', 'desks.members.index', 'desks.custom-fields.edit'];
+
+    foreach ($routes as $name) {
+        $this->actingAs($outsider)->get(route($name, $this->desk))->assertForbidden();
+    }
+
+    // From their own workspace's host, this desk doesn't exist.
+    $other->makeCurrent();
+    URL::forceRootUrl(rtrim($other->url(), '/'));
+
+    foreach ($routes as $name) {
+        $this->actingAs($outsider)->get(route($name, $this->desk))->assertNotFound();
+    }
+});
+
+test('the custom fields page lists only this workspace\'s fields', function () {
+    config(['harbor.multitenant' => true, 'harbor.domain' => 'harbor.test']);
+    URL::forceRootUrl(rtrim($this->workspace->url(), '/'));
+
+    Workspace::factory()->create()->execute(fn () => CustomField::factory()->create());
+    $this->workspace->makeCurrent();
+    $mine = CustomField::factory()->create();
+
+    $this->actingAs($this->admin)
+        ->get(route('desks.custom-fields.edit', $this->desk))
+        ->assertInertia(fn (Assert $page) => $page->has('customFields', 1)->where('customFields.0.id', $mine->id));
 });
