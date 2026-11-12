@@ -45,10 +45,10 @@ const { desks, mailboxes } = defineProps<{
 const receivesBy = computed<
   Record<App.Data.Mailboxes.MailboxData['receives_by'], string>
 >(() => ({
-  webhook: trans('Forwarded'),
-  push: trans('Push'),
-  watch: trans('Watching'),
-  poll: trans('Polling'),
+  webhook: trans('By forwarding'),
+  push: trans('Instantly'),
+  watch: trans('Every few seconds'),
+  poll: trans('Every minute'),
 }));
 
 const page = usePage();
@@ -192,10 +192,10 @@ function remove(close: () => void): void {
           component="a"
           color="white"
           :href="connect('microsoft').url"
-          >{{ $t('Connect Microsoft') }}</AppButton
+          >{{ $t('Connect Microsoft 365') }}</AppButton
         >
         <AppButton type="button" @click="open('new')">{{
-          $t('IMAP/SMTP')
+          $t('Add IMAP/SMTP mailbox')
         }}</AppButton>
       </div>
     </div>
@@ -205,8 +205,8 @@ function remove(close: () => void): void {
         <tr>
           <Th>{{ $t('Mailbox') }}</Th>
           <Th>{{ $t('Default desk') }}</Th>
-          <Th>{{ $t('Rules') }}</Th>
-          <Th>{{ $t('New mail') }}</Th>
+          <Th>{{ $t('Routing rules') }}</Th>
+          <Th>{{ $t('Receives mail') }}</Th>
           <Th right
             ><span class="sr-only">{{ $t('Actions') }}</span></Th
           >
@@ -254,7 +254,7 @@ function remove(close: () => void): void {
               v-if="mailbox.polled_at"
               class="mt-1 text-xs text-gray-500 dark:text-gray-400"
             >
-              {{ $t('Checked') }}
+              {{ $t('Last checked') }}
               <RelativeTime :datetime="mailbox.polled_at" />
             </div>
           </Td>
@@ -350,7 +350,9 @@ function remove(close: () => void): void {
   <Modal
     v-if="editing"
     :headline="
-      editing === 'new' ? $t('Add IMAP/SMTP mailbox') : $t('Edit mailbox')
+      editing === 'new'
+        ? $t('Add IMAP/SMTP mailbox')
+        : $t('Edit :address', { address: editing.address })
     "
     :action-loading="form.processing"
     size="2xl"
@@ -361,21 +363,23 @@ function remove(close: () => void): void {
       <AppFieldset>
         <InputField
           v-model="form.name"
-          :label="$t('Name')"
-          :help-text="$t('Shown as the sender of replies.')"
+          :label="$t('Sender name')"
+          :help-text="$t('The From name on replies, e.g. Acme Support.')"
           :error="form.errors.name"
           required
         />
         <EmailField
           v-if="editing === 'new'"
           v-model="form.address"
-          :label="$t('Address')"
+          :label="$t('Email address')"
+          :help-text="$t('Customers write to it and replies are sent from it.')"
           :error="form.errors.address"
           required
         />
         <SelectField
           v-model="form.default_desk_id"
           :label="$t('Default desk')"
+          :help-text="$t('New tickets go here unless a routing rule matches.')"
           :options="desks"
           :error="form.errors.default_desk_id"
           required
@@ -421,6 +425,7 @@ function remove(close: () => void): void {
             <InputField
               v-model="form.settings[protocol].username"
               :label="$t('Username')"
+              :help-text="$t('Usually the full email address.')"
               :error="error(`settings.${protocol}.username`)"
               required
             />
@@ -430,12 +435,18 @@ function remove(close: () => void): void {
               :error="error(`settings.${protocol}.password`)"
               required
             />
+            <InputField
+              v-if="protocol === 'imap'"
+              v-model="form.settings.imap.folder"
+              :label="$t('Folder to check')"
+              :help-text="
+                $t(
+                  'Only mail arriving in this folder becomes tickets. Usually INBOX.',
+                )
+              "
+              :error="error('settings.imap.folder')"
+            />
           </template>
-          <InputField
-            v-model="form.settings.imap.folder"
-            :label="$t('Folder')"
-            :error="error('settings.imap.folder')"
-          />
         </template>
 
         <template v-else>
