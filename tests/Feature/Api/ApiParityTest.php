@@ -78,6 +78,7 @@ function webToApiRoutes(): array
         'workspace.email.store' => 'api.v1.mailboxes.store',
         'workspace.email.update' => 'api.v1.mailboxes.update',
         'workspace.email.destroy' => 'api.v1.mailboxes.destroy',
+        'workspace.email.test' => 'api.v1.mailboxes.test',
         'workspace.exports.store' => 'api.v1.workspace.export',
         'workspace.general.update' => 'api.v1.workspace.update',
         'workspace.import.store' => 'api.v1.workspace.import',

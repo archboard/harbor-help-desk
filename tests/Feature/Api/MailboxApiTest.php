@@ -3,10 +3,13 @@
 use App\Actions\Mailboxes\CreateMailbox;
 use App\Enums\MailboxDriver;
 use App\Enums\WorkspaceRole;
+use App\Mail\Inbound\ImapMailboxClient;
+use App\Mail\MailboxTestMail;
 use App\Models\Desk;
 use App\Models\Mailbox;
 use App\Models\User;
 use App\Models\Workspace;
+use Illuminate\Support\Facades\Mail;
 
 beforeEach(function () {
     config(['harbor.multitenant' => true, 'harbor.domain' => 'harbor.test']);
@@ -225,4 +228,43 @@ test('another workspace mailboxes are invisible and untouched', function () {
     $this->deleteJson("http://acme.harbor.test/api/v1/mailboxes/{$foreign->id}")->assertNotFound();
 
     expect($foreign->fresh()->name)->toBe('Other Support');
+});
+
+test('admins test a mailbox: a test email to themselves and a look at the inbox, with errors reported', function () {
+    Mail::fake();
+    $mailbox = $this->acme->execute(fn () => Mailbox::factory()->create());
+    $url = "http://acme.harbor.test/api/v1/mailboxes/{$mailbox->id}/test";
+    actAs($this->admin, $this->acme);
+
+    mockImapClient(uidValidity: 7, uidNext: 101, messages: 3);
+    $this->postJson($url)->assertOk()->assertExactJson([
+        'sending' => ['passed' => true, 'message' => "Sent a test email to {$this->admin->email}."],
+        'receiving' => ['passed' => true, 'message' => 'Connected. The inbox has 3 messages.'],
+    ]);
+    Mail::assertSent(MailboxTestMail::class, fn (MailboxTestMail $mail): bool => $mail->hasTo($this->admin->email) && $mail->hasFrom($mailbox->address));
+    expect((new MailboxTestMail($mailbox))->render())->toContain('apple-touch-icon.png', 'Your mailbox can send mail', e($mailbox->name));
+
+    $client = Mockery::mock(ImapMailboxClient::class);
+    $client->shouldReceive('status')->andThrow(new RuntimeException('Authentication failed.'));
+    $client->shouldReceive('disconnect')->once();
+    app()->bind(ImapMailboxClient::class, fn () => $client);
+    $this->postJson($url)->assertOk()->assertJsonPath('receiving', ['passed' => false, 'message' => 'Authentication failed.']);
+
+    // A send-only mailbox isn't checked for receiving.
+    $mailbox->update(['settings' => ['smtp' => $mailbox->settings['smtp']]]);
+    $this->postJson($url)->assertOk()->assertJsonPath('receiving', null)->assertJsonPath('sending.passed', true);
+});
+
+test("agents can't test a mailbox, nor can anyone test another workspace's", function () {
+    Mail::fake();
+    $mailbox = $this->acme->execute(fn () => Mailbox::factory()->create());
+    $foreign = $this->other->execute(fn () => Mailbox::factory()->create());
+
+    actAs($this->agent, $this->acme);
+    $this->postJson("http://acme.harbor.test/api/v1/mailboxes/{$mailbox->id}/test")->assertForbidden();
+
+    actAs($this->admin, $this->acme);
+    $this->postJson("http://acme.harbor.test/api/v1/mailboxes/{$foreign->id}/test")->assertNotFound();
+
+    Mail::assertNothingSent();
 });

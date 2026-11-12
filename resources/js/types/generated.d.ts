@@ -594,6 +594,10 @@ declare namespace App {
         signature?: string | null;
         settings: Record<string, any>;
       };
+      export type MailboxCheckData = {
+        passed: boolean;
+        message: string;
+      };
       export type MailboxData = {
         id: string;
         driver: App.Enums.MailboxDriver;
@@ -623,6 +627,10 @@ declare namespace App {
         encryption: 'ssl' | 'tls' | 'starttls';
         username: string | null;
         folder?: string;
+      };
+      export type MailboxTestData = {
+        sending: App.Data.Mailboxes.MailboxCheckData | null;
+        receiving: App.Data.Mailboxes.MailboxCheckData | null;
       };
       export type UpdateMailboxData = {
         name?: string;

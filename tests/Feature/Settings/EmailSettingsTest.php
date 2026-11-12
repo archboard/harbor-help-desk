@@ -6,6 +6,7 @@ use App\Models\Desk;
 use App\Models\Mailbox;
 use App\Models\User;
 use App\Models\Workspace;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Concerns\InWorkspace;
 
@@ -130,4 +131,15 @@ test("another workspace's mailboxes are not reachable", function () {
     $this->delete(route('workspace.email.destroy', $foreign->id))->assertNotFound();
 
     expect($foreign->fresh()->name)->toBe('Foreign');
+});
+
+test('testing a mailbox from the settings page reports the result as a toast', function () {
+    Mail::fake();
+    mockImapClient(uidValidity: 7, uidNext: 101, messages: 1);
+    $mailbox = Mailbox::factory()->create();
+
+    $this->actingAs($this->admin)
+        ->post(route('workspace.email.test', $mailbox))
+        ->assertRedirect()
+        ->assertInertiaFlash('toast', ['type' => 'success', 'message' => "Sending: Sent a test email to {$this->admin->email}. Receiving: Connected. The inbox has 1 message."]);
 });

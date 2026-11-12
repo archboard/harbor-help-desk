@@ -31,7 +31,7 @@ import Td from '@/components/tables/Td.vue';
 import Th from '@/components/tables/Th.vue';
 import Thead from '@/components/tables/Thead.vue';
 import RelativeTime from '@/components/RelativeTime.vue';
-import { destroy, store, update } from '@/routes/workspace/email';
+import { destroy, store, test, update } from '@/routes/workspace/email';
 import { update as updateSettings } from '@/routes/workspace/settings';
 import { redirect as connect } from '@/routes/mailboxes/oauth';
 
@@ -78,6 +78,7 @@ const { copy, copied } = useClipboard();
 const editing = ref<App.Data.Mailboxes.MailboxData | 'new' | null>(null);
 const deleting = ref<App.Data.Mailboxes.MailboxData | null>(null);
 const deleteLoading = ref(false);
+const testing = ref<string | null>(null);
 
 const form = useForm({
   name: '',
@@ -169,6 +170,18 @@ function save(close: () => void): void {
       mailbox === 'new' || mailbox === null ? store() : update(mailbox.id),
       { preserveScroll: true, onSuccess: close },
     );
+}
+
+function runTest(mailbox: App.Data.Mailboxes.MailboxData): void {
+  router.post(
+    test(mailbox.id).url,
+    {},
+    {
+      preserveScroll: true,
+      onStart: () => (testing.value = mailbox.id),
+      onFinish: () => (testing.value = null),
+    },
+  );
 }
 
 function remove(close: () => void): void {
@@ -288,6 +301,15 @@ function remove(close: () => void): void {
                 }).url
               "
               >{{ $t('Reconnect') }}</AppButton
+            >
+            <AppButton
+              type="button"
+              size="xs"
+              color="white"
+              :loading="testing === mailbox.id"
+              :disabled="testing !== null"
+              @click="runTest(mailbox)"
+              >{{ $t('Test') }}</AppButton
             >
             <AppButton
               type="button"

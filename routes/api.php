@@ -44,6 +44,7 @@ use App\Http\Controllers\Api\V1\SetAwayController;
 use App\Http\Controllers\Api\V1\SlaPolicyController;
 use App\Http\Controllers\Api\V1\TagController;
 use App\Http\Controllers\Api\V1\TestAutomationController;
+use App\Http\Controllers\Api\V1\TestMailboxController;
 use App\Http\Controllers\Api\V1\TicketAssigneeController;
 use App\Http\Controllers\Api\V1\TicketClaimController;
 use App\Http\Controllers\Api\V1\TicketCommentController;
@@ -131,6 +132,7 @@ Route::prefix('v1')->name('api.v1.')
         Route::apiResource('sla-policies', SlaPolicyController::class)->parameters(['sla-policies' => 'slaPolicy']);
 
         Route::apiResource('mailboxes', MailboxController::class);
+        Route::post('mailboxes/{mailbox}/test', TestMailboxController::class)->middleware('throttle:6,1')->name('mailboxes.test');
 
         Route::post('contacts/{contact}/erase', EraseContactController::class)->name('contacts.erase');
         Route::post('contacts/{contact}/export', RequestContactExportController::class)->name('contacts.export');

@@ -53,10 +53,10 @@ function acmeWithAgent(): array
 /**
  * Bind a mocked IMAP client that reports the given folder status for every mailbox.
  */
-function mockImapClient(int $uidValidity, int $uidNext): MockInterface
+function mockImapClient(int $uidValidity, int $uidNext, int $messages = 0): MockInterface
 {
     $client = Mockery::mock(ImapMailboxClient::class);
-    $client->shouldReceive('status')->andReturn(['uid_validity' => $uidValidity, 'uid_next' => $uidNext]);
+    $client->shouldReceive('status')->andReturn(['uid_validity' => $uidValidity, 'uid_next' => $uidNext, 'messages' => $messages]);
     $client->shouldReceive('disconnect');
     app()->bind(ImapMailboxClient::class, fn () => $client);
 

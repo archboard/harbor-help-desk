@@ -16,6 +16,7 @@ use App\Http\Controllers\Workspace\ResendInvitationController;
 use App\Http\Controllers\Workspace\RotateWebhookSecretController;
 use App\Http\Controllers\Workspace\SendWebhookPingController;
 use App\Http\Controllers\Workspace\SettingsController;
+use App\Http\Controllers\Workspace\TestMailboxController;
 use App\Http\Controllers\Workspace\WebhookController;
 use Illuminate\Support\Facades\Route;
 
@@ -36,6 +37,7 @@ Route::middleware(['auth', 'verified'])->prefix('workspace')->name('workspace.')
     Route::resource('email', EmailController::class)
         ->only(['index', 'store', 'update', 'destroy'])
         ->parameters(['email' => 'mailbox']);
+    Route::post('email/{mailbox}/test', TestMailboxController::class)->middleware('throttle:6,1')->name('email.test');
 
     Route::get('attachments', [AttachmentsController::class, 'edit'])->name('attachments.edit');
 

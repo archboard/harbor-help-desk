@@ -69,6 +69,14 @@ class GraphMailboxClient
         return $this->request()->get(self::BASE_URL.'/me/messages/'.rawurlencode($id).'/$value')->throw()->body();
     }
 
+    /**
+     * How many messages the Inbox holds.
+     */
+    public function count(): int
+    {
+        return (int) $this->request()->get(self::BASE_URL."/me/mailFolders('Inbox')", ['$select' => 'totalItemCount'])->throw()->json('totalItemCount');
+    }
+
     protected function request(): PendingRequest
     {
         return Http::withToken(app(RefreshMailboxToken::class)->handle($this->mailbox))->timeout(30);
