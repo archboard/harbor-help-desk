@@ -7,7 +7,9 @@
 
 /* Copied from ../../resources/css/app.css: blue primary, zinc gray */
 @theme {
-  --font-sans: 'Inter Variable', Inter, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-sans:
+    'Inter Variable', Inter, ui-sans-serif, system-ui, sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   --font-display: 'DM Serif Display', ui-serif, Georgia, serif;
 
   --color-primary-50: var(--color-blue-50);
