@@ -1,0 +1,16 @@
+# Harbor Helpdesk
+
+> Harbor Helpdesk is an open source (AGPL-3.0) helpdesk by Archboard. It turns support inboxes into tickets that people and AI agents work together, through the web app, a versioned JSON API and a built-in MCP server.
+
+- Self-host it free with Docker or on a Debian/Ubuntu VM. It needs PHP, PostgreSQL, Redis and Reverb.
+- Or use Harbor Cloud, hosted by Archboard, with each workspace on its own subdomain of harbor.help.
+- Mailboxes: Gmail, Microsoft 365, IMAP/SMTP or a hosted address.
+- Features: desks with manual, round robin or load-balanced assignment; SLA policies with business hours; automations and macros; a customer portal with satisfaction ratings; reports and exports; webhooks; passkeys and an audit log.
+- AI agents connect over MCP at https://<workspace>.harbor.help/mcp with OAuth, scoped to one workspace, and use the same actions and permissions as people.
+
+## Links
+
+- [Source code](https://github.com/archboard/harbor-helpdesk)
+- [Docker install](https://github.com/archboard/harbor-helpdesk/blob/main/INSTALLATION.md)
+- [VM install](https://github.com/archboard/harbor-helpdesk/blob/main/INSTALLATION-VM.md)
+- [Changelog](https://github.com/archboard/harbor-helpdesk/blob/main/CHANGELOG.md)

@@ -7,7 +7,7 @@ This guide takes a fresh Debian 12+ or Ubuntu 24.04+ server to a running, self-h
 [`install-vm.sh`](install-vm.sh) automates every step below. Point your domain's DNS at the server first, then run:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/archboard/harbor-help-desk/main/install-vm.sh \
+curl -fsSL https://raw.githubusercontent.com/archboard/harbor-helpdesk/main/install-vm.sh \
   | sudo bash -s -- --domain help.example.org --email you@example.org --version v1.0.0
 ```
 
@@ -49,7 +49,7 @@ sudo useradd --create-home --shell /bin/bash harbor
 sudo -u postgres createuser harbor
 sudo -u postgres createdb -O harbor harbor_help
 sudo mkdir -p /var/www/harbor-help && sudo chown harbor: /var/www/harbor-help
-sudo -u harbor git clone --branch v1.0.0 https://github.com/archboard/harbor-help-desk.git /var/www/harbor-help
+sudo -u harbor git clone --branch v1.0.0 https://github.com/archboard/harbor-helpdesk.git /var/www/harbor-help
 ```
 
 Configure PHP-FPM with a pool for the `harbor` user (the script uses the socket `/run/php/harbor.sock`) and raise `upload_max_filesize` and `post_max_size` above your attachment limit.

@@ -12,7 +12,7 @@ To install each piece directly on the server instead, see [INSTALLATION-VM.md](I
 ## 2. Run the setup script
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/archboard/harbor-help-desk/main/setup-docker.sh \
+curl -fsSL https://raw.githubusercontent.com/archboard/harbor-helpdesk/main/setup-docker.sh \
   | sudo bash -s -- --domain help.example.org --email you@example.org --version v1.0.0
 ```
 
@@ -52,8 +52,8 @@ Skip this if `docker compose version` already works. Use Docker's official apt r
 ```sh
 sudo mkdir -p /opt/harbor-help && sudo chown "$USER" /opt/harbor-help
 cd /opt/harbor-help
-curl -fsSLO https://raw.githubusercontent.com/archboard/harbor-help-desk/main/docker-compose.yml
-curl -fsSL -o .env https://raw.githubusercontent.com/archboard/harbor-help-desk/main/.env.example
+curl -fsSLO https://raw.githubusercontent.com/archboard/harbor-helpdesk/main/docker-compose.yml
+curl -fsSL -o .env https://raw.githubusercontent.com/archboard/harbor-helpdesk/main/.env.example
 chmod 600 .env
 ```
 

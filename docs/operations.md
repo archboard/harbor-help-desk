@@ -117,7 +117,7 @@ The running version is shown by `HARBOR_VERSION` (recorded in `.env`).
 ### Docker
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/archboard/harbor-help-desk/main/setup-docker.sh \
+curl -fsSL https://raw.githubusercontent.com/archboard/harbor-helpdesk/main/setup-docker.sh \
   | sudo bash -s -- --domain help.example.org --version vX.Y.Z
 ```
 
