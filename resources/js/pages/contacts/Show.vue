@@ -109,7 +109,7 @@ function eraseContact(close: () => void): void {
 
     <section
       v-if="canErase"
-      class="space-y-3 rounded-lg border border-red-300 p-4 dark:border-red-900"
+      class="space-y-3 rounded-2xl border border-red-300 p-4 dark:border-red-900"
       :aria-label="$t('Danger zone')"
     >
       <h2 class="text-lg font-semibold text-red-700 dark:text-red-400">

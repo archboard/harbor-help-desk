@@ -94,6 +94,14 @@ test('a ticket without a mailbox uses the mailbox of its desk, then the oldest',
         ->and(Mailbox::forTicket($orphan)->is($this->mailbox))->toBeTrue();
 });
 
+test('a receive-only mailbox hands its replies to the next mailbox that sends', function () {
+    $this->mailbox->update(['settings' => ['imap' => $this->mailbox->settings['imap']]]);
+    $sender = Mailbox::factory()->create(['default_desk_id' => $this->desk->id]);
+
+    expect(Mailbox::forTicket($this->ticket)->is($sender))->toBeTrue()
+        ->and($this->workspace->notificationMailbox()->is($sender))->toBeTrue();
+});
+
 test('nothing is sent when the workspace has no mailbox', function () {
     $this->ticket->update(['mailbox_id' => null]);
     $this->mailbox->delete();

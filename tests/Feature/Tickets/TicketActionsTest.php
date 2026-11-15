@@ -174,6 +174,22 @@ test('only desk members can be assigned', function () {
         ->toThrow(ValidationException::class, 'Only members of the ticket’s desk can be assigned.');
 });
 
+test('an assignee who has left the desk can be kept but not added back', function () {
+    $ticket = Ticket::factory()->create();
+    $agent = deskMember($this->workspace, $ticket->desk);
+    $stale = deskMember($this->workspace, $ticket->desk);
+    $ticket->assignees()->attach($stale, ['workspace_id' => $ticket->workspace_id]);
+    $ticket->desk->users()->detach($stale);
+
+    app(SyncTicketAssignees::class)->handle($agent, $ticket, ['user_ids' => [$agent->id, $stale->id]]);
+
+    expect($ticket->assignees()->pluck('users.id')->all())->toContain($agent->id, $stale->id);
+
+    app(SyncTicketAssignees::class)->handle($agent, $ticket, ['user_ids' => [$agent->id]]);
+    expect(fn () => app(SyncTicketAssignees::class)->handle($agent, $ticket, ['user_ids' => [$agent->id, $stale->id]]))
+        ->toThrow(ValidationException::class);
+});
+
 test('desk leads can delete and restore tickets but agents cannot', function () {
     $ticket = Ticket::factory()->create();
     $lead = deskMember($this->workspace, $ticket->desk, DeskRole::LEAD);

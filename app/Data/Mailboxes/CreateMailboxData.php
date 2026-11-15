@@ -37,7 +37,7 @@ class CreateMailboxData extends InputData
     {
         return [
             ...MailboxRules::common(creating: true),
-            ...MailboxRules::connection(MailboxDriver::tryFrom((string) ($context->payload['driver'] ?? '')), creating: true),
+            ...MailboxRules::connection(MailboxDriver::tryFrom((string) ($context->payload['driver'] ?? ''))),
         ];
     }
 }

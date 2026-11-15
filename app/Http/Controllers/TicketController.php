@@ -14,6 +14,7 @@ use App\Data\SavedViews\SavedViewData;
 use App\Data\Tags\TagData;
 use App\Data\Tickets\TicketData;
 use App\Data\Users\UserData;
+use App\Data\Workspaces\OnboardingData;
 use App\Enums\TicketPriority;
 use App\Enums\TicketSource;
 use App\Enums\TicketStatus;
@@ -47,13 +48,17 @@ class TicketController extends Controller
             ->with(['desk', 'requester', 'assignees', 'tags'])
             ->paginate(50);
 
+        $workspace = Workspace::current();
+
         return Inertia::render('tickets/Index', [
+            // A closure, so reloads that don't ask for it skip the checks.
+            'onboarding' => fn (): ?OnboardingData => $this->onboardingFor($user, $workspace),
             'tickets' => Inertia::scroll(TicketData::collect($tickets)),
             'filters' => (object) $filters,
             'savedViews' => SavedViewData::collect(SavedView::visibleTo($user)->with('user')->orderBy('name')->get()),
             'desks' => DeskData::collect($desks),
             'leadDeskIds' => $desks->filter(fn (Desk $desk): bool => $user->can('update', $desk))->values()->modelKeys(),
-            'agents' => UserData::collect(Workspace::current()->users()->orderBy('name')->get()),
+            'agents' => UserData::collect($workspace->users()->orderBy('name')->get()),
             'tags' => TagData::collect(Tag::query()->orderBy('name')->get()),
             'customFields' => CustomFieldData::collect(CustomField::query()->orderBy('position')->get()),
             'statuses' => TicketStatus::options(),
@@ -129,5 +134,19 @@ class TicketController extends Controller
         Flash::success(__('Ticket restored.'));
 
         return back();
+    }
+
+    /**
+     * The checklist, only for admins who haven't dismissed it and while a step is still open.
+     */
+    private function onboardingFor(User $user, Workspace $workspace): ?OnboardingData
+    {
+        if (! $user->can('update', $workspace) || $workspace->settings->onboardingDismissed) {
+            return null;
+        }
+
+        $onboarding = OnboardingData::forWorkspace($workspace);
+
+        return $onboarding->complete ? null : $onboarding;
     }
 }

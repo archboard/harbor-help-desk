@@ -85,6 +85,10 @@ return [
         // held-open connections, and the per-minute poll only runs as a 5-minute backstop.
         'watch' => (bool) env('HARBOR_MAIL_WATCH', false),
         'watch_interval' => (int) env('HARBOR_MAIL_WATCH_INTERVAL', 10),
+
+        // In multitenant mode, IMAP/SMTP hosts must resolve to public IPs, so a tenant can't point
+        // Harbor at the operator's network. Allowed by default locally, for dev mail catchers.
+        'private_hosts' => (bool) env('HARBOR_MAIL_PRIVATE_HOSTS', env('APP_ENV') === 'local'),
     ],
 
 ];

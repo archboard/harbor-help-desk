@@ -6,6 +6,7 @@ import { useClipboard } from '@vueuse/core';
 import { computed, ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import CardAction from '@/components/CardAction.vue';
+import CardHeader from '@/components/CardHeader.vue';
 import CardPadding from '@/components/CardPadding.vue';
 import CardWrapper from '@/components/CardWrapper.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -14,6 +15,7 @@ import AppInput from '@/components/forms/AppInput.vue';
 import AppSelect from '@/components/forms/AppSelect.vue';
 import FieldError from '@/components/forms/FieldError.vue';
 import {
+  CheckboxField,
   EmailField,
   InputField,
   NumberField,
@@ -30,7 +32,7 @@ import Td from '@/components/tables/Td.vue';
 import Th from '@/components/tables/Th.vue';
 import Thead from '@/components/tables/Thead.vue';
 import RelativeTime from '@/components/RelativeTime.vue';
-import { destroy, store, update } from '@/routes/workspace/email';
+import { destroy, store, test, update } from '@/routes/workspace/email';
 import { update as updateSettings } from '@/routes/workspace/settings';
 import { redirect as connect } from '@/routes/mailboxes/oauth';
 
@@ -40,6 +42,9 @@ const { desks, mailboxes } = defineProps<{
   mailboxes: App.Data.Mailboxes.MailboxData[];
   desks: App.Data.Desks.DeskData[];
   oauthProviders: { google: boolean; microsoft: boolean };
+  microsoftHasSecret: boolean;
+  /** The redirect URI to register on the Microsoft app. */
+  oauthRedirectUri: string;
 }>();
 
 const receivesBy = computed<
@@ -49,6 +54,7 @@ const receivesBy = computed<
   push: trans('Instantly'),
   watch: trans('Every few seconds'),
   poll: trans('Every minute'),
+  never: trans('Send only'),
 }));
 
 const page = usePage();
@@ -60,6 +66,28 @@ const settingsForm = useForm({
     page.props.workspace?.settings?.mail_new_tickets_per_sender_per_hour ?? 20,
 });
 
+const microsoftForm = useForm({
+  microsoft_client_id:
+    page.props.workspace?.settings?.microsoft_client_id ?? '',
+  microsoft_tenant:
+    page.props.workspace?.settings?.microsoft_tenant ?? 'common',
+  microsoft_client_secret: '',
+});
+
+/** A blank secret keeps the saved one, so it's only sent when typed. */
+function saveMicrosoftApp(): void {
+  microsoftForm
+    .transform(({ microsoft_client_secret, ...app }) => ({
+      ...app,
+      microsoft_client_id: app.microsoft_client_id || null,
+      ...(microsoft_client_secret ? { microsoft_client_secret } : {}),
+    }))
+    .submit(updateSettings(), {
+      preserveScroll: true,
+      onSuccess: () => microsoftForm.reset('microsoft_client_secret'),
+    });
+}
+
 const notificationMailboxes = computed(() => [
   { value: '', label: trans('Default (oldest mailbox)') },
   ...mailboxes.map((mailbox) => ({
@@ -70,12 +98,13 @@ const notificationMailboxes = computed(() => [
 
 const encryptions = { ssl: 'SSL/TLS', starttls: 'STARTTLS', tls: 'TLS' };
 
-const { copy, copied } = useClipboard();
+const { copy, copied } = useClipboard({ legacy: true });
 
 /** The mailbox being edited, `'new'` while adding an IMAP/SMTP one, or null when closed. */
 const editing = ref<App.Data.Mailboxes.MailboxData | 'new' | null>(null);
 const deleting = ref<App.Data.Mailboxes.MailboxData | null>(null);
 const deleteLoading = ref(false);
+const testing = ref<string | null>(null);
 
 const form = useForm({
   name: '',
@@ -83,6 +112,8 @@ const form = useForm({
   default_desk_id: '',
   signature: '',
   routing: [] as App.Data.Mailboxes.MailboxRoutingRuleData[],
+  receives: true,
+  sends: true,
   settings: {
     imap: {
       host: '',
@@ -143,18 +174,40 @@ function save(close: () => void): void {
         default_desk_id,
         signature,
         routing,
+        receives,
+        sends,
         settings,
       }):
         | Omit<App.Data.Mailboxes.CreateMailboxData, 'driver'>
         | App.Data.Mailboxes.UpdateMailboxData =>
         mailbox === 'new'
-          ? { name, address, default_desk_id, settings }
+          ? {
+              name,
+              address,
+              default_desk_id,
+              settings: {
+                imap: receives ? settings.imap : null,
+                smtp: sends ? settings.smtp : null,
+              },
+            }
           : { name, default_desk_id, signature: signature || null, routing },
     )
     .submit(
       mailbox === 'new' || mailbox === null ? store() : update(mailbox.id),
       { preserveScroll: true, onSuccess: close },
     );
+}
+
+function runTest(mailbox: App.Data.Mailboxes.MailboxData): void {
+  router.post(
+    test(mailbox.id).url,
+    {},
+    {
+      preserveScroll: true,
+      onStart: () => (testing.value = mailbox.id),
+      onFinish: () => (testing.value = null),
+    },
+  );
 }
 
 function remove(close: () => void): void {
@@ -279,6 +332,15 @@ function remove(close: () => void): void {
               type="button"
               size="xs"
               color="white"
+              :loading="testing === mailbox.id"
+              :disabled="testing !== null"
+              @click="runTest(mailbox)"
+              >{{ $t('Test') }}</AppButton
+            >
+            <AppButton
+              type="button"
+              size="xs"
+              color="white"
               @click="open(mailbox)"
               >{{ $t('Edit') }}</AppButton
             >
@@ -345,6 +407,96 @@ function remove(close: () => void): void {
         <CardAction :loading="settingsForm.processing" />
       </form>
     </CardWrapper>
+
+    <CardWrapper>
+      <form @submit.prevent="saveMicrosoftApp">
+        <CardPadding>
+          <CardHeader class="mb-2">{{ $t('Microsoft 365 app') }}</CardHeader>
+          <div class="mb-6 space-y-2 text-sm text-gray-500 dark:text-gray-400">
+            <p>
+              {{
+                $t(
+                  'To connect Microsoft 365 mailboxes, register an app for Harbor Help in the Microsoft Entra admin center:',
+                )
+              }}
+            </p>
+            <ol class="list-decimal space-y-1 pl-5">
+              <li>
+                {{
+                  $t(
+                    'Go to App registrations and choose New registration. Pick who can sign in, and add a Web redirect URI:',
+                  )
+                }}
+                <span class="mt-1 flex items-center gap-2">
+                  <code class="truncate text-gray-700 dark:text-gray-300">{{
+                    oauthRedirectUri
+                  }}</code>
+                  <button
+                    type="button"
+                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                    @click="copy(oauthRedirectUri)"
+                  >
+                    <span class="sr-only">{{ $t('Copy redirect URI') }}</span>
+                    <Check v-if="copied" class="size-4" aria-hidden="true" />
+                    <Copy v-else class="size-4" aria-hidden="true" />
+                  </button>
+                </span>
+              </li>
+              <li>
+                {{
+                  $t(
+                    'Under API permissions, add the delegated Microsoft Graph permissions Mail.Read, Mail.Send and offline_access.',
+                  )
+                }}
+              </li>
+              <li>
+                {{
+                  $t(
+                    'Under Certificates & secrets, create a client secret and copy its value.',
+                  )
+                }}
+              </li>
+              <li>
+                {{
+                  $t(
+                    'Enter the application (client) ID, tenant and secret below, then use Connect Microsoft 365 above.',
+                  )
+                }}
+              </li>
+            </ol>
+          </div>
+          <AppFieldset>
+            <InputField
+              v-model="microsoftForm.microsoft_client_id"
+              :label="$t('Application (client) ID')"
+              :error="microsoftForm.errors.microsoft_client_id"
+            />
+            <InputField
+              v-model="microsoftForm.microsoft_tenant"
+              :label="$t('Tenant')"
+              :help-text="
+                $t(
+                  'Your directory (tenant) ID or domain to allow only your organization, or common for any Microsoft account.',
+                )
+              "
+              :error="microsoftForm.errors.microsoft_tenant"
+              required
+            />
+            <PasswordField
+              v-model="microsoftForm.microsoft_client_secret"
+              :label="$t('Client secret')"
+              :placeholder="
+                microsoftHasSecret
+                  ? $t('Saved. Enter a new one to replace it.')
+                  : ''
+              "
+              :error="microsoftForm.errors.microsoft_client_secret"
+            />
+          </AppFieldset>
+        </CardPadding>
+        <CardAction :loading="microsoftForm.processing" />
+      </form>
+    </CardWrapper>
   </div>
 
   <Modal
@@ -390,62 +542,78 @@ function remove(close: () => void): void {
             v-for="protocol in ['imap', 'smtp'] as const"
             :key="protocol"
           >
-            <h3
-              class="pt-2 text-sm font-semibold text-gray-900 dark:text-white"
-            >
-              {{
-                protocol === 'imap'
-                  ? $t('Incoming (IMAP)')
-                  : $t('Outgoing (SMTP)')
-              }}
-            </h3>
-            <div class="grid gap-4 sm:grid-cols-3">
-              <div class="sm:col-span-2">
-                <InputField
-                  v-model="form.settings[protocol].host"
-                  :label="$t('Host')"
-                  :error="error(`settings.${protocol}.host`)"
+            <CheckboxField
+              v-if="protocol === 'imap'"
+              v-model="form.receives"
+              :label="$t('Receive mail over IMAP')"
+              :help-text="$t('New mail in this mailbox becomes tickets.')"
+              :error="error('settings.imap')"
+            />
+            <CheckboxField
+              v-else
+              v-model="form.sends"
+              :label="$t('Send mail over SMTP')"
+              :help-text="
+                $t('Replies and notifications go out from this address.')
+              "
+              :error="error('settings.smtp')"
+            />
+            <template v-if="protocol === 'imap' ? form.receives : form.sends">
+              <div class="grid gap-4 sm:grid-cols-3">
+                <div class="sm:col-span-2">
+                  <InputField
+                    v-model="form.settings[protocol].host"
+                    :label="$t('Host')"
+                    :error="error(`settings.${protocol}.host`)"
+                    required
+                  />
+                </div>
+                <NumberField
+                  v-model="form.settings[protocol].port"
+                  :label="$t('Port')"
+                  :error="error(`settings.${protocol}.port`)"
                   required
                 />
               </div>
-              <NumberField
-                v-model="form.settings[protocol].port"
-                :label="$t('Port')"
-                :error="error(`settings.${protocol}.port`)"
+              <SelectField
+                v-model="form.settings[protocol].encryption"
+                :label="$t('Encryption')"
+                :options="encryptions"
+                :error="error(`settings.${protocol}.encryption`)"
                 required
               />
-            </div>
-            <SelectField
-              v-model="form.settings[protocol].encryption"
-              :label="$t('Encryption')"
-              :options="encryptions"
-              :error="error(`settings.${protocol}.encryption`)"
-              required
-            />
-            <InputField
-              v-model="form.settings[protocol].username"
-              :label="$t('Username')"
-              :help-text="$t('Usually the full email address.')"
-              :error="error(`settings.${protocol}.username`)"
-              required
-            />
-            <PasswordField
-              v-model="form.settings[protocol].password"
-              :label="$t('Password')"
-              :error="error(`settings.${protocol}.password`)"
-              required
-            />
-            <InputField
-              v-if="protocol === 'imap'"
-              v-model="form.settings.imap.folder"
-              :label="$t('Folder to check')"
-              :help-text="
-                $t(
-                  'Only mail arriving in this folder becomes tickets. Usually INBOX.',
-                )
-              "
-              :error="error('settings.imap.folder')"
-            />
+              <InputField
+                v-model="form.settings[protocol].username"
+                :label="$t('Username')"
+                :help-text="$t('Usually the full email address.')"
+                :error="error(`settings.${protocol}.username`)"
+                :required="protocol === 'imap'"
+              />
+              <PasswordField
+                v-model="form.settings[protocol].password"
+                :label="$t('Password')"
+                :help-text="
+                  protocol === 'smtp'
+                    ? $t(
+                        'Leave blank if your server accepts mail without logging in.',
+                      )
+                    : undefined
+                "
+                :error="error(`settings.${protocol}.password`)"
+                :required="protocol === 'imap'"
+              />
+              <InputField
+                v-if="protocol === 'imap'"
+                v-model="form.settings.imap.folder"
+                :label="$t('Folder to check')"
+                :help-text="
+                  $t(
+                    'Only mail arriving in this folder becomes tickets. Usually INBOX.',
+                  )
+                "
+                :error="error('settings.imap.folder')"
+              />
+            </template>
           </template>
         </template>
 

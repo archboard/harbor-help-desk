@@ -37,6 +37,11 @@ function webToApiRoutes(): array
         'desks.members.destroy' => 'api.v1.desks.members.destroy',
         'desks.restore' => 'api.v1.desks.restore',
         'desks.tickets.store' => 'api.v1.desks.tickets.store',
+        'workspace.members.update' => 'api.v1.members.update',
+        'workspace.members.destroy' => 'api.v1.members.destroy',
+        'workspace.invitations.store' => 'api.v1.invitations.store',
+        'workspace.invitations.destroy' => 'api.v1.invitations.destroy',
+        'workspace.invitations.resend' => 'api.v1.invitations.resend',
         'notifications.read' => 'api.v1.notifications.read',
         'notifications.read-one' => 'api.v1.notifications.read-one',
         'reminders.destroy' => 'api.v1.reminders.destroy',
@@ -73,6 +78,7 @@ function webToApiRoutes(): array
         'workspace.email.store' => 'api.v1.mailboxes.store',
         'workspace.email.update' => 'api.v1.mailboxes.update',
         'workspace.email.destroy' => 'api.v1.mailboxes.destroy',
+        'workspace.email.test' => 'api.v1.mailboxes.test',
         'workspace.exports.store' => 'api.v1.workspace.export',
         'workspace.general.update' => 'api.v1.workspace.update',
         'workspace.import.store' => 'api.v1.workspace.import',
@@ -94,6 +100,7 @@ function webOnlyRoutes(): array
 {
     return [
         'install.store',
+        'invitations.store',
         'magic-link.store',
         'user-password.update',
         'profile.destroy',

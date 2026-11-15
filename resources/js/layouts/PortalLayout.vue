@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
+import AppFooter from '@/components/AppFooter.vue';
 import Container from '@/components/Container.vue';
 import Notifications from '@/components/Notifications.vue';
 import { logout } from '@/routes/portal';
@@ -13,7 +14,7 @@ const page = usePage();
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-black">
+  <div class="flex min-h-screen flex-col bg-gray-50 dark:bg-black">
     <header
       class="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900"
     >
@@ -41,7 +42,7 @@ const page = usePage();
       </Container>
     </header>
 
-    <Container class="max-w-3xl py-10">
+    <Container class="w-full max-w-3xl flex-1 py-10">
       <div v-if="title" class="mb-8 space-y-2">
         <h1 class="font-display text-3xl tracking-tight">{{ $t(title) }}</h1>
         <p v-if="description" class="text-sm text-gray-600 dark:text-gray-400">
@@ -51,6 +52,8 @@ const page = usePage();
 
       <slot />
     </Container>
+
+    <AppFooter />
 
     <Notifications />
   </div>

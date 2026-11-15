@@ -11,6 +11,7 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 import { ChevronDown, Menu as MenuIcon, Plus, Search, X } from '@lucide/vue';
 import { computed, watch } from 'vue';
 import AppButton from '@/components/AppButton.vue';
+import AppFooter from '@/components/AppFooter.vue';
 import AppearanceTabs from '@/components/AppearanceTabs.vue';
 import CommandPalette from '@/components/CommandPalette.vue';
 import Container from '@/components/Container.vue';
@@ -53,7 +54,7 @@ function setAway(away: boolean): void {
 </script>
 
 <template>
-  <div class="min-h-screen">
+  <div class="flex min-h-screen flex-col">
     <Disclosure
       v-slot="{ open }"
       as="nav"
@@ -236,7 +237,7 @@ function setAway(away: boolean): void {
       </DisclosurePanel>
     </Disclosure>
 
-    <main class="py-8">
+    <main class="flex-1 py-8">
       <Container>
         <TimezonePrompt />
 
@@ -248,6 +249,8 @@ function setAway(away: boolean): void {
         <slot />
       </Container>
     </main>
+
+    <AppFooter />
 
     <Notifications />
     <QuickView />

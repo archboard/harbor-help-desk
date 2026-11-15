@@ -141,10 +141,47 @@ test('connecting an address another workspace has creates a new mailbox and leav
         ->and(Mailbox::withoutGlobalScopes()->where('workspace_id', $this->acme->id)->sole()->settings['refresh_token'])->toBe('refresh-1');
 });
 
+/**
+ * Give the workspace its own Microsoft Entra app.
+ */
+function giveMicrosoftApp(Workspace $workspace, string $clientId, string $tenant, string $secret): void
+{
+    $workspace->update(['settings' => ['microsoft_client_id' => $clientId, 'microsoft_tenant' => $tenant], 'microsoft_client_secret' => $secret]);
+}
+
+test('connecting Microsoft uses the workspace\'s own app, not another workspace\'s', function () {
+    $other = Workspace::factory()->create(['subdomain' => 'other']);
+    giveMicrosoftApp($other, '00000000-0000-0000-0000-00000000000b', 'other.com', 'other-secret');
+
+    // Acme has no app yet, so it can't connect.
+    $this->actingAs($this->admin)->get('http://acme.harbor.test/mailboxes/oauth/microsoft')->assertNotFound();
+
+    giveMicrosoftApp($this->acme, '00000000-0000-0000-0000-00000000000a', 'acme.com', 'acme-secret');
+    Workspace::forgetCurrent();
+    $location = $this->get('http://acme.harbor.test/mailboxes/oauth/microsoft')->assertRedirect()->headers->get('Location');
+
+    expect($location)->toStartWith('https://login.microsoftonline.com/acme.com/oauth2/v2.0/authorize?');
+    parse_str((string) parse_url((string) $location, PHP_URL_QUERY), $query);
+    expect($query['client_id'])->toBe('00000000-0000-0000-0000-00000000000a');
+
+    $idToken = 'header.'.rtrim(strtr(base64_encode(json_encode(['email' => 'help@acme.com'])), '+/', '-_'), '=').'.signature';
+    Http::fake(['login.microsoftonline.com/*' => Http::response(['access_token' => 'access-1', 'refresh_token' => 'refresh-1', 'expires_in' => 3600, 'id_token' => $idToken])]);
+
+    $this->get('http://harbor.test/mailboxes/oauth/callback?code=abc&state='.urlencode($query['state']));
+
+    expect(Mailbox::withoutGlobalScopes()->where('driver', MailboxDriver::MICROSOFT)->sole()->workspace_id)->toBe($this->acme->id);
+    Http::assertSent(fn ($request) => $request->url() === 'https://login.microsoftonline.com/acme.com/oauth2/v2.0/token'
+        && $request['client_id'] === '00000000-0000-0000-0000-00000000000a'
+        && $request['client_secret'] === 'acme-secret');
+});
+
 test('Microsoft token refreshes ask for the Graph scopes again', function () {
+    giveMicrosoftApp($this->acme, '00000000-0000-0000-0000-00000000000a', 'acme.com', 'acme-secret');
     Http::fake(['login.microsoftonline.com/*' => Http::response(['access_token' => 'access-2', 'expires_in' => 3600])]);
     $mailbox = $this->acme->execute(fn () => Mailbox::factory()->microsoft()->create(['settings' => ['access_token' => 'access-1', 'refresh_token' => 'refresh-1', 'expires_at' => 0]]));
 
     expect(app(RefreshMailboxToken::class)->handle($mailbox))->toBe('access-2');
-    Http::assertSent(fn ($request) => str_contains($request['scope'], 'https://graph.microsoft.com/Mail.Send'));
+    Http::assertSent(fn ($request) => str_contains($request['scope'], 'https://graph.microsoft.com/Mail.Send')
+        && $request['client_secret'] === 'acme-secret'
+        && str_starts_with($request->url(), 'https://login.microsoftonline.com/acme.com/'));
 });

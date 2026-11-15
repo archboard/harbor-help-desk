@@ -20,11 +20,13 @@ use App\Http\Controllers\Api\V1\DuplicateAutomationController;
 use App\Http\Controllers\Api\V1\EraseContactController;
 use App\Http\Controllers\Api\V1\ExportController;
 use App\Http\Controllers\Api\V1\ImportWorkspaceController;
+use App\Http\Controllers\Api\V1\InvitationController;
 use App\Http\Controllers\Api\V1\LookupTicketsController;
 use App\Http\Controllers\Api\V1\MacroController;
 use App\Http\Controllers\Api\V1\MailboxController;
 use App\Http\Controllers\Api\V1\MarkNotificationReadController;
 use App\Http\Controllers\Api\V1\MarkNotificationsReadController;
+use App\Http\Controllers\Api\V1\MemberController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\NotificationPreferenceController;
 use App\Http\Controllers\Api\V1\OpenApiController;
@@ -32,6 +34,7 @@ use App\Http\Controllers\Api\V1\ReorderAutomationsController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\RequestContactExportController;
 use App\Http\Controllers\Api\V1\RequestWorkspaceExportController;
+use App\Http\Controllers\Api\V1\ResendInvitationController;
 use App\Http\Controllers\Api\V1\RotateWebhookSecretController;
 use App\Http\Controllers\Api\V1\RotateWebhookTokenController;
 use App\Http\Controllers\Api\V1\SavedViewController;
@@ -41,6 +44,7 @@ use App\Http\Controllers\Api\V1\SetAwayController;
 use App\Http\Controllers\Api\V1\SlaPolicyController;
 use App\Http\Controllers\Api\V1\TagController;
 use App\Http\Controllers\Api\V1\TestAutomationController;
+use App\Http\Controllers\Api\V1\TestMailboxController;
 use App\Http\Controllers\Api\V1\TicketAssigneeController;
 use App\Http\Controllers\Api\V1\TicketClaimController;
 use App\Http\Controllers\Api\V1\TicketCommentController;
@@ -53,6 +57,7 @@ use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\WebhookController;
 use App\Http\Controllers\Api\V1\WebhookDeliveryController;
 use App\Http\Controllers\Api\V1\WorkspaceController;
+use App\Http\Controllers\Api\V1\WorkspaceOnboardingController;
 use App\Http\Controllers\Api\V1\WorkspaceSettingsController;
 use App\Http\Controllers\Api\V1\WorkspaceTicketEventController;
 use App\Http\Middleware\EnsurePlatformToken;
@@ -76,7 +81,12 @@ Route::prefix('v1')->name('api.v1.')
 
         Route::get('workspace', [WorkspaceController::class, 'show'])->name('workspace.show');
         Route::patch('workspace', [WorkspaceController::class, 'update'])->name('workspace.update');
+        Route::get('workspace/onboarding', [WorkspaceOnboardingController::class, 'show'])->name('workspace.onboarding.show');
         Route::patch('workspace/settings', [WorkspaceSettingsController::class, 'update'])->name('workspace.settings.update');
+
+        Route::apiResource('members', MemberController::class)->only(['index', 'update', 'destroy']);
+        Route::post('invitations/{invitation}/resend', ResendInvitationController::class)->middleware('throttle:6,1')->name('invitations.resend');
+        Route::apiResource('invitations', InvitationController::class)->only(['index', 'store', 'destroy']);
 
         Route::put('availability', SetAwayController::class)->name('availability.update');
 
@@ -122,6 +132,7 @@ Route::prefix('v1')->name('api.v1.')
         Route::apiResource('sla-policies', SlaPolicyController::class)->parameters(['sla-policies' => 'slaPolicy']);
 
         Route::apiResource('mailboxes', MailboxController::class);
+        Route::post('mailboxes/{mailbox}/test', TestMailboxController::class)->middleware('throttle:6,1')->name('mailboxes.test');
 
         Route::post('contacts/{contact}/erase', EraseContactController::class)->name('contacts.erase');
         Route::post('contacts/{contact}/export', RequestContactExportController::class)->name('contacts.export');

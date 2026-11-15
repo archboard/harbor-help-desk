@@ -156,10 +156,11 @@ class BuildExport implements ShouldQueue
 
     /**
      * Tables with a `workspace_id` column that a workspace export leaves out on purpose:
-     * exports are this feature's own bookkeeping, notifications are per-user and transient, and
-     * webhook deliveries are a short-lived delivery log.
+     * exports are this feature's own bookkeeping, notifications are per-user and transient,
+     * webhook deliveries are a short-lived delivery log, and pending invitations are offers to
+     * people outside the workspace.
      */
-    public const array EXCLUDED_WORKSPACE_TABLES = ['exports', 'notifications', 'webhook_deliveries'];
+    public const array EXCLUDED_WORKSPACE_TABLES = ['exports', 'notifications', 'webhook_deliveries', 'workspace_invitations'];
 
     /**
      * Columns written as null: mailbox credentials (`settings` holds the encrypted IMAP/SMTP/OAuth

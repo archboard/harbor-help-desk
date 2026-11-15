@@ -15,6 +15,7 @@ use App\Http\Controllers\DownloadExportController;
 use App\Http\Controllers\DuplicateAutomationController;
 use App\Http\Controllers\EraseContactController;
 use App\Http\Controllers\InstallController;
+use App\Http\Controllers\InvitationAcceptanceController;
 use App\Http\Controllers\LookupTicketsController;
 use App\Http\Controllers\MailboxOAuthController;
 use App\Http\Controllers\MarkAllNotificationsReadController;
@@ -73,6 +74,10 @@ Route::middleware(['guest', EnsureInstallOpen::class])->group(function () {
 Route::middleware('workspace')->group(function () {
     Route::get('setup', StartSetupController::class)->middleware(['guest', 'signed:relative'])->name('setup.start');
 
+    // The page posts back to its own signed URL, query string included.
+    Route::get('invitations/{invitation}', [InvitationAcceptanceController::class, 'show'])->middleware('signed:relative')->name('invitations.show');
+    Route::post('invitations/{invitation}', [InvitationAcceptanceController::class, 'store'])->middleware(['signed:relative', 'throttle:6,1'])->name('invitations.store');
+
     Route::middleware(['auth', 'verified'])->group(function () {
         Route::redirect('dashboard', '/tickets')->name('dashboard');
         Route::put('availability', SetAwayController::class)->name('availability.update');
@@ -127,6 +132,8 @@ Route::middleware('workspace')->group(function () {
 
         Route::resource('desks', DeskController::class)->except(['create', 'edit']);
         Route::post('desks/{desk}/restore', [DeskController::class, 'restore'])->withTrashed()->name('desks.restore');
+        Route::get('desks/{desk}/members', [DeskMemberController::class, 'index'])->name('desks.members.index');
+        Route::get('desks/{desk}/custom-fields', [DeskCustomFieldController::class, 'edit'])->name('desks.custom-fields.edit');
         Route::put('desks/{desk}/members/{user}', [DeskMemberController::class, 'update'])->name('desks.members.update');
         Route::delete('desks/{desk}/members/{user}', [DeskMemberController::class, 'destroy'])->name('desks.members.destroy');
         Route::put('desks/{desk}/custom-fields', [DeskCustomFieldController::class, 'update'])->name('desks.custom-fields.update');

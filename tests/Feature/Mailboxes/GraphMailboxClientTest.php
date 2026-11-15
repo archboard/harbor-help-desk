@@ -56,3 +56,11 @@ test('an expired delta link surfaces as a 410 for the poll to restart', function
 
     $this->graph->page('https://graph.microsoft.com/v1.0/delta-1');
 })->throws(RequestException::class);
+
+test('count reads the size of the Inbox', function () {
+    Http::fake(['graph.microsoft.com/*' => Http::response(['totalItemCount' => 12])]);
+
+    expect($this->graph->count())->toBe(12);
+
+    Http::assertSent(fn (Request $request): bool => str_contains($request->url(), "/me/mailFolders('Inbox')?") && str_contains(urldecode($request->url()), '$select=totalItemCount'));
+});

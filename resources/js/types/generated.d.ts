@@ -594,6 +594,10 @@ declare namespace App {
         signature?: string | null;
         settings: Record<string, any>;
       };
+      export type MailboxCheckData = {
+        passed: boolean;
+        message: string;
+      };
       export type MailboxData = {
         id: string;
         driver: App.Enums.MailboxDriver;
@@ -605,10 +609,10 @@ declare namespace App {
         routing: App.Data.Mailboxes.MailboxRoutingRuleData[];
         signature: string | null;
         settings?: {
-          imap: App.Data.Mailboxes.MailboxServerData;
-          smtp: App.Data.Mailboxes.MailboxServerData;
+          imap: App.Data.Mailboxes.MailboxServerData | null;
+          smtp: App.Data.Mailboxes.MailboxServerData | null;
         };
-        receives_by: 'webhook' | 'push' | 'watch' | 'poll';
+        receives_by: 'webhook' | 'push' | 'watch' | 'poll' | 'never';
         polled_at: string | null;
         last_error: string | null;
         created_at: string | null;
@@ -621,8 +625,12 @@ declare namespace App {
         host: string;
         port: number;
         encryption: 'ssl' | 'tls' | 'starttls';
-        username: string;
+        username: string | null;
         folder?: string;
+      };
+      export type MailboxTestData = {
+        sending: App.Data.Mailboxes.MailboxCheckData | null;
+        receiving: App.Data.Mailboxes.MailboxCheckData | null;
       };
       export type UpdateMailboxData = {
         name?: string;
@@ -1136,6 +1144,10 @@ declare namespace App {
       };
     }
     namespace Workspaces {
+      export type AcceptInvitationData = {
+        name: string;
+        password: string;
+      };
       export type CreateWorkspaceData = {
         name: string;
         subdomain: string;
@@ -1148,6 +1160,22 @@ declare namespace App {
       export type ImportWorkspaceData = {
         file: File;
       };
+      export type InviteMemberData = {
+        email: string;
+        role: App.Enums.WorkspaceRole;
+        desk_id: string | null;
+      };
+      export type OnboardingData = {
+        steps: App.Data.Workspaces.OnboardingStepData[];
+        inbound_address: string | null;
+        default_desk_id: string | null;
+        complete: boolean;
+      };
+      export type OnboardingStepData = {
+        key: string;
+        complete: boolean;
+        skipped: boolean;
+      };
       export type ProvisionedWorkspaceData = {
         id: string;
         name: string;
@@ -1159,6 +1187,9 @@ declare namespace App {
       export type SetAwayData = {
         away: boolean;
       };
+      export type UpdateMemberRoleData = {
+        role: App.Enums.WorkspaceRole;
+      };
       export type UpdateProvisionedWorkspaceData = {
         name?: string;
         subdomain?: string;
@@ -1168,6 +1199,9 @@ declare namespace App {
       };
       export type UpdateWorkspaceSettingsData = {
         mail_notification_mailbox_id?: string | null;
+        microsoft_client_id?: string | null;
+        microsoft_tenant?: string | null;
+        microsoft_client_secret?: string | null;
         mail_new_tickets_per_sender_per_hour?: number | null;
         attachments_max_size_kb?: number | null;
         attachments_blocked_extensions?: string[] | null;
@@ -1177,6 +1211,8 @@ declare namespace App {
         surveys_enabled?: boolean | null;
         retention_resolved_ticket_days?: number | null;
         retention_trash_days?: number | null;
+        onboarding_dismissed?: boolean | null;
+        onboarding_skipped_steps?: string[] | null;
       };
       export type WorkspaceData = {
         id: string;
@@ -1186,8 +1222,27 @@ declare namespace App {
         away_at: string | null;
         settings?: App.Data.Workspaces.WorkspaceSettings;
       };
+      export type WorkspaceInvitationData = {
+        id: string;
+        email: string;
+        role: App.Enums.WorkspaceRole;
+        desk?: App.Data.Desks.DeskData | null;
+        invited_by?: App.Data.Users.UserData | null;
+        created_at: string | null;
+        expires_at: string;
+      };
+      export type WorkspaceMemberData = {
+        id: string;
+        name: string;
+        email: string;
+        role: App.Enums.WorkspaceRole;
+        desk_count: number;
+        joined_at: string | null;
+      };
       export type WorkspaceSettings = {
         mail_notification_mailbox_id: string | null;
+        microsoft_client_id: string | null;
+        microsoft_tenant: string;
         mail_new_tickets_per_sender_per_hour: number;
         attachments_max_size_kb: number;
         attachments_blocked_extensions: string[];
@@ -1197,6 +1252,8 @@ declare namespace App {
         surveys_enabled: boolean;
         retention_resolved_ticket_days: number | null;
         retention_trash_days: number;
+        onboarding_dismissed: boolean;
+        onboarding_skipped_steps: string[];
       };
     }
   }
@@ -1232,6 +1289,13 @@ declare namespace App {
       | 'webhook_deleted'
       | 'webhook_secret_rotated'
       | 'webhook_disabled'
+      | 'member_invited'
+      | 'invitation_revoked'
+      | 'invitation_resent'
+      | 'invitation_accepted'
+      | 'member_role_changed'
+      | 'member_removed'
+      | 'member_left'
       | 'sla_policy_created'
       | 'sla_policy_updated'
       | 'sla_policy_deleted'

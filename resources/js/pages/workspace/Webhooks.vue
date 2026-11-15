@@ -41,7 +41,7 @@ const { webhooks, eventTypes } = defineProps<{
 }>();
 
 const page = usePage();
-const { copy, copied } = useClipboard();
+const { copy, copied } = useClipboard({ legacy: true });
 
 /** The webhook being edited, `'new'` while creating one, or null when the dialog is closed. */
 const editing = ref<Webhook | 'new' | null>(null);

@@ -20,7 +20,7 @@ const { automation } = defineProps<{
 }>();
 
 const http = useHttp({});
-const { copy } = useClipboard();
+const { copy } = useClipboard({ legacy: true });
 
 const hasSecret = ref(automation?.has_webhook_token ?? false);
 const confirming = ref(false);

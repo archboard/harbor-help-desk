@@ -6,6 +6,7 @@ use App\Models\Desk;
 use App\Models\Mailbox;
 use App\Models\User;
 use App\Models\Workspace;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Concerns\InWorkspace;
 
@@ -22,7 +23,8 @@ beforeEach(function () {
 });
 
 test('admins see the mailboxes, desks and configured providers, never secrets', function () {
-    config(['services.google_mail.client_id' => 'google-client', 'services.microsoft_mail.client_id' => null]);
+    config(['services.google_mail.client_id' => 'google-client']);
+    $this->workspace->update(['settings' => ['microsoft_client_id' => '00000000-0000-0000-0000-000000000001']]);
     Mailbox::factory()->create(['default_desk_id' => $this->desk->id, 'polled_at' => now()]);
     Mailbox::factory()->create([
         'driver' => MailboxDriver::GOOGLE,
@@ -43,7 +45,8 @@ test('admins see the mailboxes, desks and configured providers, never secrets', 
         ->where('mailboxes.1.receives_by', 'push')
         ->missing('mailboxes.1.settings')
         ->where('desks.0.id', $this->desk->id)
-        ->where('oauthProviders', ['google' => true, 'microsoft' => false]));
+        ->where('oauthProviders', ['google' => true, 'microsoft' => false])
+        ->where('microsoftHasSecret', false));
 
     expect($response->getContent())->not->toContain('secret');
 });
@@ -75,6 +78,27 @@ test('admins add, update and delete an IMAP mailbox through the web routes', fun
 
     $this->delete(route('workspace.email.destroy', $mailbox))->assertRedirect();
     expect(Mailbox::count())->toBe(0);
+});
+
+test('a mailbox may be send-only, with an SMTP server that needs no login, but not without either server', function () {
+    $mailbox = ['name' => 'Acme Support', 'address' => 'help@acme.com', 'default_desk_id' => $this->desk->id];
+    $this->actingAs($this->admin);
+
+    $this->post(route('workspace.email.store'), [...$mailbox, 'settings' => ['imap' => null, 'smtp' => null]])
+        ->assertSessionHasErrors(['settings.imap', 'settings.smtp']);
+
+    $this->post(route('workspace.email.store'), [...$mailbox, 'settings' => ['imap' => ['host' => '1.1.1.1'], 'smtp' => null]])
+        ->assertSessionHasErrors(['settings.imap.port', 'settings.imap.username', 'settings.imap.password'])
+        ->assertSessionDoesntHaveErrors(['settings.smtp']);
+
+    $this->post(route('workspace.email.store'), [...$mailbox, 'settings' => ['imap' => null, 'smtp' => ['host' => '1.1.1.1', 'port' => 25, 'encryption' => 'starttls', 'username' => '', 'password' => '']]])
+        ->assertSessionHasNoErrors();
+
+    expect(Mailbox::sole())->receivesMail()->toBeFalse()->sendsMail()->toBeTrue();
+    $this->get(route('workspace.email.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('mailboxes.0.receives_by', 'never')
+        ->where('mailboxes.0.settings.imap', null)
+        ->where('mailboxes.0.settings.smtp.username', null));
 });
 
 test('a routing rule must point at a desk in this workspace', function () {
@@ -109,4 +133,55 @@ test("another workspace's mailboxes are not reachable", function () {
     $this->delete(route('workspace.email.destroy', $foreign->id))->assertNotFound();
 
     expect($foreign->fresh()->name)->toBe('Foreign');
+});
+
+test('testing a mailbox from the settings page reports the result as a toast', function () {
+    Mail::fake();
+    mockImapClient(uidValidity: 7, uidNext: 101, messages: 1);
+    $mailbox = Mailbox::factory()->create();
+
+    $this->actingAs($this->admin)
+        ->post(route('workspace.email.test', $mailbox))
+        ->assertRedirect()
+        ->assertInertiaFlash('toast', ['type' => 'success', 'message' => "Sending: Sent a test email to {$this->admin->email}. Receiving: Connected. The inbox has 1 message."]);
+});
+
+test('admins save the workspace Microsoft app, and its secret is encrypted and never shown', function () {
+    $app = ['microsoft_client_id' => '6f0c1d2e-3b4a-4c5d-8e9f-0a1b2c3d4e5f', 'microsoft_tenant' => 'acme.onmicrosoft.com'];
+    $this->actingAs($this->admin);
+
+    $this->patch(route('workspace.settings.update'), [...$app, 'microsoft_client_secret' => 'entra-secret'])->assertSessionHasNoErrors();
+
+    $workspace = $this->workspace->fresh();
+    expect($workspace->microsoft_client_secret)->toBe('entra-secret')
+        ->and($workspace->getRawOriginal('microsoft_client_secret'))->not->toContain('entra-secret')
+        ->and($workspace->getRawOriginal('settings'))->not->toContain('entra-secret');
+
+    // Leaving the secret out keeps it.
+    $this->patch(route('workspace.settings.update'), $app)->assertSessionHasNoErrors();
+    expect($this->workspace->fresh()->microsoft_client_secret)->toBe('entra-secret');
+
+    $response = $this->get(route('workspace.email.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('oauthProviders.microsoft', true)
+        ->where('microsoftHasSecret', true)
+        ->where('workspace.settings.microsoft_client_id', $app['microsoft_client_id'])
+        ->where('workspace.settings.microsoft_tenant', 'acme.onmicrosoft.com'));
+    expect($response->getContent())->not->toContain('entra-secret');
+
+    $this->patch(route('workspace.settings.update'), ['microsoft_client_secret' => null])->assertSessionHasNoErrors();
+    expect($this->workspace->fresh()->microsoft_client_secret)->toBeNull();
+});
+
+test('the Microsoft app ID must be a GUID and the tenant a plain name', function () {
+    $this->actingAs($this->admin)
+        ->patch(route('workspace.settings.update'), ['microsoft_client_id' => 'nope', 'microsoft_tenant' => 'evil.com/x?'])
+        ->assertSessionHasErrors(['microsoft_client_id', 'microsoft_tenant']);
+});
+
+test('agents cannot set the Microsoft app', function () {
+    $this->actingAs($this->agent)
+        ->patch(route('workspace.settings.update'), ['microsoft_client_secret' => 'stolen'])
+        ->assertForbidden();
+
+    expect($this->workspace->fresh()->microsoft_client_secret)->toBeNull();
 });

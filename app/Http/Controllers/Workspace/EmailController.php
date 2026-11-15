@@ -14,6 +14,7 @@ use App\Http\Flash;
 use App\Models\Desk;
 use App\Models\Mailbox;
 use App\Models\User;
+use App\Models\Workspace;
 use Illuminate\Container\Attributes\CurrentUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,13 +32,18 @@ class EmailController extends Controller
     {
         Gate::authorize('viewAny', Mailbox::class);
 
+        $workspace = Workspace::current();
+
         return Inertia::render('workspace/Email', [
             'mailboxes' => MailboxData::collect(Mailbox::query()->oldest('id')->get()),
             'desks' => DeskData::collect(Desk::query()->orderBy('name')->get()),
             'oauthProviders' => [
                 'google' => filled(config('services.google_mail.client_id')),
-                'microsoft' => filled(config('services.microsoft_mail.client_id')),
+                'microsoft' => filled($workspace->settings->microsoftClientId) && filled($workspace->microsoft_client_secret),
             ],
+            // The app's ID and tenant come from the shared `workspace.settings` prop; the secret never leaves.
+            'microsoftHasSecret' => filled($workspace->microsoft_client_secret),
+            'oauthRedirectUri' => MailboxOAuthController::callbackUrl(),
         ]);
     }
 

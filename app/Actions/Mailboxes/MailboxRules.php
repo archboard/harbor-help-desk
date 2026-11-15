@@ -3,6 +3,7 @@
 namespace App\Actions\Mailboxes;
 
 use App\Enums\MailboxDriver;
+use App\Models\Mailbox;
 use App\Models\Workspace;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -41,8 +42,9 @@ class MailboxRules
      *
      * @return array<string, array<int, ValidationRule|Closure|string|object>>
      */
-    public static function connection(?MailboxDriver $driver, bool $creating): array
+    public static function connection(?MailboxDriver $driver, ?Mailbox $mailbox = null): array
     {
+        $creating = $mailbox === null;
         $required = $creating ? 'required' : 'sometimes';
         $ownServer = $driver === MailboxDriver::IMAP;
         $oauth = (bool) $driver?->usesOAuth();
@@ -57,17 +59,32 @@ class MailboxRules
         }
 
         if ($ownServer) {
-            foreach (['imap', 'smtp'] as $protocol) {
-                $rules["settings.{$protocol}"] = [$required, 'array'];
-                $rules["settings.{$protocol}.host"] = [$required, 'string', 'max:255', self::publicHost(...)];
-                $rules["settings.{$protocol}.port"] = [$required, 'integer', 'between:1,65535'];
-                $rules["settings.{$protocol}.encryption"] = [$required, 'in:ssl,tls,starttls'];
-                $rules["settings.{$protocol}.username"] = [$required, 'string', 'max:255'];
+            // A mailbox may only receive (IMAP) or only send (SMTP), but not neither.
+            foreach (['imap' => 'smtp', 'smtp' => 'imap'] as $protocol => $other) {
+                // A new server needs every field; a stored one may change a field at a time.
+                $field = isset($mailbox?->settings[$protocol]) ? 'sometimes' : "required_with:settings.{$protocol}";
+                $rules["settings.{$protocol}"] = $creating ? ['nullable', "required_without:settings.{$other}", 'array'] : ['sometimes', 'nullable', 'array'];
+                $rules["settings.{$protocol}.host"] = [$field, 'string', 'max:255', self::publicHost(...)];
+                $rules["settings.{$protocol}.port"] = [$field, 'integer', 'between:1,65535'];
+                $rules["settings.{$protocol}.encryption"] = [$field, 'in:ssl,tls,starttls'];
+                // Some SMTP relays accept mail without logging in, trusting the network instead.
+                $credentials = $protocol === 'smtp' ? ['sometimes', 'nullable'] : [$field];
+                $rules["settings.{$protocol}.username"] = [...$credentials, 'string', 'max:255'];
                 // Passwords are never sent back to clients, so an update may leave them out.
-                $rules["settings.{$protocol}.password"] = [$required, 'string', 'max:1000'];
+                $rules["settings.{$protocol}.password"] = [...$credentials, 'string', 'max:1000'];
             }
 
             $rules['settings.imap.folder'] = ['sometimes', 'string', 'max:255'];
+
+            if ($mailbox) {
+                $rules['settings'][] = function (string $attribute, mixed $value, Closure $fail) use ($mailbox): void {
+                    $settings = array_replace($mailbox->settings ?? [], is_array($value) ? $value : []);
+
+                    if (empty($settings['imap']) && empty($settings['smtp'])) {
+                        $fail(__('A mailbox needs an IMAP or SMTP server.'));
+                    }
+                };
+            }
         }
 
         // Updating an OAuth mailbox's settings means reconnecting it: all three tokens, nothing else.
@@ -87,7 +104,7 @@ class MailboxRules
      */
     protected static function publicHost(string $attribute, mixed $value, Closure $fail): void
     {
-        if (! config('harbor.multitenant') || ! is_string($value)) {
+        if (! config('harbor.multitenant') || config('harbor.mail.private_hosts') || ! is_string($value)) {
             return;
         }
 

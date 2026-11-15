@@ -45,7 +45,9 @@ const colors: Record<ButtonColor, string> = {
 const root = useTemplateRef<HTMLElement | Component>('root');
 const lockedSize = reactive({ width: '', height: '' });
 
-// Lock the current size so the button doesn't shrink when the label swaps for the spinner
+// Lock the current size so the button doesn't shrink when the label swaps for the spinner.
+// `align-middle` keeps an inline button still too: by default it sits on its content's
+// baseline, which drops when the text is replaced by the spinner, shifting the whole line.
 watch(
   () => loading,
   () => {
@@ -62,7 +64,7 @@ watch(
   <component
     :is="component"
     ref="root"
-    class="relative z-0 cursor-pointer items-center justify-center overflow-hidden border border-transparent text-center font-medium shadow-sm transition duration-150 ease-in-out hover:shadow-none focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none disabled:opacity-50 dark:focus:ring-offset-gray-900"
+    class="relative z-0 cursor-pointer items-center justify-center overflow-hidden border border-transparent text-center align-middle font-medium shadow-sm transition duration-150 ease-in-out hover:shadow-none focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none disabled:opacity-50 dark:focus:ring-offset-gray-900"
     :class="[sizes[size], colors[color], full ? 'flex w-full' : 'inline-flex']"
     :style="lockedSize"
     :disabled="loading"

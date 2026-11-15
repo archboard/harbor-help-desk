@@ -16,10 +16,15 @@ class WorkspaceSettings extends Data
 {
     /**
      * @param  list<string>  $attachmentsBlockedExtensions
+     * @param  list<string>  $onboardingSkippedSteps
      */
     public function __construct(
         /** The mailbox app email (notifications, sign-in links) is sent from; null means the oldest mailbox. */
         public ?string $mailNotificationMailboxId = null,
+        /** The application (client) ID of the workspace's Microsoft Entra app, for connecting Microsoft 365 mailboxes. Its secret is stored encrypted on the workspace, never here. */
+        public ?string $microsoftClientId = null,
+        /** The Entra tenant that signs mailboxes in: a tenant ID or domain, `organizations` or `common`. */
+        public string $microsoftTenant = 'common',
         /** How many new tickets one sender can open per hour by email; replies don't count. */
         public int $mailNewTicketsPerSenderPerHour = 20,
         /** The largest file that can be attached, in kilobytes; the platform cap and the server's PHP limits still apply. */
@@ -38,6 +43,10 @@ class WorkspaceSettings extends Data
         public ?int $retentionResolvedTicketDays = null,
         /** How many days a deleted ticket stays in the trash before it and its files are removed for good. */
         public int $retentionTrashDays = 30,
+        /** Hides the "Get set up" checklist from the tickets page. */
+        public bool $onboardingDismissed = false,
+        /** Checklist steps an admin marked done themselves (`OnboardingData::STEPS`). */
+        public array $onboardingSkippedSteps = [],
     ) {}
 
     /**

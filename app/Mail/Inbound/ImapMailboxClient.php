@@ -17,15 +17,15 @@ class ImapMailboxClient
     public function __construct(protected Mailbox $mailbox) {}
 
     /**
-     * The folder's next UID and UID validity, from a single STATUS command.
+     * The folder's next UID, UID validity and message count, from a single STATUS command.
      *
-     * @return array{uid_validity: int, uid_next: int}
+     * @return array{uid_validity: int, uid_next: int, messages: int}
      */
     public function status(): array
     {
         $values = array_change_key_case($this->folder()->status(), CASE_UPPER);
 
-        return ['uid_validity' => (int) ($values['UIDVALIDITY'] ?? 0), 'uid_next' => (int) ($values['UIDNEXT'] ?? 0)];
+        return ['uid_validity' => (int) ($values['UIDVALIDITY'] ?? 0), 'uid_next' => (int) ($values['UIDNEXT'] ?? 0), 'messages' => (int) ($values['MESSAGES'] ?? 0)];
     }
 
     /**
