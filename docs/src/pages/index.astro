@@ -296,7 +296,11 @@ const jsonLd = {
 
       const store = (theme: Theme) => {
         try {
-          theme === 'auto' ? localStorage.removeItem('starlight-theme') : localStorage.setItem('starlight-theme', theme);
+          if (theme === 'auto') {
+            localStorage.removeItem('starlight-theme');
+          } else {
+            localStorage.setItem('starlight-theme', theme);
+          }
         } catch {}
       };
       const apply = (theme: Theme) => {
