@@ -92,10 +92,10 @@ function signOut(): void {
       </template>
 
       <p
-        v-if="form.errors.email"
+        v-if="page.props.errors.email"
         class="text-sm text-red-600 dark:text-red-400"
       >
-        {{ form.errors.email }}
+        {{ page.props.errors.email }}
       </p>
 
       <AppButton type="submit" :loading="form.processing" full>
