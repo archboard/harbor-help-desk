@@ -11,7 +11,7 @@
       {{ $t('Built by Archboard') }}
     </a>
     <a
-      href="https://github.com/archboard/harbor-help-desk"
+      href="https://github.com/archboard/harbor-helpdesk"
       target="_blank"
       rel="noopener"
       class="hover:text-gray-900 dark:hover:text-white"

@@ -14,7 +14,7 @@
 # Safe to re-run: existing secrets and .env values are kept, and a re-run
 # refreshes the Compose file, pulls new images and restarts the stack.
 #
-#   curl -fsSL https://raw.githubusercontent.com/archboard/harbor-help-desk/main/setup-docker.sh \
+#   curl -fsSL https://raw.githubusercontent.com/archboard/harbor-helpdesk/main/setup-docker.sh \
 #     | sudo bash -s -- --domain help.example.org --email you@example.org
 
 set -euo pipefail
@@ -23,7 +23,7 @@ DOMAIN="${DOMAIN:-}"
 EMAIL="${EMAIL:-}"
 PROXY="${PROXY:-}"
 HARBOR_VERSION="${HARBOR_VERSION:-}"
-HARBOR_REPO="${HARBOR_REPO:-https://github.com/archboard/harbor-help-desk}"
+HARBOR_REPO="${HARBOR_REPO:-https://github.com/archboard/harbor-helpdesk}"
 APP_DIR="${APP_DIR:-/opt/harbor-help}"
 NO_TLS="${NO_TLS:-0}"
 BUILD="${BUILD:-0}"

@@ -1,0 +1,327 @@
+---
+import '../styles/global.css';
+import Icon from '../components/Icon.astro';
+import LavaLamp from '../components/LavaLamp.astro';
+import harbor from '../assets/harbor.svg?raw';
+import { ARCHBOARD, CLOUD_URL, GITHUB_URL, SITE_URL } from '../config';
+
+const title = 'Harbor Helpdesk: the open source helpdesk for people and AI agents';
+const description =
+  'Open source helpdesk and Zendesk alternative with shared inboxes, SLAs, automations, a customer portal, an API and an MCP server for AI agents. Self-host free.';
+const canonical = `${SITE_URL}/`;
+
+const features = [
+  { icon: 'envelope', title: 'Shared mailboxes', body: 'Connect Gmail, Microsoft 365 or any IMAP inbox, or use a hosted address. Every email becomes a ticket and replies thread back.' },
+  { icon: 'user', title: 'Desks and assignment', body: 'Split work into desks with their own members. Assign by hand, round robin or to whoever has the lightest load.' },
+  { icon: 'clock', title: 'SLAs and business hours', body: 'Set first response and resolution targets per policy, measured against each desk’s business schedule.' },
+  { icon: 'bolt', title: 'Automations and macros', body: 'Route, tag and update tickets when conditions match, and reply to common questions with one click.' },
+  { icon: 'globe', title: 'Customer portal', body: 'Customers open and follow their tickets on the web, and rate the help they got when it is solved.' },
+  { icon: 'chart', title: 'Reports and exports', body: 'Response, resolution, agent, SLA and satisfaction reports, plus full exports of your workspace data.' },
+  { icon: 'code', title: 'API and webhooks', body: 'Everything in the app is in the versioned JSON API. Webhooks tell your other systems when tickets change.' },
+  { icon: 'lock', title: 'Passkeys and audit log', body: 'Agents sign in with passkeys or two-factor codes, and admin changes are recorded in an audit log.' },
+] as const;
+
+const mcpTools = ['search_tickets', 'claim_next_ticket', 'reply_to_ticket', 'apply_macro', 'set_reminder'];
+
+const hosting = [
+  {
+    name: 'Self-hosted',
+    price: 'Free',
+    blurb: 'Run Harbor Helpdesk on your own server with Docker or a plain Debian or Ubuntu VM. Install scripts set up everything it needs.',
+    features: ['The complete application, AGPL-3.0', 'PHP, Postgres, Redis and Reverb, nothing else', 'Community support on GitHub'],
+    cta: 'Read the install guide',
+    href: `${GITHUB_URL}/blob/main/INSTALLATION.md`,
+  },
+  {
+    name: 'Harbor Cloud',
+    price: 'Hosted by Archboard',
+    blurb: 'Your workspace on its own subdomain at harbor.help. We run updates, backups and mail delivery.',
+    features: ['yourteam.harbor.help', 'Automatic updates and backups', 'Same features as self-hosted'],
+    cta: 'Get started',
+    href: CLOUD_URL,
+    badge: true,
+  },
+];
+
+const faq = [
+  { q: 'Is Harbor Helpdesk really free?', a: 'Yes. Harbor Helpdesk is open source under the AGPL-3.0 license, and you can self-host the complete application at no cost. Archboard also runs Harbor Cloud if you would rather not host it yourself.' },
+  { q: 'Can AI agents work tickets?', a: 'Yes. Harbor Helpdesk includes an MCP server, so any MCP client can search, claim, update and reply to tickets with the same permissions as the person who connected it.' },
+  { q: 'What do I need to self-host it?', a: 'A server with PHP, PostgreSQL, Redis and Reverb. The Docker setup script and the VM install script install and configure all of them, including HTTPS.' },
+  { q: 'Which email providers does it work with?', a: 'Gmail and Microsoft 365 through their APIs, any provider over IMAP and SMTP, or a hosted address that Harbor Helpdesk receives mail on.' },
+  { q: 'Is Harbor Helpdesk an alternative to Zendesk, Freshdesk or Help Scout?', a: 'Yes. Harbor Helpdesk covers the same ground as hosted help desk software: shared inboxes, ticket assignment, SLAs, automations, macros, a customer portal and reports. It is open source, so you can self-host it and keep your support data on your own servers.' },
+  { q: 'Who makes Harbor Helpdesk?', a: 'Harbor Helpdesk is built and maintained by Archboard, which also runs Harbor Cloud.' },
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    { '@type': 'WebSite', name: 'Harbor Helpdesk', url: canonical, publisher: ARCHBOARD },
+    {
+      '@type': 'SoftwareApplication',
+      name: 'Harbor Helpdesk',
+      applicationCategory: 'BusinessApplication',
+      applicationSubCategory: 'Help desk software',
+      image: `${SITE_URL}/og.png`,
+      featureList: features.map((feature) => feature.title),
+      operatingSystem: 'Web',
+      description,
+      url: canonical,
+      license: 'https://www.gnu.org/licenses/agpl-3.0.html',
+      codeRepository: GITHUB_URL,
+      author: ARCHBOARD,
+      publisher: ARCHBOARD,
+      offers: [{ '@type': 'Offer', name: 'Self-hosted', price: '0', priceCurrency: 'USD' }],
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faq.map(({ q, a }) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })),
+    },
+  ],
+};
+---
+
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content="Archboard" />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="theme-color" content="#2563eb" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Harbor Helpdesk" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={`${SITE_URL}/og.png`} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Harbor Helpdesk: the open source helpdesk for people and AI agents" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    {/* Same storage key and attribute as Starlight's theme picker, so the choice carries into future docs */}
+    <script is:inline>
+      (() => {
+        let stored = null;
+        try {
+          stored = localStorage.getItem('starlight-theme');
+        } catch {}
+        document.documentElement.dataset.theme = stored || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+      })();
+    </script>
+  </head>
+  <body>
+    <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 btn-primary">Skip to content</a>
+
+    <header class="sticky top-0 z-40 border-b border-gray-200 bg-white/85 backdrop-blur dark:border-gray-800 dark:bg-black/85">
+      <nav class="mx-auto flex max-w-6xl items-center gap-6 px-6 py-3" aria-label="Main">
+        <a href="/" class="flex items-center gap-2.5 font-semibold text-gray-900 dark:text-white">
+          <span class="size-7 text-primary-600 dark:text-primary-400 [&>svg]:size-full" set:html={harbor} aria-hidden="true" />
+          Harbor Helpdesk
+        </a>
+        <ul class="hidden items-center gap-6 text-sm text-gray-600 md:flex dark:text-gray-300">
+          <li><a class="hover:text-gray-900 dark:hover:text-white" href="#features">Features</a></li>
+          <li><a class="hover:text-gray-900 dark:hover:text-white" href="#agents">AI agents</a></li>
+          <li><a class="hover:text-gray-900 dark:hover:text-white" href="#hosting">Hosting</a></li>
+          <li><a class="hover:text-gray-900 dark:hover:text-white" href={GITHUB_URL}>GitHub</a></li>
+        </ul>
+        <div class="ms-auto flex items-center gap-3">
+          <button id="theme-toggle" type="button" class="btn px-3 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-900" aria-label="Theme: auto">
+            <Icon name="laptop" class="theme-auto size-5" />
+            <Icon name="sun" class="theme-light hidden size-5" />
+            <Icon name="moon" class="theme-dark hidden size-5" />
+          </button>
+          <a href={CLOUD_URL} class="btn-primary">Get started</a>
+        </div>
+      </nav>
+    </header>
+
+    <main id="main">
+      <div class="relative isolate overflow-hidden">
+        {/* Same palette as the app's AuthLayout lava lamp */}
+        <LavaLamp
+          class="-z-10 opacity-40 mask-b-from-40% dark:opacity-30"
+          colors={['var(--color-primary-400)', 'var(--color-sky-300)', 'var(--color-primary-700)', 'var(--color-cyan-400)', 'var(--color-indigo-400)']}
+        />
+        <section class="mx-auto max-w-6xl px-6 pt-20 pb-24 text-center md:pt-28">
+          <p class="mb-5 inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-sm text-primary-800 dark:border-primary-800 dark:bg-primary-950 dark:text-primary-200">
+            Open source helpdesk from Archboard · AGPL-3.0
+          </p>
+          <h1 class="mx-auto max-w-4xl font-display text-5xl leading-[1.05] tracking-tight text-balance text-gray-950 md:text-7xl dark:text-white">
+            The helpdesk your team and your AI agents share.
+          </h1>
+          <p class="mx-auto mt-6 max-w-2xl text-lg text-gray-600 dark:text-gray-300">
+            Harbor Helpdesk turns your support inboxes into tickets your team can assign, track against SLAs and solve together. Every action is in the API and the
+            MCP server too, so agents work the same queue with the same rules.
+          </p>
+          <div class="mt-9 flex flex-wrap justify-center gap-3">
+            <a href={CLOUD_URL} class="btn-primary">Get started</a>
+            <a href={`${GITHUB_URL}/blob/main/INSTALLATION.md`} class="btn-secondary">Self-host it</a>
+            <a href={GITHUB_URL} class="btn text-primary-700 hover:underline dark:text-primary-300">View on GitHub →</a>
+          </div>
+        </section>
+      </div>
+
+      <section aria-label="Highlights" class="border-y border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900/40">
+        <ul class="mx-auto grid max-w-6xl gap-6 px-6 py-8 text-sm text-gray-600 sm:grid-cols-3 dark:text-gray-300">
+          <li class="flex items-center justify-center gap-3"><Icon name="code" class="size-5 text-primary-600 dark:text-primary-400" /> Open source, AGPL-3.0</li>
+          <li class="flex items-center justify-center gap-3"><Icon name="terminal" class="size-5 text-primary-600 dark:text-primary-400" /> Built-in MCP server</li>
+          <li class="flex items-center justify-center gap-3"><Icon name="bolt" class="size-5 text-primary-600 dark:text-primary-400" /> Realtime updates for every agent</li>
+        </ul>
+      </section>
+
+      <section id="features" class="mx-auto max-w-6xl scroll-mt-20 px-6 py-24">
+        <h2 class="font-display text-4xl text-gray-950 md:text-5xl dark:text-white">Everything a support team needs</h2>
+        <p class="mt-4 max-w-2xl text-lg text-gray-600 dark:text-gray-300">From the first email to the satisfaction rating, in one place your whole team works from.</p>
+        <ul class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {features.map((feature) => (
+            <li class="card p-6">
+              <Icon name={feature.icon} class="size-6 text-primary-600 dark:text-primary-400" />
+              <h3 class="mt-4 font-semibold text-gray-950 dark:text-white">{feature.title}</h3>
+              <p class="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">{feature.body}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section id="agents" class="scroll-mt-20 border-y border-gray-200 bg-white py-24 dark:border-gray-800 dark:bg-gray-900/40">
+        <div class="mx-auto grid max-w-6xl items-center gap-12 px-6 lg:grid-cols-2">
+          <div>
+            <h2 class="font-display text-4xl text-gray-950 md:text-5xl dark:text-white">AI agents are teammates, not a bolt-on</h2>
+            <p class="mt-4 text-lg text-gray-600 dark:text-gray-300">
+              Connect Claude or any MCP client to your workspace. Agents search the queue, claim the next ticket, reply and apply macros through the same
+              actions and permissions your people use, and every change shows up in the ticket history.
+            </p>
+            <ul class="mt-6 space-y-2 text-gray-600 dark:text-gray-300">
+              <li class="flex gap-2"><Icon name="check" class="mt-0.5 size-5 shrink-0 text-primary-600 dark:text-primary-400" /> Signed in with OAuth, scoped to one workspace</li>
+              <li class="flex gap-2"><Icon name="check" class="mt-0.5 size-5 shrink-0 text-primary-600 dark:text-primary-400" /> No logic of its own: the MCP server calls the app’s actions</li>
+              <li class="flex gap-2"><Icon name="check" class="mt-0.5 size-5 shrink-0 text-primary-600 dark:text-primary-400" /> Your model, your provider, no AI add-on fee</li>
+            </ul>
+          </div>
+          <div class="card overflow-hidden font-mono text-sm shadow-2xl shadow-primary-900/10">
+            <div class="flex items-center gap-1.5 border-b border-gray-200 px-4 py-3 dark:border-gray-800">
+              <span class="size-3 rounded-full bg-gray-200 dark:bg-gray-800"></span>
+              <span class="size-3 rounded-full bg-gray-200 dark:bg-gray-800"></span>
+              <span class="size-3 rounded-full bg-gray-200 dark:bg-gray-800"></span>
+              <span class="ms-2 text-xs text-gray-500">mcp.json</span>
+            </div>
+            <pre class="overflow-x-auto p-5 text-gray-700 dark:text-gray-300"><code>{`{
+  "mcpServers": {
+    "harbor": {
+      "type": "http",
+      "url": "https://yourteam.harbor.help/mcp"
+    }
+  }
+}`}</code></pre>
+            <ul class="flex flex-wrap gap-2 border-t border-gray-200 p-5 dark:border-gray-800">
+              {mcpTools.map((tool) => (
+                <li class="rounded-md bg-primary-50 px-2 py-1 text-xs text-primary-800 dark:bg-primary-950 dark:text-primary-200">{tool}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="hosting" class="mx-auto max-w-6xl scroll-mt-20 px-6 py-24">
+        <h2 class="font-display text-4xl text-gray-950 md:text-5xl dark:text-white">Host it yourself, or let Archboard run it</h2>
+        <p class="mt-4 max-w-2xl text-lg text-gray-600 dark:text-gray-300">Both options run the same complete application.</p>
+        <div class="mt-12 grid gap-5 md:grid-cols-2">
+          {hosting.map((tier) => (
+            <div class:list={['card relative flex flex-col p-7', tier.badge && 'border-primary-500! dark:border-primary-600!']}>
+              <h3 class="text-lg font-semibold text-gray-950 dark:text-white">{tier.name}</h3>
+              <p class="mt-3 font-display text-3xl text-gray-950 dark:text-white">{tier.price}</p>
+              <p class="mt-4 text-gray-600 dark:text-gray-300">{tier.blurb}</p>
+              <ul class="mt-6 flex-1 space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                {tier.features.map((feature) => (
+                  <li class="flex gap-2"><Icon name="check" class="mt-0.5 size-4 shrink-0 text-primary-600 dark:text-primary-400" /> {feature}</li>
+                ))}
+              </ul>
+              <a href={tier.href} class:list={['mt-8', tier.badge ? 'btn-primary' : 'btn-secondary']}>{tier.cta}</a>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section class="border-t border-gray-200 bg-white py-24 dark:border-gray-800 dark:bg-gray-900/40">
+        <div class="mx-auto max-w-3xl px-6">
+          <h2 class="font-display text-4xl text-gray-950 md:text-5xl dark:text-white">Questions</h2>
+          <div class="mt-10 divide-y divide-gray-200 border-y border-gray-200 dark:divide-gray-800 dark:border-gray-800">
+            {faq.map(({ q, a }) => (
+              <details class="group py-5">
+                <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-medium text-gray-950 dark:text-white [&::-webkit-details-marker]:hidden">
+                  {q}
+                  <Icon name="chevron-down" class="size-5 shrink-0 transition-transform group-open:rotate-180" />
+                </summary>
+                <p class="mt-3 text-gray-600 dark:text-gray-300">{a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section class="px-6 py-24">
+        <div class="mx-auto max-w-6xl rounded-3xl bg-primary-900 px-8 py-16 text-center text-white dark:bg-primary-950 dark:ring-1 dark:ring-primary-800">
+          <h2 class="font-display text-4xl md:text-5xl">Give your inbox a harbor.</h2>
+          <p class="mx-auto mt-4 max-w-xl text-primary-100">Start a hosted workspace, or install it on your own server for free.</p>
+          <div class="mt-8 flex flex-wrap justify-center gap-3">
+            <a href={CLOUD_URL} class="btn bg-white font-semibold text-primary-900 hover:bg-primary-50">Get started</a>
+            <a href={`${GITHUB_URL}/blob/main/INSTALLATION.md`} class="btn border border-primary-400/50 text-white hover:bg-primary-800">Self-host it</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="border-t border-gray-200 dark:border-gray-800">
+      <div class="mx-auto flex max-w-6xl flex-wrap items-center gap-x-8 gap-y-4 px-6 py-10 text-sm text-gray-600 dark:text-gray-400">
+        <a href="https://archboard.io" class="flex items-center gap-2 font-medium text-gray-900 dark:text-white">
+          <span class="size-5 text-primary-600 dark:text-primary-400 [&>svg]:size-full" set:html={harbor} aria-hidden="true" /> Harbor Helpdesk by Archboard
+        </a>
+        <ul class="flex flex-wrap gap-6">
+          <li><a class="hover:underline" href={GITHUB_URL}>GitHub</a></li>
+          <li><a class="hover:underline" href={`${GITHUB_URL}/blob/main/CHANGELOG.md`}>Changelog</a></li>
+          <li><a class="hover:underline" href={`${GITHUB_URL}/blob/main/LICENSE`}>License (AGPL-3.0)</a></li>
+        </ul>
+        <p class="ms-auto">© {new Date().getFullYear()} Archboard</p>
+      </div>
+    </footer>
+
+    <script>
+      const toggle = document.getElementById('theme-toggle')!;
+      const order = ['auto', 'light', 'dark'] as const;
+      type Theme = (typeof order)[number];
+
+      const store = (theme: Theme) => {
+        try {
+          if (theme === 'auto') {
+            localStorage.removeItem('starlight-theme');
+          } else {
+            localStorage.setItem('starlight-theme', theme);
+          }
+        } catch {}
+      };
+      const apply = (theme: Theme) => {
+        document.documentElement.dataset.theme = theme === 'auto' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : theme;
+        toggle.setAttribute('aria-label', `Theme: ${theme}`);
+        for (const option of order) {
+          toggle.querySelector(`.theme-${option}`)?.classList.toggle('hidden', option !== theme);
+        }
+      };
+
+      let current: Theme = 'auto';
+      try {
+        current = (localStorage.getItem('starlight-theme') as Theme) || 'auto';
+      } catch {}
+      apply(current);
+      toggle.addEventListener('click', () => {
+        current = order[(order.indexOf(current) + 1) % order.length];
+        store(current);
+        apply(current);
+      });
+      matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => current === 'auto' && apply('auto'));
+    </script>
+  </body>
+</html>

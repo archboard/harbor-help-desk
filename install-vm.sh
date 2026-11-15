@@ -7,7 +7,7 @@
 # Safe to re-run: existing secrets and .env values are kept, and a re-run pulls
 # the code, rebuilds, migrates and restarts everything.
 #
-#   curl -fsSL https://raw.githubusercontent.com/archboard/harbor-help-desk/main/install-vm.sh \
+#   curl -fsSL https://raw.githubusercontent.com/archboard/harbor-helpdesk/main/install-vm.sh \
 #     | sudo bash -s -- --domain help.example.org --email you@example.org --version v1.0.0
 
 set -euo pipefail
@@ -15,7 +15,7 @@ set -euo pipefail
 DOMAIN="${DOMAIN:-}"
 EMAIL="${EMAIL:-}"
 REF="${HARBOR_VERSION:-${REF:-main}}"
-REPO="${HARBOR_REPO:-https://github.com/archboard/harbor-help-desk.git}"
+REPO="${HARBOR_REPO:-https://github.com/archboard/harbor-helpdesk.git}"
 APP_DIR="${APP_DIR:-/var/www/harbor-help}"
 APP_USER="${APP_USER:-harbor}"
 DB_NAME="${DB_NAME:-harbor_help}"
