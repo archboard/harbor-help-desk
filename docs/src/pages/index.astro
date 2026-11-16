@@ -16,9 +16,9 @@ const features = [
   { icon: 'clock', title: 'SLAs and business hours', body: 'Set first response and resolution targets per policy, measured against each desk’s business schedule.' },
   { icon: 'bolt', title: 'Automations and macros', body: 'Route, tag and update tickets when conditions match, and reply to common questions with one click.' },
   { icon: 'globe', title: 'Customer portal', body: 'Customers open and follow their tickets on the web, and rate the help they got when it is solved.' },
-  { icon: 'chart', title: 'Reports and exports', body: 'Response, resolution, agent, SLA and satisfaction reports, plus full exports of your workspace data.' },
+  { icon: 'chart', title: 'Reports and exports', body: 'Response, resolution, workload, SLA and satisfaction reports, plus full exports of your workspace data.' },
   { icon: 'code', title: 'API and webhooks', body: 'Everything in the app is in the versioned JSON API. Webhooks tell your other systems when tickets change.' },
-  { icon: 'lock', title: 'Passkeys and audit log', body: 'Agents sign in with passkeys or two-factor codes, and admin changes are recorded in an audit log.' },
+  { icon: 'lock', title: 'Passkeys and audit log', body: 'Staff sign in with passkeys or two-factor codes, and admin changes are recorded in an audit log.' },
 ] as const;
 
 const mcpTools = ['search_tickets', 'claim_next_ticket', 'reply_to_ticket', 'apply_macro', 'set_reminder'];
@@ -170,7 +170,7 @@ const jsonLd = {
         <ul class="mx-auto grid max-w-6xl gap-6 px-6 py-8 text-sm text-gray-600 sm:grid-cols-3 dark:text-gray-300">
           <li class="flex items-center justify-center gap-3"><Icon name="code" class="size-5 text-primary-600 dark:text-primary-400" /> Open source, AGPL-3.0</li>
           <li class="flex items-center justify-center gap-3"><Icon name="terminal" class="size-5 text-primary-600 dark:text-primary-400" /> Built-in MCP server</li>
-          <li class="flex items-center justify-center gap-3"><Icon name="bolt" class="size-5 text-primary-600 dark:text-primary-400" /> Realtime updates for every agent</li>
+          <li class="flex items-center justify-center gap-3"><Icon name="bolt" class="size-5 text-primary-600 dark:text-primary-400" /> Realtime updates for your whole team</li>
         </ul>
       </section>
 
@@ -265,7 +265,7 @@ const jsonLd = {
 
       <section class="px-6 py-24">
         <div class="mx-auto max-w-6xl rounded-3xl bg-primary-900 px-8 py-16 text-center text-white dark:bg-primary-950 dark:ring-1 dark:ring-primary-800">
-          <h2 class="font-display text-4xl md:text-5xl">Give your inbox a harbor.</h2>
+          <h2 class="font-display text-4xl md:text-5xl">Every request deserves a safe harbor.</h2>
           <p class="mx-auto mt-4 max-w-xl text-primary-100">Start a hosted workspace, or install it on your own server for free.</p>
           <div class="mt-8 flex flex-wrap justify-center gap-3">
             <a href={CLOUD_URL} class="btn bg-white font-semibold text-primary-900 hover:bg-primary-50">Get started</a>
