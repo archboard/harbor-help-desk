@@ -10,9 +10,10 @@ use Spatie\LaravelData\Optional;
 use Spatie\LaravelData\Support\Validation\ValidationContext;
 
 /**
- * One of the workspace's own mailboxes: IMAP/SMTP with passwords, or Google or Microsoft with
- * OAuth tokens. The settings hold secrets, so they're accepted here and never sent back. The
- * hosted mailbox is only made by {@see CreateHostedMailbox}.
+ * One of the workspace's own mailboxes: IMAP/SMTP with passwords, Postmark with a server
+ * token (`settings.server_token`), or Google or Microsoft with OAuth tokens. The settings
+ * hold secrets, so they're accepted here and never sent back. The hosted mailbox is only made
+ * by {@see CreateHostedMailbox}.
  */
 class CreateMailboxData extends InputData
 {

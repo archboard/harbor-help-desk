@@ -11,8 +11,8 @@ use Spatie\LaravelData\Lazy;
 use Spatie\TypeScriptTransformer\Attributes\LiteralTypeScriptType;
 
 /**
- * Never exposes passwords or OAuth tokens: only the servers and usernames of an IMAP/SMTP
- * mailbox's settings.
+ * Never exposes passwords or tokens: only the servers and usernames of an IMAP/SMTP mailbox's
+ * settings. A Postmark mailbox's webhook URL holds its secret, which only admins may see.
  */
 class MailboxData extends Data
 {
@@ -20,6 +20,7 @@ class MailboxData extends Data
      * @param  string|null  $inboundAddress  Hosted only: the address tenants forward their own mail to.
      * @param  Collection<int, MailboxRoutingRuleData>  $routing
      * @param  array{imap: ?MailboxServerData, smtp: ?MailboxServerData}|Lazy  $settings  IMAP only; either may be null.
+     * @param  string|Lazy  $webhookUrl  Postmark only: the secret URL to set as the server's inbound webhook.
      */
     public function __construct(
         public string $id,
@@ -32,6 +33,7 @@ class MailboxData extends Data
         public Collection $routing,
         public ?string $signature,
         public array|Lazy $settings,
+        public string|Lazy $webhookUrl,
         #[LiteralTypeScriptType("'webhook' | 'push' | 'watch' | 'poll' | 'never'")]
         public string $receivesBy,
         public ?CarbonImmutable $polledAt,
@@ -55,8 +57,10 @@ class MailboxData extends Data
                 'imap' => isset($mailbox->settings['imap']) ? MailboxServerData::from($mailbox->settings['imap']) : null,
                 'smtp' => isset($mailbox->settings['smtp']) ? MailboxServerData::from($mailbox->settings['smtp']) : null,
             ]),
+            webhookUrl: Lazy::when(fn (): bool => $mailbox->driver === MailboxDriver::POSTMARK, fn (): string => rtrim((string) config('app.url'), '/')
+                .route('webhooks.postmark.mailbox', [$mailbox->id, (string) $mailbox->push_secret], absolute: false)),
             receivesBy: match (true) {
-                $mailbox->driver === MailboxDriver::HOSTED => 'webhook',
+                $mailbox->driver === MailboxDriver::HOSTED, $mailbox->driver === MailboxDriver::POSTMARK => 'webhook',
                 ! $mailbox->receivesMail() => 'never',
                 (bool) $mailbox->push_expires_at?->isFuture() => 'push',
                 config('harbor.mail.watch') && $mailbox->driver !== MailboxDriver::MICROSOFT => 'watch',

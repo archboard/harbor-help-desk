@@ -45,4 +45,16 @@ class MailboxFactory extends Factory
             'settings' => ['access_token' => 'access-1', 'refresh_token' => 'refresh-1', 'expires_at' => now()->addHour()->getTimestamp()],
         ]);
     }
+
+    /**
+     * A mailbox on the workspace's own Postmark server.
+     */
+    public function postmark(): static
+    {
+        return $this->state(fn (): array => [
+            'driver' => MailboxDriver::POSTMARK,
+            'settings' => ['server_token' => 'server-token'],
+            'push_secret' => 'webhook-secret',
+        ]);
+    }
 }

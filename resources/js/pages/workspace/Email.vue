@@ -5,10 +5,12 @@ import { ArrowDown, ArrowUp, Copy, Check, Inbox, X } from '@lucide/vue';
 import { useClipboard } from '@vueuse/core';
 import { computed, ref } from 'vue';
 import AppButton from '@/components/AppButton.vue';
+import AppMenuItem from '@/components/AppMenuItem.vue';
 import CardAction from '@/components/CardAction.vue';
 import CardHeader from '@/components/CardHeader.vue';
 import CardPadding from '@/components/CardPadding.vue';
 import CardWrapper from '@/components/CardWrapper.vue';
+import DropDownButton from '@/components/forms/buttons/DropDownButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import AppFieldset from '@/components/forms/AppFieldset.vue';
 import AppInput from '@/components/forms/AppInput.vue';
@@ -100,8 +102,16 @@ const encryptions = { ssl: 'SSL/TLS', starttls: 'STARTTLS', tls: 'TLS' };
 
 const { copy, copied } = useClipboard({ legacy: true });
 
-/** The mailbox being edited, `'new'` while adding an IMAP/SMTP one, or null when closed. */
-const editing = ref<App.Data.Mailboxes.MailboxData | 'new' | null>(null);
+/** The mailbox being edited, the driver of the one being added, or null when closed. */
+const editing = ref<
+  App.Data.Mailboxes.MailboxData | 'imap' | 'postmark' | null
+>(null);
+const isNew = computed(() => typeof editing.value === 'string');
+const isPostmark = computed(
+  () =>
+    editing.value === 'postmark' ||
+    (typeof editing.value === 'object' && editing.value?.driver === 'postmark'),
+);
 const deleting = ref<App.Data.Mailboxes.MailboxData | null>(null);
 const deleteLoading = ref(false);
 const testing = ref<string | null>(null);
@@ -112,6 +122,7 @@ const form = useForm({
   default_desk_id: '',
   signature: '',
   routing: [] as App.Data.Mailboxes.MailboxRoutingRuleData[],
+  server_token: '',
   receives: true,
   sends: true,
   settings: {
@@ -142,12 +153,15 @@ function deskName(id: string): string {
   return desks.find((desk) => desk.id === id)?.name ?? trans('Archived desk');
 }
 
-function open(mailbox: App.Data.Mailboxes.MailboxData | 'new'): void {
+function open(
+  mailbox: App.Data.Mailboxes.MailboxData | 'imap' | 'postmark',
+): void {
   form.clearErrors();
   form.reset();
 
-  if (mailbox !== 'new') {
+  if (typeof mailbox === 'object') {
     form.name = mailbox.name;
+    form.address = mailbox.address;
     form.signature = mailbox.signature ?? '';
     form.default_desk_id = mailbox.default_desk_id;
     form.routing = mailbox.routing.map((rule) => ({ ...rule }));
@@ -174,26 +188,55 @@ function save(close: () => void): void {
         default_desk_id,
         signature,
         routing,
+        server_token,
         receives,
         sends,
         settings,
       }):
-        | Omit<App.Data.Mailboxes.CreateMailboxData, 'driver'>
-        | App.Data.Mailboxes.UpdateMailboxData =>
-        mailbox === 'new'
-          ? {
-              name,
-              address,
-              default_desk_id,
-              settings: {
-                imap: receives ? settings.imap : null,
-                smtp: sends ? settings.smtp : null,
-              },
-            }
-          : { name, default_desk_id, signature: signature || null, routing },
+        | App.Data.Mailboxes.CreateMailboxData
+        | App.Data.Mailboxes.UpdateMailboxData => {
+        if (mailbox === 'postmark') {
+          return {
+            driver: mailbox,
+            name,
+            address,
+            default_desk_id,
+            settings: { server_token },
+          };
+        }
+
+        if (mailbox === 'imap' || mailbox === null) {
+          return {
+            driver: 'imap',
+            name,
+            address,
+            default_desk_id,
+            settings: {
+              imap: receives ? settings.imap : null,
+              smtp: sends ? settings.smtp : null,
+            },
+          };
+        }
+
+        return {
+          name,
+          default_desk_id,
+          signature: signature || null,
+          routing,
+          // A blank token keeps the saved one.
+          ...(mailbox.driver === 'postmark'
+            ? {
+                address,
+                ...(server_token ? { settings: { server_token } } : {}),
+              }
+            : {}),
+        };
+      },
     )
     .submit(
-      mailbox === 'new' || mailbox === null ? store() : update(mailbox.id),
+      typeof mailbox === 'object' && mailbox !== null
+        ? update(mailbox.id)
+        : store(),
       { preserveScroll: true, onSuccess: close },
     );
 }
@@ -247,9 +290,19 @@ function remove(close: () => void): void {
           :href="connect('microsoft').url"
           >{{ $t('Connect Microsoft 365') }}</AppButton
         >
-        <AppButton type="button" @click="open('new')">{{
-          $t('Add IMAP/SMTP mailbox')
-        }}</AppButton>
+        <DropDownButton size="base" color="primary">
+          {{ $t('Add mailbox') }}
+          <template #dropdown>
+            <div class="p-1">
+              <AppMenuItem is="button" type="button" @click="open('imap')">
+                {{ $t('IMAP/SMTP') }}
+              </AppMenuItem>
+              <AppMenuItem is="button" type="button" @click="open('postmark')">
+                {{ $t('Postmark') }}
+              </AppMenuItem>
+            </div>
+          </template>
+        </DropDownButton>
       </div>
     </div>
 
@@ -502,9 +555,11 @@ function remove(close: () => void): void {
   <Modal
     v-if="editing"
     :headline="
-      editing === 'new'
+      editing === 'imap'
         ? $t('Add IMAP/SMTP mailbox')
-        : $t('Edit :address', { address: editing.address })
+        : editing === 'postmark'
+          ? $t('Add Postmark mailbox')
+          : $t('Edit :address', { address: editing.address })
     "
     :action-loading="form.processing"
     size="2xl"
@@ -512,6 +567,70 @@ function remove(close: () => void): void {
     @action="save"
   >
     <form class="mt-4" @submit.prevent>
+      <div
+        v-if="isPostmark"
+        class="mb-6 space-y-2 text-sm text-gray-500 dark:text-gray-400"
+      >
+        <p>
+          {{
+            $t(
+              'Harbor sends replies through your Postmark server and receives mail from its inbound stream. In Postmark:',
+            )
+          }}
+        </p>
+        <ol class="list-decimal space-y-1 pl-5">
+          <li>
+            {{
+              $t(
+                'Open your server, go to API Tokens and copy a Server API token.',
+              )
+            }}
+          </li>
+          <li>
+            {{
+              $t(
+                'Under Sender Signatures, confirm the email address or verify its domain, so Postmark will send from it.',
+              )
+            }}
+          </li>
+          <li>
+            {{
+              $t(
+                "Open the server's Default Inbound Stream. Under Settings, set the inbound webhook URL below, check Include raw email content in JSON payload, and save.",
+              )
+            }}
+            <span
+              v-if="typeof editing === 'object' && editing.webhook_url"
+              class="mt-1 flex items-center gap-2"
+            >
+              <code class="truncate text-gray-700 dark:text-gray-300">{{
+                editing.webhook_url
+              }}</code>
+              <button
+                type="button"
+                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                @click="copy(editing.webhook_url)"
+              >
+                <span class="sr-only">{{ $t('Copy webhook URL') }}</span>
+                <Check v-if="copied" class="size-4" aria-hidden="true" />
+                <Copy v-else class="size-4" aria-hidden="true" />
+              </button>
+            </span>
+            <span v-else class="mt-1 block">{{
+              $t(
+                'The URL appears here once the mailbox is added. Edit it to copy the URL.',
+              )
+            }}</span>
+          </li>
+          <li>
+            {{
+              $t(
+                "Forward the email address to the stream's inbound address (…@inbound.postmarkapp.com), or set up inbound domain forwarding.",
+              )
+            }}
+          </li>
+        </ol>
+      </div>
       <AppFieldset>
         <InputField
           v-model="form.name"
@@ -521,7 +640,7 @@ function remove(close: () => void): void {
           required
         />
         <EmailField
-          v-if="editing === 'new'"
+          v-if="isNew || isPostmark"
           v-model="form.address"
           :label="$t('Email address')"
           :help-text="$t('Customers write to it and replies are sent from it.')"
@@ -536,8 +655,18 @@ function remove(close: () => void): void {
           :error="form.errors.default_desk_id"
           required
         />
+        <PasswordField
+          v-if="isPostmark"
+          v-model="form.server_token"
+          :label="$t('Server API token')"
+          :placeholder="
+            isNew ? '' : $t('Saved. Enter a new one to replace it.')
+          "
+          :error="error('settings.server_token') ?? error('settings')"
+          :required="isNew"
+        />
 
-        <template v-if="editing === 'new'">
+        <template v-if="editing === 'imap'">
           <template
             v-for="protocol in ['imap', 'smtp'] as const"
             :key="protocol"
@@ -617,7 +746,7 @@ function remove(close: () => void): void {
           </template>
         </template>
 
-        <template v-else>
+        <template v-else-if="!isNew">
           <TextareaField
             v-model="form.signature"
             :label="$t('Signature')"

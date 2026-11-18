@@ -81,7 +81,7 @@ class MailboxWatcher
     protected function reload(): void
     {
         $this->mailboxes = Mailbox::withoutGlobalScope('workspace')
-            ->whereNotIn('driver', [MailboxDriver::HOSTED, MailboxDriver::MICROSOFT])
+            ->whereNotIn('driver', [MailboxDriver::HOSTED, MailboxDriver::POSTMARK, MailboxDriver::MICROSOFT])
             ->whereNotNull('settings')
             ->withoutPush()
             ->with('workspace')

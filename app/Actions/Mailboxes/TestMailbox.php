@@ -26,7 +26,8 @@ class TestMailbox
 
         return new MailboxTestData(
             sending: $mailbox->sendsMail() ? $this->check(fn (): string => $this->send($actor, $mailbox)) : null,
-            receiving: $mailbox->receivesMail() && $mailbox->driver !== MailboxDriver::HOSTED
+            // Webhook mailboxes have no inbox to open.
+            receiving: $mailbox->receivesMail() && ! in_array($mailbox->driver, [MailboxDriver::HOSTED, MailboxDriver::POSTMARK], true)
                 ? $this->check(fn (): string => $this->receive($mailbox))
                 : null,
         );

@@ -131,8 +131,8 @@ class Mailbox extends Model
     */
 
     /**
-     * Limit to the mailboxes `mailboxes:poll` should queue a poll for this minute. Hosted
-     * mailboxes receive by webhook, so only the workspace's own mailboxes are polled, and not
+     * Limit to the mailboxes `mailboxes:poll` should queue a poll for this minute. Hosted and
+     * Postmark mailboxes receive by webhook, so only the other mailboxes are polled, and not
      * those without credentials (imported ones). A mailbox with an unexpired push subscription,
      * or one `mailboxes:watch` covers (any but Microsoft, which has no IMAP), is only polled
      * after 5 minutes, as a backstop.
@@ -142,7 +142,7 @@ class Mailbox extends Model
     #[Scope]
     protected function needsScheduledPoll(Builder $query): void
     {
-        $query->where('driver', '!=', MailboxDriver::HOSTED)
+        $query->whereNotIn('driver', [MailboxDriver::HOSTED, MailboxDriver::POSTMARK])
             ->whereNotNull('settings')
             ->where(fn (Builder $query) => $query
                 ->whereNull('polled_at')
@@ -246,8 +246,8 @@ class Mailbox extends Model
 
     /**
      * The transport that sends as this mailbox: the platform mailer's (Postmark in the cloud)
-     * for the hosted mailbox, Graph for Microsoft 365, otherwise the workspace's own SMTP server
-     * (XOAUTH2 for Google).
+     * for the hosted mailbox, Graph for Microsoft 365, the workspace's own Postmark server for
+     * Postmark, otherwise the workspace's own SMTP server (XOAUTH2 for Google).
      */
     public function transport(): TransportInterface
     {
@@ -266,8 +266,10 @@ class Mailbox extends Model
 
         $name = "mailbox-{$this->id}";
 
-        if ($this->driver === MailboxDriver::MICROSOFT) {
-            config(["mail.mailers.{$name}" => ['transport' => 'graph', 'mailbox' => $this]]);
+        if ($this->driver === MailboxDriver::MICROSOFT || $this->driver === MailboxDriver::POSTMARK) {
+            config(["mail.mailers.{$name}" => $this->driver === MailboxDriver::MICROSOFT
+                ? ['transport' => 'graph', 'mailbox' => $this]
+                : ['transport' => 'postmark', 'token' => $this->settings['server_token'] ?? '']]);
             Mail::purge($name);
 
             return $name;

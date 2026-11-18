@@ -11,7 +11,8 @@ use Illuminate\Validation\Rule;
 
 /**
  * Validation rules for creating or updating a mailbox. Hosted and OAuth mailboxes can only
- * change their name, signature, default desk and routing, and OAuth ones their tokens.
+ * change their name, signature, default desk and routing, OAuth ones their tokens, and
+ * Postmark ones their address and server token.
  */
 class MailboxRules
 {
@@ -47,11 +48,12 @@ class MailboxRules
         $creating = $mailbox === null;
         $required = $creating ? 'required' : 'sometimes';
         $ownServer = $driver === MailboxDriver::IMAP;
+        $postmark = $driver === MailboxDriver::POSTMARK;
         $oauth = (bool) $driver?->usesOAuth();
 
         $rules = [
-            'address' => [$creating || $ownServer ? $required : 'missing', 'string', 'email', 'max:255'],
-            'settings' => [$creating || $ownServer || $oauth ? $required : 'missing', 'array'],
+            'address' => [$creating || $ownServer || $postmark ? $required : 'missing', 'string', 'email', 'max:255'],
+            'settings' => [$creating || $ownServer || $postmark || $oauth ? $required : 'missing', 'array'],
         ];
 
         if ($creating) {
@@ -85,6 +87,12 @@ class MailboxRules
                     }
                 };
             }
+        }
+
+        // The token of the workspace's own Postmark server, which sends replies. Never sent back.
+        if ($postmark) {
+            $rules['settings'][] = 'array:server_token';
+            $rules['settings.server_token'] = [$creating ? 'required' : 'required_with:settings', 'string', 'max:255'];
         }
 
         // Updating an OAuth mailbox's settings means reconnecting it: all three tokens, nothing else.

@@ -23,7 +23,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * The workspace's mailboxes. IMAP/SMTP ones are added here; Google and Microsoft ones are
+ * The workspace's mailboxes. IMAP/SMTP and Postmark ones are added here; Google and Microsoft ones are
  * connected through {@see MailboxOAuthController}.
  */
 class EmailController extends Controller
@@ -49,7 +49,7 @@ class EmailController extends Controller
 
     public function store(Request $request, #[CurrentUser] User $user, CreateMailbox $createMailbox): RedirectResponse
     {
-        $createMailbox->handle($user, [...$request->all(), 'driver' => MailboxDriver::IMAP->value]);
+        $createMailbox->handle($user, [...$request->all(), 'driver' => $request->input('driver') === MailboxDriver::POSTMARK->value ? MailboxDriver::POSTMARK->value : MailboxDriver::IMAP->value]);
 
         Flash::success(__('Mailbox added.'));
 

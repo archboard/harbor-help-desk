@@ -122,6 +122,34 @@ test('in multitenant mode, mail servers must be public unless the operator allow
     $this->postJson('http://acme.harbor.test/api/v1/mailboxes', $input)->assertCreated();
 });
 
+test('admins add a Postmark mailbox with a server token, and get its webhook URL but never the token', function () {
+    config(['app.url' => 'https://harbor.test']);
+    actAs($this->admin, $this->acme);
+
+    $response = $this->postJson('http://acme.harbor.test/api/v1/mailboxes', [
+        'driver' => 'postmark',
+        'name' => 'Acme Support',
+        'address' => 'help@acme.com',
+        'default_desk_id' => $this->desk->id,
+        'settings' => ['server_token' => 'pm-token'],
+    ])->assertCreated();
+
+    $mailbox = $this->acme->execute(fn () => Mailbox::sole());
+    expect($mailbox->push_secret)->toHaveLength(40);
+    $response->assertJsonPath('receives_by', 'webhook')
+        ->assertJsonPath('webhook_url', "https://harbor.test/webhooks/postmark/mailboxes/{$mailbox->id}/{$mailbox->push_secret}")
+        ->assertJsonMissingPath('settings')
+        ->assertDontSee('pm-token');
+
+    $this->patchJson("http://acme.harbor.test/api/v1/mailboxes/{$mailbox->id}", ['settings' => ['server_token' => '', 'imap' => []]])
+        ->assertJsonValidationErrors(['settings', 'settings.server_token']);
+    $this->patchJson("http://acme.harbor.test/api/v1/mailboxes/{$mailbox->id}", ['address' => 'support@acme.com', 'settings' => ['server_token' => 'new-token']])
+        ->assertOk()
+        ->assertJsonPath('address', 'support@acme.com');
+
+    expect($mailbox->fresh()->settings)->toBe(['server_token' => 'new-token']);
+});
+
 test('OAuth mailboxes never expose their tokens or push secret', function () {
     $google = $this->acme->execute(fn () => Mailbox::factory()->create([
         'driver' => MailboxDriver::GOOGLE,

@@ -117,6 +117,7 @@ function webOnlyRoutes(): array
         'webhooks.microsoft.graph',
         'webhooks.postmark.bounce',
         'webhooks.postmark.inbound',
+        'webhooks.postmark.mailbox',
     ];
 }
 

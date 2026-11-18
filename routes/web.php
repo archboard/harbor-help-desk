@@ -41,6 +41,7 @@ use App\Http\Controllers\TicketTagController;
 use App\Http\Controllers\TicketThreadController;
 use App\Http\Controllers\Webhooks\AutomationWebhookController;
 use App\Http\Controllers\Webhooks\MailboxPushController;
+use App\Http\Controllers\Webhooks\PostmarkMailboxWebhookController;
 use App\Http\Controllers\Webhooks\PostmarkWebhookController;
 use App\Http\Middleware\EnsureInstallOpen;
 use App\Http\Middleware\VerifyPostmarkWebhook;
@@ -58,6 +59,7 @@ Route::middleware(['throttle:webhooks', VerifyPostmarkWebhook::class])->prefix('
     Route::post('bounce', [PostmarkWebhookController::class, 'bounce'])->name('bounce');
 });
 
+Route::post('webhooks/postmark/mailboxes/{mailbox}/{token}', PostmarkMailboxWebhookController::class)->middleware('throttle:webhooks')->name('webhooks.postmark.mailbox');
 Route::post('webhooks/automations/{automation}/{token}', AutomationWebhookController::class)->middleware('throttle:webhooks')->name('webhooks.automations');
 Route::post('webhooks/google/gmail', [MailboxPushController::class, 'gmail'])->middleware('throttle:webhooks')->name('webhooks.google.gmail');
 Route::post('webhooks/microsoft/graph', [MailboxPushController::class, 'graph'])->middleware('throttle:webhooks')->name('webhooks.microsoft.graph');

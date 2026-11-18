@@ -108,9 +108,10 @@ test('a connection error is saved on the mailbox and cleared by the next good po
     expect($this->mailbox->fresh()->last_error)->toBeNull();
 });
 
-test('the command queues polls only for each workspace own non-hosted mailboxes that receive', function () {
+test('the command queues polls only for each workspace own non-webhook mailboxes that receive', function () {
     Queue::fake();
     $hosted = Mailbox::factory()->create(['driver' => MailboxDriver::HOSTED, 'settings' => null]);
+    $postmark = Mailbox::factory()->postmark()->create();
     $sendOnly = Mailbox::factory()->create(['settings' => ['smtp' => ['host' => 'smtp.example.com', 'port' => 25, 'encryption' => 'starttls']]]);
     $other = Workspace::factory()->create()->execute(fn () => Mailbox::factory()->create());
 
@@ -120,6 +121,7 @@ test('the command queues polls only for each workspace own non-hosted mailboxes 
     Queue::assertPushed(PollMailbox::class, fn (PollMailbox $job) => $job->mailbox->is($this->mailbox));
     Queue::assertPushed(PollMailbox::class, fn (PollMailbox $job) => $job->mailbox->is($other));
     Queue::assertNotPushed(PollMailbox::class, fn (PollMailbox $job) => $job->mailbox->is($hosted));
+    Queue::assertNotPushed(PollMailbox::class, fn (PollMailbox $job) => $job->mailbox->is($postmark));
     Queue::assertNotPushed(PollMailbox::class, fn (PollMailbox $job) => $job->mailbox->is($sendOnly));
 });
 

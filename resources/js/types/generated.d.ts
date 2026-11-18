@@ -612,6 +612,7 @@ declare namespace App {
           imap: App.Data.Mailboxes.MailboxServerData | null;
           smtp: App.Data.Mailboxes.MailboxServerData | null;
         };
+        webhook_url?: string;
         receives_by: 'webhook' | 'push' | 'watch' | 'poll' | 'never';
         polled_at: string | null;
         last_error: string | null;
@@ -1331,7 +1332,12 @@ declare namespace App {
     export type ExportStatus = 'pending' | 'completed' | 'failed';
     export type ExportType = 'contact' | 'workspace';
     export type MacroScope = 'personal' | 'workspace' | 'desk';
-    export type MailboxDriver = 'hosted' | 'imap' | 'google' | 'microsoft';
+    export type MailboxDriver =
+      | 'hosted'
+      | 'imap'
+      | 'google'
+      | 'microsoft'
+      | 'postmark';
     export type NotificationChannel = 'database' | 'mail';
     export type NotificationType =
       | 'new_ticket'

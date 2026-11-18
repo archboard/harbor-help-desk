@@ -14,6 +14,7 @@ enum MailboxDriver: string
     case IMAP = 'imap';
     case GOOGLE = 'google';
     case MICROSOFT = 'microsoft';
+    case POSTMARK = 'postmark';
 
     public function label(): string
     {
@@ -22,6 +23,7 @@ enum MailboxDriver: string
             self::IMAP => __('IMAP/SMTP'),
             self::GOOGLE => __('Google'),
             self::MICROSOFT => __('Microsoft 365'),
+            self::POSTMARK => __('Postmark'),
         };
     }
 
