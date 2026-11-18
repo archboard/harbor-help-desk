@@ -343,6 +343,21 @@ function remove(close: () => void): void {
                 <Copy v-else class="size-3.5" aria-hidden="true" />
               </button>
             </div>
+            <div
+              v-if="mailbox.driver === 'postmark' && mailbox.webhook_url"
+              class="mt-1 flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400"
+            >
+              {{ $t('Inbound webhook URL') }}
+              <button
+                type="button"
+                class="inline-flex items-center gap-1 rounded-sm text-gray-700 hover:text-gray-900 dark:text-gray-200 dark:hover:text-white"
+                :aria-label="$t('Copy webhook URL')"
+                @click="copy(mailbox.webhook_url)"
+              >
+                <Check v-if="copied" class="size-3.5" aria-hidden="true" />
+                <Copy v-else class="size-3.5" aria-hidden="true" />
+              </button>
+            </div>
             <p
               v-if="mailbox.last_error"
               class="mt-1 max-w-md text-xs whitespace-normal text-red-600 dark:text-red-400"
@@ -618,7 +633,7 @@ function remove(close: () => void): void {
             </span>
             <span v-else class="mt-1 block">{{
               $t(
-                'The URL appears here once the mailbox is added. Edit it to copy the URL.',
+                'Once the mailbox is added, copy the URL from its row in the mailbox list.',
               )
             }}</span>
           </li>
