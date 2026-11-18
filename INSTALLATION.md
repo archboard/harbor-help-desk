@@ -174,6 +174,28 @@ Clone the repository into `/opt/harbor-help` and run `setup-docker.sh --build` t
 
 </details>
 
+<details>
+<summary>Updating manually</summary>
+
+Take a [backup](docs/operations.md#backups) first. Then, from `/opt/harbor-help`:
+
+```sh
+# Fetch the current Compose file (your docker-compose.override.yml is kept)
+curl -fsSLO https://raw.githubusercontent.com/archboard/harbor-helpdesk/main/docker-compose.yml
+
+# Pull the newest image and recreate the containers
+docker compose pull
+docker compose up -d
+```
+
+This updates to the newest `latest` image, which tracks `main`. Leave `HARBOR_VERSION` unset (or `latest`) in `.env`.
+
+To run a tagged release instead, read its upgrade notes in [CHANGELOG.md](CHANGELOG.md), set `HARBOR_VERSION=vX.Y.Z` in `.env`, and fetch the Compose file from that tag (replace `main` with `vX.Y.Z` in the URL) before pulling.
+
+The `app` service runs migrations on start and the other services wait until it is healthy. Check with `docker compose ps`. Old images stay on disk until you run `docker image prune`.
+
+</details>
+
 ## 3. Verify
 
 - `https://help.example.org/up` returns `200` (the script checks this for you). It returns an error when Postgres or Redis is unreachable.
