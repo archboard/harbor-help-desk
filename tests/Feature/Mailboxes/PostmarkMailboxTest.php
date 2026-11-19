@@ -3,6 +3,7 @@
 use App\Models\Mailbox;
 use App\Models\Ticket;
 use App\Models\Workspace;
+use Illuminate\Support\Facades\Mail;
 use Symfony\Component\Mailer\Bridge\Postmark\Transport\PostmarkApiTransport;
 
 beforeEach(function () {
@@ -23,6 +24,7 @@ function postmarkMailboxInbound(): array
 }
 
 test('inbound mail posted to a mailbox webhook URL opens a ticket in its workspace', function () {
+    Mail::fake();
     $this->postJson(route('webhooks.postmark.mailbox', [$this->mailbox->id, 'webhook-secret']), postmarkMailboxInbound())->assertOk();
 
     expect(Ticket::withoutGlobalScope('workspace')->sole())

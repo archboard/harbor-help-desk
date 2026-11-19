@@ -490,6 +490,7 @@ declare namespace App {
         slug: string;
         assignment_strategy: App.Enums.AssignmentStrategy;
         sla_policy_id: string | null;
+        sends_receipts: boolean;
         custom_fields?: App.Data.CustomFields.CustomFieldData[];
         members?: App.Data.Desks.DeskMemberData[];
         archived_at: string | null;
@@ -513,6 +514,7 @@ declare namespace App {
         slug?: string;
         assignment_strategy?: App.Enums.AssignmentStrategy;
         sla_policy_id?: string | null;
+        sends_receipts?: boolean;
       };
     }
     namespace Exports {

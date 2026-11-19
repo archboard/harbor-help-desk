@@ -19,6 +19,7 @@ class UpdateDeskData extends InputData
         public string|Optional $slug,
         public AssignmentStrategy|Optional $assignmentStrategy,
         public string|null|Optional $slaPolicyId,
+        public bool|Optional $sendsReceipts,
     ) {}
 
     /**
@@ -31,6 +32,7 @@ class UpdateDeskData extends InputData
             'slug' => ['sometimes', 'required', ...DeskSlugRules::FORMAT],
             'assignment_strategy' => ['sometimes', 'required', Rule::enum(AssignmentStrategy::class)],
             'sla_policy_id' => ['sometimes', 'nullable', 'string'],
+            'sends_receipts' => ['sometimes', 'boolean'],
         ];
     }
 }

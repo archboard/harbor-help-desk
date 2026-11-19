@@ -11,12 +11,14 @@ use App\Mail\Inbound\InboundEmail;
 use App\Models\Desk;
 use App\Models\Mailbox;
 use App\Models\Ticket;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Tests\Concerns\InWorkspace;
 
 uses(InWorkspace::class);
 
 beforeEach(function () {
+    Mail::fake();
     $this->desk = Desk::factory()->create(['assignment_strategy' => AssignmentStrategy::ROUND_ROBIN]);
     $this->ann = deskMember($this->workspace, $this->desk);
     $this->bob = deskMember($this->workspace, $this->desk);

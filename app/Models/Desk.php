@@ -61,6 +61,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *
  * @method static Builder<static>|Desk whereSlaPolicyId($value)
  *
+ * @property bool $sends_receipts
+ *
+ * @method static Builder<static>|Desk whereSendsReceipts($value)
+ *
  * @mixin \Eloquent
  */
 #[Unguarded]
@@ -77,7 +81,7 @@ class Desk extends Model
 
     public const string DELETED_AT = 'archived_at';
 
-    protected $attributes = ['assignment_strategy' => 'manual'];
+    protected $attributes = ['assignment_strategy' => 'manual', 'sends_receipts' => true];
 
     /*
     |--------------------------------------------------------------------------
@@ -90,7 +94,7 @@ class Desk extends Model
      */
     protected function casts(): array
     {
-        return ['assignment_strategy' => AssignmentStrategy::class];
+        return ['assignment_strategy' => AssignmentStrategy::class, 'sends_receipts' => 'boolean'];
     }
 
     /*

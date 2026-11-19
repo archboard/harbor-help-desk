@@ -28,6 +28,7 @@ use Tests\Concerns\InWorkspace;
 uses(InWorkspace::class);
 
 beforeEach(function () {
+    Mail::fake();
     Storage::fake('local');
     $this->contact = Contact::factory()->create();
     $this->ticket = Ticket::factory()->create(['requester_id' => $this->contact->id]);

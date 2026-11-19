@@ -8,7 +8,11 @@ import CardHeader from '@/components/CardHeader.vue';
 import CardPadding from '@/components/CardPadding.vue';
 import CardWrapper from '@/components/CardWrapper.vue';
 import AppFieldset from '@/components/forms/AppFieldset.vue';
-import { InputField, SelectField } from '@/components/forms/fields';
+import {
+  CheckboxField,
+  InputField,
+  SelectField,
+} from '@/components/forms/fields';
 import ConfirmationModal from '@/components/modals/ConfirmationModal.vue';
 import { notify } from '@/lib/notifications';
 import { destroy, update } from '@/routes/desks';
@@ -27,6 +31,7 @@ const form = useForm({
   slug: desk.slug,
   assignment_strategy: desk.assignment_strategy,
   sla_policy_id: desk.sla_policy_id ?? '',
+  sends_receipts: desk.sends_receipts,
 });
 
 const policyOptions = computed(() => ({
@@ -94,6 +99,11 @@ function archive(close: () => void): void {
               :label="$t('SLA policy')"
               :options="policyOptions"
               :error="form.errors.sla_policy_id"
+            />
+            <CheckboxField
+              v-model="form.sends_receipts"
+              :label="$t('Email requesters a receipt when they open a ticket')"
+              :error="form.errors.sends_receipts"
             />
           </AppFieldset>
         </CardPadding>

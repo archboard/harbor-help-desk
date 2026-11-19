@@ -17,6 +17,7 @@ use App\Models\Ticket;
 use App\Models\Workspace;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use Tests\Concerns\InWorkspace;
 
@@ -74,6 +75,7 @@ test('tickets cannot be created for another workspace contact', function () {
 });
 
 test('a contact can open a ticket by email without a desk policy', function () {
+    Mail::fake();
     $desk = Desk::factory()->create();
     $contact = Contact::factory()->create();
     $mailbox = Mailbox::factory()->create(['default_desk_id' => $desk->id]);

@@ -36,11 +36,12 @@ test('admins list every desk and agents only their own', function () {
             'slug' => $this->acmeDesk->slug,
             'assignment_strategy' => 'manual',
             'sla_policy_id' => null,
+            'sends_receipts' => true,
             'custom_fields' => [],
             'archived_at' => null,
         ])
         ->assertExactJsonStructure([
-            'data' => ['*' => ['id', 'name', 'slug', 'assignment_strategy', 'sla_policy_id', 'custom_fields', 'archived_at']],
+            'data' => ['*' => ['id', 'name', 'slug', 'assignment_strategy', 'sla_policy_id', 'sends_receipts', 'custom_fields', 'archived_at']],
             'links' => ['*' => ['url', 'label', 'page', 'active']],
             'meta' => ['current_page', 'first_page_url', 'from', 'last_page', 'last_page_url', 'next_page_url', 'path', 'per_page', 'prev_page_url', 'to', 'total'],
         ]);

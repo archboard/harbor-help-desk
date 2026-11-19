@@ -17,6 +17,7 @@ use App\Models\TicketComment;
 use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Tests\Concerns\InWorkspace;
@@ -49,6 +50,7 @@ function receive(InboundEmail $email, ?Mailbox $mailbox = null): ?TicketComment
 }
 
 beforeEach(function () {
+    Mail::fake();
     $this->desk = Desk::sole();
     $this->mailbox = Mailbox::factory()->create(['default_desk_id' => $this->desk->id, 'address' => 'support@acme.com']);
 });
