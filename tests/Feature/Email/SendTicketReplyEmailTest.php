@@ -111,3 +111,12 @@ test('nothing is sent when the workspace has no mailbox', function () {
     Mail::assertNothingSent();
     expect($comment->fresh()->message_id)->toBeNull();
 });
+
+test('reply text is sent as written, never as markdown or HTML', function () {
+    app(AddTicketComment::class)->handle($this->agent, $this->ticket, ['body' => "# Not a heading\n<b>bold</b> [link](https://evil.test)"]);
+
+    Mail::assertSent(TicketReplyMail::class, fn (TicketReplyMail $mail): bool => (bool) $mail
+        ->assertSeeInHtml('# Not a heading<br>&lt;b&gt;bold&lt;/b&gt; [link](https://evil.test)', false)
+        ->assertDontSeeInHtml('href="https://evil.test"', false)
+        ->assertSeeInText("# Not a heading\n<b>bold</b> [link](https://evil.test)", false));
+});

@@ -62,8 +62,7 @@ class TicketReplyMail extends Mailable
         $workspace = $this->comment->workspace;
 
         return new Content(
-            view: 'mail.ticket-reply',
-            text: 'mail.ticket-reply-text',
+            markdown: 'mail.ticket-reply',
             with: [
                 'marker' => InboundEmail::REPLY_MARKER,
                 'ticket' => $this->comment->ticket,

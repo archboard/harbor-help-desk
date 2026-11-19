@@ -310,6 +310,26 @@ img {
   padding-bottom: 0;
 }
 
+/* Customer mail */
+
+.plain-text {
+  font-size: 15px;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.reply-marker {
+  color: #a1a1aa;
+  font-size: 12px;
+}
+
+.signature {
+  border-top: 1px solid #e4e4e7;
+  color: #52525b;
+  margin-top: 24px;
+  padding-top: 16px;
+}
+
 /* Utilities */
 
 .break-all {
