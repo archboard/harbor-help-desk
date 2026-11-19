@@ -164,41 +164,43 @@ const field =
     />
 
     <CardWrapper v-else>
-      <InfiniteScroll data="events" as="ul" class="divide-y">
-        <li
-          v-for="event in events.data"
-          :key="event.id"
-          class="flex items-start justify-between gap-4 px-6 py-3 text-sm"
-        >
-          <div class="min-w-0">
-            <p class="text-gray-900 dark:text-gray-100">
-              <template v-if="'action' in event">
-                <span class="font-medium">{{ event.actor_name }}</span>
-                &middot; {{ event.description }}
-              </template>
-              <template v-else>
-                <Link
-                  v-if="event.ticket_id"
-                  :href="showTicket(event.ticket_id)"
-                  class="font-medium text-primary-600 dark:text-primary-400"
-                >
-                  #{{ event.ticket_number ?? '' }}
-                </Link>
-                {{ event.description }}
-              </template>
-            </p>
-            <p
-              v-if="'action' in event && event.ip"
-              class="text-xs text-gray-500 dark:text-gray-400"
-            >
-              {{ event.ip }}
-            </p>
-          </div>
-          <RelativeTime
-            :datetime="event.created_at"
-            class="shrink-0 text-gray-500 dark:text-gray-400"
-          />
-        </li>
+      <InfiniteScroll data="events">
+        <ul class="divide-y">
+          <li
+            v-for="event in events.data"
+            :key="event.id"
+            class="flex items-start justify-between gap-4 px-6 py-3 text-sm"
+          >
+            <div class="min-w-0">
+              <p class="text-gray-900 dark:text-gray-100">
+                <template v-if="'action' in event">
+                  <span class="font-medium">{{ event.actor_name }}</span>
+                  &middot; {{ event.description }}
+                </template>
+                <template v-else>
+                  <Link
+                    v-if="event.ticket_id"
+                    :href="showTicket(event.ticket_id)"
+                    class="font-medium text-primary-600 dark:text-primary-400"
+                  >
+                    #{{ event.ticket_number ?? '' }}
+                  </Link>
+                  {{ event.description }}
+                </template>
+              </p>
+              <p
+                v-if="'action' in event && event.ip"
+                class="text-xs text-gray-500 dark:text-gray-400"
+              >
+                {{ event.ip }}
+              </p>
+            </div>
+            <RelativeTime
+              :datetime="event.created_at"
+              class="shrink-0 text-gray-500 dark:text-gray-400"
+            />
+          </li>
+        </ul>
       </InfiniteScroll>
     </CardWrapper>
   </div>
