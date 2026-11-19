@@ -86,11 +86,16 @@ test('a contact can open a ticket by email without a desk policy', function () {
         'message_id' => '<abc@mail.example.com>',
     ]);
 
+    $comment = $ticket->comments()->sole();
+
     expect($ticket->mailbox_id)->toBe($mailbox->id);
-    expect($ticket->comments()->sole())
+    expect($comment)
         ->message_id->toBe('<abc@mail.example.com>')
         ->author->is($contact)->toBeTrue();
-    expect($ticket->events()->first()->actor->is($contact))->toBeTrue();
+    expect($ticket->events()->sole())
+        ->type->toBe(TicketEventType::CREATED)
+        ->properties->toBe(['comment_id' => $comment->id])
+        ->actor->is($contact)->toBeTrue();
 });
 
 test('only contacts can set email fields and contacts cannot assign', function (string $actor, array $input) {

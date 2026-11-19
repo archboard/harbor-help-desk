@@ -30,8 +30,8 @@ class AddTicketComment
      * A user may send `last_seen_comment_id` (null when none were shown): if anyone else commented
      * after it, the reply is rejected so two people don't answer at once. Omitting it skips the check.
      * An internal note's `mentioned_user_ids` (desk members) are stored on its event.
-     * `$opening` marks the message a ticket was opened with ({@see CreateTicket}), so it is announced
-     * as part of the new ticket instead of as a reply.
+     * `$opening` marks the message a ticket was opened with ({@see CreateTicket}): it is part of the
+     * ticket's `created` event, so no reply event is recorded for it.
      *
      * @param  array<string, mixed>  $input
      */
@@ -62,13 +62,15 @@ class AddTicketComment
             $comment->author()->associate($actor);
             $ticket->comments()->save($comment);
 
-            $ticket->recordEvent(
-                $comment->is_internal ? TicketEventType::INTERNAL_NOTE_ADDED : TicketEventType::COMMENT_ADDED,
-                $actor,
-                ['comment_id' => $comment->id] + ($opening ? ['opening' => true] : []) + ($comment->is_internal && filled($validated['mentioned_user_ids'] ?? null)
-                    ? ['mentioned_user_ids' => $validated['mentioned_user_ids']]
-                    : []),
-            );
+            if (! $opening) {
+                $ticket->recordEvent(
+                    $comment->is_internal ? TicketEventType::INTERNAL_NOTE_ADDED : TicketEventType::COMMENT_ADDED,
+                    $actor,
+                    ['comment_id' => $comment->id] + ($comment->is_internal && filled($validated['mentioned_user_ids'] ?? null)
+                        ? ['mentioned_user_ids' => $validated['mentioned_user_ids']]
+                        : []),
+                );
+            }
 
             // ponytail: every file is validated up front, so only a storage error mid-loop rolls back
             // the comment; files already written then stay on disk. Add an orphan sweep if that bites.

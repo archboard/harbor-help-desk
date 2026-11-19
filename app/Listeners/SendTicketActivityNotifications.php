@@ -40,7 +40,7 @@ class SendTicketActivityNotifications implements ShouldQueue
                 NotificationType::ASSIGNED,
                 User::query()->whereKey($ticketEvent->properties['user_id'])->get(),
             ]],
-            $ticketEvent->type === TicketEventType::COMMENT_ADDED && $ticketEvent->actor instanceof Contact && ! $this->isOpening($ticketEvent) => [[
+            $ticketEvent->type === TicketEventType::COMMENT_ADDED && $ticketEvent->actor instanceof Contact => [[
                 NotificationType::REQUESTER_REPLIED,
                 $ticket->assignees()->get()->whenEmpty(fn () => $this->deskMembers($ticket)),
             ]],
@@ -143,17 +143,9 @@ class SendTicketActivityNotifications implements ShouldQueue
             TicketEventType::TAG_REMOVED,
             TicketEventType::ATTACHMENT_ADDED,
             TicketEventType::ATTACHMENT_REMOVED => true,
-            TicketEventType::COMMENT_ADDED => $ticketEvent->actor instanceof User && ! $this->isOpening($ticketEvent),
+            TicketEventType::COMMENT_ADDED => $ticketEvent->actor instanceof User,
             default => false,
         };
-    }
-
-    /**
-     * The message a ticket was opened with is part of the new ticket, not a reply or an update.
-     */
-    protected function isOpening(TicketEvent $ticketEvent): bool
-    {
-        return $ticketEvent->properties['opening'] ?? false;
     }
 
     /**

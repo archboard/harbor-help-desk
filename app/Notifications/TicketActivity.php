@@ -75,10 +75,9 @@ class TicketActivity extends Notification
     protected function openingCommentId(): ?string
     {
         return $this->ticketEvent->ticket->events()
-            ->where('type', TicketEventType::COMMENT_ADDED)
-            ->where('properties->opening', true)
+            ->where('type', TicketEventType::CREATED)
             ->first()
-            ?->properties['comment_id'];
+            ?->properties['comment_id'] ?? null;
     }
 
     /**
